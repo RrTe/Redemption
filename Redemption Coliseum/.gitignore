@@ -1,0 +1,37 @@
+# Dependencies (Server & Client)
+node_modules/
+
+# Environment Variables (Sicherheit!)
+.env
+.env.local
+.env.*.local
+
+# Build Outputs (Client & Server)
+dist/
+build/
+out/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDEs / Editoren
+.vscode/
+.idea/
+*.suo
+*.ntvs
+*.njsproj
+*.sln
+*.sw?
+
+# Temporäre Dateien
+*.tmp
+
+# Lokale Test-Ordner (nicht hochladen)
+TestStuff/

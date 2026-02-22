@@ -1,0 +1,94 @@
+1	Glory of the Lord [2024 - Winner]
+1	Jephthah's Daughter
+1	Faithful Servant (GoC)
+1	Jairus (GoC)
+1	The Persistent Widow (GoC)
+1	Watchful Servant (GoC)
+1	Simon of Cyrene (Roots)
+1	Zaccheus, the Repentant / Zaccheus, Tax Collector (GoC)
+1	The New Covenant (I/J+)
+1	Fruit of the Land
+1	Teaching in Parables (GoC)
+1	Restoring the Afflicted (GoC)
+1	Amazing Faith (GoC)
+1	The Deceiver (RoJ)
+1	Stocks (Roots)
+1	Who is Without Sin? (GoC)
+1	The Angel of the Winds
+1	Holy Grail (Roots)
+1	Storehouse [IR]
+1	The Emmaus Road
+1	The Amalekites' Slave (FoM)
+1	Tenants Kill the Son (GoC)
+1	Lost Sheep / Good Shepherd (GoC)
+1	Gabriel, Mouth of God (GoC)
+1	Son of God [Tomb] [2022 - Seasonal]
+1	Nicodemus, the Seeker / Nicodemus, the Teacher (2022 - National)
+1	Plot to Kill (RoJ)
+1	Angel of the Lord (J)
+1	The Second Coming (CoW AB)
+1	Crowd's Choice (GoC)
+1	The Winged Leopard (PoC)
+1	The Prince of Greece [T2C]
+1	The Priests of Zeus
+1	The Goat with a Horn [T2C]
+1	Seleucus the Victorious
+1	Ptolemy, Ruler of Egypt
+1	Greek Scholars (Roots)
+1	Greek Forces
+1	Cassander of Macedon
+1	Antiochus' Army
+1	Antiochus IV Epiphanes [T2C]
+1	Antigonus the One-Eyed
+1	Alexander's Destroyers
+1	Alexander the Great
+1	Alexander of Troas (Roots)
+1	Allowed to Be Trampled
+1	Smashed Opponent
+1	Without Touching
+1	Forces Arise
+1	The Realm of Greece
+1	Perplexing Vision
+1	Return to Curse
+1	Lost Soul "Stubborn" [Daniel 9:6]
+1	Shrine to Artemis
+1	Hellenistic Jews
+1	Areopagus
+Reserve:
+1	Plague of Frogs (GoC)
+1	Jephthah (J)
+1	Jairus' Daughter (GoC)
+1	Scattered Sheep
+1	Confusion of Mind (PoC)
+1	Battle Cry [II]
+1	Foreign Wives (2022 - Side Event)
+1	The Depraved [Black]
+1	Greek Philosophers (Roots)
+1	Clash with Persia
+Tokens:
+1	Plague of Disease
+1	Feast of Unleavened Bread (LoC)
+1	Tenants Kill the Son (GoC)
+1	Centurion's Proclamation (Roots)
+1	Daughter's Grief
+1	Battle Cry [II]
+2	Talitha Kum! (GoC)
+1	High Priest's Plot (GoC)
+1	The Manger (GoC)
+1	Ten Virgins (GoC)
+1	Lost Coin Found (GoC)
+2	Withered Seed (GoC)
+1	Silly Women (Roots)
+1	Plague of Boils (LoC)
+1	Thirty Pieces of Silver (GoC)
+1	The Wages of Sin (FoM)
+1	Bringing Fear (LoC)
+1	Go Away! (LoC)
+1	The Obstinate Pharisee (GoC)
+1	Mask of Pride (Roots)
+1	Good Seed (GoC)
+1	Vine-Grower's Rebellion (GoC)
+1	The Expert Lawyer (GoC)
+1	Disciples of the Pharisees (GoC)
+1	The Thankful Leper (GoC)
+1	Coliseum Lions (J)

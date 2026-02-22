@@ -1,0 +1,23 @@
+# Verzeichnisse, die die KI ignorieren soll
+node_modules/
+dist/
+build/
+bin/
+obj/
+.git/
+.vscode/
+
+# Bestimmte Dateitypen ausschließen
+*.log
+*.tmp
+*.exe
+*.dll
+*.pdb
+
+# Medien und Dokumente (spart massiv Kontext-Platz)
+client/public/assets/
+*.png
+*.jpg
+*.svg
+*.pdf
+docs/
