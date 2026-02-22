@@ -164,7 +164,7 @@ export class LobbyScene extends Phaser.Scene {
       "Load Game",
       () => this.openLoadGameDialog(),
       350,
-      50
+      50,
     );
     this.add.existing(this.loadGameBtn);
 
@@ -246,15 +246,18 @@ export class LobbyScene extends Phaser.Scene {
     });
 
     // ✨ NEU: Legal / Impressum Link (Unten Links, dezent)
-    this.legalBtn = this.add.text(10, this.scale.height - 10, "Legal / Impressum", {
+    this.legalBtn = this.add
+      .text(10, this.scale.height - 10, "Legal / Impressum", {
         fontFamily: "Arial",
         fontSize: "14px",
-        color: "#666666"
-    }).setOrigin(0, 1).setInteractive({ useHandCursor: true });
-    
-    this.legalBtn.on('pointerdown', () => {
-        // Hier deine URL einfügen (z.B. Link zu Google Doc oder Unterseite)
-        window.open("https://deine-impressum-url.com", "_blank");
+        color: "#666666",
+      })
+      .setOrigin(0, 1)
+      .setInteractive({ useHandCursor: true });
+
+    this.legalBtn.on("pointerdown", () => {
+      // Hier deine URL einfügen (z.B. Link zu Google Doc oder Unterseite)
+      window.open("https://deine-impressum-url.com", "_blank");
     });
 
     // 6. Initialize Colyseus Client
@@ -279,9 +282,9 @@ export class LobbyScene extends Phaser.Scene {
     // Wenn wir auf Vercel sind (oder einer anderen Domain), nutzen wir die Render-URL.
     // Du musst diese URL anpassen, sobald du deinen Render-Server hast!
     if (window.location.hostname.includes("vercel.app")) {
-        this.endpoint = "wss://redemption-coliseum-server.onrender.com"; // BEISPIEL! Anpassen!
+      this.endpoint = "wss://redemptionctcg-server.onrender.com"; // BEISPIEL! Anpassen!
     } else {
-    this.endpoint = `${protocol}//${window.location.hostname}${serverPort}`;
+      this.endpoint = `${protocol}//${window.location.hostname}${serverPort}`;
     }
 
     this.httpEndpoint = this.endpoint
@@ -367,8 +370,8 @@ export class LobbyScene extends Phaser.Scene {
 
     // ✨ NEU: Load Game Button (unter Deck Select)
     if (this.loadGameBtn) {
-        this.loadGameBtn.setPosition(width / 2, currentButtonY);
-        currentButtonY += 80;
+      this.loadGameBtn.setPosition(width / 2, currentButtonY);
+      currentButtonY += 80;
     }
 
     // 4. Liste
@@ -427,7 +430,7 @@ export class LobbyScene extends Phaser.Scene {
 
     // 8. Legal Button
     if (this.legalBtn) {
-        this.legalBtn.setPosition(10, height - 10);
+      this.legalBtn.setPosition(10, height - 10);
     }
 
     // 7. Settings Button (Position analog zu GameUI)
@@ -647,7 +650,9 @@ export class LobbyScene extends Phaser.Scene {
           } catch (err: any) {
             log("Lobby", "Error parsing deck:", err);
             // ✨ FIX: Zeige die echte Fehlermeldung an, um das Problem zu verstehen
-            this.statusText.setText("Error: " + (err?.message || "Invalid Deck File"));
+            this.statusText.setText(
+              "Error: " + (err?.message || "Invalid Deck File"),
+            );
           }
         }
       };
@@ -661,34 +666,34 @@ export class LobbyScene extends Phaser.Scene {
 
   // ✨ NEU: Öffnet Dialog zum Laden eines Spielstands
   openLoadGameDialog() {
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = ".json";
-      input.style.display = "none";
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.style.display = "none";
 
-      input.onchange = (e: any) => {
-          const file = e.target.files[0];
-          if (!file) return;
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (!file) return;
 
-          const reader = new FileReader();
-          reader.onload = (event) => {
-              const content = event.target?.result as string;
-              if (content) {
-                  try {
-                      const savedState = JSON.parse(content);
-                      this.createGame(savedState); // Übergebe den State an createGame
-                  } catch (err) {
-                      log("Lobby", "Error parsing save file:", err);
-                      this.statusText.setText("Invalid Save File");
-                  }
-              }
-          };
-          reader.readAsText(file);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result as string;
+        if (content) {
+          try {
+            const savedState = JSON.parse(content);
+            this.createGame(savedState); // Übergebe den State an createGame
+          } catch (err) {
+            log("Lobby", "Error parsing save file:", err);
+            this.statusText.setText("Invalid Save File");
+          }
+        }
       };
+      reader.readAsText(file);
+    };
 
-      document.body.appendChild(input);
-      input.click();
-      document.body.removeChild(input);
+    document.body.appendChild(input);
+    input.click();
+    document.body.removeChild(input);
   }
 
   // ✨ NEU: Aktualisiert den Text des Deck-Buttons
@@ -764,10 +769,7 @@ export class LobbyScene extends Phaser.Scene {
   // ✨ NEU: Versucht, die Verbindung wiederherzustellen
   async reconnectToGame(reconnectionToken: string) {
     console.log("[Lobby] reconnectToGame triggered", { reconnectionToken }); // ✨ DEBUG
-    log(
-      "Lobby",
-      `Attempting to reconnect with token.`,
-    ); // ✨ FIX: Use central logger
+    log("Lobby", `Attempting to reconnect with token.`); // ✨ FIX: Use central logger
     this.statusText.setText("Reconnecting...");
 
     if (!this.client) {
@@ -792,7 +794,8 @@ export class LobbyScene extends Phaser.Scene {
     }
   }
 
-  async createGame(savedState?: any) { // ✨ NEU: Optionaler Parameter
+  async createGame(savedState?: any) {
+    // ✨ NEU: Optionaler Parameter
     // ✨ NEU: Visuelles Feedback beim Erstellen
     const btn = this.createBtn;
     const text = btn.getByName("text") as Phaser.GameObjects.BitmapText;
@@ -813,7 +816,7 @@ export class LobbyScene extends Phaser.Scene {
         deck: this.selectedDeck, // ✨ NEU: Übergabe des gewählten Decks
         playerName: this.playerName, // ✨ NEU
         deckName: this.selectedDeck.name || "Random Deck", // ✨ FIX: 'as any' ist nicht mehr nötig
-        savedState: savedState // ✨ NEU: Übergebe Savegame
+        savedState: savedState, // ✨ NEU: Übergebe Savegame
       };
 
       const room = await this.client.create("game_room", roomOptions);
