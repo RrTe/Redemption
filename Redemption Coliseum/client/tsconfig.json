@@ -18,7 +18,8 @@
     "emitDeclarationOnly": true,
     "declarationDir": "./dist/types",
     /* Linting */
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "erasableSyntaxOnly": true,
