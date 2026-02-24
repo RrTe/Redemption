@@ -29,6 +29,7 @@ export class LobbyScene extends Phaser.Scene {
   private soundManager!: SoundManager; // ✨ NEU
   private nameLabel!: Phaser.GameObjects.BitmapText; // ✨ NEU: Label für den Namen
   private legalBtn!: Phaser.GameObjects.Text; // ✨ NEU: Legal Button
+  private privacyBtn!: Phaser.GameObjects.Text; // ✨ NEU: Privacy Button
 
   // ✨ NEU: Scrolling Variablen
   private settingsButton!: Phaser.GameObjects.Image; // ✨ NEU: Settings Button
@@ -257,7 +258,21 @@ export class LobbyScene extends Phaser.Scene {
 
     this.legalBtn.on("pointerdown", () => {
       // Hier deine URL einfügen (z.B. Link zu Google Doc oder Unterseite)
-      window.open("https://deine-impressum-url.com", "_blank");
+      window.open("/impressum.html", "_blank");
+    });
+
+    // ✨ NEU: Privacy Policy Link (Rechts daneben)
+    this.privacyBtn = this.add
+      .text(160, this.scale.height - 10, "Privacy Policy", {
+        fontFamily: "Arial",
+        fontSize: "14px",
+        color: "#666666",
+      })
+      .setOrigin(0, 1)
+      .setInteractive({ useHandCursor: true });
+
+    this.privacyBtn.on("pointerdown", () => {
+      window.open("/privacy.html", "_blank");
     });
 
     // 6. Initialize Colyseus Client
@@ -431,6 +446,11 @@ export class LobbyScene extends Phaser.Scene {
     // 8. Legal Button
     if (this.legalBtn) {
       this.legalBtn.setPosition(10, height - 10);
+    }
+
+    // 9. Privacy Button
+    if (this.privacyBtn) {
+      this.privacyBtn.setPosition(160, height - 10);
     }
 
     // 7. Settings Button (Position analog zu GameUI)
