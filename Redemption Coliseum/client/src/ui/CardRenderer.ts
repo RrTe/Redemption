@@ -12,6 +12,17 @@ import {
 } from "../../../shared/card-constants";
 import { log, DEBUG } from "../utils/logger";
 
+/**
+ * ✨ NEU: Zentrale Konfiguration für den Kartenfächer (Hand).
+ * Definiert Winkel, Radius und Abstände für beide Spieler einheitlich.
+ */
+const HAND_FAN_CONFIG = {
+  MAX_TOTAL_ANGLE: 100,      // Maximaler Fächerwinkel (Grad)
+  MAX_ANGLE_PER_CARD: 12,    // Maximaler Winkel pro Karte (Grad)
+  RADIUS_FACTOR: 1.2,        // Radius relativ zur Kartenhöhe (1.2 = eng, "Hand-Feeling")
+  PLAYER_PIVOT_OFFSET: 0.65, // Y-Offset des Drehpunkts für Spieler (relativ zur Kartenhöhe)
+  OPPONENT_PIVOT_OFFSET: 1.2 // Y-Offset des Drehpunkts für Gegner (relativ zur Kartenhöhe)
+};
 
 /**
  * ✨ REFACTORING: Verwaltet das Rendern (Erstellen, Positionieren, Aktualisieren)
@@ -126,14 +137,17 @@ export class CardRenderer {
     handSize: number,
   ): { x: number; y: number; angle: number } {
     const cardHeight = this.layout.handCardHeight;
-    const maxTotalAngle = 40;
-    // Parameter für den Fächer (identisch zu renderHandCards)
-    const anglePerCard = Math.min(maxTotalAngle / Math.max(1, handSize - 1), 8);
+    
+    // ✨ FIX: Nutze zentrale Konfiguration
+    const anglePerCard = Math.min(
+      HAND_FAN_CONFIG.MAX_TOTAL_ANGLE / Math.max(1, handSize - 1),
+      HAND_FAN_CONFIG.MAX_ANGLE_PER_CARD,
+    );
     const totalAngle = (handSize - 1) * anglePerCard;
     const startAngle = -totalAngle / 2;
 
-    const pivotY = this.layout.playerHand.bottom + cardHeight * 1.2;
-    const radius = cardHeight * 1.5;
+    const radius = cardHeight * HAND_FAN_CONFIG.RADIUS_FACTOR;
+    const pivotY = this.layout.playerHand.bottom + cardHeight * HAND_FAN_CONFIG.PLAYER_PIVOT_OFFSET;
 
     const currentAngle = startAngle + index * anglePerCard;
     const angleRad = Phaser.Math.DegToRad(currentAngle);
@@ -188,7 +202,8 @@ export class CardRenderer {
     if (!cardUI) {
       // ✨ DEIN PLAN: Logge die Erstellung eines neuen Objekts
       log(
-        "Renderer", `[PROCESS_CARD] [CREATE] CardID: ${cardId.slice(
+        "Renderer",
+        `[PROCESS_CARD] [CREATE] CardID: ${cardId.slice(
           -4,
         )}. Creating NEW CardUI.`,
       );
@@ -207,7 +222,8 @@ export class CardRenderer {
     } else {
       // ✨ DEIN PLAN: Logge die Wiederverwendung und den Zustand des bestehenden Objekts
       log(
-        "Renderer", `[PROCESS_CARD] [UPDATE] CardID: ${cardId.slice(
+        "Renderer",
+        `[PROCESS_CARD] [UPDATE] CardID: ${cardId.slice(
           -4,
         )}, InstanceID: ${cardUI.instanceId.slice(
           // ✨ KORREKTUR: Logge die korrekte isAnimating-Variable
@@ -215,7 +231,8 @@ export class CardRenderer {
         )}, Animating: ${isAnimating}`,
       );
       log(
-        "Renderer", `  -> POSITIONS: Current (${cardUI.x.toFixed(0)}, ${cardUI.y.toFixed(
+        "Renderer",
+        `  -> POSITIONS: Current (${cardUI.x.toFixed(0)}, ${cardUI.y.toFixed(
           0,
         )}) -> Target (${targetX.toFixed(0)}, ${targetY.toFixed(0)}) | Depth: ${
           cardUI.depth
@@ -244,7 +261,8 @@ export class CardRenderer {
       // ✨ DEBUG: Logge die Entscheidungsgrundlage für die Play-Animation
       if (oldZone === ZONES.HAND && newZone !== ZONES.HAND) {
         log(
-          "Renderer", `[PLAY_ANIM_CHECK] Card ${cardId.slice(
+          "Renderer",
+          `[PLAY_ANIM_CHECK] Card ${cardId.slice(
             -4,
           )}: OldZone=${oldZone}, NewZone=${newZone} -> isPlayMove=${isPlayMove}`,
         );
@@ -367,7 +385,8 @@ export class CardRenderer {
 
     if (attachments.length > 0) {
       log(
-        "Renderer", `[RENDER] Card ${parentCard.id.slice(-4)} has ${attachments.length} attachments:`,
+        "Renderer",
+        `[RENDER] Card ${parentCard.id.slice(-4)} has ${attachments.length} attachments:`,
         attachments.map((c) => c.id.slice(-4)),
       );
     }
@@ -393,7 +412,8 @@ export class CardRenderer {
       // ✨ DEBUG: Logge die berechneten Positionen
       if (DEBUG) {
         log(
-          "Renderer", `[ATTACH DEBUG] Parent ${parentCard.id.slice(-4)} @ (${parentX.toFixed(0)}, ${parentY.toFixed(0)}) ` +
+          "Renderer",
+          `[ATTACH DEBUG] Parent ${parentCard.id.slice(-4)} @ (${parentX.toFixed(0)}, ${parentY.toFixed(0)}) ` +
             `| Child ${att.id.slice(-4)} Target @ (${targetX.toFixed(0)}, ${targetY.toFixed(0)}) ` +
             `| Offset: (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`,
         );
@@ -443,7 +463,8 @@ export class CardRenderer {
       // ✨ DEBUGGING: Logge die Werte, die zur Positionsberechnung verwendet werden.
       const { x, y, angle } = this.getHandCardTargetPosition(index, handSize);
       log(
-        "Renderer", `[POS_CALC] Karte: ${cardData.id.slice(
+        "Renderer",
+        `[POS_CALC] Karte: ${cardData.id.slice(
           -4,
         )}, Index: ${index}, Handgröße: ${handSize} -> Ziel (x: ${x.toFixed(
           0,
@@ -498,16 +519,16 @@ export class CardRenderer {
     const cardWidth = this.layout.handCardWidth;
     const cardHeight = this.layout.handCardHeight;
 
-    const maxTotalAngle = 40;
-    const anglePerCard = Math.min(maxTotalAngle / Math.max(1, handSize - 1), 8);
+    // ✨ FIX: Nutze zentrale Konfiguration
+    const anglePerCard = Math.min(
+      HAND_FAN_CONFIG.MAX_TOTAL_ANGLE / Math.max(1, handSize - 1),
+      HAND_FAN_CONFIG.MAX_ANGLE_PER_CARD,
+    );
     const totalAngle = (handSize - 1) * anglePerCard;
     const startAngle = -totalAngle / 2;
 
-    // ✨ FINALE KORREKTUR: Der Drehpunkt muss UNTERHALB der Karten liegen, genau wie beim Spieler,
-    // um die gleiche Fächerform zu erzeugen (unten eng, oben breit).
-    // Wir passen den Wert an, um den Fächer korrekt nach oben zu schieben.
-    const pivotY = this.layout.opponentHand.y + cardHeight * 1.7;
-    const radius = cardHeight * 1.5;
+    const radius = cardHeight * HAND_FAN_CONFIG.RADIUS_FACTOR;
+    const pivotY = this.layout.opponentHand.y + cardHeight * HAND_FAN_CONFIG.OPPONENT_PIVOT_OFFSET;
 
     opponent.hand.forEach((cardData, index) => {
       // Verwende die exakt gleiche Winkelberechnung wie beim Spieler.
@@ -625,7 +646,8 @@ export class CardRenderer {
       let targetX = startX + index * (cardWidth + actualSpacing);
       // ✨ DEIN PLAN: Detailliertes Logging für jede Karte in dieser Funktion.
       log(
-        "Renderer", `[RENDER_UNMANAGED_ROW] Processing card: ${cardData.Name} (ID: ${
+        "Renderer",
+        `[RENDER_UNMANAGED_ROW] Processing card: ${cardData.Name} (ID: ${
           cardData.id
         }) | Controller: ${cardData.controllerId} | Owner: ${
           cardData.originalOwnerId
@@ -654,7 +676,8 @@ export class CardRenderer {
         // Spiegel die berechnete Position auf die andere Seite.
         targetX = 2 * this.dragBounds.centerX - targetX;
         log(
-          "Renderer", `  -> [MIRROR] Card '${
+          "Renderer",
+          `  -> [MIRROR] Card '${
             cardData.id
           }' is being mirrored to X: ${targetX.toFixed(2)}`,
         );
@@ -686,7 +709,8 @@ export class CardRenderer {
       const attachedCards = territory.filter((c) => c.attachedTo);
       if (attachedCards.length > 0) {
         log(
-          "Renderer", `[RENDER DEBUG] Found ${attachedCards.length} attached cards in territory:`,
+          "Renderer",
+          `[RENDER DEBUG] Found ${attachedCards.length} attached cards in territory:`,
           attachedCards.map((c) => `${c.id} -> ${c.attachedTo}`),
         );
       }
