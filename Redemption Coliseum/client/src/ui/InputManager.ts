@@ -12,6 +12,7 @@ import { type MoveCardMessage } from "../../../shared/messages.js";
 import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones.js";
 import type { QuantitySelectionDialogData } from "../scenes/QuantitySelectionDialogScene.js";
 import { log, DEBUG } from "../utils/logger";
+import { ElementManager } from "./ElementManager.js"; // ✨ NEU
 
 
 // ✨ NEU: Verzögerung (in ms), bevor der Attach-Modus aktiviert wird.
@@ -37,6 +38,7 @@ export class InputManager {
   private pendingDragTarget: CardUI | null = null; // ✨ NEU: Potenzielles Ziel für Attach (während Delay)
   private attachHoverTimer: number | null = null; // ✨ NEU: Timer für Attach-Verzögerung
   private currentHoveredDeck: StackedPileUI | null = null; // ✨ NEU: Welches Deck wird gerade gehovert?
+  private elementManager: ElementManager; // ✨ NEU
 
   constructor(
     scene: Phaser.Scene,
@@ -45,6 +47,7 @@ export class InputManager {
     animationManager: AnimationManager,
     previewManager: PreviewManager,
     dragBounds: Phaser.Geom.Rectangle,
+    elementManager: ElementManager // ✨ NEU
   ) {
     this.scene = scene;
     this.room = room;
@@ -52,6 +55,7 @@ export class InputManager {
     this.networkManager = networkManager;
     this.animationManager = animationManager;
     this.previewManager = previewManager;
+    this.elementManager = elementManager; // ✨ NEU
   }
 
   /** Registriert alle globalen Input-Event-Handler für Drag & Drop. */
@@ -497,6 +501,44 @@ export class InputManager {
           }
         }
 
+        // ✨ NEU: Zonen-Highlighting beim Draggen
+        // Wir suchen nach Zonen unter der Maus (die keine Karten sind)
+        const hitZone = hitObjects.find(obj => obj instanceof Phaser.GameObjects.Zone && obj.name) as Phaser.GameObjects.Zone | undefined;
+        
+        if (hitZone) {
+            const zoneName = hitZone.name as Zone;
+            const ownerId = hitZone.getData("ownerId");
+            const isMe = ownerId === this.room.sessionId;
+            
+            let label = "";
+            // ✨ FIX: Einheitliches Farbschema (Gold) für alle Zonen.
+            // Die Unterscheidung erfolgt jetzt rein über den Text.
+            const UNIFIED_COLOR = 0xffd700; 
+            let color = UNIFIED_COLOR;
+
+            // Logik für Beschriftung
+            if (zoneName === ZONES.TERRITORY) {
+                label = isMe ? "My Territory" : "Opponent Territory";
+            } else if (zoneName === ZONES.LAND_OF_BONDAGE) {
+                label = isMe ? "My Land of Bondage" : "Opponent Land of Bondage";
+            } else if (zoneName === ZONES.BATTLEFIELD) {
+                 // Nur in der Battle-Phase hervorheben
+                 if (this.room.state.currentPhase === "battle") {
+                     label = "Field of Battle";
+                 }
+            }
+
+            // Wenn wir einen gültigen Label haben, zeigen wir das Highlight
+            if (label) {
+                this.elementManager.showZoneHighlight(hitZone, label, color);
+            } else {
+                this.elementManager.hideZoneHighlight();
+            }
+        } else {
+            // Keine Zone getroffen -> Verstecken
+            this.elementManager.hideZoneHighlight();
+        }
+
         // ✨ NEU: Prüfen, ob wir über einer anderen Karte schweben (für Attach)
         // Wir nutzen hitTestPointer, um Objekte unter der Maus zu finden.
         // (Hinweis: hitObjects wurde oben schon geholt, wir können es wiederverwenden oder neu holen)
@@ -596,6 +638,9 @@ export class InputManager {
           this.currentHoveredDeck.showBottomHighlight(false);
           this.currentHoveredDeck = null;
         }
+
+        // ✨ NEU: Zonen-Highlight verstecken
+        this.elementManager.hideZoneHighlight();
 
         // Timer aufräumen
         if (this.attachHoverTimer !== null) {

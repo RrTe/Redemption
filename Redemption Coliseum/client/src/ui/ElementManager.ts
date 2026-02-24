@@ -32,6 +32,9 @@ type StaticElements = {
   phaseBar: Phaser.GameObjects.Graphics; // ✨ NEU: Die 3D-Hintergrundleiste
   playerInfoText: Phaser.GameObjects.BitmapText; // ✨ NEU: Spielername & Deck
   opponentInfoText: Phaser.GameObjects.BitmapText; // ✨ NEU: Gegnername & Deck
+  highlightOverlay: Phaser.GameObjects.Container; // ✨ NEU: Container für Zonen-Highlight
+  highlightGraphics: Phaser.GameObjects.Graphics; // ✨ NEU: Rahmen/Hintergrund
+  highlightText: Phaser.GameObjects.BitmapText; // ✨ NEU: Text
 };
 type ZoneElements = {
   playerLandOfBondageZone: Phaser.GameObjects.Zone;
@@ -210,7 +213,13 @@ export class ElementManager {
 
     // 1. Schlagschatten
     concedeBar.fillStyle(0x000000, 0.5);
-    concedeBar.fillRoundedRect(cBarX + 3, cBarY + 3, cBarWidth, cBarHeight, cRadius);
+    concedeBar.fillRoundedRect(
+      cBarX + 3,
+      cBarY + 3,
+      cBarWidth,
+      cBarHeight,
+      cRadius,
+    );
 
     // 2. Basis-Körper
     concedeBar.fillStyle(0x1a1a2e, 0.9);
@@ -218,7 +227,12 @@ export class ElementManager {
 
     // 3. Glanzlicht oben
     concedeBar.fillStyle(0xffffff, 0.05);
-    concedeBar.fillRoundedRect(cBarX, cBarY, cBarWidth, cBarHeight / 2, { tl: cRadius, tr: cRadius, bl: 0, br: 0 });
+    concedeBar.fillRoundedRect(cBarX, cBarY, cBarWidth, cBarHeight / 2, {
+      tl: cRadius,
+      tr: cRadius,
+      bl: 0,
+      br: 0,
+    });
 
     // 4. Rand
     concedeBar.lineStyle(2, 0x444466, 0.8);
@@ -230,20 +244,31 @@ export class ElementManager {
     concedeButton.add([concedeBar, concedeImg]);
 
     // Interaktivität
-    concedeButton.setInteractive(new Phaser.Geom.Rectangle(cBarX, cBarY, cBarWidth, cBarHeight), Phaser.Geom.Rectangle.Contains);
+    concedeButton.setInteractive(
+      new Phaser.Geom.Rectangle(cBarX, cBarY, cBarWidth, cBarHeight),
+      Phaser.Geom.Rectangle.Contains,
+    );
     if (concedeButton.input) concedeButton.input.cursor = "pointer";
 
     // Hover-Effekt (Rot werden als Warnung)
     concedeButton.on("pointerover", () => {
-        this.scene.tweens.add({ targets: concedeButton, scale: 1.15, duration: 100, ease: "Back.easeOut" });
-        concedeImg.setTint(0xffaaaa); // Rötlicher Tint
+      this.scene.tweens.add({
+        targets: concedeButton,
+        scale: 1.15,
+        duration: 100,
+        ease: "Back.easeOut",
+      });
+      concedeImg.setTint(0xffaaaa); // Rötlicher Tint
     });
     concedeButton.on("pointerout", () => {
-        this.scene.tweens.add({ targets: concedeButton, scale: 1.0, duration: 100 });
-        concedeImg.clearTint();
+      this.scene.tweens.add({
+        targets: concedeButton,
+        scale: 1.0,
+        duration: 100,
+      });
+      concedeImg.clearTint();
     });
     // Klick-Logik wird in GameUI.ts behandelt
-
 
     // ✨ NEU: Settings Button (Gold)
     const settingsButton = this.scene.add
@@ -346,6 +371,32 @@ export class ElementManager {
       .setTint(0xffd700) // Gold
       .setDropShadow(2, 2, 0x000000, 0.8);
 
+    // ✨ NEU: Highlight Overlay für Drag & Drop (Initial unsichtbar)
+    const highlightOverlay = this.scene.add
+      .container(0, 0)
+      .setDepth(2000)
+      .setVisible(false);
+    const highlightGraphics = this.scene.add.graphics();
+    const highlightText = this.scene.add
+      .bitmapText(0, 0, "fairydust", "", 48)
+      .setOrigin(0.5)
+      .setAlpha(0.5) // Dezent
+      .setTint(0xffffff)
+      .setDropShadow(2, 2, 0x000000, 0.5);
+
+    highlightOverlay.add([highlightGraphics, highlightText]);
+
+    // Sanftes Pulsieren für den Text ("Atmen")
+    this.scene.tweens.add({
+      targets: highlightText,
+      alpha: { from: 0.8, to: 1.0 }, // ✨ FIX: Höhere Deckkraft für bessere Lesbarkeit
+      scale: { from: 0.95, to: 1.05 },
+      duration: 1000,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+
     return {
       boardText,
       phaseIcons,
@@ -357,6 +408,9 @@ export class ElementManager {
       phaseBar,
       playerInfoText,
       opponentInfoText,
+      highlightOverlay,
+      highlightGraphics,
+      highlightText,
     };
   }
 
@@ -603,7 +657,7 @@ export class ElementManager {
       this.layout.opponentLandOfBondage,
     );
 
-    // ✨ NEU (BATTLE): Positioniere die neue Battlefield-Zone neu.
+    // ✨ NEU (BATTLE): Positioniere die neuen Battlefield-Zone neu.
     const fullBattlefieldRect = Phaser.Geom.Rectangle.Union(
       this.layout.playerBattlefieldArea,
       this.layout.opponentBattlefieldArea,
@@ -688,8 +742,8 @@ export class ElementManager {
     );
     // ✨ NEU: Concede Button positionieren
     this.staticElements.concedeButton.setPosition(
-        this.layout.concedeButton.x,
-        this.layout.concedeButton.y
+      this.layout.concedeButton.x,
+      this.layout.concedeButton.y,
     );
 
     this.staticElements.boardText.setPosition(20, 70);
@@ -801,8 +855,49 @@ export class ElementManager {
     Object.values(this.staticElements.phaseIcons).forEach((icon) =>
       icon.destroy(),
     );
+    this.staticElements.highlightOverlay.destroy(); // ✨ NEU
 
     // Zerstöre alle Zonenelemente (Zonen und Piles)
     Object.values(this.zoneElements).forEach((element) => element.destroy());
+  }
+
+  /**
+   * ✨ NEU: Zeigt das Highlight-Overlay über einer bestimmten Zone an.
+   * @param zone Die Zone (oder das Objekt), über dem das Highlight erscheinen soll.
+   * @param text Der Text, der angezeigt werden soll (z.B. "My Territory").
+   * @param color Die Farbe des Rahmens (Hex).
+   */
+  public showZoneHighlight(
+    zone: Phaser.GameObjects.GameObject,
+    text: string,
+    color: number,
+  ) {
+    const bounds = (zone as any).getBounds ? (zone as any).getBounds() : null;
+    if (!bounds) return;
+
+    const { highlightOverlay, highlightGraphics, highlightText } =
+      this.staticElements;
+
+    highlightOverlay.setVisible(true);
+    highlightText.setText(text);
+    highlightText.setPosition(bounds.centerX, bounds.centerY);
+
+    // ✨ FIX: Dunkles Gold für besseren Kontrast
+    highlightText.setTint(0x8b6508);
+
+    highlightGraphics.clear();
+    highlightGraphics.fillStyle(color, 0.3); // Weniger Transparenz für bessere Sichtbarkeit
+    highlightGraphics.fillRoundedRect(
+      bounds.x,
+      bounds.y,
+      bounds.width,
+      bounds.height,
+      15,
+    );
+  }
+
+  /** ✨ NEU: Versteckt das Highlight-Overlay. */
+  public hideZoneHighlight() {
+    this.staticElements.highlightOverlay.setVisible(false);
   }
 }

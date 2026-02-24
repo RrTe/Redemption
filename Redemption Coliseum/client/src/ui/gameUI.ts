@@ -157,6 +157,7 @@ export class GameUI {
       this.animationManager, // ✨ NEU: Übergebe den AnimationManager
       this.previewManager, // ✨ NEU: Übergebe den PreviewManager
       this.dragBounds,
+      this.elementManager // ✨ NEU: Übergebe ElementManager für Highlights
     );
 
     this.cardRenderer = new CardRenderer(
