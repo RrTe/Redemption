@@ -58,9 +58,34 @@ export class InputManager {
     this.elementManager = elementManager; // ✨ NEU
   }
 
+  /**
+   * ✨ NEU: Hilfsmethode, um eine Karte sicher zurückzusetzen.
+   * Stellt Position, Winkel und Tiefe wieder her.
+   */
+  private snapBack(gameObject: CardUI) {
+    // Animation zurück zur Startposition
+    this.scene.tweens.add({
+      targets: gameObject,
+      x: gameObject.getData("start_x"),
+      y: gameObject.getData("start_y"),
+      angle: gameObject.getData("start_angle"),
+      ease: "Power1",
+      duration: 200,
+    });
+
+    // Tiefe wiederherstellen
+    if (gameObject.scene) {
+        const startDepth = gameObject.getData("start_depth");
+        if (startDepth !== undefined) {
+            gameObject.setDepth(startDepth);
+        }
+        // Zur Sicherheit nach oben holen, damit sie nicht hinter der Elternkarte verschwindet
+        this.scene.children.bringToTop(gameObject);
+    }
+  }
+
   /** Registriert alle globalen Input-Event-Handler für Drag & Drop. */
   public registerInputHandlers() {
-    // Handler für Mouseover-Effekte auf Handkarten
     this.scene.input.on("gameobjectover", this.onPointerOver, this);
     this.scene.input.on("gameobjectout", this.onPointerOut, this);
 
@@ -435,11 +460,15 @@ export class InputManager {
         // die volle Kontrolle über Skalierung und Position hat.
         this.animationManager.stopHandHoverAnimation(gameObject);
 
+        // ✨ FIX: Capture depth BEFORE changing it!
+        gameObject.setData("start_depth", gameObject.depth);
+
         gameObject.setDepth(1000); // ✨ FIX: Drag-Layer muss höher sein als Handkarten (100+)
         // Merke dir die Startposition der Karte.
         gameObject.setData("start_x", gameObject.x);
         gameObject.setData("start_y", gameObject.y);
         gameObject.setData("start_angle", gameObject.angle);
+        gameObject.setData("drop_action_taken", false); // ✨ NEU: Flag für sauberes Event-Handling
 
         // ✨ NEU: Initialisiere Drag-Targets, um Sprünge zu vermeiden
         gameObject.dragTargetX = gameObject.x;
@@ -475,9 +504,13 @@ export class InputManager {
           this.dragBounds.bottom,
         );
 
-        // ✨ NEU: Deck-Highlighting Logik (Bottom of Deck)
-        // Prüfen, ob wir über dem Deck sind
+        // ✨ ROLLBACK: Zurück zu hitTestPointer, da die manuelle Logik Probleme machte.
+        // Safety Check für den Camera-Bug:
+        if (!this.scene.cameras.main) return;
+
         const hitObjects = this.scene.input.hitTestPointer(pointer);
+
+        // 1. Deck Highlight
         const deckPile = hitObjects.find(obj => obj instanceof StackedPileUI && obj.zoneName === ZONES.DECK) as StackedPileUI | undefined;
 
         if (deckPile) {
@@ -501,7 +534,7 @@ export class InputManager {
           }
         }
 
-        // ✨ NEU: Zonen-Highlighting beim Draggen
+        // 2. Zonen-Highlighting
         // Wir suchen nach Zonen unter der Maus (die keine Karten sind)
         const hitZone = hitObjects.find(obj => obj instanceof Phaser.GameObjects.Zone && obj.name) as Phaser.GameObjects.Zone | undefined;
         
@@ -539,11 +572,7 @@ export class InputManager {
             this.elementManager.hideZoneHighlight();
         }
 
-        // ✨ NEU: Prüfen, ob wir über einer anderen Karte schweben (für Attach)
-        // Wir nutzen hitTestPointer, um Objekte unter der Maus zu finden.
-        // (Hinweis: hitObjects wurde oben schon geholt, wir können es wiederverwenden oder neu holen)
-        // Wir nutzen hier das existierende Array weiter.
-
+        // 3. Attach Target (Andere Karten)
         // Suche nach einer CardUI, die NICHT die gezogene Karte ist.
         const target = hitObjects.find(
           (obj) =>
@@ -621,11 +650,19 @@ export class InputManager {
     this.scene.input.on(
       "dragend",
       (pointer: Phaser.Input.Pointer, gameObject: CardUI, dropped: boolean) => {
-        this.isDragging = false; // ✨ NEU: Drag-Ende markieren
-        if (gameObject.scene) {
-          // ✨ FIX: Reset depth based on zone to avoid z-fighting with hand cards (100+)
-          const baseDepth = gameObject.currentZone === ZONES.HAND ? 100 : 0;
-          gameObject.setDepth(baseDepth);
+        this.isDragging = false;
+
+        // ✨ REFACTOR: Die Logik für das Zurückschnappen wird jetzt zentral im 'dragend' Handler
+        // geprüft, NACHDEM der 'drop' Handler die Chance hatte, eine Aktion auszuführen.
+
+        // Standard-Tiefen-Reset für normale Drag-Operationen.
+        // Wenn die Karte zurückschnappt, wird diese Tiefe im selben Frame durch die obige Logik korrigiert.
+        if (gameObject.scene && !gameObject.getData("is_snapping_back")) {
+            // Setze eine Basis-Tiefe, die vom CardRenderer im nächsten Frame überschrieben wird.
+            // ✨ FIX: Stelle vorerst die Start-Tiefe wieder her, statt 0 zu setzen.
+            // Das verhindert, dass die Karte visuell "hinter" andere springt, bis das Server-Update kommt.
+            const startDepth = gameObject.getData("start_depth") ?? (gameObject.currentZone === ZONES.HAND ? 100 : 0);
+            gameObject.setDepth(startDepth);
         }
 
         gameObject.isBeingDragged = false; // ✨ NEU: Drag-Status zurücksetzen
@@ -653,18 +690,14 @@ export class InputManager {
           this.currentDragTarget.showTargetGlow(false);
           this.currentDragTarget = null;
         }
-
-        // Wenn die Karte nicht auf einer gültigen Zone abgelegt wurde...
-        if (!dropped) {
-          // ...animieren wir sie zurück an ihre Startposition.
-          this.scene.tweens.add({
-            targets: gameObject,
-            x: gameObject.getData("start_x"),
-            y: gameObject.getData("start_y"),
-            angle: gameObject.getData("start_angle"),
-            ease: "Power1",
-            duration: 200, // Eine kurze, knackige Animation
-          });
+        
+        // ✨ FINALE KORREKTUR: Wenn der 'drop' Handler keine Aktion ausgeführt hat (weder
+        // eine Nachricht gesendet noch explizit zurückgeschnappt), dann müssen wir
+        // die Karte jetzt zurücksetzen. Das deckt den Fall "im leeren Raum losgelassen" ab.
+        if (!gameObject.getData("drop_action_taken")) {
+          log("Input", `[DRAG_END] No drop action was taken. Snapping card back.`);
+          // ✨ FIX: Nutze zentrale snapBack Methode (stellt auch Tiefe wieder her!)
+          this.snapBack(gameObject);
         }
         // Wenn `dropped` true ist, wird der 'drop'-Handler ausgelöst und der Server
         // kümmert sich um die neue Position.
@@ -680,30 +713,59 @@ export class InputManager {
       ) => {
         log("Input", `Drop called with dropzone:`, dropZone);
 
+        // ✨ REFACTOR: Die gesamte Logik für das Loslassen einer Karte ist jetzt hier.
+        // Wir prüfen zuerst, ob die Karte zurückschnappen soll.
+        const isAttached = !!gameObject.cardData.attachedTo;
+        if (isAttached) {
+             const startX = gameObject.getData("start_x");
+             const startY = gameObject.getData("start_y");
+             const dist = Phaser.Math.Distance.Between(startX, startY, gameObject.x, gameObject.y);
+             const DETACH_THRESHOLD = 50; // Etwas großzügigerer Radius
+
+             if (dist < DETACH_THRESHOLD) {
+                 log("Input", `[DROP] Attached card moved only ${dist.toFixed(1)}px. Snapping back (preventing detach).`);
+                 gameObject.setData("drop_action_taken", true); // Wir haben eine Aktion ausgeführt (snapBack)
+                 this.snapBack(gameObject);
+                 return; // WICHTIG: Hier abbrechen! Keine Nachricht an den Server.
+             }
+        }
         const fromZone = gameObject.cardData.zone as Zone;
         const toZone = dropZone.name as Zone;
         const targetOwnerId = dropZone.getData("ownerId");
 
         // ✨ NEU: Attach-Logik beim Drop
-        // Wir prüfen manuell, ob wir über einer Karte gedroppt haben, da Phaser's 'drop' Event
-        // sich auf die Zone bezieht, nicht auf überlappende GameObjects.
-        // Wir nutzen das im 'drag'-Handler ermittelte Target.
-        if (this.currentDragTarget) {
+        // ✨ FIX 2: Fallback-Suche, falls currentDragTarget null ist (z.B. bei schnellem Drag-Out am Rand).
+        let attachTarget = this.currentDragTarget;
+        if (!attachTarget) {
+             const hitObjects = this.scene.input.hitTestPointer(pointer);
+             attachTarget = hitObjects.find(
+                (obj) =>
+                    obj instanceof CardUI &&
+                    obj !== gameObject &&
+                    (obj as CardUI).currentZone !== ZONES.HAND &&
+                    !PILE_ZONES.includes((obj as CardUI).currentZone) &&
+                    (obj as CardUI).cardData.Type !== "Lost Soul",
+             ) as CardUI | undefined || null;
+             
+             if (attachTarget) {
+                 log("Input", `[DROP] Found attach target via fallback hitTest: ${attachTarget.cardData.id}`);
+             }
+        }
+
+        if (attachTarget) {
           log(
-            "Input", `[DROP] Attaching card ${gameObject.cardData.id} to ${this.currentDragTarget.cardData.id}`,
-          );
-          log(
-            "Input", `[DROP] Sending moveCard with attachTo: ${this.currentDragTarget.cardData.id}`,
+            "Input", `[DROP] Attaching card ${gameObject.cardData.id} to ${attachTarget.cardData.id}`,
           );
           // Animation abspielen
-          this.currentDragTarget.playAttachAnimation();
+          gameObject.setData("drop_action_taken", true); // Aktion wurde ausgeführt
+          attachTarget.playAttachAnimation();
 
           // Nachricht an Server senden
           this.networkManager.sendMoveCard({
             from: fromZone,
-            to: this.currentDragTarget.currentZone, // In die Zone des Ziels bewegen
+            to: attachTarget.currentZone, // In die Zone des Ziels bewegen
             cardId: gameObject.cardData.id,
-            coords: { attachTo: this.currentDragTarget.cardData.id },
+            coords: { attachTo: attachTarget.cardData.id },
           });
           return; // Fertig, keine weitere Zonen-Logik
         }
@@ -717,37 +779,29 @@ export class InputManager {
 
         if (isToken && forbiddenTokenZones.includes(toZone)) {
           log("Input", `[DROP] Blocked Token from entering ${toZone}.`);
-          // Zurück zur Startposition animieren
-          this.scene.tweens.add({
-            targets: gameObject,
-            x: gameObject.getData("start_x"),
-            y: gameObject.getData("start_y"),
-            angle: gameObject.getData("start_angle"),
-            ease: "Power1",
-            duration: 200,
-          });
+          gameObject.setData("drop_action_taken", true);
+          // ✨ FIX: Nutze zentrale snapBack Methode
+          this.snapBack(gameObject);
           return;
         }
 
         // ✨ NEU: Paralysierte Karten dürfen nicht ins Battlefield bewegt werden.
         if (toZone === ZONES.BATTLEFIELD && gameObject.isParalyzed) {
           log("Input", `[DROP] Blocked paralyzed card from entering Battlefield.`);
+          gameObject.setData("drop_action_taken", true);
           // Zurück zur Startposition animieren (manuell, da dropped=true ist)
-          this.scene.tweens.add({
-            targets: gameObject,
-            x: gameObject.getData("start_x"),
-            y: gameObject.getData("start_y"),
-            angle: gameObject.getData("start_angle"),
-            ease: "Power1",
-            duration: 200,
-          });
+          // ✨ FIX: Nutze zentrale snapBack Methode
+          this.snapBack(gameObject);
           return; // Abbruch: Keine Nachricht an den Server senden
         }
 
         const currentControllerId = gameObject.cardData.controllerId;
+        // isAttached wurde bereits oben definiert
 
         // ✨ NEU: Prüfen, ob die Karte nur innerhalb derselben "freien" Zone verschoben wird.
         const isSameZoneMove =
+          !isAttached && // ✨ FIX: Diese Optimierung gilt nur, wenn die Karte NICHT angefügt ist.
+          // Wenn sie angefügt ist, MÜSSEN wir eine volle "moveCard"-Nachricht senden, um das Ablösen auf dem Server auszulösen.
           fromZone === toZone &&
           [ZONES.TERRITORY, ZONES.LAND_OF_BONDAGE, ZONES.BATTLEFIELD].includes(
             fromZone,
@@ -761,6 +815,7 @@ export class InputManager {
           log(
             "Input", `[MOVE] Card moved within the same zone. Sending coordinate update only.`,
           );
+          gameObject.setData("drop_action_taken", true);
           this.room.send("updateCardState", {
             cardId: gameObject.cardData.id,
             updates: { x: gameObject.x, y: gameObject.y },
@@ -787,6 +842,7 @@ export class InputManager {
             coords,
           };
           log("Input", `[MOVE] Sending full moveCard message for zone change:`, message);
+          gameObject.setData("drop_action_taken", true);
           this.networkManager.sendMoveCard(message);
         }
       },
