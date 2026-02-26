@@ -240,9 +240,11 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
   }
 
   public updateSize(width: number, height: number) {
+    if (!this.scene || !this.active) return; // ✨ FIX: Sicherheitscheck gegen Abstürze bei zerstörten Objekten
+
     this.setSize(width, height);
     this.emptyPileImage.setDisplaySize(width, height);
-    this.shadow.setSize(
+    if (this.shadow) this.shadow.setSize(
       width + SHADOW_CONFIG.PADDING,
       height + SHADOW_CONFIG.PADDING,
     ); // ✨ FIX: Konsistente Größe

@@ -107,8 +107,9 @@ export default class CardGameScene extends Phaser.Scene {
       // ✨ FIX: Hintergrund erst initialisieren, wenn UI und SettingsManager bereit sind.
       this.initializeBackground();
 
-      // Resize-Handler registrieren
-      this.scale.on("resize", (gameSize: Phaser.Structs.Size) => {
+      // ✨ FIX: Resize-Handler speichern, um ihn beim Shutdown sauber zu entfernen.
+      // Das verhindert, dass 'repositionUI' auf einer zerstörten Szene aufgerufen wird.
+      const onResize = (gameSize: Phaser.Structs.Size) => {
         if (
           isNaN(gameSize.width) ||
           isNaN(gameSize.height) ||
@@ -118,9 +119,19 @@ export default class CardGameScene extends Phaser.Scene {
           return;
         }
         // Die repositionUI-Methode benötigt kein Argument mehr.
-        this.ui.repositionUI();
+        if (this.ui) this.ui.repositionUI();
         // ✨ NEU: Hintergrund anpassen
         this.currentBackground?.resize(gameSize.width, gameSize.height);
+      };
+
+      this.scale.on("resize", onResize);
+
+      // ✨ NEU: Cleanup beim Beenden der Szene
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+          this.scale.off("resize", onResize); // WICHTIG: Globalen Listener entfernen!
+          if (this.ui) {
+              this.ui.destroy();
+          }
       });
 
       // Initiales UI-Layout anwenden

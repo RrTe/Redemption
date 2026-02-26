@@ -171,10 +171,12 @@ export class ChatManager {
       this.chatBackground.setY(newHeight / 2);
       this.chatBackground.setDisplaySize(300, chatHeight);
 
-      this.chatDOM.setY(newHeight / 2);
       // DOM-Element-Größe via Style updaten
-      const wrapper = this.chatDOM.node.querySelector('#chat-wrapper') as HTMLElement;
-      if (wrapper) wrapper.style.height = `${chatHeight}px`;
+      if (this.chatDOM && this.chatDOM.node) { // ✨ FIX: Sicherheitscheck gegen Absturz bei toten Elementen
+          this.chatDOM.setY(newHeight / 2);
+          const wrapper = this.chatDOM.node.querySelector('#chat-wrapper') as HTMLElement;
+          if (wrapper) wrapper.style.height = `${chatHeight}px`;
+      }
   }
 
   private registerHandlers() {
@@ -311,5 +313,14 @@ export class ChatManager {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  /** ✨ NEU: Räumt alle UI-Elemente sauber auf. */
+  public destroy() {
+    if (this.container) this.container.destroy();
+    if (this.toggleButton) this.toggleButton.destroy();
+    if (this.notificationBubble) this.notificationBubble.destroy();
+    if (this.chatDOM) this.chatDOM.destroy();
+    this.isOpen = false;
   }
 }

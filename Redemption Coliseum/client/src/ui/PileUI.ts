@@ -132,6 +132,8 @@ export class PileUI extends Phaser.GameObjects.Container {
 
   // ✨ NEU: Methode zur Aktualisierung der Größe
   public updateSize(width: number, height: number) {
+    if (!this.scene || !this.active) return; // ✨ FIX: Sicherheitscheck gegen Abstürze bei zerstörten Objekten
+
     this.setSize(width, height);
     this.background.setSize(width, height);
     this.placeholderImage?.setDisplaySize(width, height); // ✨ NEU: Bildgröße anpassen

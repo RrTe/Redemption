@@ -14,7 +14,6 @@ import type { QuantitySelectionDialogData } from "../scenes/QuantitySelectionDia
 import { log, DEBUG } from "../utils/logger";
 import { ElementManager } from "./ElementManager.js"; // ✨ NEU
 
-
 // ✨ NEU: Verzögerung (in ms), bevor der Attach-Modus aktiviert wird.
 const ATTACH_HOVER_DELAY = 700;
 
@@ -47,7 +46,7 @@ export class InputManager {
     animationManager: AnimationManager,
     previewManager: PreviewManager,
     dragBounds: Phaser.Geom.Rectangle,
-    elementManager: ElementManager // ✨ NEU
+    elementManager: ElementManager, // ✨ NEU
   ) {
     this.scene = scene;
     this.room = room;
@@ -75,13 +74,22 @@ export class InputManager {
 
     // Tiefe wiederherstellen
     if (gameObject.scene) {
-        const startDepth = gameObject.getData("start_depth");
-        if (startDepth !== undefined) {
-            gameObject.setDepth(startDepth);
-        }
-        // Zur Sicherheit nach oben holen, damit sie nicht hinter der Elternkarte verschwindet
-        this.scene.children.bringToTop(gameObject);
+      const startDepth = gameObject.getData("start_depth");
+      if (startDepth !== undefined) {
+        gameObject.setDepth(startDepth);
+      }
+      // Zur Sicherheit nach oben holen, damit sie nicht hinter der Elternkarte verschwindet
+      this.scene.children.bringToTop(gameObject);
     }
+  }
+
+  /** ✨ NEU: Aufräumen von Timern und Listeners. */
+  public destroy() {
+    if (this.attachHoverTimer !== null) {
+      clearTimeout(this.attachHoverTimer);
+      this.attachHoverTimer = null;
+    }
+    // Scene-Input-Listener werden von Phaser beim Scene-Shutdown automatisch entfernt.
   }
 
   /** Registriert alle globalen Input-Event-Handler für Drag & Drop. */
@@ -97,7 +105,8 @@ export class InputManager {
         gameObject: Phaser.GameObjects.GameObject,
       ) => {
         log(
-          "Input", `gameobjectdown on ${
+          "Input",
+          `gameobjectdown on ${
             gameObject.constructor.name
           } (RightBtn: ${pointer.rightButtonDown()})`,
         );
@@ -149,7 +158,8 @@ export class InputManager {
           // Wenn eine gültige Zone für die Suche gefunden wurde:
           if (searchZone) {
             log(
-              "Input", `Right-clicked on searchable zone: ${searchZone} of player ${targetPlayerId}`,
+              "Input",
+              `Right-clicked on searchable zone: ${searchZone} of player ${targetPlayerId}`,
             );
 
             // ✨ FIX: Kein Menü auf leeren Stapeln anzeigen.
@@ -160,7 +170,10 @@ export class InputManager {
               if (player) {
                 const pile = (player as any)[searchZone!];
                 if (!pile || pile.length === 0) {
-                  log("Input", `Pile ${searchZone} is empty. Not opening radial menu.`);
+                  log(
+                    "Input",
+                    `Pile ${searchZone} is empty. Not opening radial menu.`,
+                  );
                   return; // Abbrechen, wenn der Stapel leer ist
                 }
               }
@@ -194,7 +207,8 @@ export class InputManager {
               actionKey: "search",
               callback: () => {
                 log(
-                  "Input", `[RadialMenu] Action 'search' triggered for ${searchZone} of ${targetPlayerId}`,
+                  "Input",
+                  `[RadialMenu] Action 'search' triggered for ${searchZone} of ${targetPlayerId}`,
                 );
                 this.networkManager.sendRequestSearchPile(
                   searchZone!,
@@ -209,7 +223,8 @@ export class InputManager {
               actionKey: "look",
               callback: () => {
                 log(
-                  "Input", `[RadialMenu] Action 'look' triggered for ${searchZone} of ${
+                  "Input",
+                  `[RadialMenu] Action 'look' triggered for ${searchZone} of ${
                     targetPlayerId || "self"
                   }`,
                 );
@@ -249,7 +264,8 @@ export class InputManager {
               actionKey: "reveal",
               callback: () => {
                 log(
-                  "Input", `[RadialMenu] Action 'reveal' triggered for ${searchZone} of ${
+                  "Input",
+                  `[RadialMenu] Action 'reveal' triggered for ${searchZone} of ${
                     targetPlayerId || "self"
                   }`,
                 );
@@ -290,7 +306,8 @@ export class InputManager {
                 actionKey: "shuffle",
                 callback: () => {
                   log(
-                    "Input", `[RadialMenu] Action 'shuffle' triggered for ${searchZone}`,
+                    "Input",
+                    `[RadialMenu] Action 'shuffle' triggered for ${searchZone}`,
                   );
                   // Sende Shuffle-Nachricht
                   this.room.send("shufflePile", { zone: searchZone });
@@ -305,7 +322,8 @@ export class InputManager {
                 actionKey: "discard",
                 callback: () => {
                   log(
-                    "Input", `[RadialMenu] Action 'discard' triggered for ${searchZone} of ${
+                    "Input",
+                    `[RadialMenu] Action 'discard' triggered for ${searchZone} of ${
                       targetPlayerId || "self"
                     }`,
                   );
@@ -414,7 +432,8 @@ export class InputManager {
           // ✨ FIX: Nur für Handkarten erlauben, da Feldkarten jetzt das Radial Menu nutzen.
           if (zone === ZONES.HAND) {
             log(
-              "Input", `Right Click detected on Hand Card ${card.cardData.id}`,
+              "Input",
+              `Right Click detected on Hand Card ${card.cardData.id}`,
             );
             this.room.send("updateCardState", {
               cardId: card.cardData.id,
@@ -428,7 +447,8 @@ export class InputManager {
         if (pointer.leftButtonReleased()) {
           const now = Date.now();
           log(
-            "Input", `Left Click on Card. Delta: ${now - this.lastClickTime}ms`,
+            "Input",
+            `Left Click on Card. Delta: ${now - this.lastClickTime}ms`,
           );
           if (
             this.lastClickedCardId === card.cardData.id &&
@@ -511,7 +531,9 @@ export class InputManager {
         const hitObjects = this.scene.input.hitTestPointer(pointer);
 
         // 1. Deck Highlight
-        const deckPile = hitObjects.find(obj => obj instanceof StackedPileUI && obj.zoneName === ZONES.DECK) as StackedPileUI | undefined;
+        const deckPile = hitObjects.find(
+          (obj) => obj instanceof StackedPileUI && obj.zoneName === ZONES.DECK,
+        ) as StackedPileUI | undefined;
 
         if (deckPile) {
           this.currentHoveredDeck = deckPile;
@@ -536,40 +558,42 @@ export class InputManager {
 
         // 2. Zonen-Highlighting
         // Wir suchen nach Zonen unter der Maus (die keine Karten sind)
-        const hitZone = hitObjects.find(obj => obj instanceof Phaser.GameObjects.Zone && obj.name) as Phaser.GameObjects.Zone | undefined;
-        
+        const hitZone = hitObjects.find(
+          (obj) => obj instanceof Phaser.GameObjects.Zone && obj.name,
+        ) as Phaser.GameObjects.Zone | undefined;
+
         if (hitZone) {
-            const zoneName = hitZone.name as Zone;
-            const ownerId = hitZone.getData("ownerId");
-            const isMe = ownerId === this.room.sessionId;
-            
-            let label = "";
-            // ✨ FIX: Einheitliches Farbschema (Gold) für alle Zonen.
-            // Die Unterscheidung erfolgt jetzt rein über den Text.
-            const UNIFIED_COLOR = 0xffd700; 
-            let color = UNIFIED_COLOR;
+          const zoneName = hitZone.name as Zone;
+          const ownerId = hitZone.getData("ownerId");
+          const isMe = ownerId === this.room.sessionId;
 
-            // Logik für Beschriftung
-            if (zoneName === ZONES.TERRITORY) {
-                label = isMe ? "My Territory" : "Opponent Territory";
-            } else if (zoneName === ZONES.LAND_OF_BONDAGE) {
-                label = isMe ? "My Land of Bondage" : "Opponent Land of Bondage";
-            } else if (zoneName === ZONES.BATTLEFIELD) {
-                 // Nur in der Battle-Phase hervorheben
-                 if (this.room.state.currentPhase === "battle") {
-                     label = "Field of Battle";
-                 }
-            }
+          let label = "";
+          // ✨ FIX: Einheitliches Farbschema (Gold) für alle Zonen.
+          // Die Unterscheidung erfolgt jetzt rein über den Text.
+          const UNIFIED_COLOR = 0xffd700;
+          let color = UNIFIED_COLOR;
 
-            // Wenn wir einen gültigen Label haben, zeigen wir das Highlight
-            if (label) {
-                this.elementManager.showZoneHighlight(hitZone, label, color);
-            } else {
-                this.elementManager.hideZoneHighlight();
+          // Logik für Beschriftung
+          if (zoneName === ZONES.TERRITORY) {
+            label = isMe ? "My Territory" : "Opponent Territory";
+          } else if (zoneName === ZONES.LAND_OF_BONDAGE) {
+            label = isMe ? "My Land of Bondage" : "Opponent Land of Bondage";
+          } else if (zoneName === ZONES.BATTLEFIELD) {
+            // Nur in der Battle-Phase hervorheben
+            if (this.room.state.currentPhase === "battle") {
+              label = "Field of Battle";
             }
-        } else {
-            // Keine Zone getroffen -> Verstecken
+          }
+
+          // Wenn wir einen gültigen Label haben, zeigen wir das Highlight
+          if (label) {
+            this.elementManager.showZoneHighlight(hitZone, label, color);
+          } else {
             this.elementManager.hideZoneHighlight();
+          }
+        } else {
+          // Keine Zone getroffen -> Verstecken
+          this.elementManager.hideZoneHighlight();
         }
 
         // 3. Attach Target (Andere Karten)
@@ -602,9 +626,11 @@ export class InputManager {
             if (this.currentDragTarget) {
               this.currentDragTarget.showTargetGlow(false);
               this.currentDragTarget = null;
-              
+
               // ✨ FIX: Transparenz nur zurücksetzen, wenn wir NICHT über dem Deck-Boden sind
-              const isOverDeckBottom = this.currentHoveredDeck && pointer.y > this.currentHoveredDeck.getBounds().centerY;
+              const isOverDeckBottom =
+                this.currentHoveredDeck &&
+                pointer.y > this.currentHoveredDeck.getBounds().centerY;
               if (!isOverDeckBottom) {
                 gameObject.setTransparent(false);
               }
@@ -636,11 +662,13 @@ export class InputManager {
           if (this.currentDragTarget) {
             this.currentDragTarget.showTargetGlow(false);
             this.currentDragTarget = null;
-            
+
             // ✨ FIX: Auch hier prüfen, ob wir über dem Deck sind, bevor wir resetten
-            const isOverDeckBottom = this.currentHoveredDeck && pointer.y > this.currentHoveredDeck.getBounds().centerY;
+            const isOverDeckBottom =
+              this.currentHoveredDeck &&
+              pointer.y > this.currentHoveredDeck.getBounds().centerY;
             if (!isOverDeckBottom) {
-                gameObject.setTransparent(false); // Reset
+              gameObject.setTransparent(false); // Reset
             }
           }
         }
@@ -658,11 +686,13 @@ export class InputManager {
         // Standard-Tiefen-Reset für normale Drag-Operationen.
         // Wenn die Karte zurückschnappt, wird diese Tiefe im selben Frame durch die obige Logik korrigiert.
         if (gameObject.scene && !gameObject.getData("is_snapping_back")) {
-            // Setze eine Basis-Tiefe, die vom CardRenderer im nächsten Frame überschrieben wird.
-            // ✨ FIX: Stelle vorerst die Start-Tiefe wieder her, statt 0 zu setzen.
-            // Das verhindert, dass die Karte visuell "hinter" andere springt, bis das Server-Update kommt.
-            const startDepth = gameObject.getData("start_depth") ?? (gameObject.currentZone === ZONES.HAND ? 100 : 0);
-            gameObject.setDepth(startDepth);
+          // Setze eine Basis-Tiefe, die vom CardRenderer im nächsten Frame überschrieben wird.
+          // ✨ FIX: Stelle vorerst die Start-Tiefe wieder her, statt 0 zu setzen.
+          // Das verhindert, dass die Karte visuell "hinter" andere springt, bis das Server-Update kommt.
+          const startDepth =
+            gameObject.getData("start_depth") ??
+            (gameObject.currentZone === ZONES.HAND ? 100 : 0);
+          gameObject.setDepth(startDepth);
         }
 
         gameObject.isBeingDragged = false; // ✨ NEU: Drag-Status zurücksetzen
@@ -690,12 +720,15 @@ export class InputManager {
           this.currentDragTarget.showTargetGlow(false);
           this.currentDragTarget = null;
         }
-        
+
         // ✨ FINALE KORREKTUR: Wenn der 'drop' Handler keine Aktion ausgeführt hat (weder
         // eine Nachricht gesendet noch explizit zurückgeschnappt), dann müssen wir
         // die Karte jetzt zurücksetzen. Das deckt den Fall "im leeren Raum losgelassen" ab.
         if (!gameObject.getData("drop_action_taken")) {
-          log("Input", `[DRAG_END] No drop action was taken. Snapping card back.`);
+          log(
+            "Input",
+            `[DRAG_END] No drop action was taken. Snapping card back.`,
+          );
           // ✨ FIX: Nutze zentrale snapBack Methode (stellt auch Tiefe wieder her!)
           this.snapBack(gameObject);
         }
@@ -717,17 +750,25 @@ export class InputManager {
         // Wir prüfen zuerst, ob die Karte zurückschnappen soll.
         const isAttached = !!gameObject.cardData.attachedTo;
         if (isAttached) {
-             const startX = gameObject.getData("start_x");
-             const startY = gameObject.getData("start_y");
-             const dist = Phaser.Math.Distance.Between(startX, startY, gameObject.x, gameObject.y);
-             const DETACH_THRESHOLD = 50; // Etwas großzügigerer Radius
+          const startX = gameObject.getData("start_x");
+          const startY = gameObject.getData("start_y");
+          const dist = Phaser.Math.Distance.Between(
+            startX,
+            startY,
+            gameObject.x,
+            gameObject.y,
+          );
+          const DETACH_THRESHOLD = 50; // Etwas großzügigerer Radius
 
-             if (dist < DETACH_THRESHOLD) {
-                 log("Input", `[DROP] Attached card moved only ${dist.toFixed(1)}px. Snapping back (preventing detach).`);
-                 gameObject.setData("drop_action_taken", true); // Wir haben eine Aktion ausgeführt (snapBack)
-                 this.snapBack(gameObject);
-                 return; // WICHTIG: Hier abbrechen! Keine Nachricht an den Server.
-             }
+          if (dist < DETACH_THRESHOLD) {
+            log(
+              "Input",
+              `[DROP] Attached card moved only ${dist.toFixed(1)}px. Snapping back (preventing detach).`,
+            );
+            gameObject.setData("drop_action_taken", true); // Wir haben eine Aktion ausgeführt (snapBack)
+            this.snapBack(gameObject);
+            return; // WICHTIG: Hier abbrechen! Keine Nachricht an den Server.
+          }
         }
         const fromZone = gameObject.cardData.zone as Zone;
         const toZone = dropZone.name as Zone;
@@ -737,24 +778,29 @@ export class InputManager {
         // ✨ FIX 2: Fallback-Suche, falls currentDragTarget null ist (z.B. bei schnellem Drag-Out am Rand).
         let attachTarget = this.currentDragTarget;
         if (!attachTarget) {
-             const hitObjects = this.scene.input.hitTestPointer(pointer);
-             attachTarget = hitObjects.find(
-                (obj) =>
-                    obj instanceof CardUI &&
-                    obj !== gameObject &&
-                    (obj as CardUI).currentZone !== ZONES.HAND &&
-                    !PILE_ZONES.includes((obj as CardUI).currentZone) &&
-                    (obj as CardUI).cardData.Type !== "Lost Soul",
-             ) as CardUI | undefined || null;
-             
-             if (attachTarget) {
-                 log("Input", `[DROP] Found attach target via fallback hitTest: ${attachTarget.cardData.id}`);
-             }
+          const hitObjects = this.scene.input.hitTestPointer(pointer);
+          attachTarget =
+            (hitObjects.find(
+              (obj) =>
+                obj instanceof CardUI &&
+                obj !== gameObject &&
+                (obj as CardUI).currentZone !== ZONES.HAND &&
+                !PILE_ZONES.includes((obj as CardUI).currentZone) &&
+                (obj as CardUI).cardData.Type !== "Lost Soul",
+            ) as CardUI | undefined) || null;
+
+          if (attachTarget) {
+            log(
+              "Input",
+              `[DROP] Found attach target via fallback hitTest: ${attachTarget.cardData.id}`,
+            );
+          }
         }
 
         if (attachTarget) {
           log(
-            "Input", `[DROP] Attaching card ${gameObject.cardData.id} to ${attachTarget.cardData.id}`,
+            "Input",
+            `[DROP] Attaching card ${gameObject.cardData.id} to ${attachTarget.cardData.id}`,
           );
           // Animation abspielen
           gameObject.setData("drop_action_taken", true); // Aktion wurde ausgeführt
@@ -787,7 +833,10 @@ export class InputManager {
 
         // ✨ NEU: Paralysierte Karten dürfen nicht ins Battlefield bewegt werden.
         if (toZone === ZONES.BATTLEFIELD && gameObject.isParalyzed) {
-          log("Input", `[DROP] Blocked paralyzed card from entering Battlefield.`);
+          log(
+            "Input",
+            `[DROP] Blocked paralyzed card from entering Battlefield.`,
+          );
           gameObject.setData("drop_action_taken", true);
           // Zurück zur Startposition animieren (manuell, da dropped=true ist)
           // ✨ FIX: Nutze zentrale snapBack Methode
@@ -813,7 +862,8 @@ export class InputManager {
         if (isSameZoneMove) {
           // Wenn ja, senden wir nur ein Koordinaten-Update, um Counter etc. nicht zurückzusetzen.
           log(
-            "Input", `[MOVE] Card moved within the same zone. Sending coordinate update only.`,
+            "Input",
+            `[MOVE] Card moved within the same zone. Sending coordinate update only.`,
           );
           gameObject.setData("drop_action_taken", true);
           this.room.send("updateCardState", {
@@ -841,7 +891,11 @@ export class InputManager {
             cardId: gameObject.cardData.id,
             coords,
           };
-          log("Input", `[MOVE] Sending full moveCard message for zone change:`, message);
+          log(
+            "Input",
+            `[MOVE] Sending full moveCard message for zone change:`,
+            message,
+          );
           gameObject.setData("drop_action_taken", true);
           this.networkManager.sendMoveCard(message);
         }

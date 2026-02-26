@@ -929,23 +929,25 @@ export class GameUI {
       ? this.room.state.players.get(opponentId)
       : undefined;
 
-    // ✨ FIX: Overlay erst entfernen, wenn das Spiel wirklich gestartet ist (activePlayer ist gesetzt).
-    // Das passiert erst, nachdem beide Spieler "Ready" gemeldet haben.
-    // ✨ FIX: Prüfe auch, ob der Gegner "ready" ist (Ladeszene beendet).
-    if (
+    // ✨ FIX: Prüfe den Disconnect-Status ZUERST!
+    // Ein getrennter Spieler ist auch '!ready', daher würde die falsche Bedingung zuerst greifen.
+    if (opponent && !opponent.connected) {
+      // ✨ NEU: Übergebe 'true', um den Button bei Disconnect anzuzeigen.
+      this.showWaitingOverlay("Opponent disconnected. Waiting...", true);
+    } else if (
       playerCount < 2 ||
       !this.room.state.activePlayer ||
       (opponent && !opponent.ready)
     ) {
-      this.showWaitingOverlay("Waiting for Opponent...");
-    } else if (opponent && !opponent.connected) {
-      this.showWaitingOverlay("Opponent disconnected. Waiting..."); // ✨ NEU: Spezifische Nachricht
+      // ✨ FIX: Übergebe 'false', um den Button hier nicht anzuzeigen (Lobby/Loading).
+      this.showWaitingOverlay("Waiting for Opponent...", false);
     } else {
       this.hideWaitingOverlay();
     }
   }
 
-  private showWaitingOverlay(message: string) {
+  // ✨ NEU: Parameter 'showBackButton', um den Button zu steuern
+  private showWaitingOverlay(message: string, showBackButton: boolean = false) {
     const { width, height } = this.scene.scale;
 
     if (this.waitingOverlay) {
@@ -954,7 +956,15 @@ export class GameUI {
         "waitingText",
       ) as Phaser.GameObjects.BitmapText;
       if (textObj) textObj.setText(message);
-      return;
+
+      // ✨ FIX: Button dynamisch hinzufügen oder entfernen, wenn sich der Status ändert
+      const backButton = this.waitingOverlay.getByName("backButton");
+      if (showBackButton && !backButton) {
+        this.addBackButtonToOverlay(width, height);
+      } else if (!showBackButton && backButton) {
+        backButton.destroy();
+      }
+      return; // Update fertig
     }
 
     this.waitingOverlay = this.scene.add.container(0, 0).setDepth(10000); // Ganz oben
@@ -978,6 +988,13 @@ export class GameUI {
       .setDropShadow(4, 4, 0x000000, 0.8)
       .setName("waitingText"); // ✨ NEU: Name für Zugriff
 
+    this.waitingOverlay.add([bg, text]);
+
+    // ✨ NEU: Button initial hinzufügen, falls gefordert
+    if (showBackButton) {
+      this.addBackButtonToOverlay(width, height);
+    }
+
     this.scene.tweens.add({
       targets: text,
       alpha: 0.6,
@@ -985,7 +1002,23 @@ export class GameUI {
       yoyo: true,
       repeat: -1,
     });
-    this.waitingOverlay.add([bg, text]);
+  }
+
+  // ✨ NEU: Hilfsmethode zum Erstellen des Buttons im Overlay
+  private addBackButtonToOverlay(width: number, height: number) {
+    if (!this.waitingOverlay) return;
+    const backButton = this.createStyledButton(
+      width / 2,
+      height / 2 + 80,
+      "Back to Lobby",
+      () => {
+        this.room.leave();
+        localStorage.removeItem("reconnectionToken");
+        this.scene.scene.start("LobbyScene");
+      },
+    );
+    backButton.setName("backButton");
+    this.waitingOverlay.add(backButton);
   }
 
   private hideWaitingOverlay() {
