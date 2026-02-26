@@ -47,3 +47,5 @@ This repository contains both the client and server code.
 - **Root Directory:** `Redemption Coliseum/client`
 - **Framework Preset:** Vite
 - **Important:** After server deployment, update the URL in `client/src/scenes/LobbyScene.ts`!
+
+Testing
