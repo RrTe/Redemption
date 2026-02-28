@@ -1,0 +1,36 @@
+{
+  "Name": "",
+  "Set": "",
+  "ImageFile": "",
+  "OfficialSet": "",
+  "Type": "",
+  "Brigade": "",
+  "Strength": "",
+  
+  "Toughness": "",
+  "Class": "",
+  "Identifier": "",
+  "SpecialAbility": "",
+  "ParsedAbility": {
+    "effectType": "",
+    "targetType": "",
+    "timing": "",
+    "modifiers": []
+  },
+  "Tags": [],
+  "PlayablePhases": [],
+  "Alignment": "",
+  "IsCharacter": false,
+  "IsEnhancement": false,
+  "IsGospel": false,
+  "Testament": "",
+  "Rarity": "",
+  "Reference": "",
+  "Sound": "",
+  "Legality": "",
+  "Meta": {
+    "Created": "",
+    "LastModified": "",
+    "Verified": false
+  }
+}

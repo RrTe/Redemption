@@ -1,0 +1,31 @@
+Ich habe hier ein Projekt zur Datenanreicherung für mein TCG 'Redemption'. In einem Ordner findest du meine aktuelle cards_extended.json, einen Text-Extrakt eines PDFs mit Zusatzinfos (Name: "ORDIR_PDF_6.0.0.txt") und meine bisherigen Python-Skripte.
+
+Das Problem: Meine aktuellen Skripte nutzen Regex, stoßen aber bei ca. 5.000 Karten an ihre Grenzen. Die Zuordnung zwischen PDF-Text und JSON-Daten schlägt wegen unterschiedlicher Schreibweisen und Formatierungsabweichungen im PDF-Export oft fehl. Die Ausnahmelisten werden unkontrollierbar. Es werden nicht für alle Karten die korrekten Einträge aus dem PDF-Extrakt gefunden.
+
+Deine Aufgabe (Phase 1: Analyse & Planung):
+
+    Analysiere meine vorhandenen Skripte, die JSON-Struktur und den PDF-Text im Ordner.
+    Identifiziere die Hauptgründe, warum die aktuelle Logik scheitert (mache dazu 2-3 Testläufe mit vorhandenem Code und schau dir die Fehlermeldungen im Terminal an).
+    Erstelle mir einen Vorschlag für ein neues, robustes Vorgehen als eigenständiges Python-Tool.
+    Berücksichtige dabei meine lokalen Ressourcen (Ollama) und die Gemini 1.5/2.0 API und Möglichkeiten für RAG.
+    Dokumentiere deine gesamte Analyse und den vorgeschlagenen Schlachtplan in der Datei STRATEGY_ANALYSIS.md.
+
+Wichtig: Ändere noch keinen produktiven Code! Ich möchte zuerst verstehen, ob wir auf Vektorsuche (RAG), Fuzzy-Matching oder eine hybride Architektur setzen sollten, um die mehr als 5.000 Karten präzise und kostengünstig zu verarbeiten.
+
+
+
+
+Hallo,
+Ich habe hier ein Projekt zur Datenanreicherung für mein TCG 'Redemption'. In einem Ordner findest du meine aktuelle cards_extended.json, einen Text-Extrakt eines PDFs mit Zusatzinfos (Name: "ORDIR_PDF_6.0.0.txt") und meine bisherigen Python-Skripte.
+
+Das Problem: Meine aktuellen Skripte nutzen Regex, stoßen aber bei ca. 5.000 Karten an ihre Grenzen. Die Zuordnung zwischen PDF-Text und JSON-Daten schlägt wegen unterschiedlicher Schreibweisen und Formatierungsabweichungen im PDF-Export oft fehl. Die Ausnahmelisten werden unkontrollierbar. Es werden nicht für alle Karten die korrekten Einträge aus dem PDF-Extrakt gefunden.
+
+Deine Aufgabe (Phase 1: Analyse & Planung):
+
+    Analysiere meine vorhandenen Skripte, die JSON-Struktur und den PDF-Text im Ordner.
+    Identifiziere die Hauptgründe, warum die aktuelle Logik scheitert (mache dazu 2-3 Testläufe mit vorhandenem Code und schau dir die Fehlermeldungen im Terminal an).
+    Erstelle mir einen Vorschlag für ein neues, robustes Vorgehen als eigenständiges Python-Tool.
+    Berücksichtige dabei meine lokalen Ressourcen (Ollama) und die Gemini 1.5/2.0 API und Möglichkeiten für RAG.
+    Dokumentiere deine gesamte Analyse und den vorgeschlagenen Schlachtplan in der Datei STRATEGY_ANALYSIS.md.
+
+Wichtig: Ändere noch keinen produktiven Code! Ich möchte zuerst verstehen, ob wir auf Vektorsuche (RAG), Fuzzy-Matching oder eine hybride Architektur setzen sollten, um die mehr als 5.000 Karten präzise und kostengünstig zu verarbeiten.

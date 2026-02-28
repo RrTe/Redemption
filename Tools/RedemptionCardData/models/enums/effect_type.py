@@ -1,0 +1,22 @@
+from enum import Enum
+
+class EffectType(str, Enum):
+    DISCARD = "discard"
+    INTERRUPT = "interrupt"
+    NEGATE = "negate"
+    PROTECT = "protect"
+    DRAW = "draw"
+    HEAL = "heal"
+    SEARCH = "search"
+    REMOVE = "remove"
+    BANISH = "banish"
+    REVEAL = "reveal"
+    LOOK = "look"
+    SHUFFLE = "shuffle"
+    UNDERDECK = "underdeck"
+    TOPDECK = "topdeck"
+    EXCHANGE = "exchange"
+    ADD_TO_BATTLE = "add to battle"
+    CAPTURE = "capture"
+    CONVERT = "convert"
+    UNKNOWN = "unknown"

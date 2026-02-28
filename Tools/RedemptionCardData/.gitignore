@@ -1,0 +1,12 @@
+# Python Caches
+__pycache__/
+*.py[cod]
+
+# Virtuelle Umgebungen (WICHTIG!)
+venv/
+.venv/
+env/
+
+# Falls du mit Daten arbeitest (große JSON/PDF Backups, die nicht ins Git sollen)
+*.pdf
+# data/  <-- Falls dein Datenordner zu groß für GitHub ist

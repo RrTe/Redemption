@@ -1,0 +1,276 @@
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+import re
+from collections import defaultdict
+from config import LOG_ORDIR_STRUCTURE, LOG_VALIDATION_KEYS
+from card_utils import normalize, safe_keys
+from models.enums.marker_phrases import MarkerPhrases
+from mappings.ordir_categories import ORDIR_CATEGORIES
+from mappings.special_ordir_overrides import SPECIAL_ORDIR_OVERRIDES
+
+def is_marker(line):
+    line = normalize(line.lower())
+    has_following = ("the following redemption" in line) or ("following redemption" in line)
+    has_qualifier = any(
+        p in line for p in MarkerPhrases.REFERENCE.value + MarkerPhrases.CATEGORY.value
+    )
+    return has_following and has_qualifier
+
+
+def is_reference_marker(line):
+    line = normalize(line.lower())
+    has_reference = any(p in line for p in MarkerPhrases.REFERENCE.value)
+    has_category = any(p in line for p in MarkerPhrases.CATEGORY.value)
+
+    if has_reference and has_category:
+        return False  # Kategorie gewinnt
+    return has_reference
+
+
+def is_bullet(line):
+    return bool(line.strip().startswith(("•", "·", "\u2022")))
+
+
+def parse_card_line(line):
+    from config import LOG_PARSE_CARD_LINE
+    results = []
+
+    # Bullet/Role entfernen
+    line = re.sub(r"^[•·\u2022]\s*\([^)]+\):\s*", "", line).strip()
+    line = re.sub(r"^[•·\u2022]\s*", "", line).strip()
+
+    if LOG_PARSE_CARD_LINE:
+        print(f"➡️ Eingangszeile: {repr(line)}")
+
+    # Robust split: ') and' / '),'
+    line = re.sub(r"\)\s*and\b", ")|", line)
+    line = re.sub(r"\),\s*", ")|", line)
+
+    if LOG_PARSE_CARD_LINE:
+        print(f"🔧 Nach Regex-Ersetzung: {repr(line)}")
+        and_hits = len(re.findall(r"\)\s*and\b", line))
+        comma_hits = len(re.findall(r"\),\s*", line))
+        print(f"   📎 Split-Treffer: and={and_hits}, comma={comma_hits}")
+
+    parts = line.split("|")
+    if LOG_PARSE_CARD_LINE:
+        print(f"🧩 Parts: {parts}")
+
+    # Fallback: wenn es nur 1 Part gibt und dort mehr Fließtext hängt,
+    # versuche, den ERSTEN Kartenmatch "Name (Sets)" zu extrahieren.
+    if len(parts) == 1:
+        m_first = re.search(r"(.+?)\s*\(([^)]+)\)", parts[0])
+        if m_first:
+            first_card = f"{m_first.group(1).strip()} ({m_first.group(2).strip()})"
+            parts = [first_card]
+            if LOG_PARSE_CARD_LINE:
+                print(f"   ✂️ Erste Karte isoliert: {repr(first_card)}")
+
+    for part in parts:
+        part = part.strip()
+        # trailing 'and' am Ende entfernen
+        part = re.sub(r"\s+and\s*$", "", part)
+        # Zusätze entfernen, aber Bibelstellen erhalten
+        part = re.sub(r"\s*\[(?![A-Za-z]+\s*\d+:\d+)[^\]]+\]", "", part)
+
+        if LOG_PARSE_CARD_LINE:
+            print(f"   🔍 Prüfe Part: {repr(part)}")
+
+        # Ursprüngliche, stabile Regex: verlangt schließende Klammer
+        match = re.match(r"(.+?)\s*\(([^)]+)\)\s*$", part)
+        if match:
+            raw_name = match.group(1).strip()
+            raw_sets = match.group(2).replace(" and ", ",")
+            sets = [s.strip() for s in raw_sets.split(",") if s.strip()]
+            for s in sets:
+                results.append((raw_name, s))
+                if LOG_PARSE_CARD_LINE:
+                    print(f"   ✅ Karten-Match: '{raw_name}' [{s}]")
+        else:
+            if LOG_PARSE_CARD_LINE:
+                print(f"❌ Kein Karten-Match: {repr(part)}")
+
+    return results
+
+
+def extract_cards_from_block(block_lines):
+    results = []
+    current_line = ""
+    for line in block_lines:
+        if is_bullet(line):
+            if current_line:
+                results.extend(parse_card_line(current_line))
+            current_line = line
+        else:
+            current_line += " " + line
+    if current_line:
+        results.extend(parse_card_line(current_line))
+    return results
+
+
+def is_card_bullet(line):
+    # Bullet mit optionalem Role-Prefix: "• (Curse): The Flying Scroll (PoC)"
+    l = normalize(line)
+    return bool(re.match(r"^[•·\u2022]\s*(\([^)]+\):\s*)?.+\([^)]+\)", l))
+
+
+def coalesce_marker_context(lines, i):
+    prev = lines[i-1] if i > 0 else ""
+    curr = lines[i]
+    nxt = lines[i+1] if i+1 < len(lines) else ""
+
+    combined_parts = [prev, curr]
+
+    # Nächste Zeile nur anhängen, wenn:
+    # - die aktuelle Zeile KEIN Kartenbullet ist
+    # - und die nächste Zeile KEIN eigener Marker ist
+    if nxt and not is_card_bullet(curr) and not is_marker(nxt):
+        combined_parts.append(nxt)
+
+    combined = normalize(" ".join(p for p in combined_parts if p))
+
+    if LOG_ORDIR_STRUCTURE:
+        print(f"   🔗 Coalesced Marker: {repr(combined)}")
+
+    return combined
+
+
+def parse_ordir(ordir_path):
+    with ordir_path.open(encoding="utf-8") as f:
+        lines = [line.strip() for line in f if line.strip()]
+
+    category_map = defaultdict(set)
+    reference_map = defaultdict(set)
+    category_set = set(ORDIR_CATEGORIES)
+
+    i = 0
+    while i < len(lines):
+        line = normalize(lines[i])
+        if line in category_set:
+            current_category = line
+            if LOG_ORDIR_STRUCTURE:
+                print(f"\n📘 Neue Kategorie erkannt: {current_category}")
+            i += 1
+
+            while i < len(lines):
+                candidate = normalize(lines[i])
+                if candidate in category_set:
+                    break
+
+                marker = coalesce_marker_context(lines, i)
+
+                if is_marker(marker):
+                    if LOG_ORDIR_STRUCTURE:
+                        print(f"   🔎 Marker erfasst: {repr(marker)} | is_reference={is_reference_marker(marker)}")
+                    is_reference = is_reference_marker(marker)
+                    i += 1
+
+                    block_lines = []
+                    while i < len(lines):
+                        line = lines[i]
+                        if is_bullet(line):
+                            current_line = line
+                            i += 1
+                            while i < len(lines):
+                                next_line = lines[i]
+                                # Harte Kapitelgrenze: Ein einzelner Großbuchstabe (A, B, C, ...)
+                                if re.match(r"^[A-Z]$", next_line.strip()):
+                                    break
+                                # Stoppen, wenn eine neue Bullet-Zeile, ein Marker oder eine Kategorie beginnt
+                                if is_bullet(next_line) or is_marker(coalesce_marker_context(lines, i)) or normalize(next_line) in category_set:
+                                    break
+                                current_line += " " + next_line
+                                i += 1
+                            block_lines.append(current_line)
+                        else:
+                            norm = normalize(line)
+                            if is_marker(norm) or norm in category_set:
+                                break
+                            i += 1
+
+                    cards = extract_cards_from_block(block_lines)
+                    if LOG_ORDIR_STRUCTURE:
+                        for raw_name, raw_set in cards:
+                            print(f"   → Extrahierte Karte: '{raw_name}' [{raw_set}]")
+
+                    target = reference_map if is_reference else category_map
+                    # Normale Einfügungen
+                    for raw_name, raw_set in cards:
+                        for key in safe_keys(raw_name, raw_set):
+                            target[key].add(current_category)
+                            if LOG_VALIDATION_KEYS:
+                                dest = "reference_map" if is_reference else "category_map"
+                                print(f"🧭 Insert {dest}: raw=({repr(raw_name)}, {repr(raw_set)}) "
+                                      f"→ key={key}, category={current_category}")
+                            if LOG_ORDIR_STRUCTURE:
+                                dest = "reference_map" if is_reference else "category_map"
+                                print(f"   🔑 Eingefügt ({dest}): {key}")
+
+                    # Gezielte Overrides (Marker-Kontext)
+                    for (override_name, override_set), meta in SPECIAL_ORDIR_OVERRIDES.items():
+                        if bool(is_reference) == bool(meta.get("as_reference", False)):
+                            for key in safe_keys(override_name, override_set):
+                                target[key].add(current_category)
+                                if LOG_ORDIR_STRUCTURE:
+                                    dest = "reference_map" if is_reference else "category_map"
+                                    print(f"   🩹 Override ({dest}): {key}")
+
+                elif is_bullet(lines[i]):
+                    block_lines = []
+                    while i < len(lines):
+                        line = lines[i]
+                        if is_bullet(line):
+                            current_line = line
+                            i += 1
+                            while i < len(lines):
+                                next_line = lines[i]
+                                # Harte Kapitelgrenze: Ein einzelner Großbuchstabe (A, B, C, ...)
+                                if re.match(r"^[A-Z]$", next_line.strip()):
+                                    break
+                                # Stoppen, wenn eine neue Bullet-Zeile, ein Marker oder eine Kategorie beginnt
+                                if is_bullet(next_line) or is_marker(coalesce_marker_context(lines, i)) or normalize(next_line) in category_set:
+                                    break
+                                current_line += " " + next_line
+                                i += 1
+                            block_lines.append(current_line)
+                        else:
+                            norm = normalize(line)
+                            if is_marker(norm) or norm in category_set:
+                                break
+                            i += 1
+
+                    cards = extract_cards_from_block(block_lines)
+                    # Normale Einfügungen
+                    for raw_name, raw_set in cards:
+                        for key in safe_keys(raw_name, raw_set):
+                            category_map[key].add(current_category)
+                            if LOG_VALIDATION_KEYS:
+                                print(f"🧭 Insert category_map: raw=({repr(raw_name)}, {repr(raw_set)}) "
+                                      f"→ key={key}, category={current_category}")
+                            if LOG_ORDIR_STRUCTURE:
+                                print(f"   🔑 Eingefügt (category_map): {key}")
+
+                    # Gezielte Overrides (Bullet/Kategorie-Kontext)
+                    for (override_name, override_set), meta in SPECIAL_ORDIR_OVERRIDES.items():
+                        if not meta.get("as_reference", False):
+                            for key in safe_keys(override_name, override_set):
+                                category_map[key].add(current_category)
+                                if LOG_ORDIR_STRUCTURE:
+                                    print(f"   🩹 Override (category_map): {key}")
+                else:
+                    i += 1
+        else:
+            i += 1
+
+    if LOG_ORDIR_STRUCTURE:
+        print("\n🔑 category_map Keys:")
+        for key in category_map.keys():
+            print("   ", key)
+        print("\n🔑 reference_map Keys:")
+        for key in reference_map.keys():
+            print("   ", key)
+
+    return category_map, reference_map

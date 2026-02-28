@@ -1,0 +1,51 @@
+10A: 100
+1E: 13
+1EU: 17
+2E: 92
+2ER: 6
+3E: 100
+AW: 151
+Ap: 208
+CoW: 128
+CoW (AB): 129
+CoW [Ban]: 1
+Di: 115
+FoM: 165
+FoOF: 130
+Fund: 19
+GoC: 291
+I: 50
+I/J+: 6
+II: 129
+IR: 129
+J: 50
+K: 56
+K1P: 54
+Ki: 250
+L: 56
+L1P: 54
+LoC: 271
+Main: 149
+Main UL: 149
+Main UL [Ban]: 1
+Main [Ban]: 1
+Pat: 159
+Pmo-P1: 70
+Pmo-P2: 78
+Pmo-P3: 29
+PoC: 241
+PoC [Ban]: 2
+Pri: 251
+Prp: 105
+RR: 225
+RoA: 119
+RoA 3: 10
+RoA [Ban]: 1
+RoJ: 129
+RoJ (AB): 129
+TEC: 146
+TPC: 92
+TPC [Ban]: 1
+TxP: 60
+War: 171
+Wom: 81
