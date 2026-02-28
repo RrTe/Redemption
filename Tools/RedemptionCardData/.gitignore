@@ -10,3 +10,8 @@ env/
 # Falls du mit Daten arbeitest (große JSON/PDF Backups, die nicht ins Git sollen)
 *.pdf
 # data/  <-- Falls dein Datenordner zu groß für GitHub ist
+
+# Konfig Dateien
+cline-python-openrouter
+Cline_Startprompt.txt
+.clinerules
