@@ -48,7 +48,7 @@ export class SettingsManager {
       }
     } catch (error) {
       error("SettingsManager", // ✨ FIX: Logger nutzen
-        "Fehler beim Laden der Einstellungen aus dem localStorage",
+        "Error loading settings from localStorage",
         error,
       );
     }
@@ -61,7 +61,7 @@ export class SettingsManager {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings));
     } catch (error) {
       error("SettingsManager", // ✨ FIX: Logger nutzen
-        "Fehler beim Speichern der Einstellungen im localStorage",
+        "Error saving settings to localStorage",
         error,
       );
     }

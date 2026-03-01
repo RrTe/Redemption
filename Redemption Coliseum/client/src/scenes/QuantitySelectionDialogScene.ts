@@ -57,7 +57,7 @@ export class QuantitySelectionDialogScene extends Phaser.Scene {
     // --- Anzahl Auswahl ---
     const qtyY = cy - 40;
     this.add
-      .text(cx, qtyY - 40, `Anzahl (Max: ${this.dialogData.maxCount}):`, {
+      .text(cx, qtyY - 40, `Quantity (Max: ${this.dialogData.maxCount}):`, {
         fontSize: "18px",
         color: "#aaaaaa",
       })

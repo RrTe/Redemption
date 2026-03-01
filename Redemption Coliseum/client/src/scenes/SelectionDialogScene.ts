@@ -174,7 +174,7 @@ export class SelectionDialogScene extends Phaser.Scene {
       .text(
         this.scale.width / 2,
         this.scale.height - 130,
-        `Seite ${this.currentPage + 1} / ${this.totalPages}`,
+        `Page ${this.currentPage + 1} / ${this.totalPages}`,
         { fontSize: "18px", color: "#cccccc" },
       )
       .setOrigin(0.5);
@@ -213,7 +213,7 @@ export class SelectionDialogScene extends Phaser.Scene {
   private updatePaginationControls() {
     this.prevButton.setVisible(this.currentPage > 0);
     this.nextButton.setVisible(this.currentPage < this.totalPages - 1);
-    this.pageText.setText(`Seite ${this.currentPage + 1} / ${this.totalPages}`);
+    this.pageText.setText(`Page ${this.currentPage + 1} / ${this.totalPages}`);
     this.pageText.setVisible(this.totalPages > 1);
   }
 

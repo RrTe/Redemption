@@ -241,7 +241,7 @@ export class InputManager {
                 // Öffne den Auswahldialog
                 this.scene.scene.pause("CardGame");
                 this.scene.scene.launch("QuantitySelectionDialogScene", {
-                  title: "Karten ansehen",
+                  title: "View Cards",
                   maxCount: maxCount,
                   onConfirm: (count, position) => {
                     this.networkManager.sendLookAtCards(
@@ -282,7 +282,7 @@ export class InputManager {
                 // Öffne den Auswahldialog
                 this.scene.scene.pause("CardGame");
                 this.scene.scene.launch("QuantitySelectionDialogScene", {
-                  title: "Karten aufdecken",
+                  title: "Reveal Cards",
                   maxCount: maxCount,
                   onConfirm: (count, position) => {
                     this.networkManager.sendRevealCards(
@@ -338,7 +338,7 @@ export class InputManager {
 
                   this.scene.scene.pause("CardGame");
                   this.scene.scene.launch("QuantitySelectionDialogScene", {
-                    title: "Karten abwerfen",
+                    title: "Discard Cards",
                     maxCount: maxCount,
                     onConfirm: (count, position) => {
                       let cardsToDiscard: any[] = [];
@@ -1032,14 +1032,14 @@ export class InputManager {
         iconKey: "icon_paralyze",
         actionKey: "paralyze",
         callback: () => {
-          this.openCounterDialog(card, "paralyze", "Paralyze Wert");
+          this.openCounterDialog(card, "paralyze", "Paralyze Value");
         },
       },
       {
         iconKey: "icon_setaside",
         actionKey: "setaside",
         callback: () => {
-          this.openCounterDialog(card, "setaside", "Set Aside Wert");
+          this.openCounterDialog(card, "setaside", "Set Aside Value");
         },
       },
     ];

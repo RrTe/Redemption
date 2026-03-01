@@ -28,10 +28,10 @@ export async function connectToRoom() {
     globalClient = client; // ✨ NEU: Speichern
     const room = await client.joinOrCreate("game_room");
 
-    log("Verbunden mit Raum", room.roomId);
+    log("Connected to room", room.roomId);
     return room;
   } catch (err) {
-    console.error("[NET] Verbindung fehlgeschlagen:", err);
+    console.error("[NET] Connection failed:", err);
     throw err;
   }
 }

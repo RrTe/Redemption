@@ -137,7 +137,7 @@ export default class CardGameScene extends Phaser.Scene {
       // Initiales UI-Layout anwenden
       // Sie berechnet das Layout intern basierend auf der aktuellen Phase.
       this.ui.repositionUI();
-      this.ui.setStatus("Verbunden ✅", "#0f0");
+      this.ui.setStatus("Connected ✅", "#0f0");
 
       // Keybindings und den allgemeinen State-Change-Handler registrieren
       this.registerKeybindings();
@@ -155,12 +155,12 @@ export default class CardGameScene extends Phaser.Scene {
         this.currentBackground?.onSettingsChanged(enabled);
       });
     } catch (err) {
-      error("CardGame", "Verbindung fehlgeschlagen:", err); // ✨ FIX: Logger nutzen
+      error("CardGame", "Connection failed:", err); // ✨ FIX: Logger nutzen
       this.add
         .text(
           this.scale.width / 2,
           this.scale.height / 2,
-          "Verbindung fehlgeschlagen!",
+          "Connection failed!",
           { color: "#f66", fontSize: "24px" },
         )
         .setOrigin(0.5);
@@ -275,7 +275,7 @@ export default class CardGameScene extends Phaser.Scene {
       // 3. Dialog öffnen
       this.scene.pause("CardGame");
       this.scene.launch("SelectionDialogScene", {
-        title: "Wähle einen Token",
+        title: "Select a Token",
         cards: tokenPreviews,
         room: this.room,
         showCloseButton: true,
@@ -291,7 +291,7 @@ export default class CardGameScene extends Phaser.Scene {
             // 2. Öffne den Mengen-Dialog (Vorschaltdialog)
             this.scene.pause("CardGame"); // Sicherstellen, dass das Spiel pausiert bleibt
             this.scene.launch("QuantitySelectionDialogScene", {
-              title: "Wie viele Tokens?",
+              title: "How many Tokens?",
               maxCount: 20, // Sinnvolles Limit für Tokens auf einmal
               minCount: 1,
               enablePositionSelection: false, // ✨ WICHTIG: Keine "Top/Bottom" Auswahl

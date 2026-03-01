@@ -80,7 +80,7 @@ export class NetworkManager {
 
       this.scene.scene.pause("CardGame");
       this.scene.scene.launch("SelectionDialogScene", {
-        title: isInteractive ? "Wähle Karten" : "Karten ansehen",
+        title: isInteractive ? "Select Cards" : "View Cards",
         cards: message.cards,
         room: this.room,
         showCloseButton: true,
