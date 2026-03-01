@@ -3,7 +3,6 @@ import { ZONES, type Zone } from "../../../shared/zones";
 import { type TypedRoom } from "./gameUI";
 import { DEBUG } from "../utils/logger";
 
-
 const SHADOW_CONFIG = {
   OFFSET: 5,
   PADDING: 5,
@@ -113,7 +112,12 @@ export class PileUI extends Phaser.GameObjects.Container {
       if (pointer.getDistance() > 20) return;
 
       // Die Logik zum Kartenziehen wird weiterhin nur für das Deck bei einem Linksklick ausgeführt.
-      if (zoneName === ZONES.DECK && pointer.leftButtonReleased()) {
+      // ✨ FIX: Verhindere Ziehen vom Gegner-Deck per Linksklick.
+      if (
+        zoneName === ZONES.DECK &&
+        !isOpponent &&
+        pointer.leftButtonReleased()
+      ) {
         const message: any = {
           from: ZONES.DECK,
           to: ZONES.HAND,

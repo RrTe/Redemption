@@ -128,7 +128,12 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
       // Dies verhindert, dass beim Droppen einer Karte auf das Deck versehentlich eine Karte gezogen wird.
       if (pointer.getDistance() > 20) return;
 
-      if (zoneName === ZONES.DECK && pointer.leftButtonReleased()) {
+      // ✨ FIX: Verhindere Ziehen vom Gegner-Deck per Linksklick.
+      if (
+        zoneName === ZONES.DECK &&
+        !this.isOpponent &&
+        pointer.leftButtonReleased()
+      ) {
         room?.send("moveCard", { from: ZONES.DECK, to: ZONES.HAND, index: 0 });
       }
     });
@@ -143,7 +148,7 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
       if (this.glowTween && this.glowTween.isPlaying()) return; // Läuft schon
 
       this.bottomGlowGraphics.setVisible(true);
-      
+
       // Starte den Loop-Tween für den Animationseffekt
       this.glowTween = this.scene.tweens.addCounter({
         from: 0,
@@ -152,7 +157,7 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
         repeat: -1,
         onUpdate: (tween) => {
           this.drawBottomGlow(tween.getValue() ?? 0);
-        }
+        },
       });
     } else {
       if (this.glowTween) {
@@ -175,23 +180,23 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
     const right = w / 2;
 
     // 1. Basis-Leuchten (Breiter, weicher, helles Gold)
-    g.lineStyle(6, 0xFFD700, 0.4); 
+    g.lineStyle(6, 0xffd700, 0.4);
     g.lineBetween(left, y, right, y);
 
     // 2. Haupt-Linie (Scharf, helles Gold)
-    g.lineStyle(3, 0xFFD700, 1.0);
+    g.lineStyle(3, 0xffd700, 1.0);
     g.lineBetween(left, y, right, y);
 
     // 3. Der "laufende" dunkle Abschnitt (Scanner-Effekt)
     // Wir zeichnen eine dunklere Linie über die helle an der aktuellen Position.
     const spotWidth = w * 0.25; // 25% der Breite
-    const spotCenter = left + (w * progress); // Bewegt sich von links nach rechts
-    
+    const spotCenter = left + w * progress; // Bewegt sich von links nach rechts
+
     const spotStart = Math.max(left, spotCenter - spotWidth / 2);
     const spotEnd = Math.min(right, spotCenter + spotWidth / 2);
 
     if (spotEnd > spotStart) {
-      g.lineStyle(3, 0xB8860B, 1.0); // DarkGoldenRod (Dunkles Gold/Braun)
+      g.lineStyle(3, 0xb8860b, 1.0); // DarkGoldenRod (Dunkles Gold/Braun)
       g.lineBetween(spotStart, y, spotEnd, y);
     }
   }
@@ -244,13 +249,14 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
 
     this.setSize(width, height);
     this.emptyPileImage.setDisplaySize(width, height);
-    if (this.shadow) this.shadow.setSize(
-      width + SHADOW_CONFIG.PADDING,
-      height + SHADOW_CONFIG.PADDING,
-    ); // ✨ FIX: Konsistente Größe
+    if (this.shadow)
+      this.shadow.setSize(
+        width + SHADOW_CONFIG.PADDING,
+        height + SHADOW_CONFIG.PADDING,
+      ); // ✨ FIX: Konsistente Größe
     this.stackImages.forEach((img) => img.setDisplaySize(width, height));
     this.countText.setFontSize(Math.round(height * 0.3));
-    
+
     (this.input?.hitArea as Phaser.Geom.Rectangle)?.setSize(width, height);
   }
 }
