@@ -102,6 +102,12 @@ class GameRoom extends colyseus.Room {
       this.broadcast("chat", msg);
     });
 
+    // ✨ NEU: Heartbeat-Handler gegen Timeouts (Render/Heroku)
+    this.onMessage("ping", (client) => {
+      // ✨ FIX: Logge den Empfang auf dem Server (wieder einkommentiert für Test)
+      // console.log(`[Heartbeat] Ping received from ${client.sessionId}`); 
+    });
+
     // ✨ NEU: Handler für Save-Game Anfrage
     this.onMessage("requestSaveGame", (client) => {
       // Sende den aktuellen State als JSON zurück an den Client

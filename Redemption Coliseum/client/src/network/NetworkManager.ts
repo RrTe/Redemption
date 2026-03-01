@@ -5,6 +5,7 @@ import { SelectionDialogScene } from "../scenes/SelectionDialogScene";
 import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones";
 import type { MoveCardMessage } from "../../../shared/messages";
 import { log, DEBUG } from "../utils/logger";
+import { getClient } from "./connection"; // ✨ NEU
 
 /**
  * ✨ NEU (SCHRITT 3): Verwaltet die gesamte Netzwerkkommunikation mit dem Colyseus-Raum.
@@ -15,6 +16,8 @@ export class NetworkManager {
   private scene: Phaser.Scene;
   private ui: GameUI;
   private $: StateCallback;
+  private heartbeatInterval: number | null = null; // ✨ NEU
+  private isReconnecting: boolean = false; // ✨ NEU
 
   constructor(
     scene: Phaser.Scene,
@@ -31,6 +34,34 @@ export class NetworkManager {
   /** Registriert alle Handler für eingehende Server-Nachrichten. */
   public registerHandlers() {
     log("Network", "[NetworkManager] Registering message handlers...");
+
+    // ✨ NEU: Heartbeat starten (alle 15s)
+    this.startHeartbeat();
+
+    // ✨ NEU: Browser-Events für sofortiges Feedback beim lokalen Testen ("Offline"-Modus)
+    window.addEventListener("offline", () => {
+        log("Network", "Browser went offline (Event).");
+        this.ui.showWaitingOverlay("Connection lost. Waiting for network...", false);
+    });
+
+    window.addEventListener("online", () => {
+        log("Network", "Browser went online (Event).");
+        // Wenn der Socket noch offen ist (kein onLeave gefeuert), Overlay entfernen.
+        if (this.room && this.room.connection && this.room.connection.isOpen) {
+             this.ui.showWaitingOverlay("Network restored.", false);
+             setTimeout(() => this.ui.hideWaitingOverlay(), 1000);
+        }
+    });
+
+    // ✨ NEU: Automatischen Reconnect bei Verbindungsabbruch behandeln
+    this.room.onLeave((code) => {
+        log("Network", `[onLeave] Disconnected with code ${code}`);
+        // Code > 1000 bedeutet meistens Fehler/Timeout (nicht consented).
+        // Wir prüfen auch isReconnecting, um Endlosschleifen zu vermeiden.
+        if (code > 1000 && !this.isReconnecting) {
+            this.handleDisconnect();
+        }
+    });
 
     // Lausche auf die Suchergebnisse vom Server.
     this.room.onMessage("presentPileSearchResult", (message) => {
@@ -188,6 +219,57 @@ export class NetworkManager {
     );
   }
 
+  // ✨ NEU: Heartbeat-Methoden
+  private startHeartbeat() {
+      this.stopHeartbeat();
+      log("Network", "Starting Heartbeat (15s interval)");
+      // Sende alle 15 Sekunden einen Ping, um Render/Heroku Timeouts zu verhindern.
+      this.heartbeatInterval = window.setInterval(() => {
+          if (this.room) {
+              // log("Network", "❤️ Sending Heartbeat (ping)"); // ✨ FIX: Log für Produktion deaktiviert
+              this.room.send("ping");
+          }
+      }, 15000);
+  }
+
+  private stopHeartbeat() {
+      if (this.heartbeatInterval) {
+          clearInterval(this.heartbeatInterval);
+          this.heartbeatInterval = null;
+      }
+  }
+
+  // ✨ NEU: Reconnect-Logik
+  private async handleDisconnect() {
+      this.isReconnecting = true;
+      this.ui.showWaitingOverlay("Connection lost. Reconnecting...", false);
+
+      const token = localStorage.getItem("reconnectionToken");
+      const client = getClient();
+
+      if (!token || !client) {
+          this.ui.showWaitingOverlay("Connection lost. Please return to lobby.", true);
+          return;
+      }
+
+      try {
+          log("Network", "Attempting silent reconnect...");
+          // Versuche Reconnect mit dem gespeicherten Token
+          const newRoom = await client.reconnect(token);
+          log("Network", "Silent reconnect successful!", newRoom);
+          
+          // WICHTIG: Wir haben eine neue Raum-Instanz. Wir müssen die Szene neu starten,
+          // damit alle Listener auf den neuen Raum gebunden werden.
+          this.scene.scene.restart({ room: newRoom });
+      } catch (e) {
+          log("Network", "Reconnect failed:", e);
+          // Wenn es fehlschlägt, zeige den Exit-Button
+          this.ui.showWaitingOverlay("Connection failed. Please return to lobby.", true);
+      } finally {
+          this.isReconnecting = false;
+      }
+  }
+
   // --- Methoden zum Senden von Nachrichten ---
 
   public sendResolveSearch(
@@ -275,5 +357,10 @@ export class NetworkManager {
   // ✨ NEU: Signalisiert dem Server, dass die Szene geladen ist und das Spiel beginnen kann.
   public sendPlayerReady() {
     this.room.send("playerReady");
+  }
+
+  // ✨ NEU: Aufräumen
+  public destroy() {
+      this.stopHeartbeat();
   }
 }
