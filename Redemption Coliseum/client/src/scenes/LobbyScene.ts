@@ -28,6 +28,8 @@ export class LobbyScene extends Phaser.Scene {
   private playerName: string = "Player 1"; // ✨ NEU: Standardname
   private soundManager!: SoundManager; // ✨ NEU
   private nameLabel!: Phaser.GameObjects.BitmapText; // ✨ NEU: Label für den Namen
+  private helpButton!: Phaser.GameObjects.Image; // ✨ NEU
+  private helpOverlay: HTMLElement | null = null; // ✨ NEU
   private legalBtn!: Phaser.GameObjects.Text; // ✨ NEU: Legal Button
   private privacyBtn!: Phaser.GameObjects.Text; // ✨ NEU: Privacy Button
 
@@ -68,6 +70,11 @@ export class LobbyScene extends Phaser.Scene {
     this.load.image(
       "button_settings",
       "assets/ui/buttons/button-gold-7850928_1920.png",
+    );
+    // ✨ NEU: Help Button
+    this.load.image(
+      "button_help",
+      "assets/ui/buttons/Button_Help_Copilot_20260216_130131_small.png",
     );
 
     // ✨ NEU: Fehlende Assets für den SettingsDialog und UI-Sounds laden
@@ -246,6 +253,21 @@ export class LobbyScene extends Phaser.Scene {
       this.scene.launch("SettingsDialogScene", { parentScene: "LobbyScene" }); // Dialog öffnen
     });
 
+    // ✨ NEU: Help Button (Links, unten)
+    this.helpButton = this.add
+      .image(0, 0, "button_help")
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .setDisplaySize(48, 48)
+      .setAlpha(0.6);
+
+    this.helpButton.on("pointerover", () => this.tweens.add({ targets: this.helpButton, x: 36, duration: 200, ease: "Sine.easeOut" }));
+    this.helpButton.on("pointerout", () => this.tweens.add({ targets: this.helpButton, x: -12, duration: 200, ease: "Sine.easeOut" }));
+    this.helpButton.on("pointerdown", () => {
+      this.soundManager.playSound("UI_TOGGLE");
+      this.toggleHelp();
+    });
+
     // ✨ NEU: Legal / Impressum Link (Unten Links, dezent)
     this.legalBtn = this.add
       .text(10, this.scale.height - 10, "Legal / Impressum", {
@@ -326,6 +348,14 @@ export class LobbyScene extends Phaser.Scene {
 
     // ✨ NEU: Resize-Handler registrieren und initial aufrufen
     this.scale.on("resize", this.resize, this);
+
+    // ✨ NEU: Aufräumen beim Beenden der Szene
+    this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (this.helpOverlay) {
+        this.helpOverlay.remove();
+        this.helpOverlay = null;
+      }
+    });
     this.resize({ width: this.scale.width, height: this.scale.height });
   }
 
@@ -460,6 +490,12 @@ export class LobbyScene extends Phaser.Scene {
       // Vereinfacht für Lobby:
       const y = height * 0.18;
       this.settingsButton.setPosition(width + 12, y); // Initial versteckt (rechts)
+    }
+
+    // ✨ NEU: Help Button (links, vertikal zentriert)
+    const leftButtonsCenterY = height / 2;
+    if (this.helpButton) {
+      this.helpButton.setPosition(-12, leftButtonsCenterY);
     }
   }
 
@@ -900,5 +936,68 @@ export class LobbyScene extends Phaser.Scene {
     this.lobbyRoom?.leave(); // ✨ FIX: Lobby verlassen, wenn Spiel startet
     // ✨ NEU: Starte zuerst die Ladeszene, um Assets zu laden und Sync zu gewährleisten
     this.scene.start("GameLoadingScene", { room });
+  }
+
+  /** ✨ NEU: Zeigt oder versteckt das Hilfe-Overlay (IFrame). */
+  private toggleHelp() {
+    if (this.helpOverlay) {
+      const isVisible = this.helpOverlay.style.display !== "none";
+      this.helpOverlay.style.display = isVisible ? "none" : "flex";
+      return;
+    }
+
+    this.helpOverlay = document.createElement("div");
+    this.helpOverlay.id = "lobby-help-overlay";
+    Object.assign(this.helpOverlay.style, {
+      position: "absolute",
+      top: "10%",
+      left: "10%",
+      width: "80%",
+      height: "80%",
+      backgroundColor: "rgba(0, 0, 0, 0.9)",
+      border: "2px solid #ffd700",
+      borderRadius: "10px",
+      zIndex: "10000",
+      display: "flex",
+      flexDirection: "column",
+      boxShadow: "0 0 20px rgba(0,0,0,0.8)"
+    });
+
+    const header = document.createElement("div");
+    Object.assign(header.style, {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "10px 20px",
+      backgroundColor: "#1a1a2e",
+      borderBottom: "1px solid #444",
+      color: "#ffd700",
+      fontFamily: "serif",
+      fontSize: "24px"
+    });
+    header.innerHTML = "<span>Game Guide</span>";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "X";
+    Object.assign(closeBtn.style, {
+      background: "transparent",
+      border: "none",
+      color: "#ff6666",
+      fontSize: "24px",
+      cursor: "pointer",
+      fontWeight: "bold"
+    });
+    closeBtn.onclick = () => {
+      if (this.helpOverlay) this.helpOverlay.style.display = "none";
+    };
+    header.appendChild(closeBtn);
+
+    const iframe = document.createElement("iframe");
+    iframe.src = "help.html";
+    Object.assign(iframe.style, { flex: "1", border: "none", background: "#fff" });
+
+    this.helpOverlay.appendChild(header);
+    this.helpOverlay.appendChild(iframe);
+    document.body.appendChild(this.helpOverlay);
   }
 }

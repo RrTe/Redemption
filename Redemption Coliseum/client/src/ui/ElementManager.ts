@@ -28,6 +28,7 @@ type StaticElements = {
   concedeButton: Phaser.GameObjects.Container; // ✨ NEU
   settingsButton: Phaser.GameObjects.Image; // ✨ NEU
   saveButton: Phaser.GameObjects.Image; // ✨ NEU
+  helpButton: Phaser.GameObjects.Image; // ✨ NEU
   phaseIndicator: Phaser.GameObjects.Graphics; // ✨ NEU: Das Hintergrund-Licht
   phaseBar: Phaser.GameObjects.Graphics; // ✨ NEU: Die 3D-Hintergrundleiste
   playerInfoText: Phaser.GameObjects.BitmapText; // ✨ NEU: Spielername & Deck
@@ -321,6 +322,31 @@ export class ElementManager {
       });
     });
 
+    // ✨ NEU: Help Button (Links unter Chat)
+    const helpButton = this.scene.add
+      .image(0, 0, "button_help") // Asset: Button_Help_Copilot_20260216_130131_small.png
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .setDisplaySize(48, 48)
+      .setAlpha(0.6); // Konsistent mit Settings Button
+
+    helpButton.on("pointerover", () => {
+      this.scene.tweens.add({
+        targets: helpButton,
+        x: this.layout.helpButton.visibleX, // Slide nach rechts (rein)
+        duration: 200,
+        ease: "Sine.easeOut",
+      });
+    });
+    helpButton.on("pointerout", () => {
+      this.scene.tweens.add({
+        targets: helpButton,
+        x: this.layout.helpButton.hiddenX, // Slide nach links (raus)
+        duration: 200,
+        ease: "Sine.easeOut",
+      });
+    });
+
     // ✨ NEU: Indikator für die aktive Phase (Hintergrund-Leuchten)
     const phaseIndicator = this.scene.add.graphics();
     phaseIndicator.setBlendMode(Phaser.BlendModes.ADD); // Additives Mischen für Leuchteffekt
@@ -404,6 +430,7 @@ export class ElementManager {
       concedeButton, // ✨ NEU
       settingsButton,
       saveButton, // ✨ NEU
+      helpButton, // ✨ NEU
       phaseIndicator,
       phaseBar,
       playerInfoText,
@@ -828,6 +855,12 @@ export class ElementManager {
       this.layout.saveButton.y,
     );
 
+    // ✨ NEU: Help Button positionieren
+    this.staticElements.helpButton.setPosition(
+      this.layout.helpButton.hiddenX,
+      this.layout.helpButton.y,
+    );
+
     // ✨ NEU: Info-Texte positionieren
     this.staticElements.playerInfoText.setPosition(
       this.layout.playerInfo.x,
@@ -848,6 +881,7 @@ export class ElementManager {
     // nextPhaseText wird automatisch zerstört, da es Teil des Containers ist
     this.staticElements.settingsButton.destroy();
     this.staticElements.saveButton.destroy(); // ✨ NEU
+    this.staticElements.helpButton.destroy(); // ✨ NEU
     this.staticElements.phaseIndicator.destroy(); // ✨ NEU: Aufräumen
     this.staticElements.phaseBar.destroy(); // ✨ NEU: Aufräumen
     this.staticElements.playerInfoText.destroy(); // ✨ NEU

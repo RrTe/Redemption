@@ -55,6 +55,7 @@ export interface GameLayout {
   concedeButton: { x: number; y: number }; // ✨ NEU
   settingsButton: { visibleX: number; hiddenX: number; y: number };
   saveButton: { visibleX: number; hiddenX: number; y: number }; // ✨ NEU
+  helpButton: { visibleX: number; hiddenX: number; y: number }; // ✨ NEU
   chatButton: { visibleX: number; hiddenX: number; y: number }; // ✨ NEU
   // ✨ NEU: Positionen für Spieler-Infos
   playerInfo: { x: number; y: number };
@@ -321,6 +322,17 @@ export function calculateLayout(
     pileHeight,
   );
 
+  // ✨ FIX: Player & Opponent Info nach oben verschoben, da Buttons darauf zugreifen
+  const playerInfo = {
+    x: EDGE_MARGIN, // Gleicher Abstand wie opponentPilesX
+    y: height - handZoneHeight + 20, // Etwas unterhalb der Oberkante der Handzone
+  };
+
+  const opponentInfo = {
+    x: width - EDGE_MARGIN, // Rechtsbündig
+    y: 5, // ✨ FIX: Weiter nach oben (war 20), um Überlappung mit Phasen-Icons zu vermeiden
+  };
+
   // ✨ NEU: Berechne die Positionen für die UI-Texte am rechten Rand
   // ✨ NEU: Phasen-Icons rechts neben der Gegner-Hand
   const opponentHandRight = opponentHand.x + opponentHand.width;
@@ -390,40 +402,44 @@ export function calculateLayout(
   const standardLoBHeight = (height / 2 - opponentHand.height) * 0.3;
   // ✨ FIX: Wir zentrieren die Gruppe aus Settings- und Save-Button dort, wo vorher nur der Settings-Button war.
   const buttonsCenterY = opponentHand.y + opponentHand.height + standardLoBHeight / 2;
-  const buttonSpacing = 60;
+  const buttonSpacing = 55; // ✨ FIX: Etwas enger zusammen, da es jetzt 3 Buttons sind
 
   const settingsButton = {
     hiddenX: width + 12,
     visibleX: width - 24,
-    y: buttonsCenterY - buttonSpacing / 2, // Etwas nach oben
+    y: buttonsCenterY - buttonSpacing, // Oben
   };
   const saveButton = {
     hiddenX: width + 12,
     visibleX: width - 24,
-    y: buttonsCenterY + buttonSpacing / 2 - 5, // ✨ FIX: 5px nach oben korrigiert
+    y: buttonsCenterY, // Mitte
+  };
+  const helpButton = {
+    hiddenX: width + 12,
+    visibleX: width - 24,
+    y: buttonsCenterY + buttonSpacing, // Unten
   };
 
-  // --- Chat Button ---
-  // ✨ NEU: Symmetrisch zum Settings-Button, aber unten links.
-  // Y-Position: Spiegelung an der horizontalen Mittelachse.
+  // --- Left Side Buttons (Chat & Help) ---
+  // ✨ NEU: Symmetrische Ausrichtung auf der linken Seite.
+  // Zentriert zwischen dem untersten Gegner-Stapel (Land of Redemption) und der Player-Info.
+  
+  // opponentLandOfRedemptionPile ist das unterste Element der Gegner-Piles (oben links).
+  const opponentLoRBottom = opponentLandOfRedemptionPile.y + pileHeight / 2;
+  const playerInfoTop = playerInfo.y; // Text-Origin ist oben links
+  
+  const leftButtonsCenterY = opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2;
+
   const chatButton = {
-      hiddenX: -12, // Links fast versteckt
-      visibleX: 324, // ✨ FIX: Rechts außen am 300px Drawer (300 + 24)
-      y: height - settingsButton.y // Symmetrisch unten
+      hiddenX: -12, // Fast ganz links versteckt (Mitte bei -12, Breite 48 -> 12px sichtbar)
+      visibleX: 36, // Eingeschoben (Mitte bei 36 -> 12px Abstand zum Rand)
+      y: leftButtonsCenterY - buttonSpacing / 2 // Oben in der Gruppe
   };
-
-  // --- Player & Opponent Info ---
-  // Player: Unten Links (auf Höhe der Hand, linksbündig mit Gegner-Piles)
-  const playerInfo = {
-    x: EDGE_MARGIN, // Gleicher Abstand wie opponentPilesX
-    y: height - handZoneHeight + 20, // Etwas unterhalb der Oberkante der Handzone
-  };
-
-  // Opponent: Oben Rechts (gespiegelt)
-  const opponentInfo = {
-    x: width - EDGE_MARGIN, // Rechtsbündig
-    y: 5, // ✨ FIX: Weiter nach oben (war 20), um Überlappung mit Phasen-Icons zu vermeiden
-  };
+  
+  // Help Button übernimmt die Position unter dem Chat Button
+  helpButton.hiddenX = -12;
+  helpButton.visibleX = 36;
+  helpButton.y = leftButtonsCenterY + buttonSpacing / 2;
 
   // ✨ DEIN PLAN (BATTLE): Die Battle-Arena füllt den Raum, der durch das "Atmen" entsteht.
   // ✨ FINALE KORREKTUR: Die Kampfzone füllt exakt den Raum ZWISCHEN den Territorien.
@@ -487,6 +503,7 @@ export function calculateLayout(
     concedeButton, // ✨ NEU
     settingsButton,
     saveButton, // ✨ NEU
+    helpButton, // ✨ NEU
     chatButton, // ✨ NEU
     playerInfo,
     opponentInfo,

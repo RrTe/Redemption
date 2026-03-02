@@ -54,6 +54,11 @@ export class GameLoadingScene extends BaseLoadingScene {
       "button_chat",
       "assets/ui/buttons/Button_Chat_Copilot_20260216_130131_small.png",
     );
+    // ✨ NEU: Help Button
+    this.load.image(
+      "button_help",
+      "assets/ui/buttons/Button_Help_Copilot_20260216_130131_small.png",
+    );
     // ✨ NEU: Concede Button
     this.load.image("button_concede", "assets/ui/buttons/white_flag_small_compressed.png");
     this.load.image("arrow_left", "assets/ui/buttons/arrow-left_small.png");
