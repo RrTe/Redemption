@@ -238,7 +238,7 @@ export class GameUI {
 
     // ✨ NEU: Help-Button Handler
     this.elementManager.staticElements.helpButton.on("pointerdown", () => {
-      this.soundManager.playSound("UI_TOGGLE");
+      this.scene.game.events.emit("playSound", "UI_TOGGLE");
       this.toggleHelp();
     });
 
@@ -952,7 +952,7 @@ export class GameUI {
     ) {
       this.showWaitingOverlay("Waiting for Opponent...");
     } else if (opponent && !opponent.connected) {
-      this.showWaitingOverlay("Opponent disconnected. Waiting..."); // ✨ NEU: Spezifische Nachricht
+      this.showWaitingOverlay("Opponent disconnected. Waiting...", true); // ✨ FIX: Button anzeigen!
     } else {
       this.hideWaitingOverlay();
     }
@@ -1029,7 +1029,8 @@ export class GameUI {
     document.body.appendChild(this.helpOverlay);
   }
 
-  private showWaitingOverlay(message: string) {
+  // ✨ FIX: Public machen und Parameter für Button hinzufügen
+  public showWaitingOverlay(message: string, showBackButton: boolean = false) {
     const { width, height } = this.scene.scale;
 
     if (this.waitingOverlay) {
@@ -1038,6 +1039,14 @@ export class GameUI {
         "waitingText",
       ) as Phaser.GameObjects.BitmapText;
       if (textObj) textObj.setText(message);
+
+      // ✨ FIX: Button dynamisch hinzufügen oder entfernen
+      const backButton = this.waitingOverlay.getByName("backButton");
+      if (showBackButton && !backButton) {
+        this.addBackButtonToOverlay(width, height);
+      } else if (!showBackButton && backButton) {
+        backButton.destroy();
+      }
       return;
     }
 
@@ -1070,9 +1079,32 @@ export class GameUI {
       repeat: -1,
     });
     this.waitingOverlay.add([bg, text]);
+
+    // ✨ NEU: Button initial hinzufügen, falls gefordert
+    if (showBackButton) {
+      this.addBackButtonToOverlay(width, height);
+    }
   }
 
-  private hideWaitingOverlay() {
+  // ✨ NEU: Hilfsmethode zum Erstellen des Buttons im Overlay
+  private addBackButtonToOverlay(width: number, height: number) {
+    if (!this.waitingOverlay) return;
+    const backButton = this.createStyledButton(
+      width / 2,
+      height / 2 + 80,
+      "Back to Lobby",
+      () => {
+        this.room.leave();
+        localStorage.removeItem("reconnectionToken");
+        this.scene.scene.start("LobbyScene");
+      },
+    );
+    backButton.setName("backButton");
+    this.waitingOverlay.add(backButton);
+  }
+
+  // ✨ FIX: Public machen für Zugriff aus NetworkManager
+  public hideWaitingOverlay() {
     if (this.waitingOverlay) {
       this.waitingOverlay.destroy();
       this.waitingOverlay = null;

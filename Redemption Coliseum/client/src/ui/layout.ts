@@ -99,7 +99,7 @@ export function calculateLayout(
   // ✨ NEU: Berechne die Größe der Handkarten basierend auf dem Skalierungsfaktor.
   const handCardWidth = cardWidth * HAND_CARD_SCALE;
   const handCardHeight = cardHeight * HAND_CARD_SCALE;
-  const PILE_SPACING = pileHeight * 1.25; // ✨ DEIN WUNSCH: Vertikalen Abstand zwischen den Stapeln vergrößern.
+  const PILE_SPACING = pileHeight * 1.25; // ✨ FIX: Zurück auf 1.25 (Originalabstand), wie gewünscht.
 
   // ✨ NEUE BERECHNUNG: Definiere die Breite des zentralen Spielfelds und der seitlichen Stapelbereiche
   const PILE_AREA_WIDTH = pileWidth + PADDING + EDGE_MARGIN; // ✨ FIX: Margin einbeziehen
@@ -380,6 +380,9 @@ export function calculateLayout(
     radius: 15,
   };
 
+  // --- Button Spacing & Dimensions ---
+  const buttonSpacing = 55;
+
   // --- Next Phase Button ---
   // Relativ zwischen Banish Pile und Handzone (oder links vom Banish Pile)
   // Wir platzieren ihn links neben dem Banish Pile mit einem festen Abstand.
@@ -397,27 +400,32 @@ export function calculateLayout(
       y: nextPhaseButton.y // Gleiche Y-Position wie der Next-Phase-Button
   };
 
-  // --- Settings Button ---
-  // Y-Position stabil basierend auf Standard-Layout (LoB Höhe)
-  const standardLoBHeight = (height / 2 - opponentHand.height) * 0.3;
-  // ✨ FIX: Wir zentrieren die Gruppe aus Settings- und Save-Button dort, wo vorher nur der Settings-Button war.
-  const buttonsCenterY = opponentHand.y + opponentHand.height + standardLoBHeight / 2;
-  const buttonSpacing = 55; // ✨ FIX: Etwas enger zusammen, da es jetzt 3 Buttons sind
+  // --- Right Side Buttons (Settings & Save) ---
+  // ✨ FIX: Zentriert zwischen Phasen-Leiste (oben) und eigenem Land of Redemption (unten).
+  
+  // Unterkante der Phasenleiste
+  const phaseBarBottom = phaseBar.y + phaseBar.height / 2;
+  // Oberkante des eigenen Land of Redemption (oberster Stapel rechts)
+  const playerLoRTop = playerLandOfRedemptionPile.y - pileHeight / 2;
+  
+  // Verfügbarer Raum und Mitte
+  // ✨ EINSTELLUNG: Y-Position Rechts (Settings/Save). +60 schiebt sie weiter nach unten.
+  const rightButtonsCenterY = phaseBarBottom + (playerLoRTop - phaseBarBottom) / 2 + 30;
 
   const settingsButton = {
     hiddenX: width + 12,
     visibleX: width - 24,
-    y: buttonsCenterY - buttonSpacing, // Oben
+    y: rightButtonsCenterY - buttonSpacing / 2, // Oben in der Gruppe
   };
   const saveButton = {
     hiddenX: width + 12,
     visibleX: width - 24,
-    y: buttonsCenterY, // Mitte
+    y: rightButtonsCenterY + buttonSpacing / 2, // Unten in der Gruppe
   };
   const helpButton = {
     hiddenX: width + 12,
     visibleX: width - 24,
-    y: buttonsCenterY + buttonSpacing, // Unten
+    y: 0, // Wird unten überschrieben für linke Seite
   };
 
   // --- Left Side Buttons (Chat & Help) ---
@@ -428,17 +436,18 @@ export function calculateLayout(
   const opponentLoRBottom = opponentLandOfRedemptionPile.y + pileHeight / 2;
   const playerInfoTop = playerInfo.y; // Text-Origin ist oben links
   
-  const leftButtonsCenterY = opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2;
+  // ✨ EINSTELLUNG: Y-Position Links (Chat/Hilfe). +60 schiebt sie weiter nach unten.
+  const leftButtonsCenterY = opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 + 30;
 
   const chatButton = {
       hiddenX: -12, // Fast ganz links versteckt (Mitte bei -12, Breite 48 -> 12px sichtbar)
-      visibleX: 36, // Eingeschoben (Mitte bei 36 -> 12px Abstand zum Rand)
+      visibleX: 24, // ✨ FIX: Weniger weit ausfahren (war 36)
       y: leftButtonsCenterY - buttonSpacing / 2 // Oben in der Gruppe
   };
   
   // Help Button übernimmt die Position unter dem Chat Button
   helpButton.hiddenX = -12;
-  helpButton.visibleX = 36;
+  helpButton.visibleX = 24; // ✨ FIX: Weniger weit ausfahren (war 36)
   helpButton.y = leftButtonsCenterY + buttonSpacing / 2;
 
   // ✨ DEIN PLAN (BATTLE): Die Battle-Arena füllt den Raum, der durch das "Atmen" entsteht.

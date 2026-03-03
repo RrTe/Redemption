@@ -261,8 +261,12 @@ export class LobbyScene extends Phaser.Scene {
       .setDisplaySize(48, 48)
       .setAlpha(0.6);
 
-    this.helpButton.on("pointerover", () => this.tweens.add({ targets: this.helpButton, x: 36, duration: 200, ease: "Sine.easeOut" }));
-    this.helpButton.on("pointerout", () => this.tweens.add({ targets: this.helpButton, x: -12, duration: 200, ease: "Sine.easeOut" }));
+    // ✨ FIX: Werte explizit definieren. Wenn du layout.ts änderst, musst du diese Werte hier auch anpassen!
+    const HIDDEN_X = -12;
+    const VISIBLE_X = 24; // ✨ FIX: Angepasst an layout.ts (war 36)
+
+    this.helpButton.on("pointerover", () => this.tweens.add({ targets: this.helpButton, x: VISIBLE_X, duration: 200, ease: "Sine.easeOut" }));
+    this.helpButton.on("pointerout", () => this.tweens.add({ targets: this.helpButton, x: HIDDEN_X, duration: 200, ease: "Sine.easeOut" }));
     this.helpButton.on("pointerdown", () => {
       this.soundManager.playSound("UI_TOGGLE");
       this.toggleHelp();
@@ -493,7 +497,8 @@ export class LobbyScene extends Phaser.Scene {
     }
 
     // ✨ NEU: Help Button (links, vertikal zentriert)
-    const leftButtonsCenterY = height / 2;
+    // ✨ FIX: Offset erhöht auf +150, da die Spielmitte durch die Stapel deutlich tiefer liegt als height/2.
+    const leftButtonsCenterY = height / 2 + 150;
     if (this.helpButton) {
       this.helpButton.setPosition(-12, leftButtonsCenterY);
     }

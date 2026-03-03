@@ -1,1 +1,307 @@
-Test
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Game Guide</title>
+    <style>
+	  @font-face {
+	    font-family: "FairyDustB";
+	    src: url("./assets/fonts/ttf/FairyDustB.ttf") format("truetype");
+	    font-weight: normal;
+	    font-style: normal;
+	  }
+	
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 2rem;
+        background-image: url("./assets/help/paper-1074132_rotated_small_compressed.png"); /* Pfad anpassen */
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-position: center;
+        line-height: 1.5;
+      }
+
+      .page {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 2rem;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+      }
+      
+      .section-title {
+        font-size: 3.0rem;
+		font-weight: bold;
+		font-family: "FairyDustB", system-ui, sans-serif;
+        margin-top: 3rem;
+        margin-bottom: 2rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(0,0,0,0.2);
+    }
+
+      .row {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+        align-items: center;
+        padding: 1rem;                     /* Innenabstand */
+        border: 1px solid rgba(0,0,0,0.4); /* dezente Linie */
+        border-radius: 8px;                /* leicht abgerundet */
+        background: rgba(255,255,255,0.4); /* hebt sich vom Papier ab */
+      }
+
+      .row .image {
+		flex: 0 0 30%;
+		display: flex;
+		justify-content: center; /* horizontal zentrieren */
+		align-items: center;     /* vertikal zentrieren */
+	  }
+
+      .row .image img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .row .text {
+        flex: 1;
+      }
+
+      .row .text h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+      }
+
+      .row.alt {
+        flex-direction: row-reverse;
+        background: rgba(255,255,255,0.4); /* etwas heller */
+      }
+	  
+	  .half-size {
+		width: 50%;
+		height: auto;
+	  }
+
+      @media (max-width: 700px) {
+        .row,
+        .row.alt {
+          flex-direction: column;
+        }
+        .row .image,
+        .row .text {
+          flex: 1 1 auto;
+        }
+      }
+    </style>
+	
+	<script>
+	  class SettingsImageSettings extends HTMLElement {
+	    connectedCallback() {
+		  this.outerHTML = `
+		    <div class="image">
+			  <img class="half-size"
+				src="./assets/ui/buttons/button-gold-7850928_1920.png"
+				alt="Settings">
+		    </div>
+		  `;
+	    }
+	  }
+	  customElements.define('settings-image-settings', SettingsImageSettings);
+
+	  class SettingsTextSettings extends HTMLElement {
+	    connectedCallback() {
+		  this.outerHTML = `
+		    <div class="text">
+			  <h3>Settings</h3>
+			  <p>This button is located at the upper right half of the right border. It is slightly hidden and will fully move out when you do a mouse over. After clicking this button several settings can be adjusted.</p>
+			  <ul>
+			    <li>Background music volume</li>
+			    <li>Sound effects volume</li>
+			    <li>Show/hide in game animations</li>
+			    <li>Show/hide background animations</li>
+		 	  </ul>
+		    </div>
+		  `;
+	    }
+	  }
+	  customElements.define('settings-text-settings', SettingsTextSettings);
+	  
+	  class HelpImageSettings extends HTMLElement {
+	    connectedCallback() {
+		  this.outerHTML = `
+		    <div class="image">
+			  <img class="half-size"
+				src="./assets/ui/buttons/Button_Help_Copilot_20260216_130131_small.png"
+				alt="Settings">
+		    </div>
+		  `;
+	    }
+	  }
+	  customElements.define('help-image-settings', HelpImageSettings);
+
+	  class HelpTextSettings extends HTMLElement {
+	    connectedCallback() {
+		  this.outerHTML = `
+		    <div class="text">
+			  <h3>In Game Help</h3>
+			  <p>This button is located at the lower left half of the left border. It is slightly hidden and will fully move out when you do a mouse over. After clicking this button this in game help will show up.</p>
+		    </div>
+		  `;
+	    }
+	  }
+	  customElements.define('help-text-settings', HelpTextSettings);
+	</script>
+  </head>
+  <body>
+    <div class="page">
+      <h1 class="section-title">Lobby</h1>
+
+      <div class="row">
+        <div class="image">
+          <img src="./assets/help/player_name.png" alt="Player Name" />
+        </div>
+        <div class="text">
+          <h3>Player Name</h3>
+          <p>Enter your name here.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="image">
+          <img src="./assets/help/create_new_game.png" alt="Create New Game" />
+        </div>
+        <div class="text">
+          <h3>Create New Game</h3>
+          <p>Click this button to start a new game.</p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="image">
+          <img src="./assets/help/select_deck.png" alt="Select Deck" />
+        </div>
+        <div class="text">
+          <h3>Select Deck</h3>
+          <p>
+            Load your own deck by clicking this button. The deck must be in
+            Lackey .txt format. Decks are loaded from your local folder. Without
+            loading a deck some random 50 cards are selected.
+          </p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="image">
+          <img src="./assets/help/load_game.png" alt="Load Game" />
+        </div>
+        <div class="text">
+          <h3>Load Game</h3>
+          <p>
+            Load a previously saved game by clicking this button. Games are
+            loaded from your local folder.
+          </p>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="image">
+          <img src="./assets/help/list_of_games.png" alt="List of Games" />
+        </div>
+        <div class="text">
+          <h3>List of Games</h3>
+          <p>
+            Shows all currently open games in a list. You can select a game to
+            join it.
+          </p>
+        </div>
+      </div>
+
+      <div class="row">
+	    <settings-image-settings></settings-image-settings>
+	    <settings-text-settings></settings-text-settings>
+      </div>
+
+      <div class="row">
+	    <help-image-settings></help-image-settings>
+	    <help-text-settings></help-text-settings>
+      </div>
+
+      <h1 class="section-title">In Game</h1>
+
+      <div class="row alt">
+        <div class="image">
+          <img src="bilder/pfeilfeld.png" alt="Pfeilfeld" />
+        </div>
+        <div class="text">
+          <h3>Pfeil-Spielfelder</h3>
+          <p>
+            Der Pfeil zeigt auf ein bestimmtes Gebäude. Diese Felder sind
+            wichtig für Zielorte und müssen am Ende punktgenau erreicht werden.
+            Tippfelder können ebenfalls Zielorte sein.
+          </p>
+        </div>
+      </div>
+
+      <!-- 7. W-LAN Gebäude -->
+      <div class="row">
+        <div class="image">
+          <img src="bilder/wlan-gebaeude.png" alt="WLAN Gebäude" />
+        </div>
+        <div class="text">
+          <h3>Gebäude mit W-LAN-Symbol</h3>
+          <p>
+            Hier sind „Online“-Aktionen möglich. Hast du eine Aktionskarte mit
+            dem Ziel „Online“, musst du zu einem Gebäude mit W-LAN-Symbol gehen.
+          </p>
+        </div>
+      </div>
+
+      <!-- 8. Würfel 1 -->
+      <div class="row alt">
+        <div class="image">
+          <img src="bilder/wuerfel-1.png" alt="Würfel 1" />
+        </div>
+        <div class="text">
+          <h3>Du würfelst eine 1</h3>
+          <p>
+            Gehe ein Feld weiter. Kommst du auf ein Tipp-, Quiz-, Rechen- oder
+            Ereignisfeld, ziehe die entsprechende Karte. Zusätzlich bekommst du
+            den Hund Muffin. Wer am Ende Muffin hat, erhält 3 Zusatzpunkte.
+          </p>
+        </div>
+      </div>
+
+      <!-- 9. Würfel 6 -->
+      <div class="row">
+        <div class="image">
+          <img src="bilder/wuerfel-6.png" alt="Würfel 6" />
+        </div>
+        <div class="text">
+          <h3>Du würfelst eine 6</h3>
+          <p>
+            Gehe sechs Felder weiter. Ziehe ggf. eine Karte. Danach darfst du
+            erneut würfeln und ein Feld weitergehen. Bei einer weiteren 6
+            wiederholt sich der Vorgang.
+          </p>
+        </div>
+      </div>
+
+      <!-- 10. Tauschbörse -->
+      <div class="row alt">
+        <div class="image">
+          <img src="bilder/tauschboerse.png" alt="Tauschbörse" />
+        </div>
+        <div class="text">
+          <h3>Tauschbörse</h3>
+          <p>
+            Steht bereits eine Figur auf deinem Zielfeld, stelle dich daneben.
+            Ihr dürft Münzen und Tipps tauschen – aber nur, wenn beide
+            einverstanden sind.
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
