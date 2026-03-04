@@ -158,7 +158,7 @@ export class GameUI {
       this.animationManager, // ✨ NEU: Übergebe den AnimationManager
       this.previewManager, // ✨ NEU: Übergebe den PreviewManager
       this.dragBounds,
-      this.elementManager // ✨ NEU: Übergebe ElementManager für Highlights
+      this.elementManager, // ✨ NEU: Übergebe ElementManager für Highlights
     );
 
     this.cardRenderer = new CardRenderer(
@@ -942,17 +942,28 @@ export class GameUI {
       ? this.room.state.players.get(opponentId)
       : undefined;
 
-    // ✨ FIX: Overlay erst entfernen, wenn das Spiel wirklich gestartet ist (activePlayer ist gesetzt).
-    // Das passiert erst, nachdem beide Spieler "Ready" gemeldet haben.
-    // ✨ FIX: Prüfe auch, ob der Gegner "ready" ist (Ladeszene beendet).
+    const gameStarted = !!this.room.state.activePlayer;
+
+    // ✨ FIX: Priorität 1 - Verbindungsabbruch!
+    // Wenn der Gegner existiert, aber nicht verbunden ist -> Disconnect Overlay mit Button.
+    if (opponent && !opponent.connected) {
+      this.showWaitingOverlay("Opponent disconnected. Waiting...", true);
+      return;
+    }
+
+    // ✨ FIX: Priorität 2 - Gegner ist weg (Timeout), aber Spiel lief schon -> Disconnect Overlay mit Button.
+    if (playerCount < 2 && gameStarted) {
+      this.showWaitingOverlay("Opponent disconnected. Waiting...", true);
+      return;
+    }
+
+    // ✨ FIX: Priorität 3 - Normales Warten (Lobby, Ladescreen, Gegner noch nicht ready) -> Kein Button.
     if (
       playerCount < 2 ||
-      !this.room.state.activePlayer ||
+      !gameStarted ||
       (opponent && !opponent.ready)
     ) {
       this.showWaitingOverlay("Waiting for Opponent...");
-    } else if (opponent && !opponent.connected) {
-      this.showWaitingOverlay("Opponent disconnected. Waiting...", true); // ✨ FIX: Button anzeigen!
     } else {
       this.hideWaitingOverlay();
     }
@@ -982,7 +993,7 @@ export class GameUI {
       zIndex: "10000",
       display: "flex",
       flexDirection: "column",
-      boxShadow: "0 0 20px rgba(0,0,0,0.8)"
+      boxShadow: "0 0 20px rgba(0,0,0,0.8)",
     });
 
     // Header (Titel + Schließen)
@@ -996,7 +1007,7 @@ export class GameUI {
       borderBottom: "1px solid #444",
       color: "#ffd700",
       fontFamily: "serif",
-      fontSize: "24px"
+      fontSize: "24px",
     });
     header.innerHTML = "<span>Game Guide</span>";
 
@@ -1008,10 +1019,10 @@ export class GameUI {
       color: "#ff6666",
       fontSize: "24px",
       cursor: "pointer",
-      fontWeight: "bold"
+      fontWeight: "bold",
     });
     closeBtn.onclick = () => {
-        if (this.helpOverlay) this.helpOverlay.style.display = "none";
+      if (this.helpOverlay) this.helpOverlay.style.display = "none";
     };
     header.appendChild(closeBtn);
 
@@ -1021,7 +1032,7 @@ export class GameUI {
     Object.assign(iframe.style, {
       flex: "1",
       border: "none",
-      background: "#fff" // Weißer Hintergrund für die Anleitung
+      background: "#fff", // Weißer Hintergrund für die Anleitung
     });
 
     this.helpOverlay.appendChild(header);
