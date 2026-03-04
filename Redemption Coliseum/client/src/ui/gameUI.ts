@@ -438,6 +438,8 @@ export class GameUI {
       height / 2 + 80,
       "Back to Lobby",
       () => {
+        this.soundManager?.stopMusic(); // ✨ FIX: Musik stoppen, BEVOR die Szene gewechselt wird.
+        this.soundManager?.stopEverything(); // ✨ FIX: Alles stoppen vor Szenenwechsel
         this.room.leave();
         localStorage.removeItem("reconnectionToken");
         this.scene.scene.start("LobbyScene");
@@ -942,6 +944,9 @@ export class GameUI {
       ? this.room.state.players.get(opponentId)
       : undefined;
 
+    // ✨ FIX: Overlay erst entfernen, wenn das Spiel wirklich gestartet ist (activePlayer ist gesetzt).
+    // Das passiert erst, nachdem beide Spieler "Ready" gemeldet haben.
+    // ✨ FIX: Prüfe auch, ob der Gegner "ready" ist (Ladeszene beendet).
     const gameStarted = !!this.room.state.activePlayer;
 
     // ✨ FIX: Priorität 1 - Verbindungsabbruch!
@@ -960,10 +965,13 @@ export class GameUI {
     // ✨ FIX: Priorität 3 - Normales Warten (Lobby, Ladescreen, Gegner noch nicht ready) -> Kein Button.
     if (
       playerCount < 2 ||
+      !this.room.state.activePlayer ||
       !gameStarted ||
       (opponent && !opponent.ready)
     ) {
       this.showWaitingOverlay("Waiting for Opponent...");
+    } else if (opponent && !opponent.connected) {
+      this.showWaitingOverlay("Opponent disconnected. Waiting...", true); // ✨ FIX: Button anzeigen!
     } else {
       this.hideWaitingOverlay();
     }
@@ -1105,6 +1113,8 @@ export class GameUI {
       height / 2 + 80,
       "Back to Lobby",
       () => {
+        this.soundManager?.stopMusic(); // ✨ FIX: Musik stoppen, BEVOR die Szene gewechselt wird.
+        this.soundManager?.stopEverything(); // ✨ FIX: Alles stoppen vor Szenenwechsel
         this.room.leave();
         localStorage.removeItem("reconnectionToken");
         this.scene.scene.start("LobbyScene");

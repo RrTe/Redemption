@@ -16,6 +16,8 @@ export class SoundManager {
   private activeAmbienceSounds: Phaser.Sound.BaseSound[] = [];
   // ✨ NEU: Speichert Timer für zufällige Sounds (z.B. Eule), um sie zu stoppen
   private activeAmbienceTimers: Phaser.Time.TimerEvent[] = [];
+  // ✨ NEU: Speichert alle loopenden SFX, die nicht Ambience sind
+  private activeSFXLoops: Phaser.Sound.BaseSound[] = [];
 
   private currentAmbienceKey: string | null = null;
   private currentMusic: Phaser.Sound.BaseSound | null = null; // ✨ NEU: Aktuelle Musik
@@ -219,6 +221,11 @@ export class SoundManager {
         (sound as any).setPan(pan);
       }
       sound.play();
+
+      // ✨ NEU: Tracke loopende SFX, damit wir sie stoppen können
+      if (soundConfig.loop && !isAmbienceLoop) {
+          this.activeSFXLoops.push(sound);
+      }
       return sound;
     }
   }
@@ -279,6 +286,29 @@ export class SoundManager {
       this.game.events.off("playAmbience", this.playAmbience, this); // ✨ NEU
       this.game.events.off("settings-changed", this.updateVolumes, this); // ✨ FIX: Cleanup korrigiert
     }
+  }
+
+  /** ✨ NEU: Stoppt alle loopenden SFX (Sicherheitsnetz). */
+  public stopAllSFXLoops() {
+    this.activeSFXLoops.forEach((sound) => {
+        if (sound.isPlaying) {
+            sound.stop();
+            sound.destroy();
+        }
+    });
+    this.activeSFXLoops = [];
+  }
+
+  /** 
+   * ✨ NEU: Die "Notbremse". Stoppt ALLES. 
+   * Sollte nur beim expliziten Verlassen des Spiels (Button Click) gerufen werden,
+   * NICHT beim automatischen Szenenwechsel (destroy), da es sonst die Lobby stummschaltet.
+   */
+  public stopEverything() {
+      this.stopMusic();
+      this.stopAmbience();
+      this.stopAllSFXLoops();
+      this.game.sound.stopAll(); // Doppelte Sicherheit für untrackbare Sounds
   }
 
   /**

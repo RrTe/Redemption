@@ -50,7 +50,14 @@ class GameRoom extends colyseus.Room {
     // ✨ NEU: Initialisiere die Kartendatenbank mit Hash-IDs.
     // Das stellt sicher, dass wir Karten anhand der IDs finden, die der DeckEditor generiert.
     cardDatabase.forEach((c) => {
-      if (!c.id) c.id = hash(c.Name);
+      if (!c.id) {
+        // ✨ FIX: Robuster Fallback, falls hash fehlschlägt oder nicht importiert wurde.
+        if (typeof hash === 'function') {
+            c.id = hash(c.Name);
+        } else {
+            c.id = Buffer.from(c.Name).toString('base64');
+        }
+      }
     });
 
     // ✨ NEU: Chat-Historie speichern
