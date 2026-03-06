@@ -18,6 +18,8 @@ export class NetworkManager {
   private $: StateCallback;
   private heartbeatInterval: number | null = null; // ✨ NEU
   private isReconnecting: boolean = false; // ✨ NEU
+  private onLeaveListener: any; // ✨ FIX: To store and remove the listener on destroy
+  private instanceId: string; // ✨ NEU: Für Debugging
 
   constructor(
     scene: Phaser.Scene,
@@ -29,11 +31,13 @@ export class NetworkManager {
     this.room = room;
     this.ui = ui;
     this.$ = stateCallback;
+    this.instanceId = Phaser.Utils.String.UUID().slice(0, 8); // ✨ FIX: Use slice() instead of deprecated substr()
+    log("Network", `[NetworkManager ${this.instanceId}] Created for room ${room.roomId}`); // ✨ FIX: Use roomId
   }
 
   /** Registriert alle Handler für eingehende Server-Nachrichten. */
   public registerHandlers() {
-    log("Network", "[NetworkManager] Registering message handlers...");
+    log("Network", `[NetworkManager ${this.instanceId}] Registering message handlers...`);
 
     // ✨ NEU: Heartbeat starten (alle 15s)
     this.startHeartbeat();
@@ -54,8 +58,23 @@ export class NetworkManager {
     });
 
     // ✨ NEU: Automatischen Reconnect bei Verbindungsabbruch behandeln
-    this.room.onLeave((code) => {
-        log("Network", `[onLeave] Disconnected with code ${code}`);
+    // ✨ FIX: Store the listener so it can be removed.
+    this.onLeaveListener = this.room.onLeave((code) => {
+        log("Network", `[NetworkManager ${this.instanceId}] [onLeave] Disconnected with code ${code}`);
+        
+        // ✨ FIX: Zombie-Schutz! Wenn die Szene nicht mehr aktiv ist (z.B. Wechsel zur Lobby),
+        // dürfen wir nicht mehr auf Events reagieren.
+        if (!this.scene.sys.isActive()) {
+            log("Network", `[NetworkManager ${this.instanceId}] Scene is inactive. Ignoring onLeave.`);
+            return;
+        }
+        
+        // ✨ NEU: Spezifische Behandlung für "Game Over" (Zombie Room)
+        if (code === 4000) {
+            this.ui.showWaitingOverlay("Game is already over. Please return to lobby.", true);
+            return;
+        }
+
         // Code > 1000 bedeutet meistens Fehler/Timeout (nicht consented).
         // Wir prüfen auch isReconnecting, um Endlosschleifen zu vermeiden.
         if (code > 1000 && !this.isReconnecting) {
@@ -361,6 +380,13 @@ export class NetworkManager {
 
   // ✨ NEU: Aufräumen
   public destroy() {
+      log("Network", `[NetworkManager ${this.instanceId}] Destroying...`);
       this.stopHeartbeat();
+      // ✨ FIX: Unregister the onLeave listener to prevent "zombie listeners"
+      // from firing in a new scene.
+      if (this.onLeaveListener) {
+          this.onLeaveListener.remove();
+          this.onLeaveListener = null;
+      }
   }
 }

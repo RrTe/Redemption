@@ -67,6 +67,10 @@ export default class CardGameScene extends Phaser.Scene {
 
   async create() {
     try {
+      // ✨ FIX: Nuclear Option - Entferne alle existierenden Kinder der Szene.
+      // Das stellt sicher, dass keine "Geister-Objekte" aus vorherigen Runs übrig bleiben.
+      this.children.removeAll();
+
       // ✨ NEU: Registriere die Dialog-Szene dynamisch, damit sie verfügbar ist.
       if (!this.scene.get("QuantitySelectionDialogScene")) {
         this.scene.add(

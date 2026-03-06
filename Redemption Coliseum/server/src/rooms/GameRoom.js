@@ -527,6 +527,7 @@ class GameRoom extends colyseus.Room {
 
     // ✨ NEU: Handler für das "Ready"-Signal vom Client (nach dem Laden der Assets)
     this.onMessage("playerReady", (client) => {
+      logger.info(`[DIAGNOSTIC_STEP_1] 'playerReady' received from ${client.sessionId}`);
       this.readyClients.add(client.sessionId);
 
       // ✨ FIX: Markiere den Spieler im State als bereit (für das UI-Overlay)
@@ -550,6 +551,7 @@ class GameRoom extends colyseus.Room {
       ) {
         // ✨ FIX: Prüfe, ob das Spiel bereits läuft (Phase gesetzt?), um doppelten Start/Draw zu verhindern.
         if (!this.state.currentPhase) {
+          logger.info(`[DIAGNOSTIC_STEP_2] All players ready. Calling _initializeGame.`);
           // Kurze Verzögerung, um sicherzustellen, dass der Client bereit für Nachrichten ist
           this.clock.setTimeout(() => {
             this._initializeGame();
@@ -560,6 +562,9 @@ class GameRoom extends colyseus.Room {
           );
         }
       }
+      logger.info(
+        `[DIAGNOSTIC_STEP_7] 'playerReady' handler finished for ${client.sessionId}`,
+      );
     });
 
     // ✨ NEU: Handler für Aufgabe (Concede)
@@ -581,6 +586,16 @@ class GameRoom extends colyseus.Room {
   }
 
   onJoin(client, options) {
+    logger.info(`[DIAGNOSTIC_JOIN_1] onJoin started for ${client.sessionId}`);
+    // ✨ FIX: Verhindere Beitritt zu "Zombie-Räumen" (Spiele, die bereits vorbei sind).
+    // Wenn ein Raum gerade herunterfährt, aber noch im MatchMaker gelistet ist,
+    // verhindern wir hier, dass Spieler in diesen instabilen Zustand geraten.
+    if (this.state.winnerId) {
+        logger.warn(`[GameRoom] Client ${client.sessionId} tried to join ended game ${this.roomId}. Rejecting.`);
+        client.leave(4000, "Game is already over");
+        return;
+    }
+
     if (this.clients.length > this.maxClients) {
       logger.warn(`[GameRoom] Room ${this.roomId} full, kicking extra client`, {
         clientId: client.sessionId,
@@ -589,6 +604,7 @@ class GameRoom extends colyseus.Room {
       return;
     }
 
+    try {
     // ✨ NEU: Save/Load Logik - Wenn wir geladene Spieler haben, weisen wir diesen Slot zu.
     if (this.savedPlayers.length > 0) {
       this._reclaimSavedPlayer(client, options);
@@ -616,6 +632,10 @@ class GameRoom extends colyseus.Room {
 
     // ✨ ÄNDERUNG: Wir starten das Spiel NICHT mehr hier.
     // Wir warten auf das "playerReady"-Signal von allen Clients.
+    } catch (err) {
+        logger.error(`[GameRoom] Error in onJoin for ${client.sessionId}:`, err);
+    }
+    logger.info(`[DIAGNOSTIC_JOIN_2] onJoin finished for ${client.sessionId}`);
   }
 
   async onLeave(client, consented) {
@@ -631,6 +651,22 @@ class GameRoom extends colyseus.Room {
     logger.info(
       `[GameRoom] Player left: ${client.sessionId}. Consented: ${consented}`,
     );
+
+    // ✨ FIX: Wenn das Spiel bereits vorbei ist (Winner steht fest), erlauben wir keine Reconnection mehr.
+    // Das stellt sicher, dass der Spieler sauber entfernt wird und beim nächsten Spielstart (auch im selben Raum) als "neu" gilt.
+    if (this.state.winnerId) {
+      this.state.players.delete(client.sessionId);
+      logger.info(`[GameRoom] Game Over. Removing player ${client.sessionId} immediately (no reconnect).`);
+
+      // ✨ FIX: If the last player leaves an ended game, destroy the room immediately.
+      // This prevents the room from being reused in a "zombie" state for the next game.
+      if (this.state.players.size === 0) {
+        logger.info(`[GameRoom] Last player left an ended game. Disposing room ${this.roomId}.`);
+        this.disconnect();
+      }
+
+      return;
+    }
 
     try {
       // Wenn der Spieler absichtlich geht (z.B. Fenster schließen, wenn das vom Client so gesendet wird),
@@ -850,6 +886,7 @@ class GameRoom extends colyseus.Room {
   }
 
   _createPlayer(client) {
+    try {
     // ✨ FINALE, ENTSCHEIDENDE KORREKTUR:
     // Das PlayerState-Objekt muss seine eigene sessionId kennen.
     // Das Fehlen dieser Zeile war die Ursache für die 'undefined' ownerIds.
@@ -939,6 +976,7 @@ class GameRoom extends colyseus.Room {
 
     shuffle(p[ZONES.DECK]);
     shuffle(p[ZONES.RESERVE]); // ✨ NEU: Auch Reserve mischen
+    p.connected = true; // ✨ FIX: Explizit als verbunden markieren
     p.sessionId = client.sessionId;
 
     // ✨ NEU: Namen setzen
@@ -953,50 +991,62 @@ class GameRoom extends colyseus.Room {
     logger.info(
       `PlayerState added for ${client.sessionId}. Total players: ${this.state.players.size}`,
     );
+    } catch (err) {
+        logger.error(`[CREATE_PLAYER] Error creating player for ${client.sessionId}:`, err);
+    }
   }
 
   _initializeGame() {
+    logger.info(`[DIAGNOSTIC_STEP_3] _initializeGame started.`);
     logger.info(
       `[GameRoom] Initializing game for room ${this.roomId}. Locking room.`,
     );
     this.lock(); // Raum für weitere Spieler sperren
     const firstPlayerIndex = Math.floor(Math.random() * this.clients.length);
     this.state.activePlayer = this.clients[firstPlayerIndex].sessionId;
+    logger.info(
+      `[DIAGNOSTIC_STEP_4] Active player set to ${this.state.activePlayer}. Starting to draw hands.`,
+    );
 
     // Starthand für jeden Spieler ziehen
     this.state.players.forEach((player, sessionId) => {
-      logger.info(`[GameRoom] Drawing starting hand for player ${sessionId}`);
-      // ✨ KORREKTUR: Stelle sicher, dass das 'player'-Objekt (der Wert der Map) und nicht die 'sessionId' (der Schlüssel)
-      // an moveCard übergeben wird. Dies behebt den 'player.sessionId=undefined'-Fehler.
-      // ✨ FINALE KORREKTUR: Fange den Rückgabewert von moveCard ab. Das Fehlen dieser Deklaration hat den Server zum Absturz gebracht.
-      const drawnCards = moveCard(
-        player,
-        this.state,
-        this.cardLookup,
-        ZONES.DECK,
-        ZONES.HAND,
-        0,
-        STARTING_HAND_SIZE,
-        null,
-      );
+      try {
+        logger.info(`[GameRoom] Drawing starting hand for player ${sessionId}`);
+        // ✨ KORREKTUR: Stelle sicher, dass das 'player'-Objekt (der Wert der Map) und nicht die 'sessionId' (der Schlüssel)
+        // an moveCard übergeben wird. Dies behebt den 'player.sessionId=undefined'-Fehler.
+        // ✨ FINALE KORREKTUR: Fange den Rückgabewert von moveCard ab. Das Fehlen dieser Deklaration hat den Server zum Absturz gebracht.
+        const drawnCards = moveCard(
+            player,
+            this.state,
+            this.cardLookup,
+            ZONES.DECK,
+            ZONES.HAND,
+            0,
+            STARTING_HAND_SIZE,
+            null,
+        );
 
-      // ✨ FINALE KORREKTUR: Sende die 'cardsDrawn'-Nachricht für die Starthand.
-      // Dies war der Grund, warum die Animationen für die Starthand bisher nie ausgelöst wurden.
-      if (drawnCards && drawnCards.length > 0) {
-        const cardIds = drawnCards.map((c) => c.id);
-        const client = this.clients.find((c) => c.sessionId === sessionId);
-        if (client) {
-          logger.info(
-            `[INITIAL_DRAW] Sending 'cardsDrawn' event to client ${sessionId} for starting hand: [${cardIds.join(
-              ", ",
-            )}]`,
-          );
-          client.send("cardsDrawn", { cardIds });
+        // ✨ FINALE KORREKTUR: Sende die 'cardsDrawn'-Nachricht für die Starthand.
+        // Dies war der Grund, warum die Animationen für die Starthand bisher nie ausgelöst wurden.
+        if (drawnCards && drawnCards.length > 0) {
+            const cardIds = drawnCards.map((c) => c.id);
+            const client = this.clients.find((c) => c.sessionId === sessionId);
+            if (client) {
+            logger.info(
+                `[INITIAL_DRAW] Sending 'cardsDrawn' event to client ${sessionId} for starting hand: [${cardIds.join(
+                ", ",
+                )}]`,
+            );
+            client.send("cardsDrawn", { cardIds });
+            }
+
+            // ✨ NEU: Log für Starthand
+            this.broadcastGameLog(`${player.name} draws starting hand.`); // ✨ FIX
         }
-
-        // ✨ NEU: Log für Starthand
-        this.broadcastGameLog(`${player.name} draws starting hand.`); // ✨ FIX
+      } catch (err) {
+          logger.error(`[DIAGNOSTIC_ERROR] Error drawing hand for player ${sessionId}:`, err);
       }
+      logger.info(`[DIAGNOSTIC_STEP_6] Finished drawing hand for player ${sessionId}.`);
     });
 
     // Startphase und ersten Zugzähler setzen
@@ -1005,6 +1055,7 @@ class GameRoom extends colyseus.Room {
     // ✨ Der erste Spieler startet jetzt korrekt in der DRAW-Phase.
     this.state.currentPhase = PHASES.DRAW;
     logger.info(`Game starting. Active player is ${this.state.activePlayer}`);
+    logger.info(`[DIAGNOSTIC_STEP_8] _initializeGame finished.`);
   }
 
   // ✨ NEU: Beendet das Spiel und setzt den Gewinner
@@ -1033,12 +1084,13 @@ class GameRoom extends colyseus.Room {
     // Raum sperren
     this.lock();
 
-    // Clients nach einer Verzögerung trennen (optional, hier 60s Zeit lassen)
+    // ✨ FINALE LÖSUNG: Zerstöre den Raum nach 5 Sekunden zwangsweise.
+    // Das verhindert "Zombie-Räume" und ist nicht mehr vom Client-Verhalten abhängig.
     this.clock.setTimeout(() => {
       this.disconnect().catch((e) =>
         logger.error("[GAME OVER] Error during scheduled disconnect:", e),
       );
-    }, 1000 * 60);
+    }, 5000);
   }
 }
 

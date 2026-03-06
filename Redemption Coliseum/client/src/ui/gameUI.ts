@@ -76,6 +76,9 @@ export class GameUI {
   private chatManager: ChatManager; // ✨ NEU
   private gameOverOverlay: Phaser.GameObjects.Container | null = null; // ✨ NEU: Game Over Overlay
   private helpOverlay: HTMLElement | null = null; // ✨ NEU: DOM-Element für Hilfe
+  // ✨ NEU: Referenzen für Event-Listener speichern, um sie sauber zu entfernen
+  private onPlayDrawAnimation: ((data: { cardIds: string[] }) => void) | null = null;
+  private onRequestCardAction: ((data: any) => void) | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -295,7 +298,8 @@ export class GameUI {
       this.downloadSaveFile(data);
     });
 
-    this.scene.events.on("playDrawAnimation", (data: { cardIds: string[] }) => {
+    // ✨ FIX: Listener speichern, um ihn später zu entfernen
+    this.onPlayDrawAnimation = (data: { cardIds: string[] }) => {
       // ✨ ARCHITEKTUR-FIX: Sound immer hier abspielen (Feedback auf Event).
       // Das entkoppelt den Sound von der visuellen Animation.
       this.scene.game.events.emit("playSound", "CARD_DRAW"); // ✨ FIX: Globaler Event-Bus
@@ -310,12 +314,12 @@ export class GameUI {
         `[DEBUG] [2/3] 'playDrawAnimation' event received by GameUI. Triggering handler.`,
       );
       this.markCardsForDrawAnimation(data.cardIds);
-    });
+    };
+    this.scene.events.on("playDrawAnimation", this.onPlayDrawAnimation);
 
     // ✨ NEU: Handler für Karten-Interaktionen (Drehen/Wenden per Maus)
-    this.scene.events.on(
-      "request-card-action",
-      (data: { cardId: string; action: string; currentValue: boolean }) => {
+    // ✨ FIX: Listener speichern
+    this.onRequestCardAction = (data: { cardId: string; action: string; currentValue: boolean }) => {
         let updates = {};
 
         if (data.action === "toggle-flip") {
@@ -330,8 +334,8 @@ export class GameUI {
             updates,
           });
         }
-      },
-    );
+      };
+    this.scene.events.on("request-card-action", this.onRequestCardAction);
 
     // ✨ DEIN PLAN: Logge bei JEDER Zustandsänderung die Deckgrößen.
     this.room.onStateChange((state) => {
@@ -858,6 +862,24 @@ export class GameUI {
     if (this.helpOverlay) {
       this.helpOverlay.remove();
       this.helpOverlay = null;
+    }
+
+    // ✨ FIX: Destroy all sub-managers to prevent memory leaks and "zombie listeners".
+    // This is crucial for a clean scene transition.
+    this.inputManager?.destroy();
+    this.networkManager?.destroy();
+    this.chatManager?.destroy();
+    this.previewManager?.hide(); // Hide any active preview
+
+    // ✨ FIX: Event-Listener sauber entfernen!
+    // Das verhindert, dass alte UI-Instanzen auf Events der neuen Szene reagieren (Zombie-Listener).
+    if (this.onPlayDrawAnimation) {
+        this.scene.events.off("playDrawAnimation", this.onPlayDrawAnimation);
+        this.onPlayDrawAnimation = null;
+    }
+    if (this.onRequestCardAction) {
+        this.scene.events.off("request-card-action", this.onRequestCardAction);
+        this.onRequestCardAction = null;
     }
   }
 
