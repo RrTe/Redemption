@@ -3,6 +3,7 @@ import { Client, type RoomAvailable, type Room } from "colyseus.js";
 import { type TypedRoom } from "../ui/gameUI";
 import { type SoundManager } from "../managers/SoundManager"; // ✨ NEU
 import { log, error, DEBUG } from "../utils/logger";
+import { SettingsDialogScene } from "./SettingsDialogScene"; // ✨ FIX: Import missing scene
 import { DeckUtils, type DeckData } from "../utils/DeckUtils"; // ✨ NEU: Import
 
 export class LobbyScene extends Phaser.Scene {
@@ -96,6 +97,12 @@ export class LobbyScene extends Phaser.Scene {
       .image(0, 0, "bg_temple")
       .setOrigin(0.5)
       .setAlpha(0.4);
+
+    // ✨ FIX: Register the dialog scene. It was missing, causing a "Scene key not found" error.
+    // This ensures the scene is available to be launched from the lobby.
+    if (!this.scene.get("SettingsDialogScene")) {
+      this.scene.add("SettingsDialogScene", SettingsDialogScene, false);
+    }
 
     // 2. Titel
     this.titleText = this.add
