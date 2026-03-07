@@ -143,6 +143,26 @@
     }
 
     /* Definition der einzelnen Bilder (Pfade bitte anpassen) */
+    .bullet-draw {
+      background: url("./assets/ui/icons/icon_draw.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-upkeep {
+      background: url("./assets/ui/icons/icon_upkeep.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-prepare {
+      background: url("./assets/ui/icons/icon_preparation.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-battle {
+      background: url("./assets/ui/icons/icon_battle.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-discard {
+      background: url("./assets/ui/icons/icon_discard.png") no-repeat left center / 2.5rem auto;
+    }
+
     .bullet-search {
       background: url("./assets/ui/icons/icon_search.png") no-repeat left center / 2.5rem auto;
     }
@@ -413,12 +433,12 @@
         <h3>Phase Indicators</h3>
         <p>
           This toolbar displays all turn phases, each represented by a unique icon. From left to right, these are:"
-        <ul>
-          <li>Draw Phase</li>
-          <li>Upkeep Phase</li>
-          <li>Preparation Phase</li>
-          <li>Battle Phase</li>
-          <li>Discard Phase</li>
+        <ul class="custom-bullets">
+          <li class="bullet-draw">Draw Phase</li>
+          <li class="bullet-upkeep">Upkeep Phase</li>
+          <li class="bullet-prepare">Preparation Phase</li>
+          <li class="bullet-battle">Battle Phase</li>
+          <li class="bullet-discard">Discard Phase</li>
         </ul>
         A golden glow marks the current phase for the active player, while a silver-grey highlight is used for the
         inactive player.
