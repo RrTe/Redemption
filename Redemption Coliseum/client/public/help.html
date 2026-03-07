@@ -32,6 +32,17 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
     }
 
+    .document-title {
+      font-size: 4rem;
+      font-weight: bold;
+      font-family: "FairyDustB", system-ui, sans-serif;
+      text-align: center;
+      margin-top: 0.1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+    }
+
     .section-title {
       font-size: 3rem;
       font-weight: bold;
@@ -107,6 +118,81 @@
       cursor: pointer;
     }
 
+    .zoomable.half-size {
+      cursor: pointer;
+      width: 50%;
+      height: auto;
+    }
+
+    ul.custom-bullets {
+      list-style: none;
+      padding-left: 0.5rem;
+      margin-top: 1.5rem;
+    }
+
+    ul.custom-bullets li {
+      position: relative;
+      padding-left: 3.5rem;
+      /* Platz für das Icon */
+      margin-bottom: 1.2rem;
+      min-height: 2.5rem;
+      /* Icon-Höhe als Mindestmaß */
+      display: flex;
+      align-items: center;
+      /* Text vertikal zentrieren */
+    }
+
+    /* Definition der einzelnen Bilder (Pfade bitte anpassen) */
+    .bullet-search {
+      background: url("./assets/ui/icons/icon_search.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-look {
+      background: url("./assets/ui/icons/icon_look.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-reveal {
+      background: url("./assets/ui/icons/icon_reveal.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-shuffle {
+      background: url("./assets/ui/icons/icon_shuffle.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-discard {
+      background: url("./assets/ui/icons/icon_discard.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-turn {
+      background: url("./assets/ui/icons/icon_turn.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-flip {
+      background: url("./assets/ui/icons/icon_flip.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-paralyze {
+      background: url("./assets/ui/icons/icon_paralyze.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-setaside {
+      background: url("./assets/ui/icons/icon_setaside.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-fromtop {
+      background: url("./assets/ui/icons/icon_from_top_of_pile.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-frombottom {
+      background: url("./assets/ui/icons/icon_from_bottom_of_pile.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .list-label {
+      font-family: "FairyDustB", serif;
+      font-size: 1.4rem;
+      margin-right: 0.5rem;
+    }
+
     #image-overlay {
       position: fixed;
       inset: 0;
@@ -158,9 +244,8 @@
       connectedCallback() {
         this.outerHTML = `
 		    <div class="image">
-			  <img class="half-size"
-				src="./assets/ui/buttons/button-gold-7850928_1920.png"
-				alt="Settings">
+          <img class="zoomable half-size" src="./assets/help/settings_menu.png" alt="Settings Menu">
+          <img class="half-size" src="./assets/ui/buttons/button-gold-7850928_1920.png" alt="Settings">
 		    </div>
 		  `;
       }
@@ -172,7 +257,10 @@
         this.outerHTML = `
 		    <div class="text">
 			  <h3>Settings</h3>
-			  <p>This button is located at the upper right half of the right border. It is slightly hidden and will fully move out when you do a mouse over. After clicking this button several settings can be adjusted.</p>
+			  <p>
+          This button is located at the upper right half of the right border. It is slightly hidden and will fully move out when you do a mouse over. After clicking this button several settings can be adjusted.</br>
+          Clicking on the red cross closes the Settings Dialog.
+        </p>
 			  <ul>
 			    <li>Background music volume</li>
 			    <li>Sound effects volume</li>
@@ -203,7 +291,7 @@
         this.outerHTML = `
 		    <div class="text">
 			  <h3>In Game Help</h3>
-			  <p>This button is located at the lower left half of the left border. It is slightly hidden and will fully move out when you do a mouse over. After clicking this button this in game help will show up.</p>
+			  <p>This button is located at the lower left half of the left border. It is slightly hidden and will fully move out when you do a mouse over. After clicking this button this in game help will show up. To close it just click on the red cross.</p>
 		    </div>
 		  `;
       }
@@ -214,6 +302,9 @@
 
 <body>
   <div class="page">
+    <h1 class="document-title">Game Help</h1>
+    <p align="center">(<b>Note:</b> Some of the pictures have bigger versions. Just click on them to activate the bigger
+      version and click on the bigger version to close them again.)</p>
     <h1 class="section-title">Lobby</h1>
 
     <div class="row">
@@ -270,8 +361,7 @@
       <div class="text">
         <h3>List of Games</h3>
         <p>
-          Shows all currently open games in a list. You can select a game to
-          join it.
+          Shows all currently open games in a list. You can select a game to join it.
         </p>
       </div>
     </div>
@@ -304,7 +394,7 @@
 
     <div class="row alt">
       <div class="image">
-        <img src="./assets/help/phase_marker.png" alt="WLAN Gebäude" />
+        <img src="./assets/help/phase_marker.png" alt="Phase Indicators" />
       </div>
       <div class="text">
         <h3>Phase Indicators</h3>
@@ -323,51 +413,292 @@
       </div>
     </div>
 
+    <div class="row alt">
+      <settings-image-settings></settings-image-settings>
+      <settings-text-settings></settings-text-settings>
+    </div>
+
     <!-- 8. Würfel 1 -->
     <div class="row alt">
       <div class="image">
-        <img src="bilder/wuerfel-1.png" alt="Würfel 1" />
+        <img class="half-size" src="./assets/ui/buttons/Save_small.png" alt="Save Button" />
       </div>
       <div class="text">
-        <h3>Du würfelst eine 1</h3>
+        <h3>Save current Game</h3>
         <p>
-          Gehe ein Feld weiter. Kommst du auf ein Tipp-, Quiz-, Rechen- oder
-          Ereignisfeld, ziehe die entsprechende Karte. Zusätzlich bekommst du
-          den Hund Muffin. Wer am Ende Muffin hat, erhält 3 Zusatzpunkte.
+          Games are saved to your local folder.
         </p>
       </div>
     </div>
 
-    <!-- 9. Würfel 6 -->
-    <div class="row">
-      <div class="image">
-        <img src="bilder/wuerfel-6.png" alt="Würfel 6" />
-      </div>
-      <div class="text">
-        <h3>Du würfelst eine 6</h3>
-        <p>
-          Gehe sechs Felder weiter. Ziehe ggf. eine Karte. Danach darfst du
-          erneut würfeln und ein Feld weitergehen. Bei einer weiteren 6
-          wiederholt sich der Vorgang.
-        </p>
-      </div>
-    </div>
-
-    <!-- 10. Tauschbörse -->
     <div class="row alt">
       <div class="image">
-        <img src="bilder/tauschboerse.png" alt="Tauschbörse" />
+        <img class="half-size" src="./assets/gfx/Empty_LoR_Pile.png" alt="Land of Redemption" />
       </div>
       <div class="text">
-        <h3>Tauschbörse</h3>
+        <h3>Land of Redemption</h3>
         <p>
-          Steht bereits eine Figur auf deinem Zielfeld, stelle dich daneben.
-          Ihr dürft Münzen und Tipps tauschen – aber nur, wenn beide
-          einverstanden sind.
+          This area holds your rescued Lost Souls and characters. Once you have a total of five in your Land of
+          Redemption, you win the game. You can move cards here by dragging and dropping them.
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img src="./assets/help/reserve.png" alt="Reserve" />
+      </div>
+      <div class="text">
+        <h3>Reserve</h3>
+        <p>
+          Reserve pile. It shows either a card back and the number of remaining cards, or the image on the right if the
+          pile is empty.</br></br>
+          <b>Note:</b> Your opponent's empty reserve appears in a darker shade.
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img src="./assets/help/reserve.png" alt="Deck" />
+      </div>
+      <div class="text">
+        <h3>Deck</h3>
+        <p>
+          Deck pile. It shows either a card back and the number of remaining cards, or the image on the right if the
+          pile is empty.</br></br>
+          <b>Note:</b> Your opponent's empty reserve appears in a darker shade.</br></br>
+          <b>Note:</b> In order to underdeck a card drag and drop it at the lower half of the deck (a small golden edge
+          animation will appear at the lower edge of the deck to signal that the card gets underdeckted.)
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img class="half-size" src="./assets/gfx/Empty_Discard_Pile.png" alt="Discard Pile" />
+      </div>
+      <div class="text">
+        <h3>Discard Pile</h3>
+        <p>
+          All cards that are discarded are placed here. You can move cards to this pile by dragging and dropping them.
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img class="half-size" src="./assets/gfx/Empty_Banish_Pile.png" alt="Banish Pile" />
+      </div>
+      <div class="text">
+        <h3>Banish Pile</h3>
+        <p>
+          All cards that are banished or removed from game are placed here. You can move cards to this pile by dragging
+          and dropping them.
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img src="./assets/help/next_phase.png" alt="Next Phase" />
+      </div>
+      <div class="text">
+        <h3>Next Phase</h3>
+        <p>
+          This button only occurs for the active player. Pressing it will switch to the next phase (see also Phase
+          Indicators above). When in Discard Phase and pressing this button the game switches the active player to your
+          opponent.
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img class="zoomable" src="./assets/help/hands.png" alt="Hand" />
+      </div>
+      <div class="text">
+        <h3>Hand</h3>
+        <p>
+          This is where you hold your cards during the game. You can play cards from here by dragging and dropping them
+          onto the Field of Play. When doing so the current zone will be indicated you would drop them in. You can cards
+          also drag and drop back from play into your hand. You can also drag and drop cards from your hand to any of
+          your piles (except Land of Redemption).</br>
+          Dragging and dropping cards from opponents hand onto the field of play or any of opponents tile is also
+          possible (except for opponents Land of Redemption).</br>
+          Dragging and dropping cards from one hand to the other can be done too.</br>
+          At the beginning of the game starting hands are drawn automatically. Also at the begin of each turn your draw
+          3 for turn will be done automatically.</br>
+          When hovering over a card and staying there for a littel while a bigger image of that card will be displayed
+          (also in Field of Play).</br>
+          Double clicking on a card will flip it face down/up (also in Field of Play). Right clicking a card in your
+          hand will turn it upside down or vice versa.</br></br>
+          <b>Note:</b> Your opponent's hand is not visible to you. It is represented by a card back fan.
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img class="zoomable" src="./assets/help/zone_identification.png" alt="Zones" />
+      </div>
+      <div class="text">
+        <h3>Zones</h3>
+        <p>
+          When dragging and dropping cards onto the field of play, the current zone you would drop them in will be
+          indicated by a highlighted area. These zones are (from bottom to top):
+        <ul>
+          <li>Your Land of Bondage</li>
+          <li>Your Territory</li>
+          <li>Field of Battle (<b>Note:</b> Only active during Battle Phase.)</li>
+          <li>Opponents Territory</li>
+          <li>Opponents Land of Bondage</li>
+        </ul>
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img class="half-size" src="./assets/ui/icons/icon_attach_success.png" alt="Attach Card" />
+      </div>
+      <div class="text">
+        <h3>Attach a Card</h3>
+        <p>
+          You can attach cards to other cards (e.g. equip weapons, place Lost Souls into Sites or Artifacts into Temples
+          etc.) by dragging a card over another card and holding it there for a short while. An attach animation will
+          appear and if you drop the card the attached icon will flash briefly.
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img src="./assets/help/concede.png" alt="Concede Game" />
+      </div>
+      <div class="text">
+        <h3>Concede Game</h3>
+        <p>
+          This button will end the game immediately and declare your opponent as the winner. Use this if you want to
+          quit a game early. After a game ends you can return to the lobby.
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <help-image-settings></help-image-settings>
+      <help-text-settings></help-text-settings>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img class="half-size" src="./assets/ui/buttons/Button_Chat_Copilot_20260216_130131_small.png"
+          alt="Chat and Log" />
+      </div>
+      <div class="text">
+        <h3>Chat and Log</h3>
+        <p>
+          This button will open the chat and log window. Here you can chat with your opponent and review the game log.
+          Click on the chat button again to close the Chatlog.
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img class="zoomable" src="./assets/help/pile_menu.png" alt="Pile Menu" />
+      </div>
+      <div class="text">
+        <h3>Pile Menu</h3>
+        <p>
+          When right clicking on a pile which contains cards a Pile Menu (radial) appears The function of the menu items
+          are as following (clockwise, beginning from the top):
+        <ul class="custom-bullets">
+          <li class="bullet-search">Search pile</li>
+          <li class="bullet-look">Look at certain cards in pile</li>
+          <li class="bullet-reveal">Reveal cards from pile</li>
+          <li class="bullet-shuffle">Shuffle pile</li>
+          <li class="bullet-discard">Discard cards from pile</li>
+        </ul>
+        <b>Note:</b> Decks are auto-shuffled after appropriate actions have been applied (e.g. after searching a deck).
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img class="zoomable" src="./assets/help/look_reveal_discard.png" alt="Look, Reveal and Discard" />
+      </div>
+      <div class="text">
+        <h3>Look, Reveal and Discard</h3>
+        <p>
+          This dialog opens when you chose to either look at a deck or reveal it or discard from it. Here you can choose
+          how many cards you want to look at, to reveal or to discard.</br>
+          And you can also choose whether to do that:
+        <ul class="custom-bullets">
+          <li class="bullet-fromtop">From top of deck or</li>
+          <li class="bullet-frombottom">From bottom of deck</li>
+        </ul>
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img class="zoomable" src="./assets/help/card_selection_dialog.png" alt="Card Selection Dialog" />
+      </div>
+      <div class="text">
+        <h3>Card Selection Dialog</h3>
+        <p>
+          This dialog opens when you right click on a pile that contains cards and you choose to search that pile, look
+          at cards in that pile or reveal cards from that pile - but also when you right click on oppoents
+          hand. After opening you can scroll through the cards within that pile (or opponents hand) by clicking the
+          double arrow buttons (left / right). If you want to scroll faster then just click on those buttons more
+          quickly.</br>
+          Click on cards you want to select for the according action (reveal, search, ...). The cards you selected will
+          be shown above the card selection area.</br>
+          When you are done select the appropriate zone or pile of you (bottom button row) or your opponent (top button
+          row) to move the cards there. (At the moment cards moved to hands, or any piles are not displayed but can be
+          looked up inside the Chat and Log panel.)</br>
+          Click on the red cross to close the dialog.
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img class="zoomable" src="./assets/help/card_menu.png" alt="Card Menu" />
+      </div>
+      <div class="text">
+        <h3>Card Menu</h3>
+        <p>
+          When right clicking on a card in the Field of Play a Card Menu (radial) appears The function of the menu items
+          are as following (clockwise, beginning from the top):
+        <ul class="custom-bullets">
+          <li class="bullet-turn">Turn card face up/face down</li>
+          <li class="bullet-flip">Flip card 180 degrees</li>
+          <li class="bullet-paralyze">Paralyze card</li>
+          <li class="bullet-setaside">Set card aside</li>
+        </ul>
+        </p>
+      </div>
+    </div>
+
+    <div class="row alt">
+      <div class="image">
+        <img class="zoomable" src="./assets/help/paralyze_setaside.png" alt="Paralyze and Set Aside" />
+      </div>
+      <div class="text">
+        <h3>Paralyze and Set Aside</h3>
+        <p>
+          This dialog opens when you chose to either paralyze a card or set it aside. Here you can choose how many turns
+          you want to paralyze or set aside the card. The number of turns is then displayed at that card.</br></br>
+          <b>Note:</b> The number automatically decreases by 1 during each upkeep phase of the controller of that card.
         </p>
       </div>
     </div>
   </div>
+
   <div id="image-overlay">
     <img id="overlay-img" src="" alt="" />
   </div>
