@@ -504,8 +504,8 @@ export class LobbyScene extends Phaser.Scene {
     }
 
     // ✨ NEU: Help Button (links, vertikal zentriert)
-    // ✨ FIX: Offset erhöht auf +150, da die Spielmitte durch die Stapel deutlich tiefer liegt als height/2.
-    const leftButtonsCenterY = height / 2 + 150;
+    // ✨ FIX: Nutze Prozentwert (70%) statt absoluter Pixel, damit es skaliert wie der Settings-Button.
+    const leftButtonsCenterY = height * 0.7;
     if (this.helpButton) {
       this.helpButton.setPosition(-12, leftButtonsCenterY);
     }

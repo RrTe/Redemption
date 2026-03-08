@@ -230,6 +230,59 @@
       border-radius: 8px;
     }
 
+    /* ✨ NEU: Sidebar Navigation Styles */
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 280px;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.95); /* Semitransparent, passend zum Stil */
+      border-right: 1px solid rgba(0,0,0,0.2);
+      transform: translateX(-280px); /* Initial versteckt */
+      transition: transform 0.3s ease-in-out;
+      z-index: 10000;
+      overflow-y: auto;
+      padding-top: 60px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+    }
+
+    #sidebar.open {
+      transform: translateX(0);
+    }
+
+    #menu-toggle {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 10001;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(0,0,0,0.4);
+      border-radius: 4px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-size: 1.8rem;
+      line-height: 1;
+      color: #333;
+    }
+
+    #sidebar nav ul { list-style: none; padding: 0; margin: 0; }
+    #sidebar nav ul li { border-bottom: 1px solid rgba(0,0,0,0.05); }
+    #sidebar nav ul li a {
+      display: block;
+      padding: 10px 20px;
+      text-decoration: none;
+      color: #222;
+      font-family: "FairyDustB", system-ui, sans-serif;
+    }
+    #sidebar nav ul li ul li a {
+      padding-left: 40px;
+      font-family: system-ui, sans-serif;
+      font-size: 0.95rem;
+    }
+    #sidebar nav ul li a:hover { background: rgba(0,0,0,0.1); }
+    .menu-header { text-align: center; font-family: "FairyDustB"; font-size: 1.5rem; margin-bottom: 1rem; color: #444; }
+
     @media (max-width: 700px) {
 
       .row,
@@ -259,6 +312,13 @@
         document.getElementById("image-overlay").style.display = "none";
       }
     });
+
+    // ✨ NEU: Menü Toggle Funktion
+    function toggleMenu() {
+      document.getElementById('sidebar').classList.toggle('open');
+      const btn = document.getElementById('menu-toggle');
+      btn.textContent = document.getElementById('sidebar').classList.contains('open') ? '✕' : '☰';
+    }
 
     class SettingsImageSettings extends HTMLElement {
       connectedCallback() {
@@ -321,13 +381,62 @@
 </head>
 
 <body>
+  <!-- ✨ NEU: Navigation Menu -->
+  <button id="menu-toggle" onclick="toggleMenu()">☰</button>
+  <div id="sidebar">
+    <div class="menu-header">Navigation</div>
+    <nav>
+      <ul>
+        <li><a href="#lobby" onclick="toggleMenu()">Lobby</a>
+          <ul>
+            <li><a href="#lobby-overview" onclick="toggleMenu()">Overview</a></li>
+            <li><a href="#lobby-name" onclick="toggleMenu()">Player Name</a></li>
+            <li><a href="#lobby-create" onclick="toggleMenu()">Create Game</a></li>
+            <li><a href="#lobby-deck" onclick="toggleMenu()">Select Deck</a></li>
+            <li><a href="#lobby-load" onclick="toggleMenu()">Load Game</a></li>
+            <li><a href="#lobby-list" onclick="toggleMenu()">Game List</a></li>
+            <li><a href="#lobby-settings" onclick="toggleMenu()">Settings</a></li>
+            <li><a href="#lobby-help" onclick="toggleMenu()">Help</a></li>
+          </ul>
+        </li>
+        <li><a href="#ingame" onclick="toggleMenu()">In Game</a>
+          <ul>
+            <li><a href="#ingame-field" onclick="toggleMenu()">Field of Play</a></li>
+            <li><a href="#ingame-overview" onclick="toggleMenu()">- Overview</a></li>
+            <li><a href="#ingame-phases" onclick="toggleMenu()">- Phases</a></li>
+            <li><a href="#ingame-settings" onclick="toggleMenu()">- Settings</a></li>
+            <li><a href="#ingame-save" onclick="toggleMenu()">- Save Game</a></li>
+            <li><a href="#ingame-lor" onclick="toggleMenu()">- Land of Redemption</a></li>
+            <li><a href="#ingame-reserve" onclick="toggleMenu()">- Reserve</a></li>
+            <li><a href="#ingame-deck" onclick="toggleMenu()">- Deck</a></li>
+            <li><a href="#ingame-discard" onclick="toggleMenu()">- Discard Pile</a></li>
+            <li><a href="#ingame-banish" onclick="toggleMenu()">- Banish Pile</a></li>
+            <li><a href="#ingame-next" onclick="toggleMenu()">- Next Phase</a></li>
+            <li><a href="#ingame-hand" onclick="toggleMenu()">- Hand</a></li>
+            <li><a href="#ingame-zones" onclick="toggleMenu()">- Zones</a></li>
+            <li><a href="#ingame-concede" onclick="toggleMenu()">- Concede</a></li>
+            <li><a href="#ingame-help" onclick="toggleMenu()">- Help</a></li>
+            <li><a href="#ingame-chat" onclick="toggleMenu()">- Chat</a></li>
+            <li><a href="#ingame-actions" onclick="toggleMenu()">Actions & Menus</a></li>
+            <li><a href="#action-attach" onclick="toggleMenu()">- Attach Card</a></li>
+            <li><a href="#action-pile" onclick="toggleMenu()">- Pile Menu</a></li>
+            <li><a href="#action-look" onclick="toggleMenu()">- Look/Reveal</a></li>
+            <li><a href="#action-select" onclick="toggleMenu()">- Selection Dialog</a></li>
+            <li><a href="#action-card" onclick="toggleMenu()">- Card Menu</a></li>
+            <li><a href="#action-counters" onclick="toggleMenu()">- Paralyze/Set Aside</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+  </div>
+
   <div class="page">
     <h1 class="document-title">Game Help</h1>
     <p align="center">(<b>Note:</b> Some of the pictures have bigger versions. Just click on them to activate the bigger
       version and click on the bigger version to close them again.)</p>
-    <h1 class="section-title">Lobby</h1>
+    <h1 class="section-title" id="lobby">Lobby</h1>
 
-    <div class="row">
+    <div class="row" id="lobby-overview">
       <div class="image">
         <img class="zoomable" src="./assets/help/lobby_overview.png" alt="Lobby" />
       </div>
@@ -340,7 +449,7 @@
       </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="lobby-name">
       <div class="image">
         <img src="./assets/help/player_name.png" alt="Player Name" />
       </div>
@@ -350,7 +459,7 @@
       </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="lobby-create">
       <div class="image">
         <img src="./assets/help/create_new_game.png" alt="Create New Game" />
       </div>
@@ -360,7 +469,7 @@
       </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="lobby-deck">
       <div class="image">
         <img src="./assets/help/select_deck.png" alt="Select Deck" />
       </div>
@@ -374,7 +483,7 @@
       </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="lobby-load">
       <div class="image">
         <img src="./assets/help/load_game.png" alt="Load Game" />
       </div>
@@ -387,7 +496,7 @@
       </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="lobby-list">
       <div class="image">
         <img src="./assets/help/list_of_games.png" alt="List of Games" />
       </div>
@@ -399,20 +508,20 @@
       </div>
     </div>
 
-    <div class="row">
+    <div class="row" id="lobby-settings">
       <settings-image-settings></settings-image-settings>
       <settings-text-settings></settings-text-settings>
     </div>
 
-    <div class="row">
+    <div class="row" id="lobby-help">
       <help-image-settings></help-image-settings>
       <help-text-settings></help-text-settings>
     </div>
 
-    <h1 class="section-title">In Game</h1>
-    <h2 class="subsection-title">Field of Play</h2>
+    <h1 class="section-title" id="ingame">In Game</h1>
+    <h2 class="subsection-title" id="ingame-field">Field of Play</h2>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-overview">
       <div class="image">
         <img class="zoomable" src="./assets/help/game_overview_compressed.png" alt="Field of Play" />
       </div>
@@ -425,7 +534,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-phases">
       <div class="image">
         <img src="./assets/help/phase_marker.png" alt="Phase Indicators" />
       </div>
@@ -446,13 +555,13 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-settings">
       <settings-image-settings></settings-image-settings>
       <settings-text-settings></settings-text-settings>
     </div>
 
     <!-- 8. Würfel 1 -->
-    <div class="row alt">
+    <div class="row alt" id="ingame-save">
       <div class="image">
         <img class="half-size" src="./assets/ui/buttons/Save_small.png" alt="Save Button" />
       </div>
@@ -464,7 +573,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-lor">
       <div class="image">
         <img class="half-size" src="./assets/gfx/Empty_LoR_Pile.png" alt="Land of Redemption" />
       </div>
@@ -477,7 +586,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-reserve">
       <div class="image">
         <img src="./assets/help/reserve.png" alt="Reserve" />
       </div>
@@ -491,7 +600,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-deck">
       <div class="image">
         <img src="./assets/help/reserve.png" alt="Deck" />
       </div>
@@ -507,7 +616,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-discard">
       <div class="image">
         <img class="half-size" src="./assets/gfx/Empty_Discard_Pile.png" alt="Discard Pile" />
       </div>
@@ -519,7 +628,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-banish">
       <div class="image">
         <img class="half-size" src="./assets/gfx/Empty_Banish_Pile.png" alt="Banish Pile" />
       </div>
@@ -532,7 +641,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-next">
       <div class="image">
         <img src="./assets/help/next_phase.png" alt="Next Phase" />
       </div>
@@ -546,7 +655,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-hand">
       <div class="image">
         <img class="zoomable" src="./assets/help/hands.png" alt="Hand" />
       </div>
@@ -571,7 +680,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-zones">
       <div class="image">
         <img class="zoomable" src="./assets/help/zone_identification.png" alt="Zones" />
       </div>
@@ -591,7 +700,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-concede">
       <div class="image">
         <img src="./assets/help/concede.png" alt="Concede Game" />
       </div>
@@ -604,12 +713,12 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-help">
       <help-image-settings></help-image-settings>
       <help-text-settings></help-text-settings>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="ingame-chat">
       <div class="image">
         <img class="half-size" src="./assets/ui/buttons/Button_Chat_Copilot_20260216_130131_small.png"
           alt="Chat and Log" />
@@ -623,9 +732,9 @@
       </div>
     </div>
 
-    <h2 class="subsection-title">Actions and Menus</h2>
+    <h2 class="subsection-title" id="ingame-actions">Actions and Menus</h2>
 
-    <div class="row alt">
+    <div class="row alt" id="action-attach">
       <div class="image">
         <img class="half-size" src="./assets/ui/icons/icon_attach_success.png" alt="Attach Card" />
       </div>
@@ -639,7 +748,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="action-pile">
       <div class="image">
         <img class="zoomable" src="./assets/help/pile_menu.png" alt="Pile Menu" />
       </div>
@@ -660,7 +769,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="action-look">
       <div class="image">
         <img class="zoomable" src="./assets/help/look_reveal_discard.png" alt="Look, Reveal and Discard" />
       </div>
@@ -678,7 +787,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="action-select">
       <div class="image">
         <img class="zoomable" src="./assets/help/card_selection_dialog.png" alt="Card Selection Dialog" />
       </div>
@@ -700,7 +809,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="action-card">
       <div class="image">
         <img class="zoomable" src="./assets/help/card_menu.png" alt="Card Menu" />
       </div>
@@ -719,7 +828,7 @@
       </div>
     </div>
 
-    <div class="row alt">
+    <div class="row alt" id="action-counters">
       <div class="image">
         <img class="zoomable" src="./assets/help/paralyze_setaside.png" alt="Paralyze and Set Aside" />
       </div>
