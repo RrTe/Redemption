@@ -11,6 +11,7 @@ const SECRET_KEY =
   process.env.SAVE_GAME_SECRET || "RedemptionColiseum_SuperSecretKey_2026";
 
 const logger = require("../utils/logger");
+const { logGameEvent } = require("../utils/gameLogger");
 const { RoomState } = require("../state/RoomState");
 const { Card } = require("../state/Card");
 const { PlayerState } = require("../state/PlayerState");
