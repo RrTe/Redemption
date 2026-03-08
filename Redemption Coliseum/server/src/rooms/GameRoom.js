@@ -52,10 +52,10 @@ class GameRoom extends colyseus.Room {
     cardDatabase.forEach((c) => {
       if (!c.id) {
         // ✨ FIX: Robuster Fallback, falls hash fehlschlägt oder nicht importiert wurde.
-        if (typeof hash === 'function') {
-            c.id = hash(c.Name);
+        if (typeof hash === "function") {
+          c.id = hash(c.Name);
         } else {
-            c.id = Buffer.from(c.Name).toString('base64');
+          c.id = Buffer.from(c.Name).toString("base64");
         }
       }
     });
@@ -72,6 +72,8 @@ class GameRoom extends colyseus.Room {
   }
 
   onCreate(options) {
+    logGameEvent("started");
+
     this.state = new RoomState();
     // ✨ DEINE IDEE: Eine zentrale, nicht-synchronisierte Map für schnellen Kartenzugriff.
     this.cardLookup = new Map();
@@ -112,7 +114,7 @@ class GameRoom extends colyseus.Room {
     // ✨ NEU: Heartbeat-Handler gegen Timeouts (Render/Heroku)
     this.onMessage("ping", (client) => {
       // ✨ FIX: Logge den Empfang auf dem Server (wieder einkommentiert für Test)
-      // console.log(`[Heartbeat] Ping received from ${client.sessionId}`); 
+      // console.log(`[Heartbeat] Ping received from ${client.sessionId}`);
     });
 
     // ✨ NEU: Handler für Save-Game Anfrage
@@ -527,7 +529,9 @@ class GameRoom extends colyseus.Room {
 
     // ✨ NEU: Handler für das "Ready"-Signal vom Client (nach dem Laden der Assets)
     this.onMessage("playerReady", (client) => {
-      logger.info(`[DIAGNOSTIC_STEP_1] 'playerReady' received from ${client.sessionId}`);
+      logger.info(
+        `[DIAGNOSTIC_STEP_1] 'playerReady' received from ${client.sessionId}`,
+      );
       this.readyClients.add(client.sessionId);
 
       // ✨ FIX: Markiere den Spieler im State als bereit (für das UI-Overlay)
@@ -551,7 +555,9 @@ class GameRoom extends colyseus.Room {
       ) {
         // ✨ FIX: Prüfe, ob das Spiel bereits läuft (Phase gesetzt?), um doppelten Start/Draw zu verhindern.
         if (!this.state.currentPhase) {
-          logger.info(`[DIAGNOSTIC_STEP_2] All players ready. Calling _initializeGame.`);
+          logger.info(
+            `[DIAGNOSTIC_STEP_2] All players ready. Calling _initializeGame.`,
+          );
           // Kurze Verzögerung, um sicherzustellen, dass der Client bereit für Nachrichten ist
           this.clock.setTimeout(() => {
             this._initializeGame();
@@ -585,15 +591,21 @@ class GameRoom extends colyseus.Room {
     });
   }
 
+  onDispose() {
+    logGameEvent("finished");
+  }
+
   onJoin(client, options) {
     logger.info(`[DIAGNOSTIC_JOIN_1] onJoin started for ${client.sessionId}`);
     // ✨ FIX: Verhindere Beitritt zu "Zombie-Räumen" (Spiele, die bereits vorbei sind).
     // Wenn ein Raum gerade herunterfährt, aber noch im MatchMaker gelistet ist,
     // verhindern wir hier, dass Spieler in diesen instabilen Zustand geraten.
     if (this.state.winnerId) {
-        logger.warn(`[GameRoom] Client ${client.sessionId} tried to join ended game ${this.roomId}. Rejecting.`);
-        client.leave(4000, "Game is already over");
-        return;
+      logger.warn(
+        `[GameRoom] Client ${client.sessionId} tried to join ended game ${this.roomId}. Rejecting.`,
+      );
+      client.leave(4000, "Game is already over");
+      return;
     }
 
     if (this.clients.length > this.maxClients) {
@@ -605,35 +617,35 @@ class GameRoom extends colyseus.Room {
     }
 
     try {
-    // ✨ NEU: Save/Load Logik - Wenn wir geladene Spieler haben, weisen wir diesen Slot zu.
-    if (this.savedPlayers.length > 0) {
-      this._reclaimSavedPlayer(client, options);
-      return;
-    }
+      // ✨ NEU: Save/Load Logik - Wenn wir geladene Spieler haben, weisen wir diesen Slot zu.
+      if (this.savedPlayers.length > 0) {
+        this._reclaimSavedPlayer(client, options);
+        return;
+      }
 
-    // ✨ NEU: Speichere das übergebene Deck in den User-Daten des Clients
-    client.userData = {
-      deck: options.deck || [], // Erwartet ein Array von Kartennamen (Strings)
-      playerName:
-        options.playerName || `Player ${client.sessionId.substr(0, 4)}`, // ✨ NEU
-      deckName: options.deckName || "Random Deck", // ✨ NEU
-    };
+      // ✨ NEU: Speichere das übergebene Deck in den User-Daten des Clients
+      client.userData = {
+        deck: options.deck || [], // Erwartet ein Array von Kartennamen (Strings)
+        playerName:
+          options.playerName || `Player ${client.sessionId.substr(0, 4)}`, // ✨ NEU
+        deckName: options.deckName || "Random Deck", // ✨ NEU
+      };
 
-    const p = new PlayerState();
+      const p = new PlayerState();
 
-    this._createPlayer(client);
-    // ✨ NEU: Verbessertes Logging, das alle Spieler-IDs im Raum anzeigt
-    const playerIds = Array.from(this.state.players.keys());
-    logger.info(
-      `[GameRoom] Player joined: ${client.sessionId}. RoomId: ${this.roomId}. Players in room (${
-        this.clients.length
-      }): [${playerIds.join(", ")}]. Locked: ${this.locked}`,
-    );
+      this._createPlayer(client);
+      // ✨ NEU: Verbessertes Logging, das alle Spieler-IDs im Raum anzeigt
+      const playerIds = Array.from(this.state.players.keys());
+      logger.info(
+        `[GameRoom] Player joined: ${client.sessionId}. RoomId: ${this.roomId}. Players in room (${
+          this.clients.length
+        }): [${playerIds.join(", ")}]. Locked: ${this.locked}`,
+      );
 
-    // ✨ ÄNDERUNG: Wir starten das Spiel NICHT mehr hier.
-    // Wir warten auf das "playerReady"-Signal von allen Clients.
+      // ✨ ÄNDERUNG: Wir starten das Spiel NICHT mehr hier.
+      // Wir warten auf das "playerReady"-Signal von allen Clients.
     } catch (err) {
-        logger.error(`[GameRoom] Error in onJoin for ${client.sessionId}:`, err);
+      logger.error(`[GameRoom] Error in onJoin for ${client.sessionId}:`, err);
     }
     logger.info(`[DIAGNOSTIC_JOIN_2] onJoin finished for ${client.sessionId}`);
   }
@@ -656,12 +668,16 @@ class GameRoom extends colyseus.Room {
     // Das stellt sicher, dass der Spieler sauber entfernt wird und beim nächsten Spielstart (auch im selben Raum) als "neu" gilt.
     if (this.state.winnerId) {
       this.state.players.delete(client.sessionId);
-      logger.info(`[GameRoom] Game Over. Removing player ${client.sessionId} immediately (no reconnect).`);
+      logger.info(
+        `[GameRoom] Game Over. Removing player ${client.sessionId} immediately (no reconnect).`,
+      );
 
       // ✨ FIX: If the last player leaves an ended game, destroy the room immediately.
       // This prevents the room from being reused in a "zombie" state for the next game.
       if (this.state.players.size === 0) {
-        logger.info(`[GameRoom] Last player left an ended game. Disposing room ${this.roomId}.`);
+        logger.info(
+          `[GameRoom] Last player left an ended game. Disposing room ${this.roomId}.`,
+        );
         this.disconnect();
       }
 
@@ -887,112 +903,119 @@ class GameRoom extends colyseus.Room {
 
   _createPlayer(client) {
     try {
-    // ✨ FINALE, ENTSCHEIDENDE KORREKTUR:
-    // Das PlayerState-Objekt muss seine eigene sessionId kennen.
-    // Das Fehlen dieser Zeile war die Ursache für die 'undefined' ownerIds.
-    const p = new PlayerState();
-    const requestedDeck = client.userData?.deck;
+      // ✨ FINALE, ENTSCHEIDENDE KORREKTUR:
+      // Das PlayerState-Objekt muss seine eigene sessionId kennen.
+      // Das Fehlen dieser Zeile war die Ursache für die 'undefined' ownerIds.
+      const p = new PlayerState();
+      const requestedDeck = client.userData?.deck;
 
-    // ✨ NEU: Deck-Erstellung
-    // Wenn der Client ein Deck gesendet hat, versuchen wir dieses zu nutzen.
-    // Andernfalls (oder wenn das Deck leer ist) nutzen wir den Zufalls-Modus.
-    let deckCards = [];
-    let reserveCards = [];
+      // ✨ NEU: Deck-Erstellung
+      // Wenn der Client ein Deck gesendet hat, versuchen wir dieses zu nutzen.
+      // Andernfalls (oder wenn das Deck leer ist) nutzen wir den Zufalls-Modus.
+      let deckCards = [];
+      let reserveCards = [];
 
-    // ✨ FIX: Prüfe auf das neue strukturierte Deck-Objekt
-    if (requestedDeck && requestedDeck.main && requestedDeck.main.length > 0) {
-      logger.info(
-        `[CREATE_PLAYER] Building deck from ${requestedDeck.main.length} main and ${requestedDeck.reserve?.length || 0} reserve cards for ${client.sessionId}`,
-      );
-
-      // Main Deck
-      requestedDeck.main.forEach((cardIdentifier) => {
-        // ✨ FIX: Suche nach Name ODER ID.
-        // cardIdentifier kann ein String (Name/ID) oder eine Zahl (ID aus JSON) sein.
-        // Wir vergleichen locker (==), um String/Number Unterschiede bei IDs abzufangen.
-        const cardDef = cardDatabase.find(
-          (c) => c.Name === cardIdentifier || c.id == cardIdentifier,
+      // ✨ FIX: Prüfe auf das neue strukturierte Deck-Objekt
+      if (
+        requestedDeck &&
+        requestedDeck.main &&
+        requestedDeck.main.length > 0
+      ) {
+        logger.info(
+          `[CREATE_PLAYER] Building deck from ${requestedDeck.main.length} main and ${requestedDeck.reserve?.length || 0} reserve cards for ${client.sessionId}`,
         );
-        if (cardDef) {
-          deckCards.push(cardDef);
-        } else {
-          logger.warn(
-            `[CREATE_PLAYER] Requested card '${cardIdentifier}' not found in DB.`,
-          );
-        }
-      });
 
-      // Reserve Deck
-      if (requestedDeck.reserve) {
-        requestedDeck.reserve.forEach((cardIdentifier) => {
+        // Main Deck
+        requestedDeck.main.forEach((cardIdentifier) => {
+          // ✨ FIX: Suche nach Name ODER ID.
+          // cardIdentifier kann ein String (Name/ID) oder eine Zahl (ID aus JSON) sein.
+          // Wir vergleichen locker (==), um String/Number Unterschiede bei IDs abzufangen.
           const cardDef = cardDatabase.find(
             (c) => c.Name === cardIdentifier || c.id == cardIdentifier,
           );
           if (cardDef) {
-            reserveCards.push(cardDef);
+            deckCards.push(cardDef);
           } else {
             logger.warn(
-              `[CREATE_PLAYER] Requested reserve card '${cardIdentifier}' not found in DB.`,
+              `[CREATE_PLAYER] Requested card '${cardIdentifier}' not found in DB.`,
             );
           }
         });
-      }
-    }
 
-    // Fallback: Zufallsdeck, wenn kein gültiges Deck übergeben wurde
-    if (deckCards.length === 0) {
-      logger.info(
-        `[CREATE_PLAYER] No valid deck provided. Generating random deck for ${client.sessionId}`,
-      );
-      const shuffledDatabase = [...cardDatabase];
-      shuffle(shuffledDatabase);
-      deckCards = shuffledDatabase.slice(0, 50);
-    }
-
-    // Karten instanziieren
-    const createCardInstance = (cardData, idx, zone) => {
-      const c = new Card();
-      c.id = `${client.sessionId}-card${idx}`;
-      // logger.info(`[CREATE_CARD] Creating card with id: ${c.id}`);
-      c.originalOwnerId = client.sessionId;
-      c.controllerId = client.sessionId;
-      Object.entries(cardData).forEach(([key, value]) => {
-        // ✨ FIX: Do not overwrite the unique instance ID (string) with the numeric DB ID.
-        if (key !== "id") {
-          c[key] = value;
+        // Reserve Deck
+        if (requestedDeck.reserve) {
+          requestedDeck.reserve.forEach((cardIdentifier) => {
+            const cardDef = cardDatabase.find(
+              (c) => c.Name === cardIdentifier || c.id == cardIdentifier,
+            );
+            if (cardDef) {
+              reserveCards.push(cardDef);
+            } else {
+              logger.warn(
+                `[CREATE_PLAYER] Requested reserve card '${cardIdentifier}' not found in DB.`,
+              );
+            }
+          });
         }
-      });
-      c.zone = zone;
-      p[zone].push(c);
-      this.cardLookup.set(c.id, c);
-    };
+      }
 
-    deckCards.forEach((cardData, idx) =>
-      createCardInstance(cardData, `main${idx}`, ZONES.DECK),
-    );
-    reserveCards.forEach((cardData, idx) =>
-      createCardInstance(cardData, `reserve${idx}`, ZONES.RESERVE),
-    );
+      // Fallback: Zufallsdeck, wenn kein gültiges Deck übergeben wurde
+      if (deckCards.length === 0) {
+        logger.info(
+          `[CREATE_PLAYER] No valid deck provided. Generating random deck for ${client.sessionId}`,
+        );
+        const shuffledDatabase = [...cardDatabase];
+        shuffle(shuffledDatabase);
+        deckCards = shuffledDatabase.slice(0, 50);
+      }
 
-    shuffle(p[ZONES.DECK]);
-    shuffle(p[ZONES.RESERVE]); // ✨ NEU: Auch Reserve mischen
-    p.connected = true; // ✨ FIX: Explizit als verbunden markieren
-    p.sessionId = client.sessionId;
+      // Karten instanziieren
+      const createCardInstance = (cardData, idx, zone) => {
+        const c = new Card();
+        c.id = `${client.sessionId}-card${idx}`;
+        // logger.info(`[CREATE_CARD] Creating card with id: ${c.id}`);
+        c.originalOwnerId = client.sessionId;
+        c.controllerId = client.sessionId;
+        Object.entries(cardData).forEach(([key, value]) => {
+          // ✨ FIX: Do not overwrite the unique instance ID (string) with the numeric DB ID.
+          if (key !== "id") {
+            c[key] = value;
+          }
+        });
+        c.zone = zone;
+        p[zone].push(c);
+        this.cardLookup.set(c.id, c);
+      };
 
-    // ✨ NEU: Namen setzen
-    p.name = client.userData.playerName;
-    p.deckName = client.userData.deckName;
+      deckCards.forEach((cardData, idx) =>
+        createCardInstance(cardData, `main${idx}`, ZONES.DECK),
+      );
+      reserveCards.forEach((cardData, idx) =>
+        createCardInstance(cardData, `reserve${idx}`, ZONES.RESERVE),
+      );
 
-    // ✨ DEIN VORSCHLAG: Logge den neu erstellten Spielerstatus, um zu überprüfen, ob alle Zonen vorhanden sind.
-    logger.info(`PlayerState created for ${client.sessionId}:`, p.toJSON());
+      shuffle(p[ZONES.DECK]);
+      shuffle(p[ZONES.RESERVE]); // ✨ NEU: Auch Reserve mischen
+      p.connected = true; // ✨ FIX: Explizit als verbunden markieren
+      p.sessionId = client.sessionId;
 
-    this.state.players.set(client.sessionId, p);
+      // ✨ NEU: Namen setzen
+      p.name = client.userData.playerName;
+      p.deckName = client.userData.deckName;
 
-    logger.info(
-      `PlayerState added for ${client.sessionId}. Total players: ${this.state.players.size}`,
-    );
+      // ✨ DEIN VORSCHLAG: Logge den neu erstellten Spielerstatus, um zu überprüfen, ob alle Zonen vorhanden sind.
+      logger.info(`PlayerState created for ${client.sessionId}:`, p.toJSON());
+
+      this.state.players.set(client.sessionId, p);
+
+      logger.info(
+        `PlayerState added for ${client.sessionId}. Total players: ${this.state.players.size}`,
+      );
     } catch (err) {
-        logger.error(`[CREATE_PLAYER] Error creating player for ${client.sessionId}:`, err);
+      logger.error(
+        `[CREATE_PLAYER] Error creating player for ${client.sessionId}:`,
+        err,
+      );
     }
   }
 
@@ -1016,37 +1039,42 @@ class GameRoom extends colyseus.Room {
         // an moveCard übergeben wird. Dies behebt den 'player.sessionId=undefined'-Fehler.
         // ✨ FINALE KORREKTUR: Fange den Rückgabewert von moveCard ab. Das Fehlen dieser Deklaration hat den Server zum Absturz gebracht.
         const drawnCards = moveCard(
-            player,
-            this.state,
-            this.cardLookup,
-            ZONES.DECK,
-            ZONES.HAND,
-            0,
-            STARTING_HAND_SIZE,
-            null,
+          player,
+          this.state,
+          this.cardLookup,
+          ZONES.DECK,
+          ZONES.HAND,
+          0,
+          STARTING_HAND_SIZE,
+          null,
         );
 
         // ✨ FINALE KORREKTUR: Sende die 'cardsDrawn'-Nachricht für die Starthand.
         // Dies war der Grund, warum die Animationen für die Starthand bisher nie ausgelöst wurden.
         if (drawnCards && drawnCards.length > 0) {
-            const cardIds = drawnCards.map((c) => c.id);
-            const client = this.clients.find((c) => c.sessionId === sessionId);
-            if (client) {
+          const cardIds = drawnCards.map((c) => c.id);
+          const client = this.clients.find((c) => c.sessionId === sessionId);
+          if (client) {
             logger.info(
-                `[INITIAL_DRAW] Sending 'cardsDrawn' event to client ${sessionId} for starting hand: [${cardIds.join(
+              `[INITIAL_DRAW] Sending 'cardsDrawn' event to client ${sessionId} for starting hand: [${cardIds.join(
                 ", ",
-                )}]`,
+              )}]`,
             );
             client.send("cardsDrawn", { cardIds });
-            }
+          }
 
-            // ✨ NEU: Log für Starthand
-            this.broadcastGameLog(`${player.name} draws starting hand.`); // ✨ FIX
+          // ✨ NEU: Log für Starthand
+          this.broadcastGameLog(`${player.name} draws starting hand.`); // ✨ FIX
         }
       } catch (err) {
-          logger.error(`[DIAGNOSTIC_ERROR] Error drawing hand for player ${sessionId}:`, err);
+        logger.error(
+          `[DIAGNOSTIC_ERROR] Error drawing hand for player ${sessionId}:`,
+          err,
+        );
       }
-      logger.info(`[DIAGNOSTIC_STEP_6] Finished drawing hand for player ${sessionId}.`);
+      logger.info(
+        `[DIAGNOSTIC_STEP_6] Finished drawing hand for player ${sessionId}.`,
+      );
     });
 
     // Startphase und ersten Zugzähler setzen
