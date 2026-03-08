@@ -237,13 +237,13 @@
       left: 0;
       width: 280px;
       height: 100%;
-      background: rgba(255, 255, 255, 0.95); /* Semitransparent, passend zum Stil */
+      background: rgba(255, 255, 255, 0.5); /* Semitransparent, passend zum Stil */
       border-right: 1px solid rgba(0,0,0,0.2);
       transform: translateX(-280px); /* Initial versteckt */
       transition: transform 0.3s ease-in-out;
       z-index: 10000;
       overflow-y: auto;
-      padding-top: 60px;
+      padding-top: 40px;
       box-shadow: 2px 0 10px rgba(0,0,0,0.3);
     }
 
@@ -256,7 +256,7 @@
       top: 15px;
       left: 15px;
       z-index: 10001;
-      background: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.6);
       border: 1px solid rgba(0,0,0,0.4);
       border-radius: 4px;
       padding: 5px 12px;
@@ -270,10 +270,11 @@
     #sidebar nav ul li { border-bottom: 1px solid rgba(0,0,0,0.05); }
     #sidebar nav ul li a {
       display: block;
-      padding: 10px 20px;
+      padding: 4px 20px;
       text-decoration: none;
       color: #222;
       font-family: "FairyDustB", system-ui, sans-serif;
+      font-size: 1.5rem;
     }
     #sidebar nav ul li ul li a {
       padding-left: 40px;
@@ -281,10 +282,9 @@
       font-size: 0.95rem;
     }
     #sidebar nav ul li a:hover { background: rgba(0,0,0,0.1); }
-    .menu-header { text-align: center; font-family: "FairyDustB"; font-size: 1.5rem; margin-bottom: 1rem; color: #444; }
+    .menu-header { text-align: center; font-family: "FairyDustB"; font-size: 2rem; margin-bottom: 1rem; color: #444; }
 
     @media (max-width: 700px) {
-
       .row,
       .row.alt {
         flex-direction: column;
