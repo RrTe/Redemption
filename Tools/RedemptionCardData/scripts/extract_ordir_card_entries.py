@@ -25,7 +25,7 @@ with ORDIR_TEXT.open(encoding="utf-8") as f:
 
 from mappings.ordir_categories import ORDIR_CATEGORIES
 from mappings.set_alias import SET_ALIAS
-from mappings.ordir_name_errata import ORDIR_NAME_EXCEPTIONS
+from mappings.ordir_name_errata import GLOBAL_EXCEPTIONS as ORDIR_NAME_EXCEPTIONS
 from models.enums.print_suffixes import PRINT_SUFFIX_KEYWORDS
 from models.enums.brigade import ALL_BRIGADES
 

@@ -13,6 +13,26 @@ GLOBAL_EXCEPTIONS = {
     "King Jehoahaz (Isreal)": "King Jehoahaz [Israel]",
     "King Jehoahaz (Israel)": "King Jehoahaz [Israel]",  # falls korrekt geschrieben
     "King Jehoahaz (Judah)": "King Jehoahaz [Judah]",
+    # Neu aus User-Feedback
+    "Amram & Jochebed": "Moses' Parents",
+    "Famine in Egypt": "Famine of Egypt",
+    "Nicodemus, the Seeker": "Nicodemus, the Seeker / Nicodemus, the Teacher",
+    "Nicodemus, the Teacher": "Nicodemus, the Seeker / Nicodemus, the Teacher",
+    "The Worm": "Withered Plant (The Worm)",
+    "Faith of Amram & Jochebed": "Faith of Moses' Parents",
+    "Lost Soul [Acts 14:4, \"Different Testaments\"]": "Lost Soul Acts 14:4 (Same Testament)",
+    "Stephanas": "Stephanus",
+    # Lost Soul specialized mappings
+    "Lost Soul [Acts 23:27, \"Withdraw\"]": "Lost Soul  Acts 23:27",
+    "Lost Soul [Hebrews 10:39, \"Shrink\"]": "Lost Soul  Hebrews 10:39",
+    "Lost Soul [James 1:15, \"Demon Shuffle\"]": "Lost Soul  James 1:15",
+    "Lost Soul [Jeremiah 3:25, \"Shame\"]": "Lost Soul  Jeremiah 3:25",
+    "Lost Soul [Luke 19:10, \"Negater\"]": "Lost Soul  Luke 19:10",
+    "Lost Soul [Matthew 8:34, \"Site Release\"]": "Lost Soul  Matthew 8:34",
+    # Taskmaster variants
+    "Task Master": "Taskmaster",
+    "Taskmaster_": "Taskmaster",
+    "Plague of Flies": "Plague of Flies", # Ensure stays same
 }
 
 # Set-spezifische Korrekturen (nur für bestimmte Sets gültig)

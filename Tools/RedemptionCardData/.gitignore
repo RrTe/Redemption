@@ -15,3 +15,11 @@ env/
 cline-python-openrouter
 Cline_Startprompt.txt
 .clinerules
+.clineignore
+log.txt
+*.code-workspace
+Prompts
+
+# Generierte Logs und Zwischenstände
+data/*.log
+data/ordir_extracted_raw.json

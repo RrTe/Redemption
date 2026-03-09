@@ -1,0 +1,171 @@
+--- RAW EXTRACTION SCRUTINY ---
+
+[Category: Disciple]
+  Found: {'card_name': 'James, the Fisherman', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Fisherman (GC)'}
+  Found: {'card_name': 'James, the Younger', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Younger (GC)'}
+  Found: {'card_name': 'James', 'brackets': '', 'set': 'I', 'raw_string': 'James (I)'}
+  Found: {'card_name': 'James Son of Alphaeus', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Alphaeus (Ap)'}
+  Found: {'card_name': 'James Son of Zebedee', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Zebedee (Ap)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'Di', 'raw_string': 'James, Son of Alphaeus (Di, GC)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Alphaeus (Di, GC)'}
+  Found: {'card_name': 'James, Son of Thunder', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Thunder (GC)'}
+  Found: {'card_name': 'James, son of Zebedee', 'brackets': '', 'set': 'H', 'raw_string': 'James, son of Zebedee (H)'}
+  Found: {'card_name': 'James, the Fisherman', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Fisherman (GC)'}
+  Found: {'card_name': 'James, the Younger', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Younger (GC)'}
+
+[Category: Duplicate Card]
+  Found: {'card_name': 'James', 'brackets': '', 'set': 'half-brother of Jesus (Ap', 'raw_string': 'James (half-brother of Jesus (Ap)'}
+  Found: {'card_name': 'James, Leader in Jerusalem', 'brackets': '', 'set': 'PC', 'raw_string': 'James, Leader in Jerusalem (PC)'}
+  Found: {'card_name': 'James Son of Alphaeus', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Alphaeus (Ap)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'Di', 'raw_string': 'James, Son of Alphaeus (Di, GC)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Alphaeus (Di, GC)'}
+  Found: {'card_name': 'James, the Younger', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Younger (GC)'}
+  Found: {'card_name': 'James Son of Zebedee', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Zebedee (Ap)'}
+  Found: {'card_name': 'James, son of Zebedee', 'brackets': '', 'set': 'H', 'raw_string': 'James, son of Zebedee (H)'}
+  Found: {'card_name': 'James', 'brackets': '', 'set': 'I', 'raw_string': 'James (I)'}
+  Found: {'card_name': 'James, the Fisherman', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Fisherman (GC)'}
+  Found: {'card_name': 'James, Son of Thunder', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Thunder (GC)'}
+  Found: {'card_name': 'Mary the Mother of James', 'brackets': '', 'set': 'RA', 'raw_string': 'Mary the Mother of James (RA)'}
+  Found: {'card_name': 'Mary, Mother of James', 'brackets': '', 'set': 'GC', 'raw_string': 'Mary, Mother of James (GC)'}
+  Found: {'card_name': 'Nicodemus', 'brackets': '', 'set': 'Ap', 'raw_string': 'Nicodemus (Ap, Di)'}
+  Found: {'card_name': 'Nicodemus', 'brackets': '', 'set': 'Di', 'raw_string': 'Nicodemus (Ap, Di)'}
+  Found: {'card_name': 'Nicodemus, the Seeker', 'brackets': '', 'set': 'P', 'raw_string': 'Nicodemus, the Seeker (P)'}
+  Found: {'card_name': 'Nicodemus, the Teacher', 'brackets': '', 'set': 'GC', 'raw_string': 'Nicodemus, the Teacher (GC)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'RA', 'raw_string': 'Salome (RA)'}
+  Found: {'card_name': 'Salome the Sorrowful', 'brackets': '', 'set': 'GC', 'raw_string': 'Salome the Sorrowful (GC)'}
+  Found: {'card_name': 'Salome, Spice Bringer', 'brackets': '', 'set': 'GC', 'raw_string': 'Salome, Spice Bringer (GC)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'B', 'raw_string': 'Salome (B, Or, TP)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'Or', 'raw_string': 'Salome (B, Or, TP)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'TP', 'raw_string': 'Salome (B, Or, TP)'}
+
+[Category: Empty Tomb Hero]
+  Found: {'card_name': 'Mary the Mother of James', 'brackets': '', 'set': 'RA', 'raw_string': 'Mary the Mother of James (RA)'}
+  Found: {'card_name': 'Mary, Mother of James', 'brackets': '', 'set': 'GC', 'raw_string': 'Mary, Mother of James (GC)'}
+  Found: {'card_name': 'Nicodemus', 'brackets': '', 'set': 'Ap', 'raw_string': 'Nicodemus (Ap, Di)'}
+  Found: {'card_name': 'Nicodemus', 'brackets': '', 'set': 'Di', 'raw_string': 'Nicodemus (Ap, Di)'}
+  Found: {'card_name': 'Nicodemus, the Seeker', 'brackets': '', 'set': 'GC', 'raw_string': 'Nicodemus, the Seeker (GC)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'RA', 'raw_string': 'Salome (RA)'}
+  Found: {'card_name': 'Salome the Sorrowful', 'brackets': '', 'set': 'GC', 'raw_string': 'Salome the Sorrowful (GC)'}
+  Found: {'card_name': 'Salome, Spice Bringer', 'brackets': '', 'set': 'GC', 'raw_string': 'Salome, Spice Bringer (GC)'}
+
+[Category: Gender]
+  (Category matched targets, but no target cards found here. First 3 cards: [{'card_name': "Card Title/Verse text: If the title or verse refers to a character with words such as 'he' or 'his' or 'Prince', etc., then the character is to be treated as male.", 'brackets': '', 'set': 'UNKNOWN', 'raw_string': "Card Title/Verse text: If the title or verse refers to a character with words such as 'he' or 'his' or 'Prince', etc., then the character is to be treated as male."}, {'card_name': 'Card Art: If the character appears to be male, it is treated as male. If the character appears to be female, it is treated as female. Dual-Gender Characters Sometimes a card will represent exactly two characters having different genders based on the', 'brackets': '', 'set': 'UNKNOWN', 'raw_string': 'Card Art: If the character appears to be male, it is treated as male. If the character appears to be female, it is treated as female. Dual-Gender Characters Sometimes a card will represent exactly two characters having different genders based on the'}, {'card_name': 'Amram & Jochebed', 'brackets': '', 'set': 'CW-Alt', 'raw_string': 'Amram & Jochebed (CW-Alt)'}])
+
+[Category: Isaiah Card]
+  Found: {'card_name': 'Root of Jesse', 'brackets': '', 'set': 'LC', 'raw_string': 'Root of Jesse (LC, P)'}
+  Found: {'card_name': 'Root of Jesse', 'brackets': '', 'set': 'P', 'raw_string': 'Root of Jesse (LC, P)'}
+
+[Category: II Kings Card]
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'Pi', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'LC', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'P', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+
+[Category: James Card]
+  Found: {'card_name': 'James, Leader in Jerusalem', 'brackets': '', 'set': 'PC', 'raw_string': 'James, Leader in Jerusalem (PC)'}
+  Found: {'card_name': 'James', 'brackets': '', 'set': 'half-brother of Jesus (Ap', 'raw_string': 'James (half-brother of Jesus (Ap)'}
+  Found: {'card_name': 'James, Leader in Jerusalem', 'brackets': '', 'set': 'PC', 'raw_string': 'James, Leader in Jerusalem (PC)'}
+  Found: {'card_name': 'Mercy of James', 'brackets': '', 'set': 'Or', 'raw_string': 'Mercy of James (Or, PC)'}
+  Found: {'card_name': 'Mercy of James', 'brackets': '', 'set': 'PC', 'raw_string': 'Mercy of James (Or, PC)'}
+  Found: {'card_name': 'Lost Soul [James 4:6', 'brackets': '', 'set': 'Proverbs 3:34', 'raw_string': 'Lost Soul [James 4:6 (Proverbs 3:34)'}
+
+[Category: Jerusalem Church]
+  Found: {'card_name': 'James', 'brackets': '', 'set': 'I', 'raw_string': 'James (I)'}
+  Found: {'card_name': 'James (half-brother of Jesus)', 'brackets': '', 'set': 'Ap', 'raw_string': 'James (half-brother of Jesus) (Ap)'}
+  Found: {'card_name': 'James Son of Alphaeus', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Alphaeus (Ap)'}
+  Found: {'card_name': 'James, Son of Thunder', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Thunder (GC)'}
+  Found: {'card_name': 'James Son of Zebedee', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Zebedee (Ap)'}
+  Found: {'card_name': 'James, Leader in Jerusalem', 'brackets': '', 'set': 'PC', 'raw_string': 'James, Leader in Jerusalem (PC)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'Di', 'raw_string': 'James, Son of Alphaeus (Di, GC)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Alphaeus (Di, GC)'}
+  Found: {'card_name': 'James, son of Zebedee', 'brackets': '', 'set': 'H', 'raw_string': 'James, son of Zebedee (H)'}
+  Found: {'card_name': 'James, the Fisherman', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Fisherman (GC)'}
+  Found: {'card_name': 'James, the Younger', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Younger (GC)'}
+  Found: {'card_name': 'Mary the Mother of James', 'brackets': '', 'set': 'RA', 'raw_string': 'Mary the Mother of James (RA)'}
+  Found: {'card_name': 'Mary, Mother of James', 'brackets': '', 'set': 'GC', 'raw_string': 'Mary, Mother of James (GC)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'RA', 'raw_string': 'Salome (RA)'}
+  Found: {'card_name': 'Salome the Sorrowful', 'brackets': '', 'set': 'GC', 'raw_string': 'Salome the Sorrowful (GC)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'Spice Bringer (GC', 'raw_string': 'Salome (Spice Bringer (GC)'}
+
+[Category: John Card]
+  Found: {'card_name': 'Nicodemus', 'brackets': '', 'set': 'Ap', 'raw_string': 'Nicodemus (Ap, Di)'}
+  Found: {'card_name': 'Nicodemus', 'brackets': '', 'set': 'Di', 'raw_string': 'Nicodemus (Ap, Di)'}
+
+[Category: Luke Card]
+  Found: {'card_name': 'James', 'brackets': '', 'set': 'I', 'raw_string': 'James (I)'}
+  Found: {'card_name': 'James Son of Alphaeus', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Alphaeus (Ap)'}
+  Found: {'card_name': 'James Son of Zebedee', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Zebedee (Ap)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Alphaeus (GC)'}
+  Found: {'card_name': 'James, son of Zebedee', 'brackets': '', 'set': 'H', 'raw_string': 'James, son of Zebedee (H)'}
+  Found: {'card_name': 'James the Younger', 'brackets': '', 'set': 'GC', 'raw_string': 'James the Younger (GC)'}
+
+[Category: Mark Card]
+  Found: {'card_name': 'Mary the Mother of James', 'brackets': '', 'set': 'RA', 'raw_string': 'Mary the Mother of James (RA)'}
+  Found: {'card_name': 'Mary, Mother of James', 'brackets': '', 'set': 'GC', 'raw_string': 'Mary, Mother of James (GC)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'RA', 'raw_string': 'Salome (RA)'}
+  Found: {'card_name': 'Salome the Sorrowful', 'brackets': '', 'set': 'GC', 'raw_string': 'Salome the Sorrowful (GC)'}
+  Found: {'card_name': 'Salome, Spice Bringer', 'brackets': '', 'set': 'GC', 'raw_string': 'Salome, Spice Bringer (GC)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'B', 'raw_string': 'Salome (B, Or, TP)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'Or', 'raw_string': 'Salome (B, Or, TP)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'TP', 'raw_string': 'Salome (B, Or, TP)'}
+
+[Category: Martyr]
+  Found: {'card_name': 'James', 'brackets': '', 'set': 'I', 'raw_string': 'James (I)'}
+  Found: {'card_name': 'James', 'brackets': '', 'set': 'half- brother of Jesus (Ap', 'raw_string': 'James (half- brother of Jesus (Ap)'}
+  Found: {'card_name': 'James Son of Alphaeus', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Alphaeus (Ap)'}
+  Found: {'card_name': 'James Son of Zebedee', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Zebedee (Ap)'}
+  Found: {'card_name': 'James, Leader in Jerusalem', 'brackets': '', 'set': 'PC', 'raw_string': 'James, Leader in Jerusalem (PC)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'Di', 'raw_string': 'James, Son of Alphaeus (Di, GC)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Alphaeus (Di, GC)'}
+  Found: {'card_name': 'James, Son of Thunder', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Thunder (GC)'}
+  Found: {'card_name': 'James, son of Zebedee', 'brackets': '', 'set': 'H', 'raw_string': 'James, son of Zebedee (H)'}
+  Found: {'card_name': 'James, the Fisherman', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Fisherman (GC)'}
+  Found: {'card_name': 'James, the Younger', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Younger (GC)'}
+
+[Category: Matthew Card]
+  Found: {'card_name': 'James, the Fisherman', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Fisherman (GC)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'Di', 'raw_string': 'James, Son of Alphaeus (Di)'}
+  Found: {'card_name': 'James, Son of Thunder', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Thunder (GC)'}
+
+[Category: Missionary]
+  Found: {'card_name': 'James', 'brackets': '', 'set': 'I', 'raw_string': 'James (I)'}
+  Found: {'card_name': 'James Son of Alphaeus', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Alphaeus (Ap)'}
+  Found: {'card_name': 'James Son of Zebedee', 'brackets': '', 'set': 'Ap', 'raw_string': 'James Son of Zebedee (Ap)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'Di', 'raw_string': 'James, Son of Alphaeus (Di, GC)'}
+  Found: {'card_name': 'James, Son of Alphaeus', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Alphaeus (Di, GC)'}
+  Found: {'card_name': 'James, Son of Thunder', 'brackets': '', 'set': 'GC', 'raw_string': 'James, Son of Thunder (GC)'}
+  Found: {'card_name': 'James, son of Zebedee', 'brackets': '', 'set': 'H', 'raw_string': 'James, son of Zebedee (H)'}
+  Found: {'card_name': 'James, the Fisherman', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Fisherman (GC)'}
+  Found: {'card_name': 'James, the Younger', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Younger (GC)'}
+
+[Category: N.T.]
+  Found: {'card_name': 'Matthew, Mark, Luke, John, Acts, Romans, I Corinthians, II Corinthians, Galatians, Ephesians, Philippians, Colossians, I Thessalonians, II Thessalonians, I Timothy, II Timothy, Titus, Philemon, Hebrews, James, I Peter, II Peter, I John, II John, III John, Jude and Revelation. Cards with a "N.T." identifier are N.T. cards, regardless of the reference on the card. Cards with a reference from one of the New Testament books are N.T. cards, unless they have an "O.T." identifier. Cards with a historical reference from Josephus are N.T. cards, unless they have an "O.T." identifier.', 'brackets': '', 'set': 'UNKNOWN', 'raw_string': 'Matthew, Mark, Luke, John, Acts, Romans, I Corinthians, II Corinthians, Galatians, Ephesians, Philippians, Colossians, I Thessalonians, II Thessalonians, I Timothy, II Timothy, Titus, Philemon, Hebrews, James, I Peter, II Peter, I John, II John, III John, Jude and Revelation. Cards with a "N.T." identifier are N.T. cards, regardless of the reference on the card. Cards with a reference from one of the New Testament books are N.T. cards, unless they have an "O.T." identifier. Cards with a historical reference from Josephus are N.T. cards, unless they have an "O.T." identifier.'}
+
+[Category: Pharisee]
+  Found: {'card_name': 'Nicodemus, the Teacher', 'brackets': '', 'set': 'GC', 'raw_string': 'Nicodemus, the Teacher (GC)'}
+
+[Category: Royalty (or Royal or Member of a Royal Family)]
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'B', 'raw_string': 'Salome (B, Or, TP)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'Or', 'raw_string': 'Salome (B, Or, TP)'}
+  Found: {'card_name': 'Salome', 'brackets': '', 'set': 'TP', 'raw_string': 'Salome (B, Or, TP)'}
+
+[Category: Star Card]
+  Found: {'card_name': 'James, the Fisherman', 'brackets': '', 'set': 'GC', 'raw_string': 'James, the Fisherman (GC)'}
+  Found: {'card_name': 'Root of Jesse', 'brackets': '', 'set': 'LC', 'raw_string': 'Root of Jesse (LC, P)'}
+  Found: {'card_name': 'Root of Jesse', 'brackets': '', 'set': 'P', 'raw_string': 'Root of Jesse (LC, P)'}
+
+[Category: Tabernacle Artifact]
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'Pi', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'LC', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'P', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+
+[Category: Temple Artifact]
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'Pi', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'LC', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'P', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+
+[Category: Zerubbabel's Temple Artifact]
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'Pi', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'LC', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+  Found: {'card_name': 'Book of the Law', 'brackets': '', 'set': 'P', 'raw_string': 'Book of the Law (Pi, LC, P)'}
+
+--- End Scrutiny ---
