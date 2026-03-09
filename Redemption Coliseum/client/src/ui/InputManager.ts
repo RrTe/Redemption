@@ -11,11 +11,9 @@ import { StackedPileUI } from "./StackedPileUI.js";
 import { type MoveCardMessage } from "../../../shared/messages.js";
 import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones.js";
 import type { QuantitySelectionDialogData } from "../scenes/QuantitySelectionDialogScene.js";
-import { log, DEBUG } from "../utils/logger";
+import { log } from "../utils/logger";
 import { ElementManager } from "./ElementManager.js"; // ✨ NEU
-
-// ✨ NEU: Verzögerung (in ms), bevor der Attach-Modus aktiviert wird.
-const ATTACH_HOVER_DELAY = 700;
+import { DragDropHandler } from "./DragDropHandler.js"; // ✨ REFACTOR
 
 /**
  * Verwaltet alle globalen Input-Handler der Szene,
@@ -32,12 +30,8 @@ export class InputManager {
   private lastClickTime: number = 0;
   private lastClickedCardId: string | null = null;
   private activeMenu: RadialMenu | null = null; // Referenz auf das offene Menü
-  private isDragging: boolean = false; // ✨ NEU: Globaler Drag-Status
-  private currentDragTarget: CardUI | null = null; // ✨ NEU: Aktuelles Ziel unter der Maus
-  private pendingDragTarget: CardUI | null = null; // ✨ NEU: Potenzielles Ziel für Attach (während Delay)
-  private attachHoverTimer: number | null = null; // ✨ NEU: Timer für Attach-Verzögerung
-  private currentHoveredDeck: StackedPileUI | null = null; // ✨ NEU: Welches Deck wird gerade gehovert?
   private elementManager: ElementManager; // ✨ NEU
+  private dragDropHandler: DragDropHandler; // ✨ REFACTOR
 
   constructor(
     scene: Phaser.Scene,
@@ -55,40 +49,23 @@ export class InputManager {
     this.animationManager = animationManager;
     this.previewManager = previewManager;
     this.elementManager = elementManager; // ✨ NEU
-  }
 
-  /**
-   * ✨ NEU: Hilfsmethode, um eine Karte sicher zurückzusetzen.
-   * Stellt Position, Winkel und Tiefe wieder her.
-   */
-  private snapBack(gameObject: CardUI) {
-    // Animation zurück zur Startposition
-    this.scene.tweens.add({
-      targets: gameObject,
-      x: gameObject.getData("start_x"),
-      y: gameObject.getData("start_y"),
-      angle: gameObject.getData("start_angle"),
-      ease: "Power1",
-      duration: 200,
-    });
-
-    // Tiefe wiederherstellen
-    if (gameObject.scene) {
-      const startDepth = gameObject.getData("start_depth");
-      if (startDepth !== undefined) {
-        gameObject.setDepth(startDepth);
-      }
-      // Zur Sicherheit nach oben holen, damit sie nicht hinter der Elternkarte verschwindet
-      this.scene.children.bringToTop(gameObject);
-    }
+    // ✨ REFACTOR: Create the dedicated handler for drag and drop.
+    this.dragDropHandler = new DragDropHandler(
+      scene,
+      room,
+      networkManager,
+      animationManager,
+      previewManager,
+      elementManager,
+      dragBounds,
+    );
   }
 
   /** ✨ NEU: Aufräumen von Timern und Listeners. */
   public destroy() {
-    if (this.attachHoverTimer !== null) {
-      clearTimeout(this.attachHoverTimer);
-      this.attachHoverTimer = null;
-    }
+    // ✨ REFACTOR: Delegate cleanup to the handler.
+    this.dragDropHandler.destroy();
     // Scene-Input-Listener werden von Phaser beim Scene-Shutdown automatisch entfernt.
   }
 
@@ -467,440 +444,8 @@ export class InputManager {
       },
     );
 
-    this.scene.input.on(
-      "dragstart",
-      (pointer: Phaser.Input.Pointer, gameObject: CardUI) => {
-        this.isDragging = true; // ✨ NEU: Drag-Start markieren
-        log("Input", `dragstart on ${gameObject.cardData?.id}`);
-
-        // Verstecke die Vorschau sofort, wenn eine Interaktion startet.
-        this.previewManager.hide();
-
-        // ✨ NEU: Stoppe eventuelle Hover-Animationen, damit unsere Physik-Engine
-        // die volle Kontrolle über Skalierung und Position hat.
-        this.animationManager.stopHandHoverAnimation(gameObject);
-
-        // ✨ FIX: Capture depth BEFORE changing it!
-        gameObject.setData("start_depth", gameObject.depth);
-
-        gameObject.setDepth(1000); // ✨ FIX: Drag-Layer muss höher sein als Handkarten (100+)
-        // Merke dir die Startposition der Karte.
-        gameObject.setData("start_x", gameObject.x);
-        gameObject.setData("start_y", gameObject.y);
-        gameObject.setData("start_angle", gameObject.angle);
-        gameObject.setData("drop_action_taken", false); // ✨ NEU: Flag für sauberes Event-Handling
-
-        // ✨ NEU: Initialisiere Drag-Targets, um Sprünge zu vermeiden
-        gameObject.dragTargetX = gameObject.x;
-        gameObject.dragTargetY = gameObject.y;
-
-        this.currentDragTarget = null; // Reset Target
-        gameObject.isBeingDragged = true; // ✨ NEU: Drag-Status setzen
-        gameObject.startGlow(); // ✨ NEU: Glow erzwingen/behalten beim Start des Drags
-        this.scene.children.bringToTop(gameObject);
-      },
-    );
-
-    this.scene.input.on(
-      "drag",
-      (
-        pointer: Phaser.Input.Pointer,
-        gameObject: CardUI,
-        dragX: number,
-        dragY: number,
-      ) => {
-        // ✨ FIX: Sicherheitscheck, falls das Objekt während des Drags zerstört wurde.
-        if (!gameObject.scene) return;
-
-        // ✨ NEU: Setze nur das Ziel für die Physik-Engine (CardUI.onSceneUpdate)
-        gameObject.dragTargetX = Phaser.Math.Clamp(
-          dragX,
-          this.dragBounds.left,
-          this.dragBounds.right,
-        );
-        gameObject.dragTargetY = Phaser.Math.Clamp(
-          dragY,
-          this.dragBounds.top,
-          this.dragBounds.bottom,
-        );
-
-        // ✨ ROLLBACK: Zurück zu hitTestPointer, da die manuelle Logik Probleme machte.
-        // Safety Check für den Camera-Bug:
-        if (!this.scene.cameras.main) return;
-
-        const hitObjects = this.scene.input.hitTestPointer(pointer);
-
-        // 1. Deck Highlight
-        const deckPile = hitObjects.find(
-          (obj) => obj instanceof StackedPileUI && obj.zoneName === ZONES.DECK,
-        ) as StackedPileUI | undefined;
-
-        if (deckPile) {
-          this.currentHoveredDeck = deckPile;
-          const bounds = deckPile.getBounds();
-          // Wenn wir in der unteren Hälfte sind -> Highlight an
-          if (pointer.y > bounds.centerY) {
-            deckPile.showBottomHighlight(true);
-            gameObject.setTransparent(true); // ✨ NEU: Karte transparent machen
-          } else {
-            deckPile.showBottomHighlight(false);
-            // Transparenz nur zurücksetzen, wenn wir nicht gerade ein Attach-Ziel haben
-            if (!this.currentDragTarget) gameObject.setTransparent(false);
-          }
-        } else {
-          // Wenn wir das Deck verlassen haben, Highlight ausschalten
-          if (this.currentHoveredDeck) {
-            this.currentHoveredDeck.showBottomHighlight(false);
-            this.currentHoveredDeck = null;
-            if (!this.currentDragTarget) gameObject.setTransparent(false);
-          }
-        }
-
-        // 2. Zonen-Highlighting
-        // Wir suchen nach Zonen unter der Maus (die keine Karten sind)
-        const hitZone = hitObjects.find(
-          (obj) => obj instanceof Phaser.GameObjects.Zone && obj.name,
-        ) as Phaser.GameObjects.Zone | undefined;
-
-        if (hitZone) {
-          const zoneName = hitZone.name as Zone;
-          const ownerId = hitZone.getData("ownerId");
-          const isMe = ownerId === this.room.sessionId;
-
-          let label = "";
-          // ✨ FIX: Einheitliches Farbschema (Gold) für alle Zonen.
-          // Die Unterscheidung erfolgt jetzt rein über den Text.
-          const UNIFIED_COLOR = 0xffd700;
-          let color = UNIFIED_COLOR;
-
-          // Logik für Beschriftung
-          if (zoneName === ZONES.TERRITORY) {
-            label = isMe ? "My Territory" : "Opponent Territory";
-          } else if (zoneName === ZONES.LAND_OF_BONDAGE) {
-            label = isMe ? "My Land of Bondage" : "Opponent Land of Bondage";
-          } else if (zoneName === ZONES.BATTLEFIELD) {
-            // Nur in der Battle-Phase hervorheben
-            if (this.room.state.currentPhase === "battle") {
-              label = "Field of Battle";
-            }
-          }
-
-          // Wenn wir einen gültigen Label haben, zeigen wir das Highlight
-          if (label) {
-            this.elementManager.showZoneHighlight(hitZone, label, color);
-          } else {
-            this.elementManager.hideZoneHighlight();
-          }
-        } else {
-          // Keine Zone getroffen -> Verstecken
-          this.elementManager.hideZoneHighlight();
-        }
-
-        // 3. Attach Target (Andere Karten)
-        // Suche nach einer CardUI, die NICHT die gezogene Karte ist.
-        const target = hitObjects.find(
-          (obj) =>
-            obj instanceof CardUI &&
-            obj !== gameObject &&
-            // Nur Karten im Territory oder Battlefield erlauben (keine Handkarten, keine Piles)
-            (obj as CardUI).currentZone !== ZONES.HAND &&
-            !PILE_ZONES.includes((obj as CardUI).currentZone) &&
-            // ✨ FIX: Keine Lost Souls als Ziel (wie gewünscht)
-            (obj as CardUI).cardData.Type !== "Lost Soul",
-        ) as CardUI | undefined;
-
-        if (target) {
-          if (this.currentDragTarget !== target) {
-            // Wenn wir bereits auf dieses Ziel warten, Timer weiterlaufen lassen
-            if (this.pendingDragTarget === target) return;
-
-            // Neues potenzielles Ziel gefunden!
-
-            // 1. Alten Timer abbrechen
-            if (this.attachHoverTimer !== null) {
-              clearTimeout(this.attachHoverTimer);
-              this.attachHoverTimer = null;
-            }
-
-            // 2. Altes aktives Ziel deaktivieren (sofortiges Feedback bei Wechsel)
-            if (this.currentDragTarget) {
-              this.currentDragTarget.showTargetGlow(false);
-              this.currentDragTarget = null;
-
-              // ✨ FIX: Transparenz nur zurücksetzen, wenn wir NICHT über dem Deck-Boden sind
-              const isOverDeckBottom =
-                this.currentHoveredDeck &&
-                pointer.y > this.currentHoveredDeck.getBounds().centerY;
-              if (!isOverDeckBottom) {
-                gameObject.setTransparent(false);
-              }
-            }
-
-            // 3. Neuen Timer starten (400ms Verzögerung)
-            this.pendingDragTarget = target;
-            this.attachHoverTimer = window.setTimeout(() => {
-              // Prüfen, ob wir noch draggen (Sicherheit)
-              if (!this.isDragging) return;
-
-              this.currentDragTarget = target;
-              this.currentDragTarget.showTargetGlow(true);
-              gameObject.setTransparent(true); // "Geist"-Effekt
-
-              this.pendingDragTarget = null;
-              this.attachHoverTimer = null;
-            }, ATTACH_HOVER_DELAY);
-          }
-        } else {
-          // Kein Ziel
-          // Timer abbrechen
-          if (this.attachHoverTimer !== null) {
-            clearTimeout(this.attachHoverTimer);
-            this.attachHoverTimer = null;
-          }
-          this.pendingDragTarget = null;
-
-          if (this.currentDragTarget) {
-            this.currentDragTarget.showTargetGlow(false);
-            this.currentDragTarget = null;
-
-            // ✨ FIX: Auch hier prüfen, ob wir über dem Deck sind, bevor wir resetten
-            const isOverDeckBottom =
-              this.currentHoveredDeck &&
-              pointer.y > this.currentHoveredDeck.getBounds().centerY;
-            if (!isOverDeckBottom) {
-              gameObject.setTransparent(false); // Reset
-            }
-          }
-        }
-      },
-    );
-
-    this.scene.input.on(
-      "dragend",
-      (pointer: Phaser.Input.Pointer, gameObject: CardUI, dropped: boolean) => {
-        this.isDragging = false;
-
-        // ✨ REFACTOR: Die Logik für das Zurückschnappen wird jetzt zentral im 'dragend' Handler
-        // geprüft, NACHDEM der 'drop' Handler die Chance hatte, eine Aktion auszuführen.
-
-        // Standard-Tiefen-Reset für normale Drag-Operationen.
-        // Wenn die Karte zurückschnappt, wird diese Tiefe im selben Frame durch die obige Logik korrigiert.
-        if (gameObject.scene && !gameObject.getData("is_snapping_back")) {
-          // Setze eine Basis-Tiefe, die vom CardRenderer im nächsten Frame überschrieben wird.
-          // ✨ FIX: Stelle vorerst die Start-Tiefe wieder her, statt 0 zu setzen.
-          // Das verhindert, dass die Karte visuell "hinter" andere springt, bis das Server-Update kommt.
-          const startDepth =
-            gameObject.getData("start_depth") ??
-            (gameObject.currentZone === ZONES.HAND ? 100 : 0);
-          gameObject.setDepth(startDepth);
-        }
-
-        gameObject.isBeingDragged = false; // ✨ NEU: Drag-Status zurücksetzen
-        gameObject.resetDragEffects(); // ✨ NEU: Alle visuellen Effekte (Tilt, Scale, Tint, Overlay) zurücksetzen
-        gameObject.setTransparent(false); // Sicherstellen, dass Transparenz weg ist
-        gameObject.stopGlow(); // ✨ NEU: Glow beenden
-
-        // ✨ NEU: Deck-Highlight zurücksetzen
-        if (this.currentHoveredDeck) {
-          this.currentHoveredDeck.showBottomHighlight(false);
-          this.currentHoveredDeck = null;
-        }
-
-        // ✨ NEU: Zonen-Highlight verstecken
-        this.elementManager.hideZoneHighlight();
-
-        // Timer aufräumen
-        if (this.attachHoverTimer !== null) {
-          clearTimeout(this.attachHoverTimer);
-          this.attachHoverTimer = null;
-        }
-        this.pendingDragTarget = null;
-
-        if (this.currentDragTarget) {
-          this.currentDragTarget.showTargetGlow(false);
-          this.currentDragTarget = null;
-        }
-
-        // ✨ FINALE KORREKTUR: Wenn der 'drop' Handler keine Aktion ausgeführt hat (weder
-        // eine Nachricht gesendet noch explizit zurückgeschnappt), dann müssen wir
-        // die Karte jetzt zurücksetzen. Das deckt den Fall "im leeren Raum losgelassen" ab.
-        if (!gameObject.getData("drop_action_taken")) {
-          log(
-            "Input",
-            `[DRAG_END] No drop action was taken. Snapping card back.`,
-          );
-          // ✨ FIX: Nutze zentrale snapBack Methode (stellt auch Tiefe wieder her!)
-          this.snapBack(gameObject);
-        }
-        // Wenn `dropped` true ist, wird der 'drop'-Handler ausgelöst und der Server
-        // kümmert sich um die neue Position.
-      },
-    );
-
-    this.scene.input.on(
-      "drop",
-      (
-        pointer: Phaser.Input.Pointer,
-        gameObject: CardUI,
-        dropZone: Phaser.GameObjects.Zone | PileUI,
-      ) => {
-        log("Input", `Drop called with dropzone:`, dropZone);
-
-        // ✨ REFACTOR: Die gesamte Logik für das Loslassen einer Karte ist jetzt hier.
-        // Wir prüfen zuerst, ob die Karte zurückschnappen soll.
-        const isAttached = !!gameObject.cardData.attachedTo;
-        if (isAttached) {
-          const startX = gameObject.getData("start_x");
-          const startY = gameObject.getData("start_y");
-          const dist = Phaser.Math.Distance.Between(
-            startX,
-            startY,
-            gameObject.x,
-            gameObject.y,
-          );
-          const DETACH_THRESHOLD = 50; // Etwas großzügigerer Radius
-
-          if (dist < DETACH_THRESHOLD) {
-            log(
-              "Input",
-              `[DROP] Attached card moved only ${dist.toFixed(1)}px. Snapping back (preventing detach).`,
-            );
-            gameObject.setData("drop_action_taken", true); // Wir haben eine Aktion ausgeführt (snapBack)
-            this.snapBack(gameObject);
-            return; // WICHTIG: Hier abbrechen! Keine Nachricht an den Server.
-          }
-        }
-        const fromZone = gameObject.cardData.zone as Zone;
-        const toZone = dropZone.name as Zone;
-        const targetOwnerId = dropZone.getData("ownerId");
-
-        // ✨ NEU: Attach-Logik beim Drop
-        // ✨ FIX 2: Fallback-Suche, falls currentDragTarget null ist (z.B. bei schnellem Drag-Out am Rand).
-        let attachTarget = this.currentDragTarget;
-        if (!attachTarget) {
-          const hitObjects = this.scene.input.hitTestPointer(pointer);
-          attachTarget =
-            (hitObjects.find(
-              (obj) =>
-                obj instanceof CardUI &&
-                obj !== gameObject &&
-                (obj as CardUI).currentZone !== ZONES.HAND &&
-                !PILE_ZONES.includes((obj as CardUI).currentZone) &&
-                (obj as CardUI).cardData.Type !== "Lost Soul",
-            ) as CardUI | undefined) || null;
-
-          if (attachTarget) {
-            log(
-              "Input",
-              `[DROP] Found attach target via fallback hitTest: ${attachTarget.cardData.id}`,
-            );
-          }
-        }
-
-        if (attachTarget) {
-          log(
-            "Input",
-            `[DROP] Attaching card ${gameObject.cardData.id} to ${attachTarget.cardData.id}`,
-          );
-          // Animation abspielen
-          gameObject.setData("drop_action_taken", true); // Aktion wurde ausgeführt
-          attachTarget.playAttachAnimation();
-
-          // Nachricht an Server senden
-          this.networkManager.sendMoveCard({
-            from: fromZone,
-            to: attachTarget.currentZone, // In die Zone des Ziels bewegen
-            cardId: gameObject.cardData.id,
-            coords: { attachTo: attachTarget.cardData.id },
-          });
-          return; // Fertig, keine weitere Zonen-Logik
-        }
-
-        // ✨ NEU: Token-Regeln
-        // Tokens dürfen nicht auf die Hand, ins Deck oder in die Reserve.
-        const isToken =
-          gameObject.cardData.Type &&
-          gameObject.cardData.Type.includes("Token");
-        const forbiddenTokenZones = [ZONES.HAND, ZONES.DECK, ZONES.RESERVE];
-
-        if (isToken && forbiddenTokenZones.includes(toZone)) {
-          log("Input", `[DROP] Blocked Token from entering ${toZone}.`);
-          gameObject.setData("drop_action_taken", true);
-          // ✨ FIX: Nutze zentrale snapBack Methode
-          this.snapBack(gameObject);
-          return;
-        }
-
-        // ✨ NEU: Paralysierte Karten dürfen nicht ins Battlefield bewegt werden.
-        if (toZone === ZONES.BATTLEFIELD && gameObject.isParalyzed) {
-          log(
-            "Input",
-            `[DROP] Blocked paralyzed card from entering Battlefield.`,
-          );
-          gameObject.setData("drop_action_taken", true);
-          // Zurück zur Startposition animieren (manuell, da dropped=true ist)
-          // ✨ FIX: Nutze zentrale snapBack Methode
-          this.snapBack(gameObject);
-          return; // Abbruch: Keine Nachricht an den Server senden
-        }
-
-        const currentControllerId = gameObject.cardData.controllerId;
-        // isAttached wurde bereits oben definiert
-
-        // ✨ NEU: Prüfen, ob die Karte nur innerhalb derselben "freien" Zone verschoben wird.
-        const isSameZoneMove =
-          !isAttached && // ✨ FIX: Diese Optimierung gilt nur, wenn die Karte NICHT angefügt ist.
-          // Wenn sie angefügt ist, MÜSSEN wir eine volle "moveCard"-Nachricht senden, um das Ablösen auf dem Server auszulösen.
-          fromZone === toZone &&
-          [ZONES.TERRITORY, ZONES.LAND_OF_BONDAGE, ZONES.BATTLEFIELD].includes(
-            fromZone,
-          ) &&
-          // ✨ FIX: Nur wenn kein neuer Besitzer definiert ist (z.B. Battlefield)
-          // ODER der Besitzer gleich bleibt. Erlaubt Transfer zum Gegner (Besitzerwechsel).
-          (!targetOwnerId || targetOwnerId === currentControllerId);
-
-        if (isSameZoneMove) {
-          // Wenn ja, senden wir nur ein Koordinaten-Update, um Counter etc. nicht zurückzusetzen.
-          log(
-            "Input",
-            `[MOVE] Card moved within the same zone. Sending coordinate update only.`,
-          );
-          gameObject.setData("drop_action_taken", true);
-          this.room.send("updateCardState", {
-            cardId: gameObject.cardData.id,
-            updates: { x: gameObject.x, y: gameObject.y },
-          });
-        } else {
-          // Ansonsten wird die normale "moveCard"-Logik für Zonenwechsel ausgeführt.
-          const coords: MoveCardMessage["coords"] = {
-            x: gameObject.x,
-            y: gameObject.y,
-            targetPlayerId: dropZone.getData("ownerId"),
-          };
-
-          if (toZone === ZONES.DECK) {
-            const dropZoneBounds = dropZone.getBounds();
-            if (pointer.y > dropZoneBounds.centerY) {
-              coords.position = "bottom";
-            }
-          }
-
-          const message: MoveCardMessage = {
-            from: fromZone,
-            to: toZone,
-            cardId: gameObject.cardData.id,
-            coords,
-          };
-          log(
-            "Input",
-            `[MOVE] Sending full moveCard message for zone change:`,
-            message,
-          );
-          gameObject.setData("drop_action_taken", true);
-          this.networkManager.sendMoveCard(message);
-        }
-      },
-    );
+    // ✨ REFACTOR: Delegate drag event registration to the handler.
+    this.dragDropHandler.registerHandlers();
   }
 
   /**
@@ -912,11 +457,11 @@ export class InputManager {
     gameObject: Phaser.GameObjects.GameObject,
   ) {
     // ✨ NEU: Verhindere Hover-Effekte auf anderen Karten, während eine Karte gezogen wird.
-    if (this.isDragging) {
+    if (this.dragDropHandler.isDragging) {
       // Safety-Check: Falls der Pointer nicht mehr gedrückt ist, ist der Drag vorbei.
       // Dies verhindert, dass der Status hängen bleibt, falls 'dragend' verschluckt wurde.
       if (!pointer.isDown) {
-        this.isDragging = false;
+        this.dragDropHandler.isDragging = false;
       } else {
         return;
       }
