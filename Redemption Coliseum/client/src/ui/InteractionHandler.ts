@@ -12,6 +12,7 @@ import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones.js";
 import type { QuantitySelectionDialogData } from "../scenes/QuantitySelectionDialogScene.js";
 import { log } from "../utils/logger";
 import { DragDropHandler } from "./DragDropHandler.js";
+import { MenuFactory } from "./factories/MenuFactory.js"; // ✨ REFACTOR
 
 /**
  * Manages click, double-click, hover, and menu interactions.
@@ -23,6 +24,7 @@ export class InteractionHandler {
   private animationManager: AnimationManager;
   private previewManager: PreviewManager;
   private dragDropHandler: DragDropHandler;
+  private menuFactory: MenuFactory; // ✨ REFACTOR
 
   private lastClickTime: number = 0;
   private lastClickedCardId: string | null = null;
@@ -42,6 +44,9 @@ export class InteractionHandler {
     this.animationManager = animationManager;
     this.previewManager = previewManager;
     this.dragDropHandler = dragDropHandler;
+
+    // ✨ REFACTOR: Instantiate the factory to create menu actions.
+    this.menuFactory = new MenuFactory(scene, room, networkManager);
   }
 
   public registerHandlers() {
@@ -203,160 +208,10 @@ export class InteractionHandler {
           return;
         }
 
-        const menuConfigs: ActionIconConfig[] = [];
-
-        menuConfigs.push({
-          iconKey: "icon_search",
-          actionKey: "search",
-          callback: () => {
-            log(
-              "Input",
-              `[RadialMenu] Action 'search' triggered for ${searchZone} of ${targetPlayerId}`,
-            );
-            this.networkManager.sendRequestSearchPile(
-              searchZone!,
-              targetPlayerId,
-            );
-          },
-        });
-
-        menuConfigs.push({
-          iconKey: "icon_look",
-          actionKey: "look",
-          callback: () => {
-            log(
-              "Input",
-              `[RadialMenu] Action 'look' triggered for ${searchZone} of ${
-                targetPlayerId || "self"
-              }`,
-            );
-
-            const pId = targetPlayerId || this.room.sessionId;
-            const player = this.room.state.players.get(pId);
-            if (!player) return;
-            const pile = (player as any)[searchZone!];
-            const maxCount = pile?.length || 0;
-
-            if (maxCount === 0) return;
-
-            this.scene.scene.pause("CardGame");
-            this.scene.scene.launch("QuantitySelectionDialogScene", {
-              title: "View Cards",
-              maxCount: maxCount,
-              onConfirm: (count, position) => {
-                this.networkManager.sendLookAtCards(
-                  searchZone!,
-                  count,
-                  position,
-                  targetPlayerId,
-                );
-              },
-              onCancel: () => {
-                this.scene.scene.resume("CardGame");
-              },
-            } as QuantitySelectionDialogData);
-          },
-        });
-
-        menuConfigs.push({
-          iconKey: "icon_reveal",
-          actionKey: "reveal",
-          callback: () => {
-            log(
-              "Input",
-              `[RadialMenu] Action 'reveal' triggered for ${searchZone} of ${
-                targetPlayerId || "self"
-              }`,
-            );
-
-            const pId = targetPlayerId || this.room.sessionId;
-            const player = this.room.state.players.get(pId);
-            if (!player) return;
-            const pile = (player as any)[searchZone!];
-            const maxCount = pile?.length || 0;
-
-            if (maxCount === 0) return;
-
-            this.scene.scene.pause("CardGame");
-            this.scene.scene.launch("QuantitySelectionDialogScene", {
-              title: "Reveal Cards",
-              maxCount: maxCount,
-              onConfirm: (count, position) => {
-                this.networkManager.sendRevealCards(
-                  searchZone!,
-                  count,
-                  position,
-                  targetPlayerId,
-                );
-              },
-              onCancel: () => {
-                this.scene.scene.resume("CardGame");
-              },
-            } as QuantitySelectionDialogData);
-          },
-        });
-
-        if (searchZone === ZONES.DECK || searchZone === ZONES.RESERVE) {
-          menuConfigs.push({
-            iconKey: "icon_shuffle",
-            actionKey: "shuffle",
-            callback: () => {
-              log(
-                "Input",
-                `[RadialMenu] Action 'shuffle' triggered for ${searchZone}`,
-              );
-              this.room.send("shufflePile", { zone: searchZone });
-            },
-          });
-        }
-
-        if (searchZone === ZONES.DECK) {
-          menuConfigs.push({
-            iconKey: "icon_discard",
-            actionKey: "discard",
-            callback: () => {
-              log(
-                "Input",
-                `[RadialMenu] Action 'discard' triggered for ${searchZone} of ${
-                  targetPlayerId || "self"
-                }`,
-              );
-
-              const pId = targetPlayerId || this.room.sessionId;
-              const player = this.room.state.players.get(pId);
-              if (!player) return;
-              const pile = (player as any)[searchZone!];
-              const maxCount = pile?.length || 0;
-
-              if (maxCount === 0) return;
-
-              this.scene.scene.pause("CardGame");
-              this.scene.scene.launch("QuantitySelectionDialogScene", {
-                title: "Discard Cards",
-                maxCount: maxCount,
-                onConfirm: (count, position) => {
-                  let cardsToDiscard: any[] = [];
-                  if (position === "top") {
-                    cardsToDiscard = pile.slice(0, count);
-                  } else {
-                    cardsToDiscard = pile.slice(-count);
-                  }
-
-                  cardsToDiscard.forEach((card: any) => {
-                    this.networkManager.sendMoveCard({
-                      from: ZONES.DECK,
-                      to: ZONES.DISCARD,
-                      cardId: card.id,
-                    });
-                  });
-                },
-                onCancel: () => {
-                  this.scene.scene.resume("CardGame");
-                },
-              } as QuantitySelectionDialogData);
-            },
-          });
-        }
+        const menuConfigs = this.menuFactory.getActionsForPile(
+          searchZone,
+          targetPlayerId,
+        );
 
         const radius = 80;
         const iconSize =
@@ -448,42 +303,7 @@ export class InteractionHandler {
       return;
     }
 
-    const menuConfigs: ActionIconConfig[] = [
-      {
-        iconKey: "icon_turn",
-        actionKey: "turn",
-        callback: () => {
-          this.room.send("updateCardState", {
-            cardId: card.cardData.id,
-            updates: { isFaceDown: !card.cardData.isFaceDown },
-          });
-        },
-      },
-      {
-        iconKey: "icon_flip",
-        actionKey: "flip",
-        callback: () => {
-          this.room.send("updateCardState", {
-            cardId: card.cardData.id,
-            updates: { isFlipped: !card.cardData.isFlipped },
-          });
-        },
-      },
-      {
-        iconKey: "icon_paralyze",
-        actionKey: "paralyze",
-        callback: () => {
-          this.openCounterDialog(card, "paralyze", "Paralyze Value");
-        },
-      },
-      {
-        iconKey: "icon_setaside",
-        actionKey: "setaside",
-        callback: () => {
-          this.openCounterDialog(card, "setaside", "Set Aside Value");
-        },
-      },
-    ];
+    const menuConfigs = this.menuFactory.getActionsForCard(card);
 
     const radius = 80;
     const iconSize =
@@ -513,26 +333,5 @@ export class InteractionHandler {
     );
 
     pointer.event.stopPropagation();
-  }
-
-  private openCounterDialog(card: CardUI, counterKey: string, title: string) {
-    const currentVal = (card.cardData.counters as any).get(counterKey) || 0;
-
-    this.scene.scene.pause("CardGame");
-    this.scene.scene.launch("QuantitySelectionDialogScene", {
-      title: title,
-      maxCount: 99,
-      minCount: 0,
-      enablePositionSelection: false,
-      onConfirm: (count: number) => {
-        this.room.send("updateCardState", {
-          cardId: card.cardData.id,
-          updates: { counters: { [counterKey]: count } },
-        });
-      },
-      onCancel: () => {
-        this.scene.scene.resume("CardGame");
-      },
-    } as QuantitySelectionDialogData);
   }
 }
