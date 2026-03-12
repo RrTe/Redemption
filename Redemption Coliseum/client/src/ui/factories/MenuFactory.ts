@@ -31,121 +31,16 @@ export class MenuFactory {
   ): ActionIconConfig[] {
     const menuConfigs: ActionIconConfig[] = [];
 
-    menuConfigs.push({
-      iconKey: "icon_search",
-      actionKey: "search",
-      callback: () => {
-        log(
-          "Input",
-          `[RadialMenu] Action 'search' triggered for ${zone} of ${targetPlayerId}`,
-        );
-        this.networkManager.sendRequestSearchPile(zone, targetPlayerId);
-      },
-    });
-
-    menuConfigs.push({
-      iconKey: "icon_look",
-      actionKey: "look",
-      callback: () => {
-        log(
-          "Input",
-          `[RadialMenu] Action 'look' triggered for ${zone} of ${
-            targetPlayerId || "self"
-          }`,
-        );
-        const pId = targetPlayerId || this.room.sessionId;
-        const player = this.room.state.players.get(pId);
-        if (!player) return;
-        const pile = (player as any)[zone];
-        const maxCount = pile?.length || 0;
-        if (maxCount === 0) return;
-        this.openQuantityDialog("View Cards", maxCount, (count, position) => {
-          this.networkManager.sendLookAtCards(
-            zone,
-            count,
-            position,
-            targetPlayerId,
-          );
-        });
-      },
-    });
-
-    menuConfigs.push({
-      iconKey: "icon_reveal",
-      actionKey: "reveal",
-      callback: () => {
-        log(
-          "Input",
-          `[RadialMenu] Action 'reveal' triggered for ${zone} of ${
-            targetPlayerId || "self"
-          }`,
-        );
-        const pId = targetPlayerId || this.room.sessionId;
-        const player = this.room.state.players.get(pId);
-        if (!player) return;
-        const pile = (player as any)[zone];
-        const maxCount = pile?.length || 0;
-        if (maxCount === 0) return;
-        this.openQuantityDialog("Reveal Cards", maxCount, (count, position) => {
-          this.networkManager.sendRevealCards(
-            zone,
-            count,
-            position,
-            targetPlayerId,
-          );
-        });
-      },
-    });
+    menuConfigs.push(this._createSearchAction(zone, targetPlayerId));
+    menuConfigs.push(this._createLookAction(zone, targetPlayerId));
+    menuConfigs.push(this._createRevealAction(zone, targetPlayerId));
 
     if (zone === ZONES.DECK || zone === ZONES.RESERVE) {
-      menuConfigs.push({
-        iconKey: "icon_shuffle",
-        actionKey: "shuffle",
-        callback: () => {
-          log("Input", `[RadialMenu] Action 'shuffle' triggered for ${zone}`);
-          this.room.send("shufflePile", { zone: zone });
-        },
-      });
+      menuConfigs.push(this._createShuffleAction(zone));
     }
 
     if (zone === ZONES.DECK) {
-      menuConfigs.push({
-        iconKey: "icon_discard",
-        actionKey: "discard",
-        callback: () => {
-          log(
-            "Input",
-            `[RadialMenu] Action 'discard' triggered for ${zone} of ${
-              targetPlayerId || "self"
-            }`,
-          );
-          const pId = targetPlayerId || this.room.sessionId;
-          const player = this.room.state.players.get(pId);
-          if (!player) return;
-          const pile = (player as any)[zone];
-          const maxCount = pile?.length || 0;
-          if (maxCount === 0) return;
-          this.openQuantityDialog(
-            "Discard Cards",
-            maxCount,
-            (count, position) => {
-              let cardsToDiscard: any[] = [];
-              if (position === "top") {
-                cardsToDiscard = pile.slice(0, count);
-              } else {
-                cardsToDiscard = pile.slice(-count);
-              }
-              cardsToDiscard.forEach((card: any) => {
-                this.networkManager.sendMoveCard({
-                  from: ZONES.DECK,
-                  to: ZONES.DISCARD,
-                  cardId: card.id,
-                });
-              });
-            },
-          );
-        },
-      });
+      menuConfigs.push(this._createDiscardAction(zone, targetPlayerId));
     }
 
     return menuConfigs;
@@ -191,6 +86,114 @@ export class MenuFactory {
       },
     ];
     return menuConfigs;
+  }
+
+  private _createSearchAction(
+    zone: Zone,
+    targetPlayerId?: string,
+  ): ActionIconConfig {
+    return {
+      iconKey: "icon_search",
+      actionKey: "search",
+      callback: () => {
+        log(
+          "Input",
+          `[RadialMenu] Action 'search' triggered for ${zone} of ${targetPlayerId}`,
+        );
+        this.networkManager.sendRequestSearchPile(zone, targetPlayerId);
+      },
+    };
+  }
+
+  private _createLookAction(
+    zone: Zone,
+    targetPlayerId?: string,
+  ): ActionIconConfig {
+    return {
+      iconKey: "icon_look",
+      actionKey: "look",
+      callback: () => {
+        const pId = targetPlayerId || this.room.sessionId;
+        const player = this.room.state.players.get(pId);
+        if (!player) return;
+        const pile = (player as any)[zone];
+        const maxCount = pile?.length || 0;
+        if (maxCount === 0) return;
+
+        this.openQuantityDialog("View Cards", maxCount, (count, position) => {
+          this.networkManager.sendLookAtCards(
+            zone,
+            count,
+            position,
+            targetPlayerId,
+          );
+        });
+      },
+    };
+  }
+
+  private _createRevealAction(
+    zone: Zone,
+    targetPlayerId?: string,
+  ): ActionIconConfig {
+    return {
+      iconKey: "icon_reveal",
+      actionKey: "reveal",
+      callback: () => {
+        const pId = targetPlayerId || this.room.sessionId;
+        const player = this.room.state.players.get(pId);
+        if (!player) return;
+        const pile = (player as any)[zone];
+        const maxCount = pile?.length || 0;
+        if (maxCount === 0) return;
+
+        this.openQuantityDialog("Reveal Cards", maxCount, (count, position) => {
+          this.networkManager.sendRevealCards(
+            zone,
+            count,
+            position,
+            targetPlayerId,
+          );
+        });
+      },
+    };
+  }
+
+  private _createShuffleAction(zone: Zone): ActionIconConfig {
+    return {
+      iconKey: "icon_shuffle",
+      actionKey: "shuffle",
+      callback: () => {
+        this.room.send("shufflePile", { zone: zone });
+      },
+    };
+  }
+
+  private _createDiscardAction(
+    zone: Zone,
+    targetPlayerId?: string,
+  ): ActionIconConfig {
+    return {
+      iconKey: "icon_discard",
+      actionKey: "discard",
+      callback: () => {
+        const pId = targetPlayerId || this.room.sessionId;
+        const player = this.room.state.players.get(pId);
+        if (!player) return;
+        const pile = (player as any)[zone];
+        const maxCount = pile?.length || 0;
+        if (maxCount === 0) return;
+
+        this.openQuantityDialog(
+          "Discard Cards",
+          maxCount,
+          (count, position) => {
+            // The actual discard logic is now on the server for consistency.
+            this.room.send("discardFromDeck", { count, position, targetPlayerId });
+          },
+        );
+      },
+    };
   }
 
   private openQuantityDialog(
