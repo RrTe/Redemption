@@ -5,6 +5,7 @@ import { SelectionDialogScene } from "../scenes/SelectionDialogScene";
 import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones";
 import type { MoveCardMessage } from "../../../shared/messages";
 import { log, DEBUG } from "../utils/logger";
+import { type OverlayManager } from "../managers/OverlayManager.js"; // ✨ FIX
 import { getClient } from "./connection"; // ✨ NEU
 
 /**
@@ -16,6 +17,7 @@ export class NetworkManager {
   private scene: Phaser.Scene;
   private ui: GameUI;
   private $: StateCallback;
+  private overlayManager: OverlayManager; // ✨ FIX
   private heartbeatInterval: number | null = null; // ✨ NEU
   private isReconnecting: boolean = false; // ✨ NEU
   private onLeaveListener: any; // ✨ FIX: To store and remove the listener on destroy
@@ -26,60 +28,80 @@ export class NetworkManager {
     room: TypedRoom,
     ui: GameUI,
     stateCallback: StateCallback,
+    overlayManager: OverlayManager, // ✨ FIX
   ) {
     this.scene = scene;
     this.room = room;
     this.ui = ui;
     this.$ = stateCallback;
+    this.overlayManager = overlayManager; // ✨ FIX
     this.instanceId = Phaser.Utils.String.UUID().slice(0, 8); // ✨ FIX: Use slice() instead of deprecated substr()
-    log("Network", `[NetworkManager ${this.instanceId}] Created for room ${room.roomId}`); // ✨ FIX: Use roomId
+    log(
+      "Network",
+      `[NetworkManager ${this.instanceId}] Created for room ${room.roomId}`,
+    ); // ✨ FIX: Use roomId
   }
 
   /** Registriert alle Handler für eingehende Server-Nachrichten. */
   public registerHandlers() {
-    log("Network", `[NetworkManager ${this.instanceId}] Registering message handlers...`);
+    log(
+      "Network",
+      `[NetworkManager ${this.instanceId}] Registering message handlers...`,
+    );
 
     // ✨ NEU: Heartbeat starten (alle 15s)
     this.startHeartbeat();
 
     // ✨ NEU: Browser-Events für sofortiges Feedback beim lokalen Testen ("Offline"-Modus)
     window.addEventListener("offline", () => {
-        log("Network", "Browser went offline (Event).");
-        this.ui.showWaitingOverlay("Connection lost. Waiting for network...", false);
+      log("Network", "Browser went offline (Event).");
+      this.overlayManager.showWaitingOverlay(
+        "Connection lost. Waiting for network...",
+        false,
+      );
     });
 
     window.addEventListener("online", () => {
-        log("Network", "Browser went online (Event).");
-        // Wenn der Socket noch offen ist (kein onLeave gefeuert), Overlay entfernen.
-        if (this.room && this.room.connection && this.room.connection.isOpen) {
-             this.ui.showWaitingOverlay("Network restored.", false);
-             setTimeout(() => this.ui.hideWaitingOverlay(), 1000);
-        }
+      log("Network", "Browser went online (Event).");
+      // Wenn der Socket noch offen ist (kein onLeave gefeuert), Overlay entfernen.
+      if (this.room && this.room.connection && this.room.connection.isOpen) {
+        this.overlayManager.showWaitingOverlay("Network restored.", false);
+        setTimeout(() => this.overlayManager.hideWaitingOverlay(), 1000);
+      }
     });
 
     // ✨ NEU: Automatischen Reconnect bei Verbindungsabbruch behandeln
     // ✨ FIX: Store the listener so it can be removed.
     this.onLeaveListener = this.room.onLeave((code) => {
-        log("Network", `[NetworkManager ${this.instanceId}] [onLeave] Disconnected with code ${code}`);
-        
-        // ✨ FIX: Zombie-Schutz! Wenn die Szene nicht mehr aktiv ist (z.B. Wechsel zur Lobby),
-        // dürfen wir nicht mehr auf Events reagieren.
-        if (!this.scene.sys.isActive()) {
-            log("Network", `[NetworkManager ${this.instanceId}] Scene is inactive. Ignoring onLeave.`);
-            return;
-        }
-        
-        // ✨ NEU: Spezifische Behandlung für "Game Over" (Zombie Room)
-        if (code === 4000) {
-            this.ui.showWaitingOverlay("Game is already over. Please return to lobby.", true);
-            return;
-        }
+      log(
+        "Network",
+        `[NetworkManager ${this.instanceId}] [onLeave] Disconnected with code ${code}`,
+      );
 
-        // Code > 1000 bedeutet meistens Fehler/Timeout (nicht consented).
-        // Wir prüfen auch isReconnecting, um Endlosschleifen zu vermeiden.
-        if (code > 1000 && !this.isReconnecting) {
-            this.handleDisconnect();
-        }
+      // ✨ FIX: Zombie-Schutz! Wenn die Szene nicht mehr aktiv ist (z.B. Wechsel zur Lobby),
+      // dürfen wir nicht mehr auf Events reagieren.
+      if (!this.scene.sys.isActive()) {
+        log(
+          "Network",
+          `[NetworkManager ${this.instanceId}] Scene is inactive. Ignoring onLeave.`,
+        );
+        return;
+      }
+
+      // ✨ NEU: Spezifische Behandlung für "Game Over" (Zombie Room)
+      if (code === 4000) {
+        this.overlayManager.showWaitingOverlay(
+          "Game is already over. Please return to lobby.",
+          true,
+        );
+        return;
+      }
+
+      // Code > 1000 bedeutet meistens Fehler/Timeout (nicht consented).
+      // Wir prüfen auch isReconnecting, um Endlosschleifen zu vermeiden.
+      if (code > 1000 && !this.isReconnecting) {
+        this.handleDisconnect();
+      }
     });
 
     // Lausche auf die Suchergebnisse vom Server.
@@ -240,53 +262,62 @@ export class NetworkManager {
 
   // ✨ NEU: Heartbeat-Methoden
   private startHeartbeat() {
-      this.stopHeartbeat();
-      log("Network", "Starting Heartbeat (15s interval)");
-      // Sende alle 15 Sekunden einen Ping, um Render/Heroku Timeouts zu verhindern.
-      this.heartbeatInterval = window.setInterval(() => {
-          if (this.room) {
-              // log("Network", "❤️ Sending Heartbeat (ping)"); // ✨ FIX: Log für Produktion deaktiviert
-              this.room.send("ping");
-          }
-      }, 15000);
+    this.stopHeartbeat();
+    log("Network", "Starting Heartbeat (15s interval)");
+    // Sende alle 15 Sekunden einen Ping, um Render/Heroku Timeouts zu verhindern.
+    this.heartbeatInterval = window.setInterval(() => {
+      if (this.room) {
+        // log("Network", "❤️ Sending Heartbeat (ping)"); // ✨ FIX: Log für Produktion deaktiviert
+        this.room.send("ping");
+      }
+    }, 15000);
   }
 
   private stopHeartbeat() {
-      if (this.heartbeatInterval) {
-          clearInterval(this.heartbeatInterval);
-          this.heartbeatInterval = null;
-      }
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
   }
 
   // ✨ NEU: Reconnect-Logik
   private async handleDisconnect() {
-      this.isReconnecting = true;
-      this.ui.showWaitingOverlay("Connection lost. Reconnecting...", false);
+    this.isReconnecting = true;
+    this.overlayManager.showWaitingOverlay(
+      "Connection lost. Reconnecting...",
+      false,
+    );
 
-      const token = localStorage.getItem("reconnectionToken");
-      const client = getClient();
+    const token = localStorage.getItem("reconnectionToken");
+    const client = getClient();
 
-      if (!token || !client) {
-          this.ui.showWaitingOverlay("Connection lost. Please return to lobby.", true);
-          return;
-      }
+    if (!token || !client) {
+      this.overlayManager.showWaitingOverlay(
+        "Connection lost. Please return to lobby.",
+        true,
+      );
+      return;
+    }
 
-      try {
-          log("Network", "Attempting silent reconnect...");
-          // Versuche Reconnect mit dem gespeicherten Token
-          const newRoom = await client.reconnect(token);
-          log("Network", "Silent reconnect successful!", newRoom);
-          
-          // WICHTIG: Wir haben eine neue Raum-Instanz. Wir müssen die Szene neu starten,
-          // damit alle Listener auf den neuen Raum gebunden werden.
-          this.scene.scene.restart({ room: newRoom });
-      } catch (e) {
-          log("Network", "Reconnect failed:", e);
-          // Wenn es fehlschlägt, zeige den Exit-Button
-          this.ui.showWaitingOverlay("Connection failed. Please return to lobby.", true);
-      } finally {
-          this.isReconnecting = false;
-      }
+    try {
+      log("Network", "Attempting silent reconnect...");
+      // Versuche Reconnect mit dem gespeicherten Token
+      const newRoom = await client.reconnect(token);
+      log("Network", "Silent reconnect successful!", newRoom);
+
+      // WICHTIG: Wir haben eine neue Raum-Instanz. Wir müssen die Szene neu starten,
+      // damit alle Listener auf den neuen Raum gebunden werden.
+      this.scene.scene.restart({ room: newRoom });
+    } catch (e) {
+      log("Network", "Reconnect failed:", e);
+      // Wenn es fehlschlägt, zeige den Exit-Button
+      this.overlayManager.showWaitingOverlay(
+        "Connection failed. Please return to lobby.",
+        true,
+      );
+    } finally {
+      this.isReconnecting = false;
+    }
   }
 
   // --- Methoden zum Senden von Nachrichten ---
@@ -380,13 +411,13 @@ export class NetworkManager {
 
   // ✨ NEU: Aufräumen
   public destroy() {
-      log("Network", `[NetworkManager ${this.instanceId}] Destroying...`);
-      this.stopHeartbeat();
-      // ✨ FIX: Unregister the onLeave listener to prevent "zombie listeners"
-      // from firing in a new scene.
-      if (this.onLeaveListener) {
-          this.onLeaveListener.remove();
-          this.onLeaveListener = null;
-      }
+    log("Network", `[NetworkManager ${this.instanceId}] Destroying...`);
+    this.stopHeartbeat();
+    // ✨ FIX: Unregister the onLeave listener to prevent "zombie listeners"
+    // from firing in a new scene.
+    if (this.onLeaveListener) {
+      this.onLeaveListener.remove();
+      this.onLeaveListener = null;
+    }
   }
 }

@@ -18,6 +18,7 @@ import { PhaseManager } from "../managers/PhaseManager"; // ✨ NEU
 import { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Schritt 1.1
 import { SoundManager } from "../managers/SoundManager"; // ✨ NEU: Schritt 1.2
 import { AnimationManager } from "./AnimationManager.js";
+import { OverlayManager } from "../managers/OverlayManager.ts"; // ✨ REFACTOR
 import { PreviewManager } from "./PreviewManager.js"; // ✨ NEU
 import { ChatManager } from "../managers/ChatManager"; // ✨ NEU
 import type {
@@ -72,13 +73,12 @@ export class GameUI {
   private dragBounds: Phaser.Geom.Rectangle;
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
   private deckPreloaded: boolean = false; // ✨ NEU: Flag für Preloading
-  private waitingOverlay: Phaser.GameObjects.Container | null = null; // ✨ NEU: Overlay für Wartezustand
   private chatManager: ChatManager; // ✨ NEU
-  private gameOverOverlay: Phaser.GameObjects.Container | null = null; // ✨ NEU: Game Over Overlay
-  private helpOverlay: HTMLElement | null = null; // ✨ NEU: DOM-Element für Hilfe
   // ✨ NEU: Referenzen für Event-Listener speichern, um sie sauber zu entfernen
-  private onPlayDrawAnimation: ((data: { cardIds: string[] }) => void) | null = null;
+  private onPlayDrawAnimation: ((data: { cardIds: string[] }) => void) | null =
+    null;
   private onRequestCardAction: ((data: any) => void) | null = null;
+  private overlayManager: OverlayManager; // ✨ REFACTOR
 
   constructor(
     scene: Phaser.Scene,
@@ -106,6 +106,13 @@ export class GameUI {
 
     // ✨ NEU: Erstelle den ChatManager.
     this.chatManager = new ChatManager(this.scene, this.room);
+
+    // ✨ REFACTOR: Erstelle den OverlayManager.
+    this.overlayManager = new OverlayManager(
+      this.scene,
+      this.room,
+      this.soundManager,
+    );
 
     log(
       "UI",
@@ -151,6 +158,7 @@ export class GameUI {
       this.room,
       this,
       this.$,
+      this.overlayManager, // ✨ FIX: Pass OverlayManager to NetworkManager
     );
 
     // ✨ KORREKTUR: Erstelle den InputManager NACH dem NetworkManager und übergebe ihn.
@@ -242,7 +250,7 @@ export class GameUI {
     // ✨ NEU: Help-Button Handler
     this.elementManager.staticElements.helpButton.on("pointerdown", () => {
       this.scene.game.events.emit("playSound", "UI_TOGGLE");
-      this.toggleHelp();
+      this.overlayManager.toggleHelp();
     });
 
     // ✨ NEU: Concede-Button Handler
@@ -319,22 +327,26 @@ export class GameUI {
 
     // ✨ NEU: Handler für Karten-Interaktionen (Drehen/Wenden per Maus)
     // ✨ FIX: Listener speichern
-    this.onRequestCardAction = (data: { cardId: string; action: string; currentValue: boolean }) => {
-        let updates = {};
+    this.onRequestCardAction = (data: {
+      cardId: string;
+      action: string;
+      currentValue: boolean;
+    }) => {
+      let updates = {};
 
-        if (data.action === "toggle-flip") {
-          updates = { isFlipped: !data.currentValue };
-        } else if (data.action === "toggle-face-down") {
-          updates = { isFaceDown: !data.currentValue };
-        }
+      if (data.action === "toggle-flip") {
+        updates = { isFlipped: !data.currentValue };
+      } else if (data.action === "toggle-face-down") {
+        updates = { isFaceDown: !data.currentValue };
+      }
 
-        if (Object.keys(updates).length > 0) {
-          this.room.send("updateCardState", {
-            cardId: data.cardId,
-            updates,
-          });
-        }
-      };
+      if (Object.keys(updates).length > 0) {
+        this.room.send("updateCardState", {
+          cardId: data.cardId,
+          updates,
+        });
+      }
+    };
     this.scene.events.on("request-card-action", this.onRequestCardAction);
 
     // ✨ DEIN PLAN: Logge bei JEDER Zustandsänderung die Deckgrößen.
@@ -374,91 +386,9 @@ export class GameUI {
     log("UI", "Save game downloaded.");
   }
 
-  /** ✨ NEU: Erstellt einen Button im Pergament-Stil, kopiert aus LobbyScene für Konsistenz */
-  private createStyledButton(
-    x: number,
-    y: number,
-    label: string,
-    callback: () => void,
-    width: number = 300,
-    height: number = 60,
-  ): Phaser.GameObjects.Container {
-    const container = this.scene.add.container(x, y);
-
-    const bg = this.scene.add.image(0, 0, "button_parchment");
-    bg.setDisplaySize(width, height);
-
-    const fontSize = Math.min(32, height * 0.6);
-    const yOffset = fontSize * -0.25;
-    const text = this.scene.add
-      .bitmapText(0, yOffset, "fairydust", label, fontSize)
-      .setOrigin(0.5)
-      .setTint(0xf4f6e1)
-      .setDropShadow(2, 2, 0x000000, 0.7);
-
-    container.add([bg, text]);
-    container.setSize(width, height);
-    container.setInteractive({ useHandCursor: true });
-
-    container.on("pointerover", () => bg.setTint(0xdddddd));
-    container.on("pointerout", () => bg.clearTint());
-
-    container.on("pointerdown", () => {
-      this.soundManager.playSound("UI_TOGGLE");
-      callback();
-    });
-
-    return container;
-  }
-
   /** ✨ NEU: Zeigt das Game-Over-Overlay an. */
   public showGameOverOverlay(isWinner: boolean) {
-    if (this.gameOverOverlay) return; // Verhindert doppeltes Erstellen
-
-    log(
-      "UI",
-      `Showing Game Over overlay. Player has ${isWinner ? "won" : "lost"}.`,
-    );
-
-    const { width, height } = this.scene.scale;
-    this.gameOverOverlay = this.scene.add.container(0, 0).setDepth(11000); // Höchster Z-Index
-
-    const bg = this.scene.add
-      .rectangle(0, 0, width, height, 0x000000, 0.8)
-      .setOrigin(0)
-      .setInteractive();
-
-    const titleText = isWinner ? "Victory!" : "Defeat";
-    const titleColor = isWinner ? 0xffd700 : 0xaaaaaa;
-
-    const title = this.scene.add
-      .bitmapText(width / 2, height / 2 - 100, "fairydust", titleText, 96)
-      .setOrigin(0.5)
-      .setTint(titleColor)
-      .setDropShadow(4, 4, 0x000000, 0.9);
-
-    const backButton = this.createStyledButton(
-      width / 2,
-      height / 2 + 80,
-      "Back to Lobby",
-      () => {
-        this.soundManager?.stopMusic(); // ✨ FIX: Musik stoppen, BEVOR die Szene gewechselt wird.
-        this.soundManager?.stopEverything(); // ✨ FIX: Alles stoppen vor Szenenwechsel
-        this.room.leave();
-        localStorage.removeItem("reconnectionToken");
-        this.scene.scene.start("LobbyScene");
-      },
-    );
-
-    this.gameOverOverlay.add([bg, title, backButton]);
-    this.gameOverOverlay.setAlpha(0);
-
-    this.scene.tweens.add({
-      targets: this.gameOverOverlay,
-      alpha: 1,
-      duration: 1000,
-      ease: "Power1",
-    });
+    this.overlayManager.showGameOverOverlay(isWinner);
   }
 
   /** ✨ NEU: Öffnet den Dialog für aufgedeckte Karten. Wird vom NetworkManager aufgerufen. */
@@ -858,28 +788,23 @@ export class GameUI {
       this.debugGraphics.destroy();
     }
 
-    // ✨ NEU: DOM-Overlay aufräumen
-    if (this.helpOverlay) {
-      this.helpOverlay.remove();
-      this.helpOverlay = null;
-    }
-
     // ✨ FIX: Destroy all sub-managers to prevent memory leaks and "zombie listeners".
     // This is crucial for a clean scene transition.
     this.inputManager?.destroy();
     this.networkManager?.destroy();
     this.chatManager?.destroy();
+    this.overlayManager?.destroy(); // ✨ REFACTOR
     this.previewManager?.hide(); // Hide any active preview
 
     // ✨ FIX: Event-Listener sauber entfernen!
     // Das verhindert, dass alte UI-Instanzen auf Events der neuen Szene reagieren (Zombie-Listener).
     if (this.onPlayDrawAnimation) {
-        this.scene.events.off("playDrawAnimation", this.onPlayDrawAnimation);
-        this.onPlayDrawAnimation = null;
+      this.scene.events.off("playDrawAnimation", this.onPlayDrawAnimation);
+      this.onPlayDrawAnimation = null;
     }
     if (this.onRequestCardAction) {
-        this.scene.events.off("request-card-action", this.onRequestCardAction);
-        this.onRequestCardAction = null;
+      this.scene.events.off("request-card-action", this.onRequestCardAction);
+      this.onRequestCardAction = null;
     }
   }
 
@@ -974,13 +899,19 @@ export class GameUI {
     // ✨ FIX: Priorität 1 - Verbindungsabbruch!
     // Wenn der Gegner existiert, aber nicht verbunden ist -> Disconnect Overlay mit Button.
     if (opponent && !opponent.connected) {
-      this.showWaitingOverlay("Opponent disconnected. Waiting...", true);
+      this.overlayManager.showWaitingOverlay(
+        "Opponent disconnected. Waiting...",
+        true,
+      );
       return;
     }
 
     // ✨ FIX: Priorität 2 - Gegner ist weg (Timeout), aber Spiel lief schon -> Disconnect Overlay mit Button.
     if (playerCount < 2 && gameStarted) {
-      this.showWaitingOverlay("Opponent disconnected. Waiting...", true);
+      this.overlayManager.showWaitingOverlay(
+        "Opponent disconnected. Waiting...",
+        true,
+      );
       return;
     }
 
@@ -991,166 +922,14 @@ export class GameUI {
       !gameStarted ||
       (opponent && !opponent.ready)
     ) {
-      this.showWaitingOverlay("Waiting for Opponent...");
+      this.overlayManager.showWaitingOverlay("Waiting for Opponent...");
     } else if (opponent && !opponent.connected) {
-      this.showWaitingOverlay("Opponent disconnected. Waiting...", true); // ✨ FIX: Button anzeigen!
+      this.overlayManager.showWaitingOverlay(
+        "Opponent disconnected. Waiting...",
+        true,
+      );
     } else {
-      this.hideWaitingOverlay();
-    }
-  }
-
-  /** ✨ NEU: Zeigt oder versteckt das Hilfe-Overlay (IFrame). */
-  private toggleHelp() {
-    if (this.helpOverlay) {
-      // Toggle Sichtbarkeit
-      const isVisible = this.helpOverlay.style.display !== "none";
-      this.helpOverlay.style.display = isVisible ? "none" : "flex";
-      return;
-    }
-
-    // Erstelle Overlay
-    this.helpOverlay = document.createElement("div");
-    this.helpOverlay.id = "game-help-overlay";
-    Object.assign(this.helpOverlay.style, {
-      position: "absolute",
-      top: "10%",
-      left: "10%",
-      width: "80%",
-      height: "80%",
-      backgroundColor: "rgba(0, 0, 0, 0.9)",
-      border: "2px solid #ffd700",
-      borderRadius: "10px",
-      zIndex: "10000",
-      display: "flex",
-      flexDirection: "column",
-      boxShadow: "0 0 20px rgba(0,0,0,0.8)",
-    });
-
-    // Header (Titel + Schließen)
-    const header = document.createElement("div");
-    Object.assign(header.style, {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "10px 20px",
-      backgroundColor: "#1a1a2e",
-      borderBottom: "1px solid #444",
-      color: "#ffd700",
-      fontFamily: "serif",
-      fontSize: "24px",
-    });
-    header.innerHTML = "<span>Game Guide</span>";
-
-    const closeBtn = document.createElement("button");
-    closeBtn.textContent = "X";
-    Object.assign(closeBtn.style, {
-      background: "transparent",
-      border: "none",
-      color: "#ff6666",
-      fontSize: "24px",
-      cursor: "pointer",
-      fontWeight: "bold",
-    });
-    closeBtn.onclick = () => {
-      if (this.helpOverlay) this.helpOverlay.style.display = "none";
-    };
-    header.appendChild(closeBtn);
-
-    // Iframe
-    const iframe = document.createElement("iframe");
-    iframe.src = "help.html"; // ✨ Erwartet help.html im public-Ordner
-    Object.assign(iframe.style, {
-      flex: "1",
-      border: "none",
-      background: "#fff", // Weißer Hintergrund für die Anleitung
-    });
-
-    this.helpOverlay.appendChild(header);
-    this.helpOverlay.appendChild(iframe);
-    document.body.appendChild(this.helpOverlay);
-  }
-
-  // ✨ FIX: Public machen und Parameter für Button hinzufügen
-  public showWaitingOverlay(message: string, showBackButton: boolean = false) {
-    const { width, height } = this.scene.scale;
-
-    if (this.waitingOverlay) {
-      // ✨ NEU: Text aktualisieren, falls Overlay schon da ist
-      const textObj = this.waitingOverlay.getByName(
-        "waitingText",
-      ) as Phaser.GameObjects.BitmapText;
-      if (textObj) textObj.setText(message);
-
-      // ✨ FIX: Button dynamisch hinzufügen oder entfernen
-      const backButton = this.waitingOverlay.getByName("backButton");
-      if (showBackButton && !backButton) {
-        this.addBackButtonToOverlay(width, height);
-      } else if (!showBackButton && backButton) {
-        backButton.destroy();
-      }
-      return;
-    }
-
-    this.waitingOverlay = this.scene.add.container(0, 0).setDepth(10000); // Ganz oben
-
-    // Hintergrund (blockiert Input)
-    const bg = this.scene.add
-      .rectangle(0, 0, width, height, 0x000000, 0.7)
-      .setOrigin(0)
-      .setInteractive();
-
-    const text = this.scene.add
-      .bitmapText(
-        width / 2,
-        height / 2,
-        "fairydust",
-        message, // ✨ NEU: Dynamischer Text
-        48,
-      )
-      .setOrigin(0.5)
-      .setTint(0xffd700)
-      .setDropShadow(4, 4, 0x000000, 0.8)
-      .setName("waitingText"); // ✨ NEU: Name für Zugriff
-
-    this.scene.tweens.add({
-      targets: text,
-      alpha: 0.6,
-      duration: 800,
-      yoyo: true,
-      repeat: -1,
-    });
-    this.waitingOverlay.add([bg, text]);
-
-    // ✨ NEU: Button initial hinzufügen, falls gefordert
-    if (showBackButton) {
-      this.addBackButtonToOverlay(width, height);
-    }
-  }
-
-  // ✨ NEU: Hilfsmethode zum Erstellen des Buttons im Overlay
-  private addBackButtonToOverlay(width: number, height: number) {
-    if (!this.waitingOverlay) return;
-    const backButton = this.createStyledButton(
-      width / 2,
-      height / 2 + 80,
-      "Back to Lobby",
-      () => {
-        this.soundManager?.stopMusic(); // ✨ FIX: Musik stoppen, BEVOR die Szene gewechselt wird.
-        this.soundManager?.stopEverything(); // ✨ FIX: Alles stoppen vor Szenenwechsel
-        this.room.leave();
-        localStorage.removeItem("reconnectionToken");
-        this.scene.scene.start("LobbyScene");
-      },
-    );
-    backButton.setName("backButton");
-    this.waitingOverlay.add(backButton);
-  }
-
-  // ✨ FIX: Public machen für Zugriff aus NetworkManager
-  public hideWaitingOverlay() {
-    if (this.waitingOverlay) {
-      this.waitingOverlay.destroy();
-      this.waitingOverlay = null;
+      this.overlayManager.hideWaitingOverlay();
     }
   }
 }
