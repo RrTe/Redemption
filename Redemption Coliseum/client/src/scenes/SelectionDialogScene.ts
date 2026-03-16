@@ -4,7 +4,7 @@ import { type TypedRoom } from "../ui/gameUI";
 import { type Zone } from "../../../shared/zones";
 import { CardUI } from "../ui/CardUI";
 import { SoundManager } from "../managers/SoundManager";
-import { PreviewManager } from "../ui/PreviewManager";
+import { PreviewManager } from "../ui/managers/PreviewManager";
 import { log, DEBUG } from "../utils/logger";
 
 

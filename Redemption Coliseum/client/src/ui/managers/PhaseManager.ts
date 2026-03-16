@@ -1,8 +1,8 @@
-import type { TypedRoom, GameUI } from "../ui/gameUI";
-import type { ElementManager } from "../ui/ElementManager";
-import type { NetworkManager } from "../network/NetworkManager";
-import type { RoomState } from "../../../shared/types";
-import { calculateLayout } from "../ui/layout";
+import type { TypedRoom, GameUI } from "../gameUI";
+import type { ElementManager } from "./ElementManager";
+import type { NetworkManager } from "../../network/NetworkManager";
+import type { RoomState } from "../../../../shared/types";
+import { calculateLayout } from "../layout";
 
 const DEBUG = localStorage.getItem("debug") === "true";
 const log = (...a: any[]) =>
@@ -25,7 +25,7 @@ export class PhaseManager {
     room: TypedRoom,
     ui: GameUI,
     elementManager: ElementManager,
-    networkManager: NetworkManager
+    networkManager: NetworkManager,
   ) {
     this.scene = scene;
     this.room = room;
@@ -48,14 +48,14 @@ export class PhaseManager {
     this.scene.events.on(
       "nextPhaseButtonClicked",
       this.onNextPhaseClicked,
-      this
+      this,
     );
   }
 
   /** ✨ REFACTORING: Dies ist der Callback für das Button-Klick-Event. */
   private onNextPhaseClicked() {
     log(
-      "[NEXT_PHASE] 'nextPhaseButtonClicked' event received. Sending 'nextPhase' message to server."
+      "[NEXT_PHASE] 'nextPhaseButtonClicked' event received. Sending 'nextPhase' message to server.",
     );
     this.scene.game.events.emit("playSound", "PHASE_CHANGE"); // ✨ FIX: Globaler Event-Bus
     this.networkManager.sendNextPhase();
@@ -66,13 +66,13 @@ export class PhaseManager {
     // --- Logik für Phasenwechsel-Animation ---
     if (this.currentPhase !== state.currentPhase) {
       log(
-        `[PHASE_CHANGE] Detected phase change. New phase: ${state.currentPhase}`
+        `[PHASE_CHANGE] Detected phase change. New phase: ${state.currentPhase}`,
       );
       this.currentPhase = state.currentPhase;
       const newLayout = calculateLayout(
         this.scene.scale.width,
         this.scene.scale.height,
-        this.currentPhase
+        this.currentPhase,
       );
       this.ui.startPhaseChangeAnimation(newLayout);
     }
@@ -80,7 +80,7 @@ export class PhaseManager {
     // --- Logik für den "Next Phase"-Button ---
     const nextPhaseButton = this.elementManager.staticElements.nextPhaseButton;
     const arrow = nextPhaseButton.getByName(
-      "arrow"
+      "arrow",
     ) as Phaser.GameObjects.Image;
 
     // ✨ FIX: Visuellen Status (Hover/Glow) bei jedem Update zurücksetzen.
@@ -121,7 +121,7 @@ export class PhaseManager {
     this.scene.events.off(
       "nextPhaseButtonClicked",
       this.onNextPhaseClicked,
-      this
+      this,
     );
   }
 }

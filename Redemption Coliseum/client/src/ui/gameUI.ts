@@ -9,18 +9,20 @@ import { getStateCallbacks } from "../network/connection";
 import { CARD_TYPES } from "../../../shared/card-constants"; // Dieser Import ist jetzt korrekt
 import { calculateLayout, type GameLayout } from "../ui/layout";
 import { CardUI } from "./CardUI"; // ✨ Importiere die neue CardUI-Klasse
-import { ElementManager } from "./ElementManager.js";
+import { ElementManager } from "./managers/ElementManager";
 import { CardRenderer } from "./CardRenderer.js";
-import { InputManager } from "./InputManager.js";
+import { InputManager } from "./managers/InputManager";
 import { PileUI } from "./PileUI"; // ✨ Importiere die neue PileUI-Klasse
 import { NetworkManager } from "../network/NetworkManager"; // ✨ NEU (SCHRITT 3)
-import { PhaseManager } from "../managers/PhaseManager"; // ✨ NEU
+import { PhaseManager } from "./managers/PhaseManager.ts"; // ✨ NEU
 import { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Schritt 1.1
 import { SoundManager } from "../managers/SoundManager"; // ✨ NEU: Schritt 1.2
-import { AnimationManager } from "./AnimationManager.js";
-import { OverlayManager } from "../managers/OverlayManager.ts"; // ✨ REFACTOR
-import { PreviewManager } from "./PreviewManager.js"; // ✨ NEU
-import { ChatManager } from "../managers/ChatManager"; // ✨ NEU
+import { AnimationManager } from "./managers/AnimationManager.js";
+import { OverlayManager } from "./managers/OverlayManager.ts"; // ✨ REFACTOR
+import { DialogManager } from "./managers/DialogManager.js"; // ✨ REFACTOR
+import { PreviewManager } from "./managers/PreviewManager"; // ✨ NEU
+import { ChatManager } from "./managers/ChatManager"; // ✨ NEU
+import { HUDManager } from "./managers/HUDManager.js"; // ✨ REFACTOR
 import type {
   GameRoomMessages,
   MoveCardMessage,
@@ -29,17 +31,6 @@ import { PHASES } from "../../../shared/phases.js";
 import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones";
 import type { CardState, PlayerState, RoomState } from "../../../shared/types";
 import { log, DEBUG } from "../utils/logger";
-
-// ✨ NEU: Zentrale Konfiguration für den Phasen-Indikator (Glow)
-const PHASE_INDICATOR_STYLE = {
-  ACTIVE_COLOR: 0xffd700, // Gold für aktiven Spieler
-  INACTIVE_COLOR: 0xaaaaaa, // Silber/Grau für inaktiven Spieler
-  GLOW_STEPS: 6, // Anzahl der Schichten für den weichen Verlauf
-  BASE_ALPHA_ACTIVE: 0.3, // Start-Transparenz (aktiv)
-  BASE_ALPHA_INACTIVE: 0.15, // Start-Transparenz (inaktiv)
-  CORNER_RADIUS: 10, // Eckenrundung des Glows
-  PADDING: 6, // Abstand zum Icon
-};
 
 // 🆕 Typisiertes Room-Interface
 export type TypedRoom = Room & {
@@ -78,7 +69,9 @@ export class GameUI {
   private onPlayDrawAnimation: ((data: { cardIds: string[] }) => void) | null =
     null;
   private onRequestCardAction: ((data: any) => void) | null = null;
+  private dialogManager: DialogManager; // ✨ REFACTOR
   private overlayManager: OverlayManager; // ✨ REFACTOR
+  private hudManager: HUDManager; // ✨ REFACTOR
 
   constructor(
     scene: Phaser.Scene,
@@ -113,6 +106,14 @@ export class GameUI {
       this.room,
       this.soundManager,
     );
+
+    // ✨ REFACTOR: Erstelle den DialogManager.
+    // Muss nach dem NetworkManager erstellt werden, wenn er ihn braucht.
+    // Da der NetworkManager ihn aber braucht, erstellen wir ihn hier und übergeben ihn.
+    // NetworkManager wird unten erstellt.
+    // this.dialogManager = new DialogManager(this.scene, this.room, this.networkManager);
+    // Temporäre Zuweisung, wird unten überschrieben.
+    this.dialogManager = null!;
 
     log(
       "UI",
@@ -158,7 +159,15 @@ export class GameUI {
       this.room,
       this,
       this.$,
-      this.overlayManager, // ✨ FIX: Pass OverlayManager to NetworkManager
+      this.overlayManager,
+      null!, // dialogManager wird später gesetzt
+    );
+
+    // ✨ REFACTOR: Erstelle den DialogManager und übergebe den NetworkManager.
+    this.dialogManager = new DialogManager(
+      this.scene,
+      this.room,
+      this.networkManager,
     );
 
     // ✨ KORREKTUR: Erstelle den InputManager NACH dem NetworkManager und übergebe ihn.
@@ -171,6 +180,9 @@ export class GameUI {
       this.dragBounds,
       this.elementManager, // ✨ NEU: Übergebe ElementManager für Highlights
     );
+
+    // ✨ REFACTOR: Setze den DialogManager im NetworkManager
+    this.networkManager.setDialogManager(this.dialogManager);
 
     this.cardRenderer = new CardRenderer(
       this.scene,
@@ -190,6 +202,14 @@ export class GameUI {
       this.networkManager,
     );
     this.phaseManager.initialize();
+
+    // ✨ REFACTOR: Erstelle den HUDManager.
+    this.hudManager = new HUDManager(
+      this.scene,
+      this.room,
+      this.elementManager,
+      this.layout,
+    );
 
     // Debug-Grafikobjekt erstellen, wenn DEBUG aktiv ist
     if (DEBUG) {
@@ -391,42 +411,9 @@ export class GameUI {
     this.overlayManager.showGameOverOverlay(isWinner);
   }
 
-  /** ✨ NEU: Öffnet den Dialog für aufgedeckte Karten. Wird vom NetworkManager aufgerufen. */
-  public showRevealDialog() {
-    if (this.room.state.revealedCards.length === 0) return;
-
-    const actionTakerId = this.room.state.actionTakerId;
-    const isMyAction = actionTakerId === this.room.sessionId;
-
-    log(
-      "UI",
-      `[REVEAL DIALOG] Starting dialog. actionTakerId on state: '${actionTakerId}', mySessionId: '${this.room.sessionId}', isMyAction: ${isMyAction}`,
-    );
-
-    this.scene.scene.pause("CardGame");
-    this.scene.scene.launch("SelectionDialogScene", {
-      title: "Revealed Cards",
-      cards: [...this.room.state.revealedCards],
-      room: this.room,
-      showCloseButton: isMyAction,
-      isInteractive: false,
-      onComplete: () => {},
-      onCancel: () => {
-        // ✨ KORREKTUR: Delegiere an den NetworkManager.
-        if (isMyAction) this.networkManager.sendResolveReveal();
-      },
-    } as SelectionDialogData);
-    log("UI", "Launched SelectionDialogScene for revealed cards.");
-  }
-
-  /** ✨ NEU: Eine Hilfsmethode, um den Dialog sicher zu schließen. */
+  /** ✨ FIX: Wrapper für DialogManager, da CardGameScene darauf zugreift. */
   public closeSelectionDialog() {
-    const dialog = this.scene.scene.get("SelectionDialogScene");
-    if (dialog && dialog.scene.isActive()) {
-      // ✨ KORREKTUR: Der Cast ist sicher, da wir wissen, dass es unsere Szene ist.
-      // `closeDialog` ist eine public Methode auf `SelectionDialogScene`.
-      (dialog as SelectionDialogScene).closeDialog();
-    }
+    this.dialogManager.closeSelectionDialog();
   }
 
   /** Positioniert alle UI-Elemente neu, z.B. bei einer Fenstergrößen-Änderung. */
@@ -442,6 +429,9 @@ export class GameUI {
     this.layout = newLayout;
     this.elementManager.layout = newLayout;
     this.cardRenderer.layout = newLayout;
+
+    // ✨ REFACTOR: Layout im HUDManager aktualisieren
+    this.hudManager.updateLayout(newLayout);
 
     // ✨ REFACTORING: Delegiere die Neupositionierung an den ElementManager.
     this.elementManager.repositionUI(newLayout);
@@ -539,17 +529,17 @@ export class GameUI {
       `[render] Rendering with player deck size: ${player?.deck.length}`,
     );
 
-    this.updateGameStateUI(state, mySessionId, opponent);
+    this.hudManager.updateGameStateUI(state, mySessionId, opponent);
 
     if (!player) {
       // ✨ REFACTORING: Delegiere das Aufräumen an den Renderer.
       this.cardRenderer.cleanupAllCards();
       // Piles für den Spieler zurücksetzen, falls er das Spiel verlässt
-      this.updatePileCounts(null, opponent);
+      this.hudManager.updatePileCounts(null, opponent);
       return;
     }
 
-    this.updatePileCounts(player, opponent);
+    this.hudManager.updatePileCounts(player, opponent);
     // ✨ REFACTORING: Delegiere das Rendern der Karten an den Renderer.
     this.cardRenderer.renderAllCards(player, opponent);
 
@@ -589,123 +579,6 @@ export class GameUI {
     this.scene.load.start();
   }
 
-  /** Aktualisiert statische UI-Elemente wie Texte und Buttons. */
-  private updateGameStateUI(
-    state: RoomState,
-    mySessionId: string,
-    opponent: PlayerState | undefined,
-  ) {
-    if (DEBUG) {
-      log(
-        "UI",
-        `[UI UPDATE] Updating GameState UI. Current Phase: ${state.currentPhase}`,
-      );
-    }
-
-    const isActive = state.activePlayer === mySessionId;
-
-    // ✨ NEU: Phasen-Icons aktualisieren
-    // ✨ FIX: Nutze die korrekten Phasen-Konstanten, um die Icons zu aktualisieren.
-    const phasesToShow = [
-      PHASES.DRAW,
-      PHASES.UPKEEP,
-      PHASES.PREP,
-      PHASES.BATTLE,
-      PHASES.DISCARD,
-    ];
-    const currentPhase = state.currentPhase;
-
-    // Verstecke den Indikator standardmäßig (wird aktiviert, wenn wir das aktive Icon finden)
-    this.elementManager.staticElements.phaseIndicator.setVisible(false);
-
-    phasesToShow.forEach((phase) => {
-      const icon = this.elementManager.staticElements.phaseIcons[phase];
-      if (!icon) return;
-
-      const isCurrentPhase = phase === currentPhase;
-
-      // ✨ FIX: Hole die Größe aus den Layout-Daten für dieses spezifische Icon.
-      // Vorher wurde auf 'this.layout.phaseIconSize' zugegriffen, was undefined war -> Icons unsichtbar.
-      const layoutData = this.layout.phaseIcons[phase];
-      const baseSize = layoutData ? layoutData.size : 32; // Fallback, falls Layout fehlt
-
-      // ✨ FIX: Speichere den Skalierungsfaktor, damit repositionUI ihn respektiert.
-      const scaleFactor = isCurrentPhase ? 1.2 : 0.9;
-      icon.setData("scaleFactor", scaleFactor);
-
-      const targetSize = baseSize * scaleFactor;
-      icon.setDisplaySize(targetSize, targetSize);
-
-      // Debug Log für das erste Icon, um sicherzugehen
-      if (DEBUG && phase === PHASES.DRAW) {
-        log(
-          "UI",
-          `[UI UPDATE] Icon 'draw': baseSize=${baseSize}, targetSize=${targetSize}, visible=${icon.visible}, x=${icon.x}, y=${icon.y}`,
-        );
-      }
-
-      // ✨ NEU: Positioniere und zeichne den Indikator hinter dem aktiven Icon
-      if (isCurrentPhase) {
-        const indicator = this.elementManager.staticElements.phaseIndicator;
-        indicator.clear();
-
-        // Farbe: Gold (Satt) für aktiven Spieler, Silber/Grau für inaktiven
-        const color = isActive
-          ? PHASE_INDICATOR_STYLE.ACTIVE_COLOR
-          : PHASE_INDICATOR_STYLE.INACTIVE_COLOR;
-
-        // ✨ NEU: Rounded Rectangle mit Glow-Effekt (mehrere Schichten)
-        const steps = PHASE_INDICATOR_STYLE.GLOW_STEPS;
-        const baseAlpha = isActive
-          ? PHASE_INDICATOR_STYLE.BASE_ALPHA_ACTIVE
-          : PHASE_INDICATOR_STYLE.BASE_ALPHA_INACTIVE;
-        const basePadding = PHASE_INDICATOR_STYLE.PADDING;
-        const cornerRadius = PHASE_INDICATOR_STYLE.CORNER_RADIUS;
-
-        for (let i = 0; i < steps; i++) {
-          // Alpha nimmt nach außen hin ab
-          const alpha = baseAlpha / (i + 1);
-          const expansion = i * 2; // Jede Schicht wird etwas größer
-
-          const w = targetSize + basePadding + expansion * 2;
-          const h = targetSize + basePadding + expansion * 2;
-
-          indicator.fillStyle(color, alpha);
-          // Zeichne zentriertes Rounded Rectangle
-          indicator.fillRoundedRect(-w / 2, -h / 2, w, h, cornerRadius + i);
-        }
-
-        indicator.setPosition(icon.x, icon.y);
-        indicator.setVisible(true);
-      }
-
-      // Transparenz/Farbe:
-      // Aktiver Spieler + Aktuelle Phase: Normal (Alpha 1)
-      // Sonst: Leicht ausgegraut (Alpha 0.5)
-      const targetAlpha = isActive && isCurrentPhase ? 1.0 : 0.5;
-      icon.setAlpha(targetAlpha);
-    });
-
-    // ✨ NEU: Spieler-Infos aktualisieren
-    // Wir greifen auf die im PlayerState gespeicherten Namen zu.
-    if (state.players.has(mySessionId)) {
-      const me = state.players.get(mySessionId);
-      this.elementManager.staticElements.playerInfoText.setText(
-        `Player: ${me?.name || "Unknown"}\nDeck: ${me?.deckName || "Unknown"}`,
-      );
-    }
-
-    if (opponent) {
-      this.elementManager.staticElements.opponentInfoText.setText(
-        `Player: ${opponent.name}\nDeck: ${opponent.deckName}`,
-      );
-    } else {
-      this.elementManager.staticElements.opponentInfoText.setText(
-        "Waiting for opponent...",
-      );
-    }
-  }
-
   /** ✨ NEU: Berechnet ein Zwischen-Layout für die Animations-Updates. */
   private interpolateLayout(
     start: GameLayout,
@@ -730,47 +603,6 @@ export class GameUI {
       }
     }
     return interpolated as GameLayout;
-  }
-
-  /** Aktualisiert die Zähler auf den Kartenstapeln. */
-  private updatePileCounts(
-    player: PlayerState | null,
-    opponent: PlayerState | undefined,
-  ) {
-    const deckCount = player?.deck.length ?? 0;
-    log(
-      "UI",
-      `[updatePileCounts] Updating player deck count UI with value: ${deckCount}`,
-    );
-    this.elementManager.zoneElements.playerDeckPile.updateCount(deckCount);
-    this.elementManager.zoneElements.playerDiscardPile.updateCount(
-      player?.discard.length ?? 0,
-    );
-    this.elementManager.zoneElements.opponentDeckPile.updateCount(
-      opponent?.deck.length ?? 0,
-    );
-    this.elementManager.zoneElements.opponentDiscardPile.updateCount(
-      opponent?.discard.length ?? 0,
-    );
-    // ✨ NEU (PHASE 2): Aktualisiere die Zähler der neuen Piles
-    this.elementManager.zoneElements.playerReservePile.updateCount(
-      player?.reserve.length ?? 0,
-    );
-    this.elementManager.zoneElements.opponentReservePile.updateCount(
-      opponent?.reserve.length ?? 0,
-    );
-    this.elementManager.zoneElements.playerLandOfRedemptionPile.updateCount(
-      player?.land_of_redemption.length ?? 0,
-    );
-    this.elementManager.zoneElements.opponentLandOfRedemptionPile.updateCount(
-      opponent?.land_of_redemption.length ?? 0,
-    );
-    this.elementManager.zoneElements.playerBanishPile.updateCount(
-      player?.banish.length ?? 0,
-    );
-    this.elementManager.zoneElements.opponentBanishPile.updateCount(
-      opponent?.banish.length ?? 0,
-    );
   }
 
   /** Setzt den Text der Statusanzeige. */

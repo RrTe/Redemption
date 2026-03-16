@@ -1,11 +1,11 @@
 import Phaser from "phaser";
-import { type TypedRoom } from "./gameUI.js";
-import { type NetworkManager } from "../network/NetworkManager.js";
+import { type TypedRoom } from "../gameUI.js";
+import { type NetworkManager } from "../../network/NetworkManager.js";
 import { type AnimationManager } from "./AnimationManager.js";
-import { type PreviewManager } from "./PreviewManager.js";
+import { type PreviewManager } from "./PreviewManager";
 import { ElementManager } from "./ElementManager.js"; // ✨ NEU
-import { DragDropHandler } from "./DragDropHandler.js"; // ✨ REFACTOR
-import { InteractionHandler } from "./InteractionHandler.js"; // ✨ REFACTOR
+import { DragDropHandler } from "../handlers/DragDropHandler.js"; // ✨ REFACTOR
+import { InteractionHandler } from "../handlers/InteractionHandler.js"; // ✨ REFACTOR
 
 /**
  * Verwaltet alle globalen Input-Handler der Szene,

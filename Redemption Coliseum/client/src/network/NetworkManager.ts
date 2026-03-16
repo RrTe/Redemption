@@ -5,7 +5,8 @@ import { SelectionDialogScene } from "../scenes/SelectionDialogScene";
 import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones";
 import type { MoveCardMessage } from "../../../shared/messages";
 import { log, DEBUG } from "../utils/logger";
-import { type OverlayManager } from "../managers/OverlayManager.js"; // ✨ FIX
+import { type OverlayManager } from "../ui/managers/OverlayManager.js"; // ✨ FIX
+import { type DialogManager } from "../ui/managers/DialogManager.js"; // ✨ REFACTOR
 import { getClient } from "./connection"; // ✨ NEU
 
 /**
@@ -18,6 +19,7 @@ export class NetworkManager {
   private ui: GameUI;
   private $: StateCallback;
   private overlayManager: OverlayManager; // ✨ FIX
+  private dialogManager: DialogManager | null = null; // ✨ REFACTOR
   private heartbeatInterval: number | null = null; // ✨ NEU
   private isReconnecting: boolean = false; // ✨ NEU
   private onLeaveListener: any; // ✨ FIX: To store and remove the listener on destroy
@@ -28,18 +30,25 @@ export class NetworkManager {
     room: TypedRoom,
     ui: GameUI,
     stateCallback: StateCallback,
-    overlayManager: OverlayManager, // ✨ FIX
+    overlayManager: OverlayManager,
+    dialogManager: DialogManager | null, // ✨ REFACTOR
   ) {
     this.scene = scene;
     this.room = room;
     this.ui = ui;
     this.$ = stateCallback;
     this.overlayManager = overlayManager; // ✨ FIX
+    this.dialogManager = dialogManager; // ✨ REFACTOR
     this.instanceId = Phaser.Utils.String.UUID().slice(0, 8); // ✨ FIX: Use slice() instead of deprecated substr()
     log(
       "Network",
       `[NetworkManager ${this.instanceId}] Created for room ${room.roomId}`,
     ); // ✨ FIX: Use roomId
+  }
+
+  // ✨ REFACTOR: Setter to resolve circular dependency.
+  public setDialogManager(dialogManager: DialogManager) {
+    this.dialogManager = dialogManager;
   }
 
   /** Registriert alle Handler für eingehende Server-Nachrichten. */
@@ -106,71 +115,8 @@ export class NetworkManager {
 
     // Lausche auf die Suchergebnisse vom Server.
     this.room.onMessage("presentPileSearchResult", (message) => {
-      log(
-        "Network",
-        "Received 'presentPileSearchResult', launching dialog:",
-        message,
-      );
-
-      // Unterscheide zwischen einer interaktiven Suche und einem reinen "Ansehen".
-      // Eine "Ansehen"-Aktion hat keine möglichen Aktionen für den Spieler.
-      // ✨ FIX: Unterscheide explizit zwischen "Look" (nur ansehen) und "Search" (interaktiv).
-      // Der Server scheint hier inkonsistent zu sein, daher erzwingen wir den Modus auf dem Client.
-      const isInteractive =
-        message.possibleActions && message.possibleActions.length > 0;
-
-      this.scene.scene.pause("CardGame");
-      this.scene.scene.launch("SelectionDialogScene", {
-        title: isInteractive ? "Select Cards" : "View Cards",
-        cards: message.cards,
-        room: this.room,
-        showCloseButton: true,
-        isInteractive: isInteractive,
-        selectionRules: { min: isInteractive ? 1 : 0, max: Infinity },
-        possibleActions: message.possibleActions,
-        onComplete: (result) => {
-          if (isInteractive) {
-            const action = message.possibleActions.find(
-              (a: any) => a.actionId === result.actionId,
-            );
-            let coords: MoveCardMessage["coords"] = undefined;
-            const baseCoords = { x: 0, y: 0 };
-
-            // ✨ NEU: Wenn ein explizites Ziel gewählt wurde (durch die neuen Buttons), nutzen wir das.
-            if (result.target) {
-              const targetId =
-                result.target === "opponent"
-                  ? this.ui.findOpponentId(this.room.state)
-                  : this.room.sessionId;
-
-              if (targetId) {
-                coords = { ...baseCoords, targetPlayerId: targetId };
-              }
-            } else if (PILE_ZONES.includes(result.toZone)) {
-              // Fallback für alte Logik (falls nötig)
-              const originalPileOwnerId = message.cards[0]?.controllerId;
-              coords = { ...baseCoords, targetPlayerId: originalPileOwnerId };
-            } else if (action?.target === "opponent") {
-              const opponentId = this.ui.findOpponentId(this.room.state);
-              if (opponentId) {
-                coords = { ...baseCoords, targetPlayerId: opponentId };
-              }
-            } else {
-              coords = { ...baseCoords, targetPlayerId: this.room.sessionId };
-            }
-            this.sendResolveSearch(
-              result.selectedCardIds,
-              result.toZone,
-              coords,
-            );
-          }
-        },
-        onCancel: () => {
-          // ✨ FIX: Sende IMMER eine Auflösung, auch wenn der Dialog nicht interaktiv war (z.B. "Look").
-          // Der Server wartet auf diese Bestätigung, um den "Searching"-Status des Spielers aufzuheben.
-          this.sendResolveSearch([], ZONES.DECK);
-        },
-      } as SelectionDialogData);
+      // ✨ REFACTOR: Delegate to DialogManager
+      this.dialogManager?.showSearchDialog(message);
     });
 
     // Lausche auf Änderungen am `revealedCards`-Array.
@@ -180,13 +126,13 @@ export class NetworkManager {
       if (this.room.state.actionTakerId === this.room.sessionId) return;
 
       if (index === 0) {
-        setTimeout(() => this.ui.showRevealDialog(), 0);
+        setTimeout(() => this.dialogManager?.showRevealDialog(), 0);
       }
     });
 
     this.$(this.room.state).revealedCards.onRemove(() => {
       if (this.room.state.revealedCards.length === 0) {
-        this.ui.closeSelectionDialog();
+        this.dialogManager?.closeSelectionDialog();
       }
     });
 

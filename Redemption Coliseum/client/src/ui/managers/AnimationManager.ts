@@ -1,11 +1,10 @@
 import Phaser from "phaser";
-import { CardUI } from "../ui/CardUI";
-import { SettingsManager } from "../managers/SettingsManager";
-import { CardDrawEffect } from "../ui/effects/CardDrawEffect";
-import { CardPlayEffect } from "../ui/effects/CardPlayEffect";
-import { CARD_TYPES } from "../../../shared/card-constants"; // ✨ NEU: Import für Kartentypen
-import { log, DEBUG } from "../utils/logger";
-
+import { CardUI } from "../CardUI";
+import { SettingsManager } from "../../managers/SettingsManager";
+import { CardDrawEffect } from "../effects/CardDrawEffect";
+import { CardPlayEffect } from "../effects/CardPlayEffect";
+import { CARD_TYPES } from "../../../../shared/card-constants"; // ✨ NEU: Import für Kartentypen
+import { log, DEBUG } from "../../utils/logger";
 
 /**
  * Verwaltet visuelle Effekte und Animationen, die nicht direkt an den
@@ -41,7 +40,7 @@ export class AnimationManager {
     cardToAnimate: CardUI,
     startRect: Phaser.Geom.Rectangle,
     endPos: { x: number; y: number; angle: number },
-    delay: number = 0
+    delay: number = 0,
   ) {
     // Die Karte wird aus der Vormerk-Liste entfernt, da die Animation jetzt startet.
     this.pendingDrawAnimations.delete(cardToAnimate.cardData.id);
@@ -56,7 +55,7 @@ export class AnimationManager {
         if (this.activeDrawTweens.size === 0) {
           this.scene.events.emit("all-draw-animations-complete");
         }
-      }
+      },
     );
 
     if (drawTween) {
@@ -87,7 +86,7 @@ export class AnimationManager {
       angle: number;
       width: number;
       height: number;
-    }
+    },
   ) {
     // ✨ FIX: Sound entfernt. Die Effekt-Klassen (CardPlayEffect -> StandardPlayEffect etc.)
     // spielen den Sound jetzt selbst ab. Das verhindert doppelte Sounds.
@@ -99,7 +98,7 @@ export class AnimationManager {
       endPos,
       () => {
         this.activeDrawTweens.delete(cardToAnimate.cardData.id);
-      }
+      },
     );
 
     if (playTween) {

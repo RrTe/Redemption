@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import { type TypedRoom } from "../ui/gameUI";
-import { type SoundManager } from "./SoundManager";
-import { log } from "../utils/logger";
+import { type TypedRoom } from "../gameUI";
+import { type SoundManager } from "../../managers/SoundManager";
+import { log } from "../../utils/logger";
 
 /**
  * Manages all UI overlays like "Waiting for Player", "Game Over", and the help screen.
@@ -15,7 +15,11 @@ export class OverlayManager {
   private gameOverOverlay: Phaser.GameObjects.Container | null = null;
   private helpOverlay: HTMLElement | null = null;
 
-  constructor(scene: Phaser.Scene, room: TypedRoom, soundManager: SoundManager) {
+  constructor(
+    scene: Phaser.Scene,
+    room: TypedRoom,
+    soundManager: SoundManager,
+  ) {
     this.scene = scene;
     this.room = room;
     this.soundManager = soundManager;

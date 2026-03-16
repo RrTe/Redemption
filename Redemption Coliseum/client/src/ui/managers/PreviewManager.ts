@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { CardUI } from "./CardUI.js";
+import { CardUI } from "../CardUI";
 
 /**
  * Verwaltet die vergrößerte Kartenvorschau (Preview), die erscheint,

@@ -1,18 +1,18 @@
 import Phaser from "phaser";
-import { type TypedRoom } from "./gameUI.js";
-import { type NetworkManager } from "../network/NetworkManager.js";
-import { type AnimationManager } from "./AnimationManager.js";
-import { type PreviewManager } from "./PreviewManager.js";
-import { RadialMenu } from "./components/RadialMenu.js";
-import type { ActionIconConfig } from "./types/types.js";
-import { CardUI } from "./CardUI.js";
-import { PileUI } from "./PileUI.js";
-import { StackedPileUI } from "./StackedPileUI.js";
-import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones.js";
-import type { QuantitySelectionDialogData } from "../scenes/QuantitySelectionDialogScene.js";
-import { log } from "../utils/logger";
+import { type TypedRoom } from "../gameUI.js";
+import { type NetworkManager } from "../../network/NetworkManager.js";
+import { type AnimationManager } from "../managers/AnimationManager.js";
+import { type PreviewManager } from "../managers/PreviewManager";
+import { RadialMenu } from "../components/RadialMenu.js";
+import type { ActionIconConfig } from "../types/types.js";
+import { CardUI } from "../CardUI.js";
+import { PileUI } from "../PileUI.js";
+import { StackedPileUI } from "../StackedPileUI.js";
+import { ZONES, PILE_ZONES, type Zone } from "../../../../shared/zones.js";
+import type { QuantitySelectionDialogData } from "../../scenes/QuantitySelectionDialogScene.js";
+import { log } from "../../utils/logger.js";
 import { DragDropHandler } from "./DragDropHandler.js";
-import { MenuFactory } from "./factories/MenuFactory.js"; // ✨ REFACTOR
+import { MenuFactory } from "../factories/MenuFactory.js"; // ✨ REFACTOR
 
 /**
  * Manages click, double-click, hover, and menu interactions.

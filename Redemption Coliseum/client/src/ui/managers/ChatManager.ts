@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import { type TypedRoom } from "../ui/gameUI";
-import { SoundManager } from "./SoundManager";
-import { type GameLayout } from "../ui/layout"; // ✨ NEU
+import { type TypedRoom } from "../gameUI";
+import { SoundManager } from "../../managers/SoundManager";
+import { type GameLayout } from "../layout"; // ✨ NEU
 
 export class ChatManager {
   private scene: Phaser.Scene;

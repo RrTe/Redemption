@@ -473,6 +473,41 @@ class GameRoom extends colyseus.Room {
       this.broadcastGameLog(`${client.userData.playerName} shuffled ${zone}.`); // ✨ FIX
     });
 
+    // ✨ NEU: Handler für das Abwerfen von Karten vom Deck (aus dem Radial-Menü)
+    this.onMessage("discardFromDeck", (client, message) => {
+      const { count, position, targetPlayerId } = message;
+      const actingPlayer = this.state.players.get(client.sessionId);
+      const targetPlayer = this.state.players.get(
+        targetPlayerId || client.sessionId,
+      );
+
+      if (!targetPlayer || !actingPlayer) {
+        logger.warn(`[DISCARD] Player not found.`);
+        return;
+      }
+
+      const deck = getZoneCollection(targetPlayer, this.state, ZONES.DECK);
+      if (deck.length < count) {
+        logger.warn(`[DISCARD] Not enough cards in deck to discard ${count}.`);
+        return;
+      }
+
+      const cardsToDiscard =
+        position === "top" ? deck.slice(0, count) : deck.slice(-count);
+
+      logger.info(
+        `[DISCARD] Player ${actingPlayer.name} is discarding ${count} card(s) from ${targetPlayer.name}'s deck.`,
+      );
+
+      for (const card of cardsToDiscard) {
+        moveCard(
+          targetPlayer, this.state, this.cardLookup, ZONES.DECK, ZONES.DISCARD, card.id, 1, null,
+        );
+      }
+
+      this.broadcastGameLog(`${actingPlayer.name} discards ${count} card(s) from ${targetPlayer.name}'s deck.`);
+    });
+
     // ✨ NEU: Handler für das Erstellen von Tokens
     this.onMessage("createToken", (client, message) => {
       // ✨ FIX: Syntaxfehler behoben (doppelte Deklaration) und Parameter ausgelesen

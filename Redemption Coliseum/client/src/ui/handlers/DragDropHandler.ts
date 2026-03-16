@@ -1,15 +1,15 @@
 import Phaser from "phaser";
-import { type TypedRoom } from "./gameUI.js";
-import { type NetworkManager } from "../network/NetworkManager.js";
-import { type AnimationManager } from "./AnimationManager.js";
-import { type PreviewManager } from "./PreviewManager.js";
-import { CardUI } from "./CardUI.js";
-import { PileUI } from "./PileUI.js";
-import { StackedPileUI } from "./StackedPileUI.js";
-import { type MoveCardMessage } from "../../../shared/messages.js";
-import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones.js";
-import { log } from "../utils/logger";
-import { ElementManager } from "./ElementManager.js";
+import { type TypedRoom } from "../gameUI.js";
+import { type NetworkManager } from "../../network/NetworkManager.js";
+import { type AnimationManager } from "../managers/AnimationManager.js";
+import { type PreviewManager } from "../managers/PreviewManager";
+import { CardUI } from "../CardUI.js";
+import { PileUI } from "../PileUI.js";
+import { StackedPileUI } from "../StackedPileUI.js";
+import { type MoveCardMessage } from "../../../../shared/messages.js";
+import { ZONES, PILE_ZONES, type Zone } from "../../../../shared/zones.js";
+import { log } from "../../utils/logger.js";
+import { ElementManager } from "../managers/ElementManager";
 
 const ATTACH_HOVER_DELAY = 700;
 

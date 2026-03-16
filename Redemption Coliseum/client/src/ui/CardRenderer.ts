@@ -1,11 +1,11 @@
 import Phaser from "phaser";
 import { type GameLayout } from "./layout";
-import { type ElementManager } from "./ElementManager.js";
+import { type ElementManager } from "./managers/ElementManager";
 import { type TypedRoom } from "./gameUI.js";
 import { CardUI } from "./CardUI.js";
 import { type CardState, type PlayerState } from "../../../shared/types";
 import { ZONES, CONCEALED_ZONES } from "../../../shared/zones";
-import { type AnimationManager } from "./AnimationManager.js";
+import { type AnimationManager } from "./managers/AnimationManager.js";
 import {
   CARD_TYPES,
   MANAGED_TERRITORY_TYPES,
@@ -17,11 +17,11 @@ import { log, DEBUG } from "../utils/logger";
  * Definiert Winkel, Radius und Abstände für beide Spieler einheitlich.
  */
 const HAND_FAN_CONFIG = {
-  MAX_TOTAL_ANGLE: 100,      // Maximaler Fächerwinkel (Grad)
-  MAX_ANGLE_PER_CARD: 12,    // Maximaler Winkel pro Karte (Grad)
-  RADIUS_FACTOR: 1.2,        // Radius relativ zur Kartenhöhe (1.2 = eng, "Hand-Feeling")
+  MAX_TOTAL_ANGLE: 100, // Maximaler Fächerwinkel (Grad)
+  MAX_ANGLE_PER_CARD: 12, // Maximaler Winkel pro Karte (Grad)
+  RADIUS_FACTOR: 1.2, // Radius relativ zur Kartenhöhe (1.2 = eng, "Hand-Feeling")
   PLAYER_PIVOT_OFFSET: 0.65, // Y-Offset des Drehpunkts für Spieler (relativ zur Kartenhöhe)
-  OPPONENT_PIVOT_OFFSET: 1.2 // Y-Offset des Drehpunkts für Gegner (relativ zur Kartenhöhe)
+  OPPONENT_PIVOT_OFFSET: 1.2, // Y-Offset des Drehpunkts für Gegner (relativ zur Kartenhöhe)
 };
 
 /**
@@ -137,7 +137,7 @@ export class CardRenderer {
     handSize: number,
   ): { x: number; y: number; angle: number } {
     const cardHeight = this.layout.handCardHeight;
-    
+
     // ✨ FIX: Nutze zentrale Konfiguration
     const anglePerCard = Math.min(
       HAND_FAN_CONFIG.MAX_TOTAL_ANGLE / Math.max(1, handSize - 1),
@@ -147,7 +147,9 @@ export class CardRenderer {
     const startAngle = -totalAngle / 2;
 
     const radius = cardHeight * HAND_FAN_CONFIG.RADIUS_FACTOR;
-    const pivotY = this.layout.playerHand.bottom + cardHeight * HAND_FAN_CONFIG.PLAYER_PIVOT_OFFSET;
+    const pivotY =
+      this.layout.playerHand.bottom +
+      cardHeight * HAND_FAN_CONFIG.PLAYER_PIVOT_OFFSET;
 
     const currentAngle = startAngle + index * anglePerCard;
     const angleRad = Phaser.Math.DegToRad(currentAngle);
@@ -528,7 +530,9 @@ export class CardRenderer {
     const startAngle = -totalAngle / 2;
 
     const radius = cardHeight * HAND_FAN_CONFIG.RADIUS_FACTOR;
-    const pivotY = this.layout.opponentHand.y + cardHeight * HAND_FAN_CONFIG.OPPONENT_PIVOT_OFFSET;
+    const pivotY =
+      this.layout.opponentHand.y +
+      cardHeight * HAND_FAN_CONFIG.OPPONENT_PIVOT_OFFSET;
 
     opponent.hand.forEach((cardData, index) => {
       // Verwende die exakt gleiche Winkelberechnung wie beim Spieler.

@@ -1,11 +1,11 @@
 import Phaser from "phaser";
-import { type GameLayout } from "./layout";
-import { type TypedRoom } from "./gameUI";
-import { ZONES, type Zone } from "../../../shared/zones";
-import { PHASES } from "../../../shared/phases.js";
-import { PileUI } from "./PileUI";
-import { StackedPileUI } from "./StackedPileUI";
-import { log, DEBUG } from "../utils/logger";
+import { type GameLayout } from "../layout";
+import { type TypedRoom } from "../gameUI";
+import { ZONES, type Zone } from "../../../../shared/zones";
+import { PHASES } from "../../../../shared/phases.js";
+import { PileUI } from "../PileUI";
+import { StackedPileUI } from "../StackedPileUI";
+import { log, DEBUG } from "../../utils/logger";
 
 // ✨ NEU: Zentrale Konfiguration für das Design der Phasen-Leiste
 const PHASE_BAR_STYLE = {
