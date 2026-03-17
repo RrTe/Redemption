@@ -2,8 +2,8 @@ import type { TypedRoom, StateCallback } from "../ui/gameUI";
 import type { GameUI } from "../ui/gameUI";
 import type { SelectionDialogData } from "../scenes/SelectionDialogScene";
 import { SelectionDialogScene } from "../scenes/SelectionDialogScene";
-import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones";
-import type { MoveCardMessage } from "../../../shared/messages";
+import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones.js";
+import type { GameRoomMessages, MoveCardMessage } from "../../../shared/messages.js";
 import { log, DEBUG } from "../utils/logger";
 import { type OverlayManager } from "../ui/managers/OverlayManager.js"; // ✨ FIX
 import { type DialogManager } from "../ui/managers/DialogManager.js"; // ✨ REFACTOR
@@ -49,6 +49,13 @@ export class NetworkManager {
   // ✨ REFACTOR: Setter to resolve circular dependency.
   public setDialogManager(dialogManager: DialogManager) {
     this.dialogManager = dialogManager;
+  }
+
+  /** ✨ NEU: Spezifische Methode zum Erstellen von Tokens. */
+  public sendCreateToken(payload: { cardId: string; zone: string; ownerId: string }) {
+    log("Network", `Sending 'createToken' message:`, payload);
+    // Wir nutzen hier 'as any' für den Zugriff auf send, um Änderungen an shared/messages.ts zu vermeiden
+    (this.room as any).send("createToken", payload);
   }
 
   /** Registriert alle Handler für eingehende Server-Nachrichten. */

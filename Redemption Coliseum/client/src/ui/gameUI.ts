@@ -23,6 +23,7 @@ import { DialogManager } from "./managers/DialogManager.js"; // ✨ REFACTOR
 import { PreviewManager } from "./managers/PreviewManager"; // ✨ NEU
 import { ChatManager } from "./managers/ChatManager"; // ✨ NEU
 import { HUDManager } from "./managers/HUDManager.js"; // ✨ REFACTOR
+import { TokenManager } from "./managers/TokenManager"; // ✨ REFACTOR
 import type {
   GameRoomMessages,
   MoveCardMessage,
@@ -72,6 +73,7 @@ export class GameUI {
   private dialogManager: DialogManager; // ✨ REFACTOR
   private overlayManager: OverlayManager; // ✨ REFACTOR
   private hudManager: HUDManager; // ✨ REFACTOR
+  private tokenManager: TokenManager; // ✨ REFACTOR
 
   constructor(
     scene: Phaser.Scene,
@@ -209,6 +211,13 @@ export class GameUI {
       this.room,
       this.elementManager,
       this.layout,
+    );
+
+    // ✨ REFACTOR: Erstelle den TokenManager.
+    this.tokenManager = new TokenManager(
+      this.scene,
+      this.room,
+      this.networkManager,
     );
 
     // Debug-Grafikobjekt erstellen, wenn DEBUG aktiv ist
@@ -414,6 +423,11 @@ export class GameUI {
   /** ✨ FIX: Wrapper für DialogManager, da CardGameScene darauf zugreift. */
   public closeSelectionDialog() {
     this.dialogManager.closeSelectionDialog();
+  }
+
+  /** ✨ REFACTOR: Starts the token creation dialog flow. */
+  public showTokenCreationDialog() {
+    this.tokenManager.startTokenCreationProcess();
   }
 
   /** Positioniert alle UI-Elemente neu, z.B. bei einer Fenstergrößen-Änderung. */
