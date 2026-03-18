@@ -3,11 +3,10 @@ import { connectToRoom, getStateCallbacks } from "../network/connection"; // ✨
 import { GameUI, type StateCallback, type TypedRoom } from "../ui/gameUI"; // ✨ NEU: StateCallback importieren
 import { MapSchema } from "@colyseus/schema";
 import { calculateLayout } from "../ui/layout.js";
-import type { CardState, RoomState } from "../../../shared/types";
+import type { RoomState } from "../../../shared/types";
 import { QuantitySelectionDialogScene } from "./QuantitySelectionDialogScene";
 import {
   SelectionDialogScene,
-  type SelectionAction, // ✨ NEU: Importieren
   type SelectionDialogData,
 } from "./SelectionDialogScene"; // ✨ NEU
 import { SettingsDialogScene } from "./SettingsDialogScene"; // ✨ NEU
@@ -23,27 +22,6 @@ export default class CardGameScene extends Phaser.Scene {
   private room!: TypedRoom;
   private ui!: GameUI;
   private currentBackground: GameBackground | null = null; // ✨ NEU
-
-  // ✨ Tastenbelegungen als private, statische und schreibgeschützte Eigenschaft definieren.
-  //    Das räumt die create-Methode auf und bündelt die Konfiguration an einer Stelle.
-  private static readonly KEY_BINDINGS = [
-    // 'T' entfernt, da wir es für Tokens nutzen und Tappen in Redemption nicht brauchen.
-    {
-      key: "R", // R für "Reveal" / "Turn"
-      action: (card: CardState) => ({ isFaceDown: !card.isFaceDown }),
-    },
-    {
-      key: "F", // F für "Flip"
-      action: (card: CardState) => ({ isFlipped: !card.isFlipped }),
-    },
-    {
-      key: "C",
-      action: (card: CardState) => {
-        const currentCounter = card.counters.get("+1") || 0;
-        return { counters: { "+1": currentCounter + 1 } };
-      },
-    },
-  ];
 
   constructor() {
     super("CardGame");
@@ -144,7 +122,6 @@ export default class CardGameScene extends Phaser.Scene {
       this.ui.setStatus("Connected ✅", "#0f0");
 
       // Keybindings und den allgemeinen State-Change-Handler registrieren
-      this.registerKeybindings();
       this.room.onStateChange((state: RoomState) => {
         this.ui.render(state, this.room.sessionId);
       });
@@ -189,50 +166,5 @@ export default class CardGameScene extends Phaser.Scene {
     }
 
     this.currentBackground?.create();
-  }
-
-  private registerKeybindings() {
-    const keyboard = this.input.keyboard;
-    if (!keyboard) {
-      log(
-        "CardGame",
-        "WARN: Keyboard plugin not available. Cannot register test keybindings.",
-      );
-      return;
-    }
-
-    log("Input", "Registering keybindings...");
-
-    // ✨ NEU: Taste 'T' für Token-Auswahl
-    // ✨ FIX: Nutze addKey statt Event-Listener, um die Taste vom Browser abzufangen (verhindert Suchleiste).
-    const keyT = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
-
-    keyT.on("down", () => {
-      // ✨ REFACTOR: Delegate token creation to the UI layer.
-      this.ui.showTokenCreationDialog();
-    });
-
-    keyboard.on("keydown-UP", () => {
-      if (this.room.state.activePlayer)
-        this.room.send("changeRedeemedSouls", { amount: 1 });
-    });
-    keyboard.on("keydown-DOWN", () => {
-      if (this.room.state.activePlayer)
-        this.room.send("changeRedeemedSouls", { amount: -1 });
-    });
-
-    CardGameScene.KEY_BINDINGS.forEach(({ key, action }) => {
-      keyboard.addKey(key).on("down", () => {
-        const me = this.room.state.players?.get(this.room.sessionId);
-        const firstCardInHand = me?.hand[0];
-        if (firstCardInHand && this.room.state.activePlayer) {
-          const updates = action(firstCardInHand);
-          this.room.send("updateCardState", {
-            cardId: firstCardInHand.id,
-            updates,
-          });
-        }
-      });
-    });
   }
 }

@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { ZONES, type Zone } from "../../../shared/zones";
 import { type TypedRoom } from "./gameUI";
+import { type NetworkManager } from "../network/NetworkManager"; // ✨ NEU
 import { DEBUG } from "../utils/logger";
 
 const SHADOW_CONFIG = {
@@ -26,6 +27,7 @@ export class PileUI extends Phaser.GameObjects.Container {
     height: number,
     // ✨ NEU: Raum-Referenz für Nachrichtenversand
     room?: TypedRoom,
+    networkManager?: NetworkManager, // ✨ NEU
     isOpponent: boolean = false, // ✨ NEU: Flag für Gegner-Darstellung
   ) {
     super(scene, x, y);
@@ -118,12 +120,11 @@ export class PileUI extends Phaser.GameObjects.Container {
         !isOpponent &&
         pointer.leftButtonReleased()
       ) {
-        const message: any = {
+        networkManager?.sendMoveCard({
           from: ZONES.DECK,
           to: ZONES.HAND,
           index: 0,
-        };
-        room?.send("moveCard", message);
+        });
       }
     });
 

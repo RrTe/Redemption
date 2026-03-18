@@ -270,7 +270,7 @@ export class InteractionHandler {
     if (pointer.rightButtonReleased()) {
       if (zone === ZONES.HAND) {
         log("Input", `Right Click detected on Hand Card ${card.cardData.id}`);
-        this.room.send("updateCardState", {
+        this.networkManager.sendUpdateCardState({
           cardId: card.cardData.id,
           updates: { isFlipped: !card.cardData.isFlipped },
         });
@@ -285,7 +285,7 @@ export class InteractionHandler {
         this.lastClickedCardId === card.cardData.id &&
         now - this.lastClickTime < 300
       ) {
-        this.room.send("updateCardState", {
+        this.networkManager.sendUpdateCardState({
           cardId: card.cardData.id,
           updates: { isFaceDown: !card.cardData.isFaceDown },
         });

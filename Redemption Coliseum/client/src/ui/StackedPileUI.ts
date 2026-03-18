@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "./gameUI";
+import { type NetworkManager } from "../network/NetworkManager"; // ✨ NEU
 import { ZONES, type Zone } from "../../../shared/zones";
 
 const INITIAL_POOL_SIZE = 15; // Startgröße des Pools für die Grafiken
@@ -37,6 +38,7 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
     width: number,
     height: number,
     room: TypedRoom,
+    networkManager: NetworkManager, // ✨ NEU: Pflichtparameter hier
     isOpponent: boolean = false,
   ) {
     super(scene, x, y);
@@ -134,7 +136,7 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
         !this.isOpponent &&
         pointer.leftButtonReleased()
       ) {
-        room?.send("moveCard", { from: ZONES.DECK, to: ZONES.HAND, index: 0 });
+        networkManager.sendMoveCard({ from: ZONES.DECK, to: ZONES.HAND, index: 0 });
       }
     });
   }

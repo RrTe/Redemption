@@ -1,11 +1,13 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI";
+import { type NetworkManager } from "../../network/NetworkManager"; // ✨ NEU
 import { SoundManager } from "../../managers/SoundManager";
 import { type GameLayout } from "../layout"; // ✨ NEU
 
 export class ChatManager {
   private scene: Phaser.Scene;
   private room: TypedRoom;
+  private networkManager: NetworkManager; // ✨ NEU
   private soundManager: SoundManager;
 
   private container!: Phaser.GameObjects.Container; // ✨ FIX: Definite Assignment (!)
@@ -21,9 +23,10 @@ export class ChatManager {
   // ✨ NEU: Speichere Layout-Daten für Animationen
   private currentLayout: { visibleX: number, hiddenX: number } = { visibleX: 24, hiddenX: -12 };
 
-  constructor(scene: Phaser.Scene, room: TypedRoom) {
+  constructor(scene: Phaser.Scene, room: TypedRoom, networkManager: NetworkManager) {
     this.scene = scene;
     this.room = room;
+    this.networkManager = networkManager; // ✨ NEU
     this.soundManager = scene.registry.get("soundManager");
 
     this.createUI();
@@ -230,7 +233,7 @@ export class ChatManager {
   }
 
   private sendMessage(text: string) {
-    this.room.send("chat", { text });
+    this.networkManager.sendChatMessage(text); // ✨ FIX: Nutze NetworkManager
   }
 
   private addEntry(html: string) {

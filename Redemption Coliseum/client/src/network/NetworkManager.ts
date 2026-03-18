@@ -58,6 +58,36 @@ export class NetworkManager {
     (this.room as any).send("createToken", payload);
   }
 
+  /** ✨ NEU: Sendet die Aufgabe (Concede) an den Server. */
+  public sendConcede() {
+    log("Network", "Sending 'concede' message.");
+    this.room.send("concede", {});
+  }
+
+  /** ✨ NEU: Fordert das Speichern des Spielstands an. */
+  public sendRequestSaveGame() {
+    log("Network", "Sending 'requestSaveGame' message.");
+    this.room.send("requestSaveGame", {});
+  }
+
+  /** ✨ NEU: Sendet Status-Updates für eine Karte (z.B. flippen). */
+  public sendUpdateCardState(payload: { cardId: string; updates: any }) {
+    log("Network", "Sending 'updateCardState' message:", payload);
+    this.room.send("updateCardState", payload);
+  }
+
+  /** ✨ NEU: Sendet Änderung der Redeemed Souls. */
+  public sendChangeRedeemedSouls(amount: number) {
+    log("Network", `Sending 'changeRedeemedSouls' with amount: ${amount}`);
+    this.room.send("changeRedeemedSouls", { amount });
+  }
+
+  /** ✨ NEU: Sendet eine Chat-Nachricht. */
+  public sendChatMessage(text: string) {
+    // Wir nutzen hier 'as any', da Chat nicht im strengen Interface definiert ist
+    (this.room as any).send("chat", { text });
+  }
+
   /** Registriert alle Handler für eingehende Server-Nachrichten. */
   public registerHandlers() {
     log(

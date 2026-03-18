@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { type GameLayout } from "../layout";
 import { type TypedRoom } from "../gameUI";
+import { type NetworkManager } from "../../network/NetworkManager"; // ✨ NEU
 import { ZONES, type Zone } from "../../../../shared/zones";
 import { PHASES } from "../../../../shared/phases.js";
 import { PileUI } from "../PileUI";
@@ -65,15 +66,17 @@ export class ElementManager {
   private scene: Phaser.Scene;
   private room: TypedRoom;
   public layout: GameLayout;
+  private networkManager: NetworkManager; // ✨ NEU
 
   // ✨ REFACTORING: Öffentliche Eigenschaften, um die erstellten Elemente zu speichern.
   public staticElements!: StaticElements;
   public zoneElements!: ZoneElements;
 
-  constructor(scene: Phaser.Scene, room: TypedRoom, layout: GameLayout) {
+  constructor(scene: Phaser.Scene, room: TypedRoom, layout: GameLayout, networkManager: NetworkManager) {
     this.scene = scene;
     this.room = room;
     this.layout = layout;
+    this.networkManager = networkManager; // ✨ NEU
   }
 
   /** ✨ REFACTORING: Hauptmethode, die alle Elemente erstellt. */
@@ -515,6 +518,7 @@ export class ElementManager {
       layout.pileWidth,
       layout.pileHeight,
       room,
+      this.networkManager, // ✨ NEU
     );
     const playerDiscardPile = new PileUI(
       scene,
@@ -524,6 +528,7 @@ export class ElementManager {
       layout.pileWidth,
       layout.pileHeight,
       room,
+      this.networkManager, // ✨ NEU
       false, // isOpponent
     );
     playerDeckPile.setData("ownerId", room.sessionId);
@@ -537,6 +542,7 @@ export class ElementManager {
       layout.pileWidth,
       layout.pileHeight,
       room,
+      this.networkManager, // ✨ NEU
       true, // isOpponent
     );
     const opponentDiscardPile = new PileUI(
@@ -547,6 +553,7 @@ export class ElementManager {
       layout.pileWidth,
       layout.pileHeight,
       room,
+      this.networkManager, // ✨ NEU
       true, // isOpponent
     );
     opponentDiscardPile.setData("ownerId", undefined); // Platzhalter
@@ -561,6 +568,7 @@ export class ElementManager {
       layout.pileWidth,
       layout.pileHeight,
       room,
+      this.networkManager, // ✨ NEU
       true, // isOpponent
     );
     opponentReservePile.setData("ownerId", undefined); // Platzhalter
@@ -575,6 +583,7 @@ export class ElementManager {
       layout.pileWidth,
       layout.pileHeight,
       room,
+      this.networkManager, // ✨ NEU
     );
     playerReservePile.setData("ownerId", room.sessionId);
     const playerLandOfRedemptionPile = new PileUI(
@@ -585,6 +594,7 @@ export class ElementManager {
       layout.pileWidth,
       layout.pileHeight,
       room,
+      this.networkManager, // ✨ NEU
       false, // isOpponent
     );
     playerLandOfRedemptionPile.setData("ownerId", room.sessionId);
@@ -597,6 +607,7 @@ export class ElementManager {
       layout.pileWidth,
       layout.pileHeight,
       room,
+      this.networkManager, // ✨ NEU
       true, // isOpponent
     );
     opponentLandOfRedemptionPile.setData("ownerId", undefined); // Platzhalter
@@ -609,6 +620,7 @@ export class ElementManager {
       layout.pileWidth,
       layout.pileHeight,
       room,
+      this.networkManager, // ✨ NEU
       false, // isOpponent
     );
     playerBanishPile.setData("ownerId", room.sessionId);
@@ -621,6 +633,7 @@ export class ElementManager {
       layout.pileWidth,
       layout.pileHeight,
       room,
+      this.networkManager, // ✨ NEU
       true, // isOpponent
     );
     opponentBanishPile.setData("ownerId", undefined); // Platzhalter

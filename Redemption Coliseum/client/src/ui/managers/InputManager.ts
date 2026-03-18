@@ -3,9 +3,11 @@ import { type TypedRoom } from "../gameUI.js";
 import { type NetworkManager } from "../../network/NetworkManager.js";
 import { type AnimationManager } from "./AnimationManager.js";
 import { type PreviewManager } from "./PreviewManager";
+import { type TokenManager } from "./TokenManager.js"; // ✨ NEU
 import { ElementManager } from "./ElementManager.js"; // ✨ NEU
 import { DragDropHandler } from "../handlers/DragDropHandler.js"; // ✨ REFACTOR
 import { InteractionHandler } from "../handlers/InteractionHandler.js"; // ✨ REFACTOR
+import { KeyboardHandler } from "../handlers/KeyboardHandler"; // ✨ REFACTOR
 
 /**
  * Verwaltet alle globalen Input-Handler der Szene,
@@ -20,6 +22,7 @@ export class InputManager {
   private elementManager: ElementManager; // ✨ NEU
   private dragDropHandler: DragDropHandler; // ✨ REFACTOR
   private interactionHandler: InteractionHandler; // ✨ REFACTOR
+  private keyboardHandler: KeyboardHandler; // ✨ REFACTOR
 
   constructor(
     scene: Phaser.Scene,
@@ -29,6 +32,7 @@ export class InputManager {
     previewManager: PreviewManager,
     dragBounds: Phaser.Geom.Rectangle,
     elementManager: ElementManager, // ✨ NEU
+    tokenManager: TokenManager, // ✨ NEU
   ) {
     this.scene = scene;
     this.room = room;
@@ -57,6 +61,14 @@ export class InputManager {
       previewManager,
       this.dragDropHandler,
     );
+
+    // ✨ REFACTOR: Create handler for keyboard inputs.
+    this.keyboardHandler = new KeyboardHandler(
+      scene,
+      room,
+      networkManager,
+      tokenManager,
+    );
   }
 
   /** ✨ NEU: Aufräumen von Timern und Listeners. */
@@ -72,5 +84,6 @@ export class InputManager {
     // ✨ REFACTOR: Delegate drag event registration to the handler.
     this.dragDropHandler.registerHandlers();
     this.interactionHandler.registerHandlers();
+    this.keyboardHandler.registerHandlers();
   }
 }

@@ -55,7 +55,7 @@ export class GameUI {
   private layout: GameLayout;
   private elementManager: ElementManager;
   private inputManager: InputManager;
-  private networkManager: NetworkManager;
+  public readonly networkManager: NetworkManager; // ✨ FIX: Public readonly für Zugriff aus Scene
   private cardRenderer: CardRenderer;
   private phaseManager: PhaseManager; // ✨ NEU
   public settingsManager: SettingsManager; // ✨ NEU: Öffentlich gemacht für Zugriff via Scene Registry
@@ -99,8 +99,8 @@ export class GameUI {
     // ✨ NEU: Erstelle den PreviewManager.
     this.previewManager = new PreviewManager(this.scene);
 
-    // ✨ NEU: Erstelle den ChatManager.
-    this.chatManager = new ChatManager(this.scene, this.room);
+    // ✨ CHAT MANAGER: Wird jetzt NACH dem NetworkManager erstellt (siehe unten)
+    this.chatManager = null!; 
 
     // ✨ REFACTOR: Erstelle den OverlayManager.
     this.overlayManager = new OverlayManager(
@@ -139,23 +139,8 @@ export class GameUI {
       this.room.state.currentPhase, // ✨ NEU: Übergebe die initiale Phase
     );
 
-    // ✨ REFACTORING: Erstelle die Manager-Instanzen.
-    this.elementManager = new ElementManager(
-      this.scene,
-      this.room,
-      this.layout,
-    );
-    this.elementManager.createAllElements();
-
-    // Drag-Grenzen definieren
-    this.dragBounds = new Phaser.Geom.Rectangle(
-      0,
-      0,
-      this.layout.GAME_WIDTH,
-      this.layout.GAME_HEIGHT,
-    );
-
-    // ✨ NEU (SCHRITT 3): Erstelle den NetworkManager.
+    // ✨ REFACTORING: Erstelle den NetworkManager VOR dem ElementManager.
+    // Damit können wir ihn an ElementManager (und PileUI) übergeben.
     this.networkManager = new NetworkManager(
       this.scene,
       this.room,
@@ -172,6 +157,33 @@ export class GameUI {
       this.networkManager,
     );
 
+    // ✨ REFACTOR: Erstelle den ChatManager jetzt, da NetworkManager existiert.
+    this.chatManager = new ChatManager(this.scene, this.room, this.networkManager);
+
+    // ✨ REFACTOR: TokenManager VOR InputManager erstellen, da InputManager ihn braucht.
+    this.tokenManager = new TokenManager(
+      this.scene,
+      this.room,
+      this.networkManager,
+    );
+
+    // ✨ REFACTORING: Erstelle die Manager-Instanzen.
+    this.elementManager = new ElementManager(
+      this.scene,
+      this.room,
+      this.layout,
+      this.networkManager, // ✨ NEU: Übergebe NetworkManager
+    );
+    this.elementManager.createAllElements();
+
+    // Drag-Grenzen definieren
+    this.dragBounds = new Phaser.Geom.Rectangle(
+      0,
+      0,
+      this.layout.GAME_WIDTH,
+      this.layout.GAME_HEIGHT,
+    );
+
     // ✨ KORREKTUR: Erstelle den InputManager NACH dem NetworkManager und übergebe ihn.
     this.inputManager = new InputManager(
       this.scene,
@@ -181,6 +193,7 @@ export class GameUI {
       this.previewManager, // ✨ NEU: Übergebe den PreviewManager
       this.dragBounds,
       this.elementManager, // ✨ NEU: Übergebe ElementManager für Highlights
+      this.tokenManager, // ✨ NEU: Übergebe TokenManager für Tastaturkürzel
     );
 
     // ✨ REFACTOR: Setze den DialogManager im NetworkManager
@@ -211,13 +224,6 @@ export class GameUI {
       this.room,
       this.elementManager,
       this.layout,
-    );
-
-    // ✨ REFACTOR: Erstelle den TokenManager.
-    this.tokenManager = new TokenManager(
-      this.scene,
-      this.room,
-      this.networkManager,
     );
 
     // Debug-Grafikobjekt erstellen, wenn DEBUG aktiv ist
@@ -289,7 +295,7 @@ export class GameUI {
 
       // Einfache Bestätigung (Browser-Native ist am sichersten für den Anfang)
       if (window.confirm("Are you sure you want to concede the game?")) {
-        this.room.send("concede", {});
+        this.networkManager.sendConcede(); // ✨ FIX: Nutzung des NetworkManager
       }
     });
 
@@ -370,7 +376,8 @@ export class GameUI {
       }
 
       if (Object.keys(updates).length > 0) {
-        this.room.send("updateCardState", {
+        this.networkManager.sendUpdateCardState({
+          // ✨ FIX: Nutzung des NetworkManager
           cardId: data.cardId,
           updates,
         });
@@ -394,9 +401,8 @@ export class GameUI {
   /** ✨ NEU: Fordert den Server auf, das Spiel zu speichern */
   public saveGame() {
     log("UI", "Requesting save game from server...");
-    this.room.send("requestSaveGame", {});
+    this.networkManager.sendRequestSaveGame(); // ✨ FIX: Nutzung des NetworkManager
   }
-
   /** ✨ NEU: Lädt die JSON-Datei herunter */
   private downloadSaveFile(data: any) {
     const jsonStr = JSON.stringify(data, null, 2);
