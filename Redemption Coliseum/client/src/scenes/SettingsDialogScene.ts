@@ -422,15 +422,8 @@ export class SettingsDialogScene extends Phaser.Scene {
   }
 
   private updateSetting(key: string, value: any) {
-    // Wir müssen hier etwas tricksen, da SettingsManager private ist,
-    // aber wir wollen die Werte live ändern.
-    // Idealerweise hätte SettingsManager Setter-Methoden.
-    // Da wir den Code von SettingsManager kennen, nutzen wir den localStorage Hack oder erweitern ihn.
-    // Hier nutzen wir den direkten Weg über localStorage für Persistenz + Runtime Update.
-
-    // 1. Runtime Update (für sofortiges Feedback, z.B. Volume)
-    (this.settingsManager as any).settings[key] = value;
-    (this.settingsManager as any).save(); // Speichern
+    // ✨ FIX: Saubere API nutzen statt 'any'-Hack
+    this.settingsManager.set(key as any, value);
 
     // ✨ FIX: Benachrichtige die Spielszene bei ALLEN relevanten Änderungen.
     // Das ist notwendig, damit der SoundManager (für laufende Musik) und die Hintergründe (für Effekte) reagieren können.

@@ -72,6 +72,12 @@ export class SettingsManager {
     return this.settings[key];
   }
 
+  /** ✨ NEU: Setzt einen Wert und speichert ihn persistent. */
+  public set<K extends keyof GameSettings>(key: K, value: GameSettings[K]) {
+    this.settings[key] = value;
+    this.save();
+  }
+
   /** ✨ NEU: Prüft, ob Animationen aktiviert sind. */
   public areAnimationsEnabled(): boolean {
     return this.settings.animationsEnabled;
