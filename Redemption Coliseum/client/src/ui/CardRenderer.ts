@@ -11,18 +11,7 @@ import {
   MANAGED_TERRITORY_TYPES,
 } from "../../../shared/card-constants";
 import { log, DEBUG } from "../utils/logger";
-
-/**
- * ✨ NEU: Zentrale Konfiguration für den Kartenfächer (Hand).
- * Definiert Winkel, Radius und Abstände für beide Spieler einheitlich.
- */
-const HAND_FAN_CONFIG = {
-  MAX_TOTAL_ANGLE: 100, // Maximaler Fächerwinkel (Grad)
-  MAX_ANGLE_PER_CARD: 12, // Maximaler Winkel pro Karte (Grad)
-  RADIUS_FACTOR: 1.2, // Radius relativ zur Kartenhöhe (1.2 = eng, "Hand-Feeling")
-  PLAYER_PIVOT_OFFSET: 0.65, // Y-Offset des Drehpunkts für Spieler (relativ zur Kartenhöhe)
-  OPPONENT_PIVOT_OFFSET: 1.2, // Y-Offset des Drehpunkts für Gegner (relativ zur Kartenhöhe)
-};
+import { HandRenderer } from "./renderers/HandRenderer"; // ✨ NEU
 
 /**
  * ✨ REFACTORING: Verwaltet das Rendern (Erstellen, Positionieren, Aktualisieren)
@@ -36,6 +25,7 @@ export class CardRenderer {
   private cardUIs = new Map<string, CardUI>();
   private animationManager: AnimationManager; // ✨ NEU
   private dragBounds: Phaser.Geom.Rectangle;
+  private handRenderer: HandRenderer; // ✨ NEU
 
   constructor(
     scene: Phaser.Scene,
@@ -51,6 +41,14 @@ export class CardRenderer {
     this.elementManager = elementManager;
     this.animationManager = animationManager; // ✨ NEU
     this.dragBounds = dragBounds;
+
+    // ✨ NEU: Sub-Renderer initialisieren
+    this.handRenderer = new HandRenderer(
+      this.layout,
+      this.elementManager,
+      this.animationManager,
+      this.processCard.bind(this), // Wir übergeben die Methode gebunden an diese Instanz
+    );
   }
 
   /** Koordiniert das Rendern aller Karten auf dem Spielfeld. */
@@ -63,9 +61,13 @@ export class CardRenderer {
     // Dies vermeidet teure Suchen in jedem Render-Durchlauf für jede Karte.
     const attachmentMap = this._buildAttachmentMap(player, opponent);
 
-    this.renderHandCards(player, attachmentMap, renderedCardIds);
+    this.handRenderer.renderHandCards(player, attachmentMap, renderedCardIds);
     if (opponent) {
-      this.renderOpponentHandCards(opponent, attachmentMap, renderedCardIds);
+      this.handRenderer.renderOpponentHandCards(
+        opponent,
+        attachmentMap,
+        renderedCardIds,
+      );
     }
 
     const totalTerritoryCount = this.renderTerritoryCards(
@@ -125,43 +127,8 @@ export class CardRenderer {
     return attachmentMap;
   }
 
-  /**
-   * ✨ NEU: Berechnet die Zielposition und den Winkel einer Karte in der Hand.
-   * Diese Methode kapselt die Fächer-Logik, damit sie von außerhalb verwendet werden kann.
-   * @param index Der Index der Karte in der Hand.
-   * @param handSize Die Gesamtanzahl der Karten in der Hand.
-   * @returns Die Zielkoordinaten und der Winkel.
-   */
-  public getHandCardTargetPosition(
-    index: number,
-    handSize: number,
-  ): { x: number; y: number; angle: number } {
-    const cardHeight = this.layout.handCardHeight;
-
-    // ✨ FIX: Nutze zentrale Konfiguration
-    const anglePerCard = Math.min(
-      HAND_FAN_CONFIG.MAX_TOTAL_ANGLE / Math.max(1, handSize - 1),
-      HAND_FAN_CONFIG.MAX_ANGLE_PER_CARD,
-    );
-    const totalAngle = (handSize - 1) * anglePerCard;
-    const startAngle = -totalAngle / 2;
-
-    const radius = cardHeight * HAND_FAN_CONFIG.RADIUS_FACTOR;
-    const pivotY =
-      this.layout.playerHand.bottom +
-      cardHeight * HAND_FAN_CONFIG.PLAYER_PIVOT_OFFSET;
-
-    const currentAngle = startAngle + index * anglePerCard;
-    const angleRad = Phaser.Math.DegToRad(currentAngle);
-
-    const x = this.layout.playerHand.centerX + radius * Math.sin(angleRad);
-    const y = pivotY - radius * Math.cos(angleRad);
-
-    return { x, y, angle: currentAngle };
-  }
-
-  /** Erstellt oder aktualisiert eine einzelne CardUI-Instanz. */
-  private _processCard(
+  /** ✨ FIX: Public gemacht, damit Sub-Renderer darauf zugreifen können. */
+  public processCard(
     cardData: CardState,
     targetX: number,
     targetY: number,
@@ -422,7 +389,7 @@ export class CardRenderer {
       }
 
       // Rekursiver Aufruf von _processCard für das Kind
-      const attUI = this._processCard(
+      const attUI = this.processCard(
         att,
         targetX,
         targetY,
@@ -444,121 +411,6 @@ export class CardRenderer {
         // Zusätzlich zur Sicherheit (falls Depths gleich sind):
         this.scene.children.bringToTop(attUI);
       }
-    });
-  }
-
-  private renderHandCards(
-    player: PlayerState,
-    attachmentMap: Map<string, CardState[]>,
-    renderedCardIds: Set<string>,
-  ) {
-    const handSize = player.hand.length;
-    if (handSize === 0) return;
-
-    // ✨ FINALE LÖSUNG: Schritt 1 - Ein Array, um die zu startenden Animationen zu sammeln.
-    const animationsToStart: {
-      cardUI: CardUI;
-      endPos: { x: number; y: number; angle: number };
-    }[] = [];
-
-    player.hand.forEach((cardData, index) => {
-      // ✨ DEBUGGING: Logge die Werte, die zur Positionsberechnung verwendet werden.
-      const { x, y, angle } = this.getHandCardTargetPosition(index, handSize);
-      log(
-        "Renderer",
-        `[POS_CALC] Karte: ${cardData.id.slice(
-          -4,
-        )}, Index: ${index}, Handgröße: ${handSize} -> Ziel (x: ${x.toFixed(
-          0,
-        )}, y: ${y.toFixed(0)}, angle: ${angle.toFixed(1)})`,
-      );
-
-      const cardUI = this._processCard(
-        cardData,
-        x,
-        y,
-        angle,
-        attachmentMap,
-        renderedCardIds,
-        this.layout.handCardWidth,
-        this.layout.handCardHeight,
-      );
-
-      // ✨ FINALE KORREKTUR: Setze die Tiefe für Handkarten basierend auf ihrem Index.
-      // Dies stellt sicher, dass die Karten sich korrekt überlappen (links unten, rechts oben).
-      cardUI.setDepth(100 + index); // ✨ FIX: Handkarten immer über dem Spielfeld (Layer 100+)
-
-      // ✨ DEIN PLAN: Prüfe, ob für diese Karte eine Zieh-Animation vorgemerkt ist.
-      if (this.animationManager.pendingDrawAnimations.has(cardData.id)) {
-        animationsToStart.push({ cardUI, endPos: { x, y, angle } });
-      }
-    });
-
-    if (animationsToStart.length > 0) {
-      const startRect =
-        this.elementManager.zoneElements.playerDeckPile.getBounds();
-      // ✨ FINALE KORREKTUR: Starte die Animationen gestaffelt mit einem Delay.
-      animationsToStart.forEach(({ cardUI, endPos }, index) => {
-        this.animationManager.playCardDrawAnimation(
-          cardUI,
-          startRect,
-          endPos,
-          index * 200,
-        );
-      });
-    }
-  }
-
-  private renderOpponentHandCards(
-    opponent: PlayerState,
-    attachmentMap: Map<string, CardState[]>,
-    renderedCardIds: Set<string>,
-  ) {
-    const handSize = opponent.hand.length;
-    if (handSize === 0) return;
-
-    // --- Parameter für den Fächer (gespiegelt) ---.
-    const cardWidth = this.layout.handCardWidth;
-    const cardHeight = this.layout.handCardHeight;
-
-    // ✨ FIX: Nutze zentrale Konfiguration
-    const anglePerCard = Math.min(
-      HAND_FAN_CONFIG.MAX_TOTAL_ANGLE / Math.max(1, handSize - 1),
-      HAND_FAN_CONFIG.MAX_ANGLE_PER_CARD,
-    );
-    const totalAngle = (handSize - 1) * anglePerCard;
-    const startAngle = -totalAngle / 2;
-
-    const radius = cardHeight * HAND_FAN_CONFIG.RADIUS_FACTOR;
-    const pivotY =
-      this.layout.opponentHand.y +
-      cardHeight * HAND_FAN_CONFIG.OPPONENT_PIVOT_OFFSET;
-
-    opponent.hand.forEach((cardData, index) => {
-      // Verwende die exakt gleiche Winkelberechnung wie beim Spieler.
-      const currentAngle = startAngle + index * anglePerCard;
-      const angleRad = Phaser.Math.DegToRad(currentAngle);
-
-      const targetX =
-        this.layout.opponentHand.centerX + radius * Math.sin(angleRad);
-      // Y-Position wird vom Drehpunkt SUBTRAHIERT, um den Bogen nach oben zu öffnen,
-      // genau wie beim Spieler.
-      const targetY = pivotY - radius * Math.cos(angleRad);
-
-      // Die Karte selbst wird um 180 Grad gedreht, damit sie auf dem Kopf steht
-      const finalAngle = currentAngle + 180;
-
-      const cardUI = this._processCard(
-        cardData,
-        targetX,
-        targetY,
-        finalAngle,
-        attachmentMap,
-        renderedCardIds,
-        cardWidth,
-        cardHeight,
-      );
-      cardUI.setDepth(100 + index); // ✨ FIX: Auch Gegner-Handkarten anheben
     });
   }
 
@@ -594,7 +446,7 @@ export class CardRenderer {
 
     cards.forEach((cardData, index) => {
       const targetX = startX + cardWidth / 2 + index * spacing;
-      const cardUI = this._processCard(
+      const cardUI = this.processCard(
         cardData,
         targetX,
         targetY,
@@ -687,7 +539,7 @@ export class CardRenderer {
         );
       }
 
-      const cardUI = this._processCard(
+      const cardUI = this.processCard(
         cardData,
         targetX,
         targetY,
@@ -864,7 +716,7 @@ export class CardRenderer {
         targetAngle = isOpponent ? 180 : 0;
       }
 
-      const cardUI = this._processCard(
+      const cardUI = this.processCard(
         cardData,
         targetX,
         targetY,
