@@ -1,17 +1,17 @@
 import Phaser from "phaser";
-import { type GameLayout } from "./layout";
-import { type ElementManager } from "./managers/ElementManager";
-import { type TypedRoom } from "./gameUI.js";
-import { CardUI } from "./CardUI.js";
-import { type CardState, type PlayerState } from "../../../shared/types";
-import { ZONES, CONCEALED_ZONES } from "../../../shared/zones";
-import { type AnimationManager } from "./managers/AnimationManager.js";
+import { type GameLayout } from "../layout";
+import { type ElementManager } from "../managers/ElementManager";
+import { type TypedRoom } from "../gameUI.js";
+import { CardUI } from "../CardUI.js";
+import { type CardState, type PlayerState } from "../../../../shared/types";
+import { ZONES, CONCEALED_ZONES } from "../../../../shared/zones";
+import { type AnimationManager } from "../managers/AnimationManager.js";
 import {
   CARD_TYPES,
   MANAGED_TERRITORY_TYPES,
-} from "../../../shared/card-constants";
-import { log, DEBUG } from "../utils/logger";
-import { HandRenderer } from "./renderers/HandRenderer"; // ✨ NEU
+} from "../../../../shared/card-constants";
+import { log, DEBUG } from "../../utils/logger";
+import { HandRenderer } from "./HandRenderer"; // ✨ Liegt jetzt im selben Ordner
 
 /**
  * ✨ REFACTORING: Verwaltet das Rendern (Erstellen, Positionieren, Aktualisieren)
@@ -23,23 +23,23 @@ export class CardRenderer {
   public layout: GameLayout;
   private elementManager: ElementManager;
   private cardUIs = new Map<string, CardUI>();
-  private animationManager: AnimationManager; // ✨ NEU
+  private animationManager: AnimationManager;
   private dragBounds: Phaser.Geom.Rectangle;
-  private handRenderer: HandRenderer; // ✨ NEU
+  private handRenderer: HandRenderer;
 
   constructor(
     scene: Phaser.Scene,
     room: TypedRoom,
     layout: GameLayout,
     elementManager: ElementManager,
-    animationManager: AnimationManager, // ✨ NEU
+    animationManager: AnimationManager,
     dragBounds: Phaser.Geom.Rectangle,
   ) {
     this.scene = scene;
     this.room = room;
     this.layout = layout;
     this.elementManager = elementManager;
-    this.animationManager = animationManager; // ✨ NEU
+    this.animationManager = animationManager;
     this.dragBounds = dragBounds;
 
     // ✨ NEU: Sub-Renderer initialisieren

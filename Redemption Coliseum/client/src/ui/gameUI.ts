@@ -10,20 +10,20 @@ import { CARD_TYPES } from "../../../shared/card-constants"; // Dieser Import is
 import { calculateLayout, type GameLayout } from "../ui/layout";
 import { CardUI } from "./CardUI"; // ✨ Importiere die neue CardUI-Klasse
 import { ElementManager } from "./managers/ElementManager";
-import { CardRenderer } from "./CardRenderer.js";
+import { CardRenderer } from "./renderers/CardRenderer.js"; // ✨ FIX: Neuer Pfad
 import { InputManager } from "./managers/InputManager";
 import { PileUI } from "./PileUI"; // ✨ Importiere die neue PileUI-Klasse
 import { NetworkManager } from "../network/NetworkManager"; // ✨ NEU (SCHRITT 3)
-import { PhaseManager } from "./managers/PhaseManager.ts"; // ✨ NEU
+import { PhaseManager } from "./managers/PhaseManager"; // ✨ NEU
 import { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Schritt 1.1
-import { SoundManager } from "../managers/SoundManager"; // ✨ NEU: Schritt 1.2
-import { AnimationManager } from "./managers/AnimationManager.js";
-import { OverlayManager } from "./managers/OverlayManager.ts"; // ✨ REFACTOR
-import { DialogManager } from "./managers/DialogManager.js"; // ✨ REFACTOR
+import { SoundManager } from "../managers/SoundManager.ts"; // ✨ NEU: Schritt 1.2
+import { AnimationManager } from "./managers/AnimationManager";
+import { OverlayManager } from "./managers/OverlayManager"; // ✨ REFACTOR
+import { DialogManager } from "./managers/DialogManager"; // ✨ REFACTOR
 import { PreviewManager } from "./managers/PreviewManager"; // ✨ NEU
 import { ChatManager } from "./managers/ChatManager"; // ✨ NEU
-import { HUDManager } from "./managers/HUDManager.js"; // ✨ REFACTOR
-import { TokenManager } from "./managers/TokenManager"; // ✨ REFACTOR
+import { HUDManager } from "./managers/HUDManager"; // ✨ REFACTOR
+import { TokenManager } from "./managers/TokenManager.js"; // ✨ FIX: Import hinzufügen
 import type {
   GameRoomMessages,
   MoveCardMessage,
@@ -55,7 +55,7 @@ export class GameUI {
   private layout: GameLayout;
   private elementManager: ElementManager;
   private inputManager: InputManager;
-  public readonly networkManager: NetworkManager; // ✨ FIX: Public readonly für Zugriff aus Scene
+  private networkManager: NetworkManager;
   private cardRenderer: CardRenderer;
   private phaseManager: PhaseManager; // ✨ NEU
   public settingsManager: SettingsManager; // ✨ NEU: Öffentlich gemacht für Zugriff via Scene Registry
@@ -73,7 +73,7 @@ export class GameUI {
   private dialogManager: DialogManager; // ✨ REFACTOR
   private overlayManager: OverlayManager; // ✨ REFACTOR
   private hudManager: HUDManager; // ✨ REFACTOR
-  private tokenManager: TokenManager; // ✨ REFACTOR
+  private tokenManager: TokenManager; // ✨ FIX: Property hinzufügen
 
   constructor(
     scene: Phaser.Scene,
@@ -99,9 +99,6 @@ export class GameUI {
     // ✨ NEU: Erstelle den PreviewManager.
     this.previewManager = new PreviewManager(this.scene);
 
-    // ✨ CHAT MANAGER: Wird jetzt NACH dem NetworkManager erstellt (siehe unten)
-    this.chatManager = null!; 
-
     // ✨ REFACTOR: Erstelle den OverlayManager.
     this.overlayManager = new OverlayManager(
       this.scene,
@@ -109,13 +106,18 @@ export class GameUI {
       this.soundManager,
     );
 
-    // ✨ REFACTOR: Erstelle den DialogManager.
-    // Muss nach dem NetworkManager erstellt werden, wenn er ihn braucht.
-    // Da der NetworkManager ihn aber braucht, erstellen wir ihn hier und übergeben ihn.
-    // NetworkManager wird unten erstellt.
-    // this.dialogManager = new DialogManager(this.scene, this.room, this.networkManager);
-    // Temporäre Zuweisung, wird unten überschrieben.
-    this.dialogManager = null!;
+    // ✨ FIX: NetworkManager ZUERST erstellen, da andere Manager ihn brauchen.
+    this.networkManager = new NetworkManager(
+      this.scene,
+      this.room,
+      this,
+      this.$,
+      this.overlayManager,
+      null!, // dialogManager wird gleich gesetzt
+    );
+
+    // ✨ FIX: ChatManager erstellen (braucht NetworkManager)
+    this.chatManager = new ChatManager(this.scene, this.room, this.networkManager);
 
     log(
       "UI",
@@ -139,40 +141,12 @@ export class GameUI {
       this.room.state.currentPhase, // ✨ NEU: Übergebe die initiale Phase
     );
 
-    // ✨ REFACTORING: Erstelle den NetworkManager VOR dem ElementManager.
-    // Damit können wir ihn an ElementManager (und PileUI) übergeben.
-    this.networkManager = new NetworkManager(
-      this.scene,
-      this.room,
-      this,
-      this.$,
-      this.overlayManager,
-      null!, // dialogManager wird später gesetzt
-    );
-
-    // ✨ REFACTOR: Erstelle den DialogManager und übergebe den NetworkManager.
-    this.dialogManager = new DialogManager(
-      this.scene,
-      this.room,
-      this.networkManager,
-    );
-
-    // ✨ REFACTOR: Erstelle den ChatManager jetzt, da NetworkManager existiert.
-    this.chatManager = new ChatManager(this.scene, this.room, this.networkManager);
-
-    // ✨ REFACTOR: TokenManager VOR InputManager erstellen, da InputManager ihn braucht.
-    this.tokenManager = new TokenManager(
-      this.scene,
-      this.room,
-      this.networkManager,
-    );
-
     // ✨ REFACTORING: Erstelle die Manager-Instanzen.
     this.elementManager = new ElementManager(
       this.scene,
       this.room,
       this.layout,
-      this.networkManager, // ✨ NEU: Übergebe NetworkManager
+      this.networkManager, // ✨ FIX: NetworkManager übergeben
     );
     this.elementManager.createAllElements();
 
@@ -184,6 +158,18 @@ export class GameUI {
       this.layout.GAME_HEIGHT,
     );
 
+    // ✨ REFACTOR: Erstelle den DialogManager und übergebe den NetworkManager.
+    this.dialogManager = new DialogManager(
+      this.scene,
+      this.room,
+      this.networkManager,
+    );
+    // ✨ FIX: Zirkuläre Abhängigkeit auflösen
+    this.networkManager.setDialogManager(this.dialogManager);
+
+    // ✨ FIX: TokenManager erstellen (braucht NetworkManager)
+    this.tokenManager = new TokenManager(this.scene, this.room, this.networkManager);
+
     // ✨ KORREKTUR: Erstelle den InputManager NACH dem NetworkManager und übergebe ihn.
     this.inputManager = new InputManager(
       this.scene,
@@ -193,11 +179,8 @@ export class GameUI {
       this.previewManager, // ✨ NEU: Übergebe den PreviewManager
       this.dragBounds,
       this.elementManager, // ✨ NEU: Übergebe ElementManager für Highlights
-      this.tokenManager, // ✨ NEU: Übergebe TokenManager für Tastaturkürzel
+      this.tokenManager, // ✨ FIX: TokenManager übergeben
     );
-
-    // ✨ REFACTOR: Setze den DialogManager im NetworkManager
-    this.networkManager.setDialogManager(this.dialogManager);
 
     this.cardRenderer = new CardRenderer(
       this.scene,
@@ -295,7 +278,7 @@ export class GameUI {
 
       // Einfache Bestätigung (Browser-Native ist am sichersten für den Anfang)
       if (window.confirm("Are you sure you want to concede the game?")) {
-        this.networkManager.sendConcede(); // ✨ FIX: Nutzung des NetworkManager
+        this.room.send("concede", {});
       }
     });
 
@@ -376,8 +359,7 @@ export class GameUI {
       }
 
       if (Object.keys(updates).length > 0) {
-        this.networkManager.sendUpdateCardState({
-          // ✨ FIX: Nutzung des NetworkManager
+        this.room.send("updateCardState", {
           cardId: data.cardId,
           updates,
         });
@@ -401,8 +383,9 @@ export class GameUI {
   /** ✨ NEU: Fordert den Server auf, das Spiel zu speichern */
   public saveGame() {
     log("UI", "Requesting save game from server...");
-    this.networkManager.sendRequestSaveGame(); // ✨ FIX: Nutzung des NetworkManager
+    this.room.send("requestSaveGame", {});
   }
+
   /** ✨ NEU: Lädt die JSON-Datei herunter */
   private downloadSaveFile(data: any) {
     const jsonStr = JSON.stringify(data, null, 2);
@@ -424,16 +407,6 @@ export class GameUI {
   /** ✨ NEU: Zeigt das Game-Over-Overlay an. */
   public showGameOverOverlay(isWinner: boolean) {
     this.overlayManager.showGameOverOverlay(isWinner);
-  }
-
-  /** ✨ FIX: Wrapper für DialogManager, da CardGameScene darauf zugreift. */
-  public closeSelectionDialog() {
-    this.dialogManager.closeSelectionDialog();
-  }
-
-  /** ✨ REFACTOR: Starts the token creation dialog flow. */
-  public showTokenCreationDialog() {
-    this.tokenManager.startTokenCreationProcess();
   }
 
   /** Positioniert alle UI-Elemente neu, z.B. bei einer Fenstergrößen-Änderung. */
