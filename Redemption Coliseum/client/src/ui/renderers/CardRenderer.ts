@@ -9,6 +9,7 @@ import { type AnimationManager } from "../managers/AnimationManager.js";
 import { log, DEBUG } from "../../utils/logger";
 import { HandRenderer } from "./HandRenderer"; // ✨ Liegt jetzt im selben Ordner
 import { FieldRenderer } from "./FieldRenderer"; // ✨ NEU
+import { PileRenderer } from "./PileRenderer"; // ✨ NEU
 
 /**
  * ✨ REFACTORING: Verwaltet das Rendern (Erstellen, Positionieren, Aktualisieren)
@@ -24,6 +25,7 @@ export class CardRenderer {
   private dragBounds: Phaser.Geom.Rectangle;
   private handRenderer: HandRenderer;
   private fieldRenderer: FieldRenderer; // ✨ NEU
+  private pileRenderer: PileRenderer; // ✨ NEU
 
   constructor(
     scene: Phaser.Scene,
@@ -55,6 +57,12 @@ export class CardRenderer {
       this.dragBounds,
       this.processCard.bind(this),
     );
+
+    // ✨ NEU: Pile-Renderer initialisieren
+    this.pileRenderer = new PileRenderer(
+      this.layout,
+      this.processCard.bind(this),
+    );
   }
 
   /** ✨ FIX: Setter, der Änderungen an die Sub-Renderer weitergibt */
@@ -62,6 +70,7 @@ export class CardRenderer {
     this._layout = newLayout;
     this.handRenderer.setLayout(newLayout);
     this.fieldRenderer.setLayout(newLayout);
+    this.pileRenderer.setLayout(newLayout);
   }
 
   public get layout(): GameLayout {
@@ -99,13 +108,18 @@ export class CardRenderer {
       attachmentMap,
       renderedCardIds,
     );
-    this.renderDiscardPileCards(
+    this.pileRenderer.renderDiscardPileCards(
       player,
       opponent,
       attachmentMap,
       renderedCardIds,
     );
-    this.renderNewZoneCards(player, opponent, attachmentMap, renderedCardIds);
+    this.pileRenderer.renderNewZoneCards(
+      player,
+      opponent,
+      attachmentMap,
+      renderedCardIds,
+    );
     this.fieldRenderer.renderBattlefieldCards(attachmentMap, renderedCardIds);
 
     this.elementManager.staticElements.boardText.setText(
@@ -429,126 +443,6 @@ export class CardRenderer {
         this.scene.children.bringToTop(attUI);
       }
     });
-  }
-
-  private _renderZone(
-    cards: CardState[],
-    area: Phaser.Geom.Rectangle,
-    isOpponent: boolean,
-    attachmentMap: Map<string, CardState[]>,
-    renderedCardIds: Set<string>,
-    isPile: boolean = false,
-  ) {
-    cards.forEach((cardData, index) => {
-      const isBattlePhase = this.room.state.currentPhase === "battle";
-      const cardWidth = this.layout.cardWidth; // ✨ FIX: Standardgröße für Stapel
-      const cardHeight = this.layout.cardHeight;
-
-      let targetX, targetY, targetAngle;
-      // ✨ DEIN WUNSCH: Nur bestimmte Stapel sollen einen zufälligen Winkel haben.
-      const shouldHaveRandomAngle =
-        isPile &&
-        cardData.zone !== ZONES.RESERVE &&
-        cardData.zone !== ZONES.DECK;
-      const angleOffset = shouldHaveRandomAngle
-        ? (parseInt(cardData.id.slice(-2), 16) % 20) - 10
-        : 0;
-
-      if (isPile) {
-        targetX = area.centerX;
-        targetY = area.centerY;
-        targetAngle = (isOpponent ? 180 : 0) + angleOffset;
-      } else {
-        const cardSpacing = cardWidth * 1.1;
-        targetX =
-          area.centerX -
-          ((cards.length - 1) * cardSpacing) / 2 +
-          index * cardSpacing;
-        targetY = area.centerY;
-        targetAngle = isOpponent ? 180 : 0;
-      }
-
-      const cardUI = this.processCard(
-        cardData,
-        targetX,
-        targetY,
-        targetAngle,
-        attachmentMap,
-        renderedCardIds,
-        cardWidth,
-        cardHeight,
-      );
-    });
-  }
-
-  private renderDiscardPileCards(
-    player: PlayerState,
-    opponent: PlayerState | undefined,
-    attachmentMap: Map<string, CardState[]>,
-    renderedCardIds: Set<string>,
-  ) {
-    this._renderZone(
-      player.discard,
-      this.layout.playerDiscardPile,
-      false,
-      attachmentMap,
-      renderedCardIds,
-      true,
-    );
-    if (opponent) {
-      this._renderZone(
-        opponent.discard,
-        this.layout.opponentDiscardPile,
-        true,
-        attachmentMap,
-        renderedCardIds,
-        true,
-      );
-    }
-  }
-
-  private renderNewZoneCards(
-    player: PlayerState,
-    opponent: PlayerState | undefined,
-    attachmentMap: Map<string, CardState[]>,
-    renderedCardIds: Set<string>,
-  ) {
-    this._renderZone(
-      player.land_of_redemption,
-      this.layout.playerLandOfRedemptionPile,
-      false,
-      attachmentMap,
-      renderedCardIds,
-      true,
-    );
-    if (opponent) {
-      this._renderZone(
-        opponent.land_of_redemption,
-        this.layout.opponentLandOfRedemptionPile,
-        true,
-        attachmentMap,
-        renderedCardIds,
-        true,
-      );
-    }
-    this._renderZone(
-      player.banish,
-      this.layout.playerBanishPile,
-      false,
-      attachmentMap,
-      renderedCardIds,
-      true,
-    );
-    if (opponent) {
-      this._renderZone(
-        opponent.banish,
-        this.layout.opponentBanishPile,
-        true,
-        attachmentMap,
-        renderedCardIds,
-        true,
-      );
-    }
   }
 
   public cleanupAllCards() {
