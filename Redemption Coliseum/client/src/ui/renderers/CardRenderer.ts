@@ -6,12 +6,9 @@ import { CardUI } from "../CardUI.js";
 import { type CardState, type PlayerState } from "../../../../shared/types";
 import { ZONES, CONCEALED_ZONES } from "../../../../shared/zones";
 import { type AnimationManager } from "../managers/AnimationManager.js";
-import {
-  CARD_TYPES,
-  MANAGED_TERRITORY_TYPES,
-} from "../../../../shared/card-constants";
 import { log, DEBUG } from "../../utils/logger";
 import { HandRenderer } from "./HandRenderer"; // ✨ Liegt jetzt im selben Ordner
+import { FieldRenderer } from "./FieldRenderer"; // ✨ NEU
 
 /**
  * ✨ REFACTORING: Verwaltet das Rendern (Erstellen, Positionieren, Aktualisieren)
@@ -20,12 +17,13 @@ import { HandRenderer } from "./HandRenderer"; // ✨ Liegt jetzt im selben Ordn
 export class CardRenderer {
   private scene: Phaser.Scene;
   private room: TypedRoom;
-  public layout: GameLayout;
+  private _layout: GameLayout; // ✨ FIX: Internes Feld für Getter/Setter
   private elementManager: ElementManager;
   private cardUIs = new Map<string, CardUI>();
   private animationManager: AnimationManager;
   private dragBounds: Phaser.Geom.Rectangle;
   private handRenderer: HandRenderer;
+  private fieldRenderer: FieldRenderer; // ✨ NEU
 
   constructor(
     scene: Phaser.Scene,
@@ -37,7 +35,7 @@ export class CardRenderer {
   ) {
     this.scene = scene;
     this.room = room;
-    this.layout = layout;
+    this._layout = layout; // ✨ FIX
     this.elementManager = elementManager;
     this.animationManager = animationManager;
     this.dragBounds = dragBounds;
@@ -49,6 +47,25 @@ export class CardRenderer {
       this.animationManager,
       this.processCard.bind(this), // Wir übergeben die Methode gebunden an diese Instanz
     );
+
+    // ✨ NEU: Field-Renderer initialisieren
+    this.fieldRenderer = new FieldRenderer(
+      this.layout,
+      this.room,
+      this.dragBounds,
+      this.processCard.bind(this),
+    );
+  }
+
+  /** ✨ FIX: Setter, der Änderungen an die Sub-Renderer weitergibt */
+  public set layout(newLayout: GameLayout) {
+    this._layout = newLayout;
+    this.handRenderer.setLayout(newLayout);
+    this.fieldRenderer.setLayout(newLayout);
+  }
+
+  public get layout(): GameLayout {
+    return this._layout;
   }
 
   /** Koordiniert das Rendern aller Karten auf dem Spielfeld. */
@@ -70,13 +87,13 @@ export class CardRenderer {
       );
     }
 
-    const totalTerritoryCount = this.renderTerritoryCards(
+    const totalTerritoryCount = this.fieldRenderer.renderTerritoryCards(
       player,
       opponent,
       attachmentMap,
       renderedCardIds,
     );
-    this.renderLandOfBondageCards(
+    this.fieldRenderer.renderLandOfBondageCards(
       player,
       opponent,
       attachmentMap,
@@ -89,7 +106,7 @@ export class CardRenderer {
       renderedCardIds,
     );
     this.renderNewZoneCards(player, opponent, attachmentMap, renderedCardIds);
-    this.renderBattlefieldCards(attachmentMap, renderedCardIds);
+    this.fieldRenderer.renderBattlefieldCards(attachmentMap, renderedCardIds);
 
     this.elementManager.staticElements.boardText.setText(
       `Territory: ${totalTerritoryCount} Karten`,
@@ -414,261 +431,6 @@ export class CardRenderer {
     });
   }
 
-  private _renderCardRow(
-    cards: CardState[],
-    area: Phaser.Geom.Rectangle,
-    isOpponent: boolean,
-    attachmentMap: Map<string, CardState[]>,
-    renderedCardIds: Set<string>,
-  ) {
-    if (cards.length === 0) {
-      return;
-    }
-
-    const isBattlePhase = this.room.state.currentPhase === "battle";
-    const cardWidth = isBattlePhase
-      ? this.layout.smallCardWidth
-      : this.layout.cardWidth;
-    const cardHeight = isBattlePhase
-      ? this.layout.smallCardHeight
-      : this.layout.cardHeight;
-
-    const maxCardsWithoutOverlap = Math.floor(area.width / cardWidth);
-    let spacing = cardWidth * 1.05;
-
-    if (cards.length > maxCardsWithoutOverlap) {
-      spacing = (area.width - cardWidth) / (cards.length - 1);
-    }
-
-    const startX = area.x;
-    const targetY = area.centerY;
-    const angle = isOpponent ? 180 : 0;
-
-    cards.forEach((cardData, index) => {
-      const targetX = startX + cardWidth / 2 + index * spacing;
-      const cardUI = this.processCard(
-        cardData,
-        targetX,
-        targetY,
-        angle,
-        attachmentMap,
-        renderedCardIds,
-        cardWidth,
-        cardHeight,
-      );
-    });
-  }
-
-  /**
-   * ✨ KORREKTUR: Die funktionierende Logik für zentrierte, dynamische und gespiegelte Reihen.
-   */
-  private _renderUnmanagedRow(
-    cards: CardState[],
-    area: Phaser.Geom.Rectangle,
-    isOpponent: boolean,
-    attachmentMap: Map<string, CardState[]>,
-    renderedCardIds: Set<string>,
-  ) {
-    if (cards.length === 0) {
-      return;
-    }
-
-    const isBattlePhase = this.room.state.currentPhase === "battle";
-    const cardWidth = isBattlePhase
-      ? this.layout.smallCardWidth
-      : this.layout.cardWidth;
-    const cardHeight = isBattlePhase
-      ? this.layout.smallCardHeight
-      : this.layout.cardHeight;
-
-    const idealSpacing = cardWidth * 0.1;
-    const idealTotalWidth =
-      cards.length * cardWidth + Math.max(0, cards.length - 1) * idealSpacing;
-
-    let actualSpacing: number;
-    if (idealTotalWidth > area.width) {
-      actualSpacing =
-        (area.width - cards.length * cardWidth) / Math.max(1, cards.length - 1);
-    } else {
-      actualSpacing = idealSpacing;
-    }
-
-    const actualTotalWidth =
-      cards.length * cardWidth + Math.max(0, cards.length - 1) * actualSpacing;
-    const startX = area.centerX - actualTotalWidth / 2 + cardWidth / 2;
-    const targetY = area.centerY;
-
-    cards.forEach((cardData, index) => {
-      let targetX = startX + index * (cardWidth + actualSpacing);
-      // ✨ DEIN PLAN: Detailliertes Logging für jede Karte in dieser Funktion.
-      log(
-        "Renderer",
-        `[RENDER_UNMANAGED_ROW] Processing card: ${cardData.Name} (ID: ${
-          cardData.id
-        }) | Controller: ${cardData.controllerId} | Owner: ${
-          cardData.originalOwnerId
-        } | Server Coords: (${(cardData.x || 0).toFixed(2)}, ${(
-          cardData.y || 0
-        ).toFixed(
-          2,
-        )}) | Calculated Target: (${targetX.toFixed(2)}, ${targetY.toFixed(2)})`,
-      );
-      let angle = isOpponent ? 180 : 0;
-
-      // Dies ist die entscheidende Spiegelungslogik.
-      const cardBelongsToMe = cardData.controllerId === this.room.sessionId;
-
-      // Wir spiegeln, wenn die Karte dem Gegner gehört, aber ihre berechnete Position
-      // auf unserer Seite des Feldes wäre (und umgekehrt).
-      const needsMirror =
-        (isOpponent && !cardBelongsToMe) || (!isOpponent && cardBelongsToMe);
-
-      if (!needsMirror && typeof cardData.x === "number" && cardData.x !== 0) {
-        // Wenn keine Spiegelung nötig ist, verwenden wir die Server-Koordinaten,
-        // falls sie gesetzt sind (d.h. die Karte wurde manuell platziert).
-        // Ansonsten verwenden wir die berechnete Position.
-        targetX = cardData.x;
-      } else if (needsMirror) {
-        // Spiegel die berechnete Position auf die andere Seite.
-        targetX = 2 * this.dragBounds.centerX - targetX;
-        log(
-          "Renderer",
-          `  -> [MIRROR] Card '${
-            cardData.id
-          }' is being mirrored to X: ${targetX.toFixed(2)}`,
-        );
-      }
-
-      const cardUI = this.processCard(
-        cardData,
-        targetX,
-        targetY,
-        angle,
-        attachmentMap,
-        renderedCardIds,
-        cardWidth,
-        cardHeight,
-      );
-    });
-  }
-
-  private _renderPlayerTerritory(
-    playerState: PlayerState,
-    isOpponent: boolean,
-    attachmentMap: Map<string, CardState[]>,
-    renderedCardIds: Set<string>,
-  ): number {
-    const { territory } = playerState;
-
-    // ✨ DEBUG: Prüfen, ob der Client die 'attachedTo'-Information vom Server erhalten hat.
-    if (DEBUG) {
-      const attachedCards = territory.filter((c) => c.attachedTo);
-      if (attachedCards.length > 0) {
-        log(
-          "Renderer",
-          `[RENDER DEBUG] Found ${attachedCards.length} attached cards in territory:`,
-          attachedCards.map((c) => `${c.id} -> ${c.attachedTo}`),
-        );
-      }
-    }
-
-    // ✨ NEU (SCHRITT 2): Filtere Karten heraus, die an anderen hängen.
-    // Diese werden von _processCard der Elternkarte gerendert.
-    const rootCards = territory.filter((c) => !c.attachedTo);
-
-    const heroes = rootCards.filter((card) => card.Type === CARD_TYPES.HERO);
-    const fortresses = rootCards.filter(
-      (card) =>
-        card.Type === CARD_TYPES.FORTRESS || card.Type === CARD_TYPES.SITE,
-    );
-    const evilCharacters = rootCards.filter(
-      (card) => card.Type === CARD_TYPES.EC,
-    );
-    const artifacts = rootCards.filter(
-      (card) => card.Type === CARD_TYPES.ARTIFACT,
-    );
-    const unmanagedCards = rootCards.filter(
-      (card) => !MANAGED_TERRITORY_TYPES.includes(card.Type),
-    );
-
-    const layoutAreas = {
-      hero: isOpponent
-        ? this.layout.opponentHeroArea
-        : this.layout.playerHeroArea,
-      fortress: isOpponent
-        ? this.layout.opponentFortressArea
-        : this.layout.playerFortressArea,
-      ec: isOpponent ? this.layout.opponentECArea : this.layout.playerECArea,
-      artifact: isOpponent
-        ? this.layout.opponentArtifactArea
-        : this.layout.playerArtifactArea,
-    };
-
-    this._renderCardRow(
-      heroes,
-      layoutAreas.hero,
-      isOpponent,
-      attachmentMap,
-      renderedCardIds,
-    );
-    this._renderCardRow(
-      fortresses,
-      layoutAreas.fortress,
-      isOpponent,
-      attachmentMap,
-      renderedCardIds,
-    );
-    this._renderCardRow(
-      evilCharacters,
-      layoutAreas.ec,
-      isOpponent,
-      attachmentMap,
-      renderedCardIds,
-    );
-    this._renderCardRow(
-      artifacts,
-      layoutAreas.artifact,
-      isOpponent,
-      attachmentMap,
-      renderedCardIds,
-    );
-
-    this._renderUnmanagedRow(
-      unmanagedCards,
-      isOpponent ? this.layout.opponentTerritory : this.layout.playerTerritory,
-      isOpponent,
-      attachmentMap,
-      renderedCardIds,
-    );
-
-    return territory.length;
-  }
-
-  private renderTerritoryCards(
-    player: PlayerState,
-    opponent: PlayerState | undefined,
-    attachmentMap: Map<string, CardState[]>,
-    renderedCardIds: Set<string>,
-  ): number {
-    let totalCount = this._renderPlayerTerritory(
-      player,
-      false,
-      attachmentMap,
-      renderedCardIds,
-    );
-
-    if (opponent) {
-      totalCount += this._renderPlayerTerritory(
-        opponent,
-        true,
-        attachmentMap,
-        renderedCardIds,
-      );
-    }
-
-    return totalCount;
-  }
-
   private _renderZone(
     cards: CardState[],
     area: Phaser.Geom.Rectangle,
@@ -679,18 +441,8 @@ export class CardRenderer {
   ) {
     cards.forEach((cardData, index) => {
       const isBattlePhase = this.room.state.currentPhase === "battle";
-      const isLandOfBondage =
-        area === this.layout.playerLandOfBondage ||
-        area === this.layout.opponentLandOfBondage;
-
-      const cardWidth =
-        isBattlePhase && isLandOfBondage
-          ? this.layout.smallCardWidth
-          : this.layout.cardWidth;
-      const cardHeight =
-        isBattlePhase && isLandOfBondage
-          ? this.layout.smallCardHeight
-          : this.layout.cardHeight;
+      const cardWidth = this.layout.cardWidth; // ✨ FIX: Standardgröße für Stapel
+      const cardHeight = this.layout.cardHeight;
 
       let targetX, targetY, targetAngle;
       // ✨ DEIN WUNSCH: Nur bestimmte Stapel sollen einen zufälligen Winkel haben.
@@ -727,37 +479,6 @@ export class CardRenderer {
         cardHeight,
       );
     });
-  }
-
-  private renderLandOfBondageCards(
-    player: PlayerState,
-    opponent: PlayerState | undefined,
-    attachmentMap: Map<string, CardState[]>,
-    renderedCardIds: Set<string>,
-  ) {
-    // ✨ NEU: Auch hier nur Root-Karten rendern
-    const rootLoB = player.land_of_bondage.filter((c) => !c.attachedTo);
-
-    // ✨ DEIN VORSCHLAG: Rufe die neue, wiederverwendbare Methode auf.
-    this._renderUnmanagedRow(
-      rootLoB,
-      this.layout.playerLandOfBondage,
-      false,
-      attachmentMap,
-      renderedCardIds,
-    );
-
-    if (opponent) {
-      const rootOppLoB = opponent.land_of_bondage.filter((c) => !c.attachedTo);
-      // ✨ DEIN VORSCHLAG: Rufe die neue, wiederverwendbare Methode auf.
-      this._renderUnmanagedRow(
-        rootOppLoB,
-        this.layout.opponentLandOfBondage,
-        true,
-        attachmentMap,
-        renderedCardIds,
-      );
-    }
   }
 
   private renderDiscardPileCards(
@@ -828,43 +549,6 @@ export class CardRenderer {
         true,
       );
     }
-  }
-
-  private renderBattlefieldCards(
-    attachmentMap: Map<string, CardState[]>,
-    renderedCardIds: Set<string>,
-  ) {
-    const allBattlefieldCards = this.room.state.battlefield;
-
-    // ✨ NEU: Auch im Battlefield nur Root-Karten im Grid anzeigen
-    const rootBattlefield = allBattlefieldCards.filter(
-      (c: CardState) => !c.attachedTo,
-    );
-
-    const playerBattleCards = allBattlefieldCards.filter(
-      (card: CardState) =>
-        card.controllerId === this.room.sessionId && !card.attachedTo,
-    );
-    const opponentBattleCards = allBattlefieldCards.filter(
-      (card: CardState) =>
-        card.controllerId !== this.room.sessionId && !card.attachedTo,
-    );
-
-    this._renderZone(
-      playerBattleCards,
-      this.layout.playerBattlefieldArea,
-      false,
-      attachmentMap,
-      renderedCardIds,
-    );
-
-    this._renderZone(
-      opponentBattleCards,
-      this.layout.opponentBattlefieldArea,
-      true,
-      attachmentMap,
-      renderedCardIds,
-    );
   }
 
   public cleanupAllCards() {

@@ -44,6 +44,11 @@ export class HandRenderer {
     this.processCard = processCard;
   }
 
+  /** ✨ FIX: Aktualisiert das Layout, wenn sich die Fenstergröße ändert. */
+  public setLayout(newLayout: GameLayout) {
+    this.layout = newLayout;
+  }
+
   public renderHandCards(
     player: PlayerState,
     attachmentMap: Map<string, CardState[]>,
