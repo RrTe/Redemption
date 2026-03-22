@@ -3,6 +3,8 @@ import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones.js";
 import type { CardState } from "../../../shared/types";
 import type { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Import für Typisierung
 import { log, DEBUG } from "../utils/logger";
+import { CardVisuals } from "./effects/CardVisuals"; // ✨ NEU
+import { CardAttachVisuals } from "./effects/CardAttachVisuals"; // ✨ NEU
 
 // ✨ Die Basis-URL, unter der die Kartenbilder zu finden sind.
 const IMAGE_BASE_URL = "/assets/cards/";
@@ -19,15 +21,6 @@ const SHADOW_CONFIG = {
   SLICE: 6, // 9-Slice Randgröße (Ecken-Rundung)
 };
 
-// ✨ NEU: Farbe für den "Attach"-Rahmen (hier ändern!)
-const ATTACH_BORDER_COLOR = 0xa4d4ff; // ✨ FIX: Frostiges Silberblau
-
-// ✨ NEU: Skalierungsfaktoren für Attach-Icons (relativ zur Kartenbreite)
-const ATTACH_ICON_SCALE_FEEDBACK = 0.5; // 50% der Kartenbreite für das Hover-Feedback
-const ATTACH_ICON_SCALE_ANIMATION = 0.6; // 60% der Kartenbreite für die Erfolgs-Animation
-// ✨ NEU: Verhältnis des beweglichen Icons zum Ziel-Icon (damit es nicht so wuchtig wirkt)
-const ATTACH_MOVING_ICON_RATIO = 0.6; // Das fliegende Icon ist nur 60% so groß wie das Ziel
-
 export class CardUI extends Phaser.GameObjects.Container {
   public cardData: CardState;
   private background: Phaser.GameObjects.Rectangle;
@@ -43,35 +36,16 @@ export class CardUI extends Phaser.GameObjects.Container {
   public currentZone: Zone; // ✨ NEU: Eigener Speicher für die Zone, um Race Conditions zu vermeiden.
   private paralyzeText: Phaser.GameObjects.Text;
   private setasideText: Phaser.GameObjects.Text;
-  private glowEmitter: Phaser.GameObjects.Particles.ParticleEmitter | null =
-    null; // ✨ NEU: Der Partikel-Emitter
   public isBeingDragged: boolean = false; // ✨ NEU: Status für Drag-Vorgang
-  private debugGraphics: Phaser.GameObjects.Graphics | null = null; // ✨ NEU: Debugging
-  private paralyzeEmitters: Phaser.GameObjects.Particles.ParticleEmitter[] = []; // ✨ NEU: Emitter für Paralyze-Effekt
-  private paralyzeMaskGraphics: Phaser.GameObjects.Graphics | null = null; // ✨ NEU: Maske für Blitze
-  private paralyzeMask: Phaser.Display.Masks.GeometryMask | null = null; // ✨ NEU: Referenz auf die Maske selbst
   // ✨ NEU: Zielkoordinaten für die Drag-Physik (Trägheit)
   public dragTargetX: number | null = null;
   public dragTargetY: number | null = null;
   // ✨ NEU: Noise/Glitter Effekt
-  private noiseGraphics: Phaser.GameObjects.Graphics | null = null;
-  private noisePoints: {
-    x: number;
-    y: number;
-    alpha: number;
-    speedX: number;
-    speedY: number;
-    flicker: number;
-  }[] = [];
+  private visuals: CardVisuals; // ✨ NEU: Umbenannt
   private pulseTime: number = Math.random() * 100; // ✨ NEU: Zufälliger Startwert für organischen Look
   private brightnessOverlay: Phaser.GameObjects.Rectangle; // ✨ NEU: Overlay für Helligkeitseffekte
   private shadow: Phaser.GameObjects.NineSlice; // ✨ NEU: Schatten
-  private targetGlowGraphics: Phaser.GameObjects.Graphics | null = null; // ✨ NEU: Glow für Drop-Target
-  private attachIcons: (
-    | Phaser.GameObjects.Image
-    | Phaser.GameObjects.Graphics
-  )[] = []; // ✨ NEU: Icons & Backdrop
-  private attachTween: Phaser.Tweens.Tween | null = null; // ✨ NEU: Tween für Attach-Animation
+  private attachVisuals: CardAttachVisuals; // ✨ NEU
 
   constructor(
     scene: Phaser.Scene,
@@ -88,6 +62,12 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.currentZone = cardData.zone; // ✨ NEU: Initialisiere die Zone
     // ✨ NEU: Weise eine eindeutige, nicht veränderbare ID zu, um dieses Objekt zu verfolgen.
     this.instanceId = Phaser.Utils.String.UUID();
+
+    // ✨ NEU: Visuals Komponente erstellen
+    this.visuals = new CardVisuals(scene, this);
+
+    // ✨ NEU: Attach Visuals Komponente erstellen
+    this.attachVisuals = new CardAttachVisuals(scene, this);
 
     this.setSize(width, height);
 
@@ -229,8 +209,7 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     this.bringToTop(this.brightnessOverlay); // ✨ FIX: Overlay muss über dem Bild liegen
     this.updateImageVisibility();
-    this.updateGlowZone(); // ✨ NEU: Zone aktualisieren, sobald das Bild geladen und angezeigt wird.
-    this.updateParalyzeZone(); // ✨ NEU: Auch Paralyze-Zone aktualisieren
+    this.visuals.onUpdateSize(); // ✨ FIX: Effekte aktualisieren
   }
 
   // ✨ NEU: Separate Methode für die Rückseite
@@ -242,8 +221,7 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     this.bringToTop(this.brightnessOverlay); // ✨ FIX: Overlay muss über dem Bild liegen
     this.updateImageVisibility();
-    this.updateGlowZone(); // ✨ NEU: Zone aktualisieren, sobald das Bild geladen und angezeigt wird.
-    this.updateParalyzeZone(); // ✨ NEU: Auch Paralyze-Zone aktualisieren
+    this.visuals.onUpdateSize(); // ✨ FIX: Effekte aktualisieren
   }
 
   public updateSize(width: number, height: number) {
@@ -283,12 +261,8 @@ export class CardUI extends Phaser.GameObjects.Container {
     }
 
     // ✨ FIX: Maske sofort initial positionieren, damit sie beim ersten Render-Frame stimmt.
-    this.syncMaskState();
-
     // ✨ FIX: Wenn sich die Größe ändert, müssen wir auch die Emitter-Zone und das Debug-Rechteck anpassen.
-    // Das behebt das Problem, dass der grüne Rahmen nach dem Ausspielen kurzzeitig zu groß bleibt.
-    this.updateGlowZone();
-    this.updateParalyzeZone();
+    this.visuals.onUpdateSize();
   }
 
   /** ✨ NEU: Wendet einen Tint-Effekt auf die Karte an. */
@@ -335,7 +309,7 @@ export class CardUI extends Phaser.GameObjects.Container {
     }
 
     // ✨ NEU: Paralyze-Effekt aktivieren/deaktivieren
-    this.updateParalyzeEffect(paralyzeValue > 0);
+    this.visuals.updateParalyzeEffect(paralyzeValue > 0);
 
     if (this.paralyzeText) this.bringToTop(this.paralyzeText);
     if (this.setasideText) this.bringToTop(this.setasideText);
@@ -393,111 +367,7 @@ export class CardUI extends Phaser.GameObjects.Container {
    * ✨ NEU: Zeigt oder versteckt den "Ziel-Glow" (pulsierender Rahmen), wenn eine Karte darüber gehalten wird.
    */
   public showTargetGlow(show: boolean) {
-    if (show) {
-      if (!this.targetGlowGraphics) {
-        this.targetGlowGraphics = this.scene.add.graphics();
-        this.add(this.targetGlowGraphics);
-        // Nach hinten schieben (aber vor den Schatten)
-        this.sendToBack(this.targetGlowGraphics);
-        if (this.shadow) this.sendToBack(this.shadow);
-      }
-
-      this.targetGlowGraphics.clear();
-      this.targetGlowGraphics.lineStyle(4, ATTACH_BORDER_COLOR, 1); // ✨ FIX: Nutze Konstante
-      // Etwas größer als die Karte zeichnen
-      const w = this.width + 10;
-      const h = this.height + 10;
-      this.targetGlowGraphics.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
-
-      // Pulsieren
-      this.scene.tweens.add({
-        targets: this.targetGlowGraphics,
-        alpha: { from: 0.5, to: 1 },
-        duration: 500,
-        yoyo: true,
-        repeat: -1,
-      });
-
-      // ✨ NEU: Zeige die Attach-Icons an
-      this.showAttachFeedback(true);
-    } else {
-      if (this.targetGlowGraphics) {
-        this.scene.tweens.killTweensOf(this.targetGlowGraphics);
-        this.targetGlowGraphics.destroy();
-        this.targetGlowGraphics = null;
-      }
-      // ✨ NEU: Verstecke die Attach-Icons
-      this.showAttachFeedback(false);
-    }
-  }
-
-  /**
-   * ✨ NEU: Zeigt die animierten Icons an, die das "Anheften" symbolisieren.
-   * Ein Icon ist statisch, das andere gleitet von rechts oben darüber.
-   */
-  private showAttachFeedback(show: boolean) {
-    if (show) {
-      if (this.attachIcons.length > 0) return; // Bereits aktiv
-
-      // ✨ FIX: Größe relativ zur Karte berechnen (z.B. 50% der Kartenbreite)
-      // Das macht uns unabhängig von der Auflösung der Quelldatei (64px vs 512px).
-      const iconSize = this.width * ATTACH_ICON_SCALE_FEEDBACK;
-
-      // ✨ NEU: Backdrop (Hintergrund-Kreis) für besseren Kontrast
-      const backdrop = this.scene.add.graphics();
-      backdrop.fillStyle(0x000000, 0.7); // Schwarz, 70% Deckkraft
-      const radius = (iconSize / 2) * 1.25; // Etwas größer als das Icon (25% Puffer)
-      backdrop.fillCircle(0, 0, radius);
-      backdrop.setPosition(this.x, this.y);
-      backdrop.setDepth(2999); // ✨ FIX: Unter den Icons (3000), aber über allem anderen
-      this.attachIcons.push(backdrop);
-
-      // Icon 1: Statisch (Basis) - Symbolisiert das Ziel
-      // ✨ FIX: Zur Szene hinzufügen (statt Container), damit es über der Drag-Karte liegt (z-index)
-      const icon1 = this.scene.add.image(this.x, this.y, "icon_attach_target");
-      // ✨ FIX: Skaliere proportional zur Breite, um Verzerrung zu vermeiden (Seitenverhältnis beibehalten)
-      icon1.displayWidth = iconSize;
-      icon1.scaleY = icon1.scaleX;
-      icon1.setAlpha(0.8);
-      icon1.setDepth(3000); // ✨ FIX: Ganz nach oben (über Drag-Layer 1000)
-      this.attachIcons.push(icon1);
-
-      // Icon 2: Animiert (Slide) - Symbolisiert die Karte, die angeheftet wird
-      // Startet rechts oben (relativ zur Mitte) und gleitet zur Mitte
-      const startX = this.width * 0.25; // ✨ FIX: Relativer Startpunkt (25% der Breite nach rechts)
-      const startY = -this.height * 0.25; // ✨ FIX: Relativer Startpunkt (25% der Höhe nach oben)
-
-      // ✨ FIX: Position relativ zur Welt-Position der Karte berechnen
-      const icon2 = this.scene.add.image(
-        this.x + startX,
-        this.y + startY,
-        "icon_attach",
-      );
-      // ✨ FIX: Skaliere proportional zur Breite
-      icon2.displayWidth = iconSize * ATTACH_MOVING_ICON_RATIO; // ✨ FIX: Dynamisch kleiner als das Ziel
-      icon2.scaleY = icon2.scaleX;
-      icon2.setAlpha(0); // Startet unsichtbar
-      icon2.setDepth(3000); // ✨ FIX: Ganz nach oben
-      this.attachIcons.push(icon2);
-
-      // Animation: Einblenden und zur Mitte gleiten
-      this.attachTween = this.scene.tweens.add({
-        targets: icon2,
-        x: this.x, // ✨ FIX: Ziel ist die Welt-Position der Karte
-        y: this.y,
-        alpha: { from: 0, to: 1, yoyo: true, hold: 200 }, // Pulsieren
-        duration: 1000,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-      });
-    } else {
-      this.attachIcons.forEach((icon) => icon.destroy());
-      this.attachIcons = [];
-      if (this.attachTween) {
-        this.attachTween.stop();
-        this.attachTween = null;
-      }
-    }
+    this.attachVisuals.showTargetGlow(show);
   }
 
   /**
@@ -505,37 +375,7 @@ export class CardUI extends Phaser.GameObjects.Container {
    * Wird vom InputManager aufgerufen, wenn erfolgreich gedroppt wurde.
    */
   public playAttachAnimation() {
-    // ✨ FIX: Auch hier relative Größen verwenden
-    const targetSize = this.width * ATTACH_ICON_SCALE_ANIMATION;
-
-    // ✨ FIX: Nutze das neue Success-Icon und füge es der Szene hinzu (Top Z-Index)
-    const icon = this.scene.add.image(this.x, this.y, "icon_attach_success");
-    icon.setDepth(3000); // ✨ FIX: Ganz oben
-
-    // ✨ FIX: Skaliere proportional zur Breite, um Verzerrung zu vermeiden
-    icon.displayWidth = targetSize;
-    icon.scaleY = icon.scaleX;
-    const targetScale = icon.scaleX; // Den berechneten (uniformen) Skalierungsfaktor merken
-
-    icon.setScale(0); // Start bei 0
-    icon.setAlpha(0);
-
-    this.scene.tweens.add({
-      targets: icon,
-      scale: targetScale * 1.5, // ✨ FIX: Pop-Effekt auf 150% der Zielgröße
-      alpha: 1,
-      duration: 300,
-      ease: "Back.out",
-      onComplete: () => {
-        this.scene.tweens.add({
-          targets: icon,
-          scale: targetScale * 2, // ✨ FIX: Fade-Out wird noch größer
-          alpha: 0,
-          duration: 200,
-          onComplete: () => icon.destroy(),
-        });
-      },
-    });
+    this.attachVisuals.playAttachAnimation();
   }
 
   // ✨ NEU: Zentrale Methode zur Steuerung der Sichtbarkeit
@@ -599,324 +439,15 @@ export class CardUI extends Phaser.GameObjects.Container {
    * @param width Die Breite der Emitter-Zone
    * @param height Die Höhe der Emitter-Zone
    */
-  private createGlowEmitter(width: number, height: number) {
-    // ✨ FIX: Zurück zum einfachen Rechteck, da das Polygon Grafikfehler verursachte.
-    // Die abgerundeten Ecken sind bei dem Glow-Effekt visuell kaum wahrnehmbar,
-    // aber die Artefakte des Polygons waren störend.
-    const shape = new Phaser.Geom.Rectangle(
-      -width / 2,
-      -height / 2,
-      width,
-      height,
-    );
-
-    this.glowEmitter = this.scene.add.particles(0, 0, "spark", {
-      speedY: { min: -20, max: 20 }, // nach oben „aufsteigen“
-      speedX: { min: -20, max: 20 }, // etwas flackern seitlich
-      lifespan: { min: 10, max: 1200 },
-      alpha: { start: 0.8, end: 0 },
-      scale: { start: 0.1, end: 0 },
-      quantity: 100,
-      tint: [0xe0ffff, 0xc0c0c0, 0xffd700, 0xffffff], // Mix: Eisblau, Silber, Gold & Weiß
-      blendMode: "ADD",
-      emitZone: {
-        type: "edge",
-        source: shape,
-        quantity: 200,
-      },
-    });
-
-    this.add(this.glowEmitter);
-    this.sendToBack(this.glowEmitter); // ✨ FIX: Wieder nach hinten, wie gewünscht.
-
-    // ✨ FIX: Schatten muss UNTER dem Glow liegen, damit der Glow nicht abgedunkelt wird.
-    this.sendToBack(this.shadow);
-  }
-
-  /**
-   * ✨ NEU: Startet den Flammen-Effekt (DigiPolish).
-   * Konfiguration 1:1 aus dem HTML-Prototyp übernommen.
-   * @param ignoreZoneCheck Wenn true, wird der Effekt auch für Karten in Stapeln (z.B. im Suchdialog) angezeigt.
-   */
   public startGlow(ignoreZoneCheck: boolean = false) {
-    // ✨ NEU: Prüfen, ob visuelle Effekte aktiviert sind
-    if (!this.areEffectsEnabled()) return;
-
-    // Nicht für Karten in Stapeln (Deck, Discard etc.) anzeigen
-    // ✨ NEU: Prüfung kann für Spezialfälle (Dialoge) übersprungen werden.
-    if (!ignoreZoneCheck && PILE_ZONES.includes(this.currentZone)) return;
-    // ✨ FIX: Nutze updateGlowZone mit force=true, um den Emitter korrekt zu erstellen und zu starten.
-    this.updateGlowZone(true, true);
+    this.visuals.startGlow(ignoreZoneCheck);
   }
 
   /**
    * ✨ NEU: Stoppt den Flammen-Effekt.
    */
   public stopGlow() {
-    if (this.glowEmitter) {
-      this.glowEmitter.stop();
-      this.glowEmitter.setVisible(false); // ✨ FIX: Explizit unsichtbar machen, damit updateGlowZone ihn nicht neu startet.
-    }
-  }
-
-  /**
-   * ✨ NEU: Erstellt den Noise/Glitter-Effekt (Foil-Look).
-   */
-  private createNoiseEffect(width: number, height: number) {
-    // Aufräumen, falls bereits vorhanden
-    if (this.noiseGraphics) {
-      this.noiseGraphics.destroy();
-      this.noiseGraphics = null;
-    }
-
-    // Nur erstellen, wenn Effekte aktiviert sind
-    if (!this.areEffectsEnabled()) return;
-
-    this.noiseGraphics = this.scene.add.graphics();
-    this.add(this.noiseGraphics);
-    this.noiseGraphics.setBlendMode(Phaser.BlendModes.ADD);
-
-    // Partikel initialisieren
-    const noiseDensity = 200; // Anzahl der Glitzer-Partikel
-    this.noisePoints = [];
-    for (let i = 0; i < noiseDensity; i++) {
-      this.noisePoints.push({
-        x: Phaser.Math.Between(-width / 2, width / 2),
-        y: Phaser.Math.Between(-height / 2, height / 2),
-        alpha: Phaser.Math.FloatBetween(0.05, 0.12),
-        speedX: Phaser.Math.FloatBetween(-0.05, 0.05),
-        speedY: Phaser.Math.FloatBetween(0.05, 0.15),
-        flicker: Phaser.Math.FloatBetween(0.005, 0.015),
-      });
-    }
-  }
-
-  /**
-   * ✨ NEU: Hilfsmethode zum Aktualisieren der Emitter-Zone basierend auf der aktuellen Größe.
-   * @param createIfMissing Falls true, wird der Emitter erstellt, auch wenn er noch nicht existiert.
-   * @param forceVisible Falls definiert, erzwingt dies den Sichtbarkeitsstatus.
-   */
-  private updateGlowZone(
-    createIfMissing: boolean = false,
-    forceVisible?: boolean,
-  ) {
-    // ✨ FINALE KORREKTUR: Wir nutzen die tatsächlichen Dimensionen des sichtbaren Bildes.
-    // Das ist die verlässlichste Quelle für die visuelle Größe, genau wie du gesagt hast.
-    let w = this.width;
-    let h = this.height;
-    if (this.cardFrontImage && this.cardFrontImage.visible) {
-      w = this.cardFrontImage.displayWidth;
-      h = this.cardFrontImage.displayHeight;
-    } else if (this.cardBackImage && this.cardBackImage.visible) {
-      w = this.cardBackImage.displayWidth;
-      h = this.cardBackImage.displayHeight;
-    }
-
-    // --- 1. Partikel-Effekt Logik (Nur wenn Effekte an sind) ---
-    if (this.areEffectsEnabled()) {
-      // Nur aktualisieren, wenn ein Emitter existiert oder erzwungen wird
-      if (this.glowEmitter || createIfMissing) {
-        // ✨ FIX: Bestimme den Ziel-Status.
-        let shouldBeVisible = true;
-        if (forceVisible !== undefined) {
-          shouldBeVisible = forceVisible;
-        } else if (this.glowEmitter) {
-          shouldBeVisible = this.glowEmitter.visible;
-        }
-
-        // Alten Emitter zerstören, um Größe sauber neu zu setzen
-        if (this.glowEmitter) {
-          this.glowEmitter.destroy();
-        }
-
-        // Neuen Emitter mit korrekten Maßen erstellen
-        this.createGlowEmitter(w, h);
-
-        if (this.glowEmitter) {
-          if (shouldBeVisible) {
-            this.glowEmitter.start();
-            this.glowEmitter.setVisible(true);
-          } else {
-            // ✨ FIX: Wenn der Emitter vorher aus war, müssen wir den NEUEN Emitter
-            // explizit stoppen, da Phaser-Emitter standardmäßig aktiv starten.
-            this.glowEmitter.stop();
-            this.glowEmitter.setVisible(false);
-          }
-        }
-      }
-
-      // ✨ NEU: Noise-Effekt initialisieren/aktualisieren
-      this.createNoiseEffect(w, h);
-    } else {
-      // Wenn Effekte aus sind, Emitter aufräumen
-      if (this.glowEmitter) {
-        this.glowEmitter.destroy();
-        this.glowEmitter = null;
-      }
-      // ✨ NEU: Noise aufräumen
-      if (this.noiseGraphics) {
-        this.noiseGraphics.destroy();
-        this.noiseGraphics = null;
-      }
-    }
-
-    // --- 2. Debug-Rahmen Logik (Immer ausführen, wenn DEBUG an ist) ---
-    if (DEBUG) {
-      if (!this.debugGraphics) {
-        this.debugGraphics = this.scene.add.graphics();
-        this.add(this.debugGraphics);
-      }
-      this.debugGraphics.clear();
-      this.debugGraphics.lineStyle(2, 0x00ff00, 1);
-      const shape = new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h);
-      this.debugGraphics.strokeRectShape(shape);
-    } else if (this.debugGraphics) {
-      this.debugGraphics.clear(); // Falls Debug deaktiviert wurde, Rahmen entfernen
-    }
-  }
-
-  /**
-   * ✨ NEU: Steuert den Paralyze-Effekt (Blitze & Aura).
-   */
-  private updateParalyzeEffect(active: boolean) {
-    if (active && this.areEffectsEnabled()) {
-      // ✨ NEU: Check settings
-      if (this.paralyzeEmitters.length === 0) {
-        this.createParalyzeEmitters();
-      }
-    } else {
-      this.removeParalyzeEmitters();
-    }
-  }
-
-  /**
-   * ✨ NEU: Erstellt die 3 Emitter für den Paralyze-Effekt.
-   * Basiert auf dem HTML-Prototyp, skaliert aber dynamisch mit der Kartengröße.
-   */
-  private createParalyzeEmitters() {
-    // ✨ KORREKTUR: Nutze die Container-Größe als Basis. Das ist stabiler.
-    const w = this.width;
-    const h = this.height;
-
-    // ✨ SKALIERUNG: Der PoC verwendet eine Karte mit 379px Breite, die auf 0.8 skaliert wird.
-    // Die Referenzbreite ist also 379px * 0.8 = 303.2px.
-    // Wir berechnen einen Faktor, um die Partikelgrößen anzupassen.
-    const referenceWidth = 303.2;
-    const scaleFactor = w / referenceWidth;
-
-    const rect = new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h);
-
-    // 2. Randblitze / Funken (Hinter der Karte, aber vor der Aura)
-    // ✨ FIX: Nutze explizit die kleine Version für Paralyze
-    const spark = this.scene.add.particles(0, 0, "blue_spark_small", {
-      speedX: { min: -8, max: 8 }, // ✨ FIX: Kein scaleFactor bei Speed
-      speedY: { min: -4, max: 4 },
-      angle: { min: 0, max: 360 },
-      lifespan: { min: 300, max: 800 },
-      alpha: { start: 0.5, end: 0 },
-      scale: { start: 0.7 * scaleFactor, end: 0.0 }, // Größe skaliert weiterhin
-      quantity: 3,
-      tint: [0x99ccff, 0xffffff],
-      blendMode: "ADD",
-      emitZone: {
-        type: "random",
-        source: rect,
-        quantity: 1,
-      },
-    });
-    this.add(spark);
-    this.sendToBack(spark); // Wird Index 0
-    this.paralyzeEmitters.push(spark);
-
-    // 1. Schleier-Aura (Ganz hinten)
-    // ✨ FIX: Nutze explizit die kleine Version für Paralyze
-    const aura = this.scene.add.particles(0, 0, "blue_aura_small", {
-      speedX: { min: -8, max: 8 }, // ✨ FIX: Kein scaleFactor bei Speed
-      speedY: { min: -4, max: 4 },
-      accelerationX: { min: -5, max: 5 },
-      accelerationY: { min: -5, max: 5 },
-      lifespan: { min: 1500, max: 3000 },
-      alpha: { start: 0.3, end: 0 },
-      scale: { start: 2.3 * scaleFactor, end: 3.3 * scaleFactor }, // Größe skaliert weiterhin
-      quantity: 1,
-      tint: [0x224466, 0x446688, 0x88aacc],
-      blendMode: "SCREEN",
-      emitZone: {
-        type: "random",
-        source: rect,
-        quantity: 1,
-      },
-    });
-    this.add(aura);
-    this.sendToBack(aura); // Wird Index 0, schiebt Spark auf 1. Korrekt: Aura < Spark.
-    this.paralyzeEmitters.push(aura);
-
-    // 3. Blitzgitter (Über der Karte)
-    const lightning = this.scene.add.particles(0, 0, "blue_lightning", {
-      speedX: 0,
-      speedY: 0,
-      lifespan: 500,
-      alpha: { start: 0.8, end: 0.3 },
-      // ✨ FIX: Skalierung etwas erhöht, damit sie sichtbar sind (PoC war 1.0 -> 0.8)
-      scale: { start: 1.0 * scaleFactor, end: 0.8 * scaleFactor },
-      quantity: 1,
-      frequency: 150,
-      tint: [0x99ccff, 0xccccff],
-      blendMode: "ADD",
-      emitZone: {
-        type: "random",
-        source: rect,
-        quantity: 1,
-      },
-    });
-
-    // ✨ WORKAROUND: Maske global in der Szene erstellen und manuell synchronisieren.
-    // Dies umgeht die Probleme mit Masken innerhalb von Containern.
-    if (this.paralyzeMaskGraphics) this.paralyzeMaskGraphics.destroy();
-    this.paralyzeMaskGraphics = this.scene.add.graphics();
-    this.paralyzeMaskGraphics.setVisible(false); // Zuerst unsichtbar machen
-
-    this.paralyzeMaskGraphics.clear();
-    this.paralyzeMaskGraphics.fillStyle(0xffffff);
-    this.paralyzeMaskGraphics.fillRect(rect.x, rect.y, rect.width, rect.height);
-
-    const mask = this.paralyzeMaskGraphics.createGeometryMask();
-    this.paralyzeMask = mask;
-
-    // Maske anwenden
-    lightning.setMask(mask);
-
-    // Emitter in den Container
-    this.add(lightning);
-    this.bringToTop(lightning);
-    this.paralyzeEmitters.push(lightning);
-
-    // WICHTIG: Masken-Grafik NICHT in den Container legen!
-
-    // Texte müssen über dem Blitzgitter liegen
-    if (this.paralyzeText) this.bringToTop(this.paralyzeText);
-    if (this.setasideText) this.bringToTop(this.setasideText);
-  }
-
-  private removeParalyzeEmitters() {
-    this.paralyzeEmitters.forEach((e) => e.destroy());
-    this.paralyzeEmitters = [];
-    // ✨ NEU: Maske aufräumen
-    if (this.paralyzeMaskGraphics) {
-      this.paralyzeMaskGraphics.destroy();
-      this.paralyzeMaskGraphics = null;
-    }
-    // ✨ NEU: Masken-Referenz aufräumen
-    if (this.paralyzeMask) {
-      this.paralyzeMask = null;
-    }
-  }
-
-  private updateParalyzeZone() {
-    if (this.paralyzeEmitters.length > 0) {
-      this.removeParalyzeEmitters();
-      this.createParalyzeEmitters();
-    }
+    this.visuals.stopGlow();
   }
 
   /**
@@ -943,7 +474,7 @@ export class CardUI extends Phaser.GameObjects.Container {
     // ✨ FIX: Sicherheitscheck. Wenn das Objekt zerstört oder inaktiv ist, nichts tun.
     if (!this.scene || !this.active) return;
 
-    this.syncMaskState();
+    this.visuals.onUpdate(); // ✨ FIX: Effekte aktualisieren
 
     // 2. Drag & Tilt Physik (Trägheit)
     if (
@@ -1032,45 +563,6 @@ export class CardUI extends Phaser.GameObjects.Container {
       this.shadow.setAlpha(SHADOW_CONFIG.ALPHA_REST);
       this.shadow.setScale(1);
     }
-
-    // 3. ✨ NEU: Noise-Effekt Update (Glitzern)
-    if (this.noiseGraphics && this.areEffectsEnabled()) {
-      this.noiseGraphics.clear();
-      const w = this.width;
-      const h = this.height;
-
-      for (const pt of this.noisePoints) {
-        // Flimmern
-        pt.alpha += pt.flicker * (Math.random() > 0.5 ? 1 : -1);
-        pt.alpha = Phaser.Math.Clamp(pt.alpha, 0.05, 0.12);
-
-        // Bewegung
-        pt.x += pt.speedX;
-        pt.y += pt.speedY;
-
-        // Wrap-Around (Endlos-Schleife innerhalb der Karte)
-        if (pt.x < -w / 2) pt.x = w / 2;
-        if (pt.x > w / 2) pt.x = -w / 2;
-        if (pt.y < -h / 2) pt.y = h / 2;
-        if (pt.y > h / 2) pt.y = -h / 2;
-
-        this.noiseGraphics.fillStyle(0xffffff, pt.alpha);
-        this.noiseGraphics.fillRect(pt.x, pt.y, 2, 2);
-      }
-    }
-  }
-
-  /**
-   * ✨ NEU: Synchronisiert die Masken-Grafiken mit der aktuellen Position der Karte.
-   * Wird in onSceneUpdate und updateSize aufgerufen.
-   */
-  private syncMaskState() {
-    // 1. Masken-Synchronisation (wie bisher)
-    if (this.paralyzeMaskGraphics && this.active) {
-      this.paralyzeMaskGraphics.setPosition(this.x, this.y);
-      this.paralyzeMaskGraphics.setRotation(this.rotation);
-      this.paralyzeMaskGraphics.setScale(this.scaleX, this.scaleY);
-    }
   }
 
   /**
@@ -1083,6 +575,8 @@ export class CardUI extends Phaser.GameObjects.Container {
       this.scene.events.off("update", this.onSceneUpdate, this);
       this.scene.events.off("settings-changed", this.onSettingsChanged, this);
     }
+    this.visuals.destroy(); // ✨ NEU: Aufräumen
+    this.attachVisuals.destroy(); // ✨ NEU: Aufräumen
     super.destroy(fromScene);
   }
 
