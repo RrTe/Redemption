@@ -5,21 +5,14 @@ import type { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: 
 import { log, DEBUG } from "../utils/logger";
 import { CardVisuals } from "./effects/CardVisuals"; // ✨ NEU
 import { CardAttachVisuals } from "./effects/CardAttachVisuals"; // ✨ NEU
+import {
+  CardPhysicsEffects, // ✨ FIX: Klasse heißt jetzt CardPhysicsEffects (laut deiner Info)
+  SHADOW_CONFIG,
+} from "./effects/CardPhysicsEffects.js"; // ✨ NEU
+import { CardCounterVisuals } from "./effects/CardCounterVisuals"; // ✨ NEU
 
 // ✨ Die Basis-URL, unter der die Kartenbilder zu finden sind.
 const IMAGE_BASE_URL = "/assets/cards/";
-
-// ✨ NEU: Zentrale Konfiguration für Schatten-Werte
-// Hier kannst du alles an einer Stelle ändern!
-const SHADOW_CONFIG = {
-  OFFSET_REST: 10, // Versatz im Ruhezustand (x, y)
-  OFFSET_DRAG: 25, // Versatz beim Ziehen (simulierte Höhe)
-  ALPHA_REST: 0.4, // Transparenz im Ruhezustand (0-1)
-  ALPHA_DRAG: 0.3, // Transparenz beim Ziehen (weicher)
-  SCALE_DRAG: 1.1, // Skalierung beim Ziehen (wird größer)
-  PADDING: 0, // Größenzuschlag für den Schatten (Breite/Höhe)
-  SLICE: 6, // 9-Slice Randgröße (Ecken-Rundung)
-};
 
 export class CardUI extends Phaser.GameObjects.Container {
   public cardData: CardState;
@@ -34,18 +27,17 @@ export class CardUI extends Phaser.GameObjects.Container {
   public targetAngle: number = 0;
   private isLockedHidden: boolean = false; // ✨ NEU: Sperre für Sichtbarkeit
   public currentZone: Zone; // ✨ NEU: Eigener Speicher für die Zone, um Race Conditions zu vermeiden.
-  private paralyzeText: Phaser.GameObjects.Text;
-  private setasideText: Phaser.GameObjects.Text;
   public isBeingDragged: boolean = false; // ✨ NEU: Status für Drag-Vorgang
   // ✨ NEU: Zielkoordinaten für die Drag-Physik (Trägheit)
   public dragTargetX: number | null = null;
   public dragTargetY: number | null = null;
   // ✨ NEU: Noise/Glitter Effekt
   private visuals: CardVisuals; // ✨ NEU: Umbenannt
-  private pulseTime: number = Math.random() * 100; // ✨ NEU: Zufälliger Startwert für organischen Look
   private brightnessOverlay: Phaser.GameObjects.Rectangle; // ✨ NEU: Overlay für Helligkeitseffekte
   private shadow: Phaser.GameObjects.NineSlice; // ✨ NEU: Schatten
   private attachVisuals: CardAttachVisuals; // ✨ NEU
+  private physicsHandler: CardPhysicsEffects; // ✨ FIX: Typ aktualisiert
+  private counterVisuals: CardCounterVisuals; // ✨ NEU
 
   constructor(
     scene: Phaser.Scene,
@@ -68,6 +60,12 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     // ✨ NEU: Attach Visuals Komponente erstellen
     this.attachVisuals = new CardAttachVisuals(scene, this);
+
+    // ✨ NEU: Physics Handler erstellen
+    this.physicsHandler = new CardPhysicsEffects(this);
+
+    // ✨ NEU: Counter Visuals erstellen
+    this.counterVisuals = new CardCounterVisuals(scene, this, this.visuals);
 
     this.setSize(width, height);
 
@@ -105,25 +103,6 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     // ✨ DEIN PLAN: Lade BEIDE Kartenbilder (Vorder- und Rückseite) sofort.
     this.loadCardImages();
-
-    // ✨ NEU: Counter-Texte erstellen
-    const textStyle = {
-      fontSize: `${Math.round(height * 0.15)}px`,
-      color: "#ffff00",
-      fontStyle: "bold",
-      stroke: "#000000",
-      strokeThickness: 5,
-    };
-
-    this.paralyzeText = scene.add
-      .text(0, -height / 2 + 5, "", textStyle)
-      .setOrigin(0.5, 0)
-      .setVisible(false);
-    this.setasideText = scene.add
-      .text(0, height / 2 - 5, "", textStyle)
-      .setOrigin(0.5, 1)
-      .setVisible(false);
-    this.add([this.paralyzeText, this.setasideText]);
 
     // ✨ DEIN PLAN: Zeige initial das korrekte Bild an.
     this.updateImageVisibility();
@@ -239,12 +218,8 @@ export class CardUI extends Phaser.GameObjects.Container {
       height + SHADOW_CONFIG.PADDING,
     ); // ✨ FIX: Konsistente Größe
 
-    // ✨ NEU: Counter-Texte neu positionieren und skalieren
-    const fontSize = `${Math.round(height * 0.15)}px`;
-    this.paralyzeText.setFontSize(fontSize).setY(-height / 2 + 5);
-    this.setasideText.setFontSize(fontSize).setY(height / 2 - 5);
-    if (this.paralyzeText) this.bringToTop(this.paralyzeText);
-    if (this.setasideText) this.bringToTop(this.setasideText);
+    // ✨ NEU: Counter-Texte anpassen via Sub-Komponente
+    this.counterVisuals.onUpdateSize();
 
     // ✨ ENTSCHEIDENDE KORREKTUR: Stelle sicher, dass die Karte interaktiv UND ziehbar bleibt.
     // Ein setInteractive()-Aufruf ohne draggable:true würde die Drag-Fähigkeit entfernen.
@@ -292,27 +267,7 @@ export class CardUI extends Phaser.GameObjects.Container {
 
   /** ✨ NEU: Aktualisiert die Anzeige der Paralyze- und Set-Aside-Counter. */
   public updateCounters() {
-    if (!this.cardData || !this.cardData.counters) return;
-
-    const paralyzeValue = this.getCounter("paralyze");
-    if (paralyzeValue > 0) {
-      this.paralyzeText.setText(`P: ${paralyzeValue}`).setVisible(true);
-    } else {
-      this.paralyzeText.setVisible(false);
-    }
-
-    const setasideValue = this.getCounter("setaside");
-    if (setasideValue > 0) {
-      this.setasideText.setText(`SA: ${setasideValue}`).setVisible(true);
-    } else {
-      this.setasideText.setVisible(false);
-    }
-
-    // ✨ NEU: Paralyze-Effekt aktivieren/deaktivieren
-    this.visuals.updateParalyzeEffect(paralyzeValue > 0);
-
-    if (this.paralyzeText) this.bringToTop(this.paralyzeText);
-    if (this.setasideText) this.bringToTop(this.setasideText);
+    this.counterVisuals.update();
   }
 
   /** ✨ NEU: Gibt zurück, ob die Karte aktuell verdeckt ist. */
@@ -324,14 +279,14 @@ export class CardUI extends Phaser.GameObjects.Container {
    * ✨ NEU: Gibt zurück, ob die Karte paralysiert ist (Counter > 0).
    */
   public get isParalyzed(): boolean {
-    return this.getCounter("paralyze") > 0;
+    return this.counterVisuals.getCounter("paralyze") > 0;
   }
 
   /**
    * ✨ NEU: Gibt zurück, ob die Karte "Set Aside" ist (Counter > 0).
    */
   public get isSetAside(): boolean {
-    return this.getCounter("setaside") > 0;
+    return this.counterVisuals.getCounter("setaside") > 0;
   }
 
   /** ✨ NEU: Steuert, ob die Karte zwangsweise versteckt bleiben soll (z.B. während Animationen). */
@@ -451,11 +406,12 @@ export class CardUI extends Phaser.GameObjects.Container {
   }
 
   /**
-   * ✨ NEU: Berechnet die Position des Schattens basierend auf der Rotation der Karte.
+   * ✨ NEU: Aktualisiert den Zustand des Schattens (Position, Alpha, Scale).
+   * Wird vom PhysicsHandler verwendet.
    * Dadurch bleibt der Schatten immer "unten rechts" vom Betrachter aus gesehen (Lichtquelle oben links),
    * egal wie die Karte gedreht ist (z.B. beim Gegner um 180 Grad).
    */
-  private updateShadowPosition(offset: number) {
+  public updateShadowState(offset: number, alpha: number, scale: number) {
     const rad = -this.rotation; // Gegenrotation
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
@@ -464,6 +420,27 @@ export class CardUI extends Phaser.GameObjects.Container {
     const y = offset * sin + offset * cos;
 
     this.shadow.setPosition(x, y);
+    this.shadow.setAlpha(alpha);
+    this.shadow.setScale(scale);
+  }
+
+  /**
+   * ✨ NEU: Steuert den Helligkeitseffekt (Pulsieren).
+   * Wird vom PhysicsHandler verwendet.
+   */
+  public applyBrightnessEffect(
+    isLight: boolean,
+    alpha: number,
+    tintColor?: number,
+  ) {
+    if (isLight) {
+      this.clearTint();
+      this.brightnessOverlay.setVisible(true);
+      this.brightnessOverlay.setAlpha(alpha);
+    } else if (tintColor !== undefined) {
+      this.brightnessOverlay.setVisible(false);
+      this.setTint(tintColor);
+    }
   }
 
   /**
@@ -476,93 +453,8 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     this.visuals.onUpdate(); // ✨ FIX: Effekte aktualisieren
 
-    // 2. Drag & Tilt Physik (Trägheit)
-    if (
-      this.isBeingDragged &&
-      this.dragTargetX !== null &&
-      this.dragTargetY !== null
-    ) {
-      const lerpFactor = 0.12; // ✨ TWEAK: Etwas mehr Trägheit (war 0.15) für deutlicheres Nachziehen
-
-      // Interpoliere zur Zielposition
-      const newX = Phaser.Math.Linear(this.x, this.dragTargetX, lerpFactor);
-      const newY = Phaser.Math.Linear(this.y, this.dragTargetY, lerpFactor);
-
-      // Berechne Geschwindigkeit
-      const vx = newX - this.x;
-      const vy = newY - this.y;
-
-      this.x = newX;
-      this.y = newY;
-
-      // ✨ NEU: Stärkerer Tilt und Skew für den "Papier-Effekt"
-
-      // ✨ NEU: Schatten-Dynamik beim Ziehen (Lift-Effekt)
-      // Wenn die Karte gezogen wird, entfernen wir den Schatten weiter (simulierte Höhe)
-      // und machen ihn etwas weicher/transparenter.
-      this.updateShadowPosition(SHADOW_CONFIG.OFFSET_DRAG);
-      this.shadow.setAlpha(SHADOW_CONFIG.ALPHA_DRAG);
-      this.shadow.setScale(SHADOW_CONFIG.SCALE_DRAG);
-
-      // Rotation (Wedeln): Reagiert stark auf horizontale Bewegung
-      const rot = Phaser.Math.Clamp(vx * 0.05, -0.4, 0.4); // Bis zu ~20 Grad Neigung
-      this.setRotation(rot);
-
-      // ✨ NEU: 3D-Tiefe durch Stauchung (Perspective Tilt)
-      // Wir simulieren, dass die Karte beim Ziehen "angehoben" ist (Basis-Scale 1.1).
-      const dragBaseScale = 1.1;
-      const squashFactor = 0.015; // Wie stark die Karte kippt (Empfindlichkeit)
-      const maxSquash = 0.25; // Maximale Stauchung (25%)
-
-      // ✨ NEU: Pulsieren (Herzschlag) während des Drags
-      // Wir nutzen delta für framerate-unabhängige Geschwindigkeit
-      this.pulseTime += 0.003 * delta;
-      const wave = Math.sin(this.pulseTime);
-      const pulse = 0.008 * wave; // Subtile Amplitude (+/- 0.8%)
-
-      // Horizontaler Speed staucht die Breite (Rotation um Y-Achse)
-      const squashX = Phaser.Math.Clamp(
-        Math.abs(vx) * squashFactor,
-        0,
-        maxSquash,
-      );
-      // Vertikaler Speed staucht die Höhe (Rotation um X-Achse)
-      const squashY = Phaser.Math.Clamp(
-        Math.abs(vy) * squashFactor,
-        0,
-        maxSquash,
-      );
-
-      // Kombiniere Basis-Größe, Stauchung (Squash) und Pulsieren
-      this.setScale(
-        dragBaseScale * (1 - squashX) + pulse,
-        dragBaseScale * (1 - squashY) + pulse,
-      );
-
-      // ✨ NEU: Helligkeit synchron zum Pulsieren (Herzschlag)
-      // Wave 1 (Groß) -> Hell (Overlay an)
-      // Wave -1 (Klein) -> Dunkel (Tint an)
-      const brightnessIntensity = 0.05; // Stärke des Effekts (25%)
-
-      if (wave > 0) {
-        // Aufhellen (Overlay)
-        this.clearTint(); // Sicherstellen, dass kein Dark-Tint aktiv ist
-        this.brightnessOverlay.setVisible(true);
-        this.brightnessOverlay.setAlpha(wave * brightnessIntensity);
-      } else {
-        // Abdunkeln (Tint)
-        this.brightnessOverlay.setVisible(false);
-        const darkFactor = Math.abs(wave) * brightnessIntensity;
-        const val = Math.floor(255 * (1 - darkFactor));
-        const color = Phaser.Display.Color.GetColor(val, val, val);
-        this.setTint(color);
-      }
-    } else {
-      // ✨ NEU: Reset Schatten wenn nicht gezogen
-      this.updateShadowPosition(SHADOW_CONFIG.OFFSET_REST);
-      this.shadow.setAlpha(SHADOW_CONFIG.ALPHA_REST);
-      this.shadow.setScale(1);
-    }
+    // ✨ NEU: Physik-Update an Handler delegieren
+    this.physicsHandler.update(delta);
   }
 
   /**
@@ -599,19 +491,5 @@ export class CardUI extends Phaser.GameObjects.Container {
     if (!this.areEffectsEnabled()) {
       this.stopGlow(); // Stoppt den Hover-Glow sofort
     }
-  }
-
-  /**
-   * ✨ NEU: Hilfsmethode zum sicheren Abrufen von Counter-Werten.
-   * Kapselt die Logik für MapSchema (Colyseus) vs. JSON-Objekte.
-   * Macht den Code deutlich lesbarer und wartbarer.
-   */
-  public getCounter(key: string): number {
-    if (!this.cardData || !this.cardData.counters) return 0;
-    const counters: any = this.cardData.counters;
-    if (typeof counters.get === "function") {
-      return counters.get(key) || 0;
-    }
-    return counters[key] || 0;
   }
 }
