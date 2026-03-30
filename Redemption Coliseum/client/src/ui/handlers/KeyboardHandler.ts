@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI.js";
-import { type NetworkManager } from "../../network/GameNetworkManager.js";
+import { type GameNetworkManager } from "../../network/GameNetworkManager.js";
 import { type TokenManager } from "../managers/TokenManager.js";
 import { type CardState } from "../../../../shared/types.js";
 import { log } from "../../utils/logger.js";
@@ -11,7 +11,7 @@ import { log } from "../../utils/logger.js";
 export class KeyboardHandler {
   private scene: Phaser.Scene;
   private room: TypedRoom;
-  private networkManager: NetworkManager;
+  private networkManager: GameNetworkManager;
   private tokenManager: TokenManager;
 
   // ✨ Logik aus CardGameScene hierher verschoben
@@ -36,7 +36,7 @@ export class KeyboardHandler {
   constructor(
     scene: Phaser.Scene,
     room: TypedRoom,
-    networkManager: NetworkManager,
+    networkManager: GameNetworkManager,
     tokenManager: TokenManager,
   ) {
     this.scene = scene;

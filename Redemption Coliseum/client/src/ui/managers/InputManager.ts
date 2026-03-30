@@ -5,6 +5,7 @@ import { type AnimationManager } from "./AnimationManager.js";
 import { type PreviewManager } from "./PreviewManager";
 import { type TokenManager } from "./TokenManager.js"; // ✨ NEU
 import { ElementManager } from "./ElementManager.js"; // ✨ NEU
+import { type OverlayManager } from "./OverlayManager.js"; // ✨ NEU
 import { DragDropHandler } from "../handlers/DragDropHandler.js"; // ✨ REFACTOR
 import { InteractionHandler } from "../handlers/InteractionHandler.js"; // ✨ REFACTOR
 import { KeyboardHandler } from "../handlers/KeyboardHandler"; // ✨ REFACTOR
@@ -33,6 +34,7 @@ export class InputManager {
     dragBounds: Phaser.Geom.Rectangle,
     elementManager: ElementManager, // ✨ NEU
     tokenManager: TokenManager, // ✨ NEU
+    overlayManager: OverlayManager, // ✨ NEU
   ) {
     this.scene = scene;
     this.room = room;
@@ -60,6 +62,8 @@ export class InputManager {
       animationManager,
       previewManager,
       this.dragDropHandler,
+      elementManager, // ✨ NEU
+      overlayManager, // ✨ NEU
     );
 
     // ✨ REFACTOR: Create handler for keyboard inputs.

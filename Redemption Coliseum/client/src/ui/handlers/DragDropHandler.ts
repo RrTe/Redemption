@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI.js";
-import { type NetworkManager } from "../../network/GameNetworkManager.js";
+import { type GameNetworkManager } from "../../network/GameNetworkManager.js";
 import { type AnimationManager } from "../managers/AnimationManager.js";
 import { type PreviewManager } from "../managers/PreviewManager";
 import { CardUI } from "../CardUI.js";
@@ -19,7 +19,7 @@ const ATTACH_HOVER_DELAY = 700;
 export class DragDropHandler {
   private scene: Phaser.Scene;
   private room: TypedRoom;
-  private networkManager: NetworkManager;
+  private networkManager: GameNetworkManager;
   private animationManager: AnimationManager;
   private previewManager: PreviewManager;
   private elementManager: ElementManager;
@@ -34,7 +34,7 @@ export class DragDropHandler {
   constructor(
     scene: Phaser.Scene,
     room: TypedRoom,
-    networkManager: NetworkManager,
+    networkManager: GameNetworkManager,
     animationManager: AnimationManager,
     previewManager: PreviewManager,
     elementManager: ElementManager,

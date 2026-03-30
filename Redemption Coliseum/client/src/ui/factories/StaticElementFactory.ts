@@ -27,6 +27,23 @@ export class StaticElementFactory {
       .setInteractive({ useHandCursor: true })
       .setDisplaySize(48, 48)
       .setAlpha(0.6);
+    
+    settingsButton.on("pointerover", () => {
+      this.scene.tweens.add({
+        targets: settingsButton,
+        x: this.scene.scale.width - 24,
+        duration: 200,
+        ease: "Sine.easeOut",
+      });
+    });
+    settingsButton.on("pointerout", () => {
+      this.scene.tweens.add({
+        targets: settingsButton,
+        x: this.scene.scale.width + 12,
+        duration: 200,
+        ease: "Sine.easeOut",
+      });
+    });
 
     // Save Button
     const saveButton = this.scene.add
@@ -35,6 +52,23 @@ export class StaticElementFactory {
       .setInteractive({ useHandCursor: true })
       .setDisplaySize(48, 48)
       .setAlpha(0.7);
+    
+    saveButton.on("pointerover", () => {
+      this.scene.tweens.add({
+        targets: saveButton,
+        x: this.scene.scale.width - 24,
+        duration: 200,
+        ease: "Sine.easeOut",
+      });
+    });
+    saveButton.on("pointerout", () => {
+      this.scene.tweens.add({
+        targets: saveButton,
+        x: this.scene.scale.width + 12,
+        duration: 200,
+        ease: "Sine.easeOut",
+      });
+    });
 
     // Help Button
     const helpButton = this.scene.add
@@ -43,6 +77,23 @@ export class StaticElementFactory {
       .setInteractive({ useHandCursor: true })
       .setDisplaySize(48, 48)
       .setAlpha(0.6);
+    
+    helpButton.on("pointerover", () => {
+      this.scene.tweens.add({
+        targets: helpButton,
+        x: 24,
+        duration: 200,
+        ease: "Sine.easeOut",
+      });
+    });
+    helpButton.on("pointerout", () => {
+      this.scene.tweens.add({
+        targets: helpButton,
+        x: -12,
+        duration: 200,
+        ease: "Sine.easeOut",
+      });
+    });
 
     // Phasen-Indikatoren
     const phaseIndicator = this.scene.add.graphics();

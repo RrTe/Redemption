@@ -1,9 +1,11 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI.js";
-import { type NetworkManager } from "../../network/GameNetworkManager.js";
+import { type GameNetworkManager } from "../../network/GameNetworkManager.js";
 import { type AnimationManager } from "../managers/AnimationManager.js";
 import { type PreviewManager } from "../managers/PreviewManager";
 import { RadialMenu } from "../components/RadialMenu.js";
+import { type ElementManager } from "../managers/ElementManager.js";
+import { type OverlayManager } from "../managers/OverlayManager.js";
 import type { ActionIconConfig } from "../types/types.js";
 import { CardUI } from "../CardUI.js";
 import { PileUI } from "../PileUI.js";
@@ -20,10 +22,12 @@ import { MenuFactory } from "../factories/MenuFactory.js"; // ✨ REFACTOR
 export class InteractionHandler {
   private scene: Phaser.Scene;
   private room: TypedRoom;
-  private networkManager: NetworkManager;
+  private networkManager: GameNetworkManager;
   private animationManager: AnimationManager;
   private previewManager: PreviewManager;
   private dragDropHandler: DragDropHandler;
+  private elementManager: ElementManager;
+  private overlayManager: OverlayManager;
   private menuFactory: MenuFactory; // ✨ REFACTOR
 
   private lastClickTime: number = 0;
@@ -33,10 +37,12 @@ export class InteractionHandler {
   constructor(
     scene: Phaser.Scene,
     room: TypedRoom,
-    networkManager: NetworkManager,
+    networkManager: GameNetworkManager,
     animationManager: AnimationManager,
     previewManager: PreviewManager,
     dragDropHandler: DragDropHandler,
+    elementManager: ElementManager,
+    overlayManager: OverlayManager,
   ) {
     this.scene = scene;
     this.room = room;
@@ -44,6 +50,8 @@ export class InteractionHandler {
     this.animationManager = animationManager;
     this.previewManager = previewManager;
     this.dragDropHandler = dragDropHandler;
+    this.elementManager = elementManager;
+    this.overlayManager = overlayManager;
 
     // ✨ REFACTOR: Instantiate the factory to create menu actions.
     this.menuFactory = new MenuFactory(scene, room, networkManager);
@@ -54,6 +62,33 @@ export class InteractionHandler {
     this.scene.input.on("gameobjectout", this.onPointerOut, this);
     this.scene.input.on("gameobjectdown", this.onGameObjectDown, this);
     this.scene.input.on("gameobjectup", this.onGameObjectUp, this);
+
+    // Static Button Handlers
+    const { settingsButton, saveButton, helpButton, concedeButton } = this.elementManager.staticElements;
+
+    settingsButton.on("pointerdown", () => {
+      this.scene.game.events.emit("playSound", "UI_TOGGLE");
+      this.scene.scene.pause("CardGame");
+      this.scene.scene.launch("SettingsDialogScene", { parentScene: "CardGame" });
+    });
+
+    saveButton.on("pointerdown", () => {
+      this.scene.game.events.emit("playSound", "UI_TOGGLE");
+      log("UI", "Requesting save game from server...");
+      this.room.send("requestSaveGame", {});
+    });
+
+    helpButton.on("pointerdown", () => {
+      this.scene.game.events.emit("playSound", "UI_TOGGLE");
+      this.overlayManager.toggleHelp();
+    });
+
+    concedeButton.on("pointerdown", () => {
+      this.scene.game.events.emit("playSound", "UI_TOGGLE");
+      if (window.confirm("Are you sure you want to concede the game?")) {
+        this.room.send("concede", {});
+      }
+    });
   }
 
   public destroy() {

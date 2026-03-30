@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI.js";
-import { type NetworkManager } from "../../network/GameNetworkManager.js";
+import { type GameNetworkManager } from "../../network/GameNetworkManager.js";
 import type { ActionIconConfig } from "../types/types.js";
 import { CardUI } from "../CardUI.js";
 import { ZONES, type Zone } from "../../../../shared/zones.js";
@@ -13,12 +13,12 @@ import { log } from "../../utils/logger";
 export class MenuFactory {
   private scene: Phaser.Scene;
   private room: TypedRoom;
-  private networkManager: NetworkManager;
+  private networkManager: GameNetworkManager;
 
   constructor(
     scene: Phaser.Scene,
     room: TypedRoom,
-    networkManager: NetworkManager,
+    networkManager: GameNetworkManager,
   ) {
     this.scene = scene;
     this.room = room;

@@ -188,6 +188,7 @@ export class GameUI {
       this.dragBounds,
       this.elementManager, // ✨ NEU: Übergebe ElementManager für Highlights
       this.tokenManager, // ✨ FIX: TokenManager übergeben
+      this.overlayManager, // ✨ NEU: OverlayManager übergeben
     );
 
     this.cardRenderer = new CardRenderer(
@@ -257,38 +258,6 @@ export class GameUI {
   public initializeScene() {
     // ✨ REFACTORING: Delegiere die Registrierung an den InputManager.
     this.inputManager.registerInputHandlers();
-
-    // ✨ NEU: Settings-Button Handler
-    this.elementManager.staticElements.settingsButton.on("pointerdown", () => {
-      this.scene.scene.pause("CardGame"); // Spiel pausieren
-      this.scene.scene.launch("SettingsDialogScene", {
-        parentScene: "CardGame",
-      }); // ✨ FIX: Elternszene übergeben
-      this.scene.game.events.emit("playSound", "page_flip"); // ✨ FIX: Globaler Event-Bus
-    });
-
-    // ✨ NEU: Save-Button Handler
-    this.elementManager.staticElements.saveButton.on("pointerdown", () => {
-      this.scene.game.events.emit("playSound", "UI_TOGGLE");
-      this.saveGame();
-    });
-
-    // ✨ NEU: Help-Button Handler
-    this.elementManager.staticElements.helpButton.on("pointerdown", () => {
-      this.scene.game.events.emit("playSound", "UI_TOGGLE");
-      this.overlayManager.toggleHelp();
-    });
-
-    // ✨ NEU: Concede-Button Handler
-    this.elementManager.staticElements.concedeButton.on("pointerdown", () => {
-      // Sound abspielen (gleicher wie Next Phase / UI Toggle)
-      this.scene.game.events.emit("playSound", "UI_TOGGLE");
-
-      // Einfache Bestätigung (Browser-Native ist am sichersten für den Anfang)
-      if (window.confirm("Are you sure you want to concede the game?")) {
-        this.room.send("concede", {});
-      }
-    });
 
     // ✨ NEU: Melde dem Server, dass wir bereit sind (Assets geladen, UI erstellt).
     this.networkManager.sendPlayerReady();

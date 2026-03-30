@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { ZONES, type Zone } from "../../../../shared/zones";
 import { type GameLayout } from "../layout";
 import { type TypedRoom } from "../gameUI";
-import { type NetworkManager } from "../../network/GameNetworkManager";
+import { type GameNetworkManager } from "../../network/GameNetworkManager";
 import { PileUI } from "../PileUI";
 import { StackedPileUI } from "../StackedPileUI";
 import { type ZoneElements } from "../types/ElementTypes";
@@ -10,12 +10,12 @@ import { type ZoneElements } from "../types/ElementTypes";
 export class ZoneFactory {
   private scene: Phaser.Scene;
   private room: TypedRoom;
-  private networkManager: NetworkManager;
+  private networkManager: GameNetworkManager;
 
   constructor(
     scene: Phaser.Scene,
     room: TypedRoom,
-    networkManager: NetworkManager,
+    networkManager: GameNetworkManager,
   ) {
     this.scene = scene;
     this.room = room;
