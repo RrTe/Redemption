@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI";
-import { type NetworkManager } from "../../network/NetworkManager";
+import { type GameNetworkManager } from "../../network/GameNetworkManager";
 import { type CardState } from "../../../../shared/types";
 import { ZONES } from "../../../../shared/zones";
 import {
@@ -17,12 +17,12 @@ import { log } from "../../utils/logger";
 export class TokenManager {
   private scene: Phaser.Scene;
   private room: TypedRoom;
-  private networkManager: NetworkManager;
+  private networkManager: GameNetworkManager;
 
   constructor(
     scene: Phaser.Scene,
     room: TypedRoom,
-    networkManager: NetworkManager,
+    networkManager: GameNetworkManager,
   ) {
     this.scene = scene;
     this.room = room;

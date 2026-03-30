@@ -1,6 +1,6 @@
 import type { TypedRoom, GameUI } from "../gameUI";
 import type { ElementManager } from "./ElementManager";
-import type { NetworkManager } from "../../network/NetworkManager";
+import type { NetworkManager } from "../../network/GameNetworkManager";
 import type { RoomState } from "../../../../shared/types";
 import { calculateLayout } from "../layout";
 

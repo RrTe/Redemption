@@ -71,6 +71,7 @@ export class OverlayManager {
         this.soundManager?.stopEverything();
         this.room.leave();
         localStorage.removeItem("reconnectionToken");
+        localStorage.removeItem("reconnectionRoomId"); // ✨ NEU: Filter löschen
         this.scene.scene.start("LobbyScene");
       },
     );
@@ -252,6 +253,7 @@ export class OverlayManager {
         this.soundManager?.stopEverything();
         this.room.leave();
         localStorage.removeItem("reconnectionToken");
+        localStorage.removeItem("reconnectionRoomId"); // ✨ NEU: Filter löschen
         this.scene.scene.start("LobbyScene");
       },
     );

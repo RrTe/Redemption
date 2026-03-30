@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI.js";
-import { type NetworkManager } from "../../network/NetworkManager.js";
+import { type NetworkManager } from "../../network/GameNetworkManager.js";
 import { type AnimationManager } from "../managers/AnimationManager.js";
 import { type PreviewManager } from "../managers/PreviewManager";
 import { CardUI } from "../CardUI.js";

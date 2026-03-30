@@ -13,7 +13,7 @@ import { ElementManager } from "./managers/ElementManager";
 import { CardRenderer } from "./renderers/CardRenderer.js"; // ✨ FIX: Neuer Pfad
 import { InputManager } from "./managers/InputManager";
 import { PileUI } from "./PileUI"; // ✨ Importiere die neue PileUI-Klasse
-import { NetworkManager } from "../network/NetworkManager"; // ✨ NEU (SCHRITT 3)
+import { GameNetworkManager } from "../network/GameNetworkManager.ts"; // ✨ NEU (SCHRITT 3)
 import { PhaseManager } from "./managers/PhaseManager"; // ✨ NEU
 import { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Schritt 1.1
 import { SoundManager } from "../managers/SoundManager.ts"; // ✨ NEU: Schritt 1.2
@@ -55,7 +55,7 @@ export class GameUI {
   private layout: GameLayout;
   private elementManager: ElementManager;
   private inputManager: InputManager;
-  private networkManager: NetworkManager;
+  private networkManager: GameNetworkManager;
   private cardRenderer: CardRenderer;
   private phaseManager: PhaseManager; // ✨ NEU
   public settingsManager: SettingsManager; // ✨ NEU: Öffentlich gemacht für Zugriff via Scene Registry
@@ -107,7 +107,7 @@ export class GameUI {
     );
 
     // ✨ FIX: NetworkManager ZUERST erstellen, da andere Manager ihn brauchen.
-    this.networkManager = new NetworkManager(
+    this.networkManager = new GameNetworkManager(
       this.scene,
       this.room,
       this,
@@ -117,7 +117,11 @@ export class GameUI {
     );
 
     // ✨ FIX: ChatManager erstellen (braucht NetworkManager)
-    this.chatManager = new ChatManager(this.scene, this.room, this.networkManager);
+    this.chatManager = new ChatManager(
+      this.scene,
+      this.room,
+      this.networkManager,
+    );
 
     log(
       "UI",
@@ -168,7 +172,11 @@ export class GameUI {
     this.networkManager.setDialogManager(this.dialogManager);
 
     // ✨ FIX: TokenManager erstellen (braucht NetworkManager)
-    this.tokenManager = new TokenManager(this.scene, this.room, this.networkManager);
+    this.tokenManager = new TokenManager(
+      this.scene,
+      this.room,
+      this.networkManager,
+    );
 
     // ✨ KORREKTUR: Erstelle den InputManager NACH dem NetworkManager und übergebe ihn.
     this.inputManager = new InputManager(

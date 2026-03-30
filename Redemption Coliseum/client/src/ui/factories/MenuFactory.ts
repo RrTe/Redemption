@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI.js";
-import { type NetworkManager } from "../../network/NetworkManager.js";
+import { type NetworkManager } from "../../network/GameNetworkManager.js";
 import type { ActionIconConfig } from "../types/types.js";
 import { CardUI } from "../CardUI.js";
 import { ZONES, type Zone } from "../../../../shared/zones.js";
@@ -64,7 +64,6 @@ export class MenuFactory {
         callback: () => {
           this.room.send("updateCardState", {
             cardId: card.cardData.id,
-
 
             updates: { isFlipped: !card.cardData.isFlipped },
           });
@@ -189,7 +188,11 @@ export class MenuFactory {
           maxCount,
           (count, position) => {
             // The actual discard logic is now on the server for consistency.
-            this.room.send("discardFromDeck", { count, position, targetPlayerId });
+            this.room.send("discardFromDeck", {
+              count,
+              position,
+              targetPlayerId,
+            });
           },
         );
       },

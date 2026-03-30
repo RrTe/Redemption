@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { type GameLayout } from "../layout";
 import { type TypedRoom } from "../gameUI";
-import { type NetworkManager } from "../../network/NetworkManager"; // ✨ NEU
+import { type GameNetworkManager } from "../../network/GameNetworkManager.js"; // ✨ NEU
 import { ZONES, type Zone } from "../../../../shared/zones";
 import { PHASES } from "../../../../shared/phases.js";
 import { PileUI } from "../PileUI";
@@ -20,7 +20,7 @@ export class ElementManager {
   private scene: Phaser.Scene;
   private room: TypedRoom;
   public layout: GameLayout;
-  private networkManager: NetworkManager; // ✨ NEU
+  private networkManager: GameNetworkManager; // ✨ NEU
 
   // ✨ REFACTORING: Öffentliche Eigenschaften, um die erstellten Elemente zu speichern.
   public staticElements!: StaticElements;
@@ -33,7 +33,7 @@ export class ElementManager {
     scene: Phaser.Scene,
     room: TypedRoom,
     layout: GameLayout,
-    networkManager: NetworkManager,
+    networkManager: GameNetworkManager,
   ) {
     this.scene = scene;
     this.room = room;

@@ -1,19 +1,22 @@
-import type { TypedRoom, StateCallback } from "../ui/gameUI";
-import type { GameUI } from "../ui/gameUI";
-import type { SelectionDialogData } from "../scenes/SelectionDialogScene";
-import { SelectionDialogScene } from "../scenes/SelectionDialogScene";
+import type { TypedRoom, StateCallback } from "../ui/gameUI.js";
+import type { GameUI } from "../ui/gameUI.js";
+import type { SelectionDialogData } from "../scenes/SelectionDialogScene.js";
+import { SelectionDialogScene } from "../scenes/SelectionDialogScene.js";
 import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones.js";
-import type { GameRoomMessages, MoveCardMessage } from "../../../shared/messages.js";
-import { log, DEBUG } from "../utils/logger";
+import type {
+  GameRoomMessages,
+  MoveCardMessage,
+} from "../../../shared/messages.js";
+import { log, DEBUG } from "../utils/logger.js";
 import { type OverlayManager } from "../ui/managers/OverlayManager.js"; // ✨ FIX
 import { type DialogManager } from "../ui/managers/DialogManager.js"; // ✨ REFACTOR
-import { getClient } from "./connection"; // ✨ NEU
+import { getClient } from "./connection.js"; // ✨ NEU
 
 /**
  * ✨ NEU (SCHRITT 3): Verwaltet die gesamte Netzwerkkommunikation mit dem Colyseus-Raum.
  * Diese Klasse entkoppelt die UI von der direkten Server-Interaktion.
  */
-export class NetworkManager {
+export class GameNetworkManager {
   private room: TypedRoom;
   private scene: Phaser.Scene;
   private ui: GameUI;
@@ -52,7 +55,11 @@ export class NetworkManager {
   }
 
   /** ✨ NEU: Spezifische Methode zum Erstellen von Tokens. */
-  public sendCreateToken(payload: { cardId: string; zone: string; ownerId: string }) {
+  public sendCreateToken(payload: {
+    cardId: string;
+    zone: string;
+    ownerId: string;
+  }) {
     log("Network", `Sending 'createToken' message:`, payload);
     // Wir nutzen hier 'as any' für den Zugriff auf send, um Änderungen an shared/messages.ts zu vermeiden
     (this.room as any).send("createToken", payload);

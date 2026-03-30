@@ -275,6 +275,13 @@ export class SoundManager {
         (sound as any).setVolume(newVol);
       }
     });
+
+    // Aktualisiere laufende Hintergrundmusik
+    if (this.currentMusic && this.currentMusic.isPlaying) {
+      const baseVol = (this.currentMusic as any)._baseConfigVol ?? 1.0;
+      const newMusicVol = baseVol * masterVol * musicVol;
+      (this.currentMusic as any).setVolume(newMusicVol);
+    }
   }
 
   /**
@@ -339,7 +346,10 @@ export class SoundManager {
           }
 
           // ✨ FIX: Nutze game.sound statt scene.sound, damit die Musik beim Szenenwechsel nicht zerstört wird.
-          this.currentMusic = this.game.sound.add(key, { volume: masterVol * musicVol });
+          const finalVol = masterVol * musicVol;
+          this.currentMusic = this.game.sound.add(key, { volume: finalVol });
+          // Speichere Basis-Lautstärke für dynamische Updates (Settings)
+          (this.currentMusic as any)._baseConfigVol = 1.0; 
           this.currentMusic.once('complete', onComplete);
           this.currentMusic.play();
           log("SoundManager", `Playing music: ${name}`);

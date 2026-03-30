@@ -1,0 +1,495 @@
+import Phaser from "phaser";
+import { type RoomAvailable } from "colyseus.js";
+import { type SoundManager } from "../../managers/SoundManager";
+
+export class LobbyUIManager {
+  private scene: Phaser.Scene;
+  private soundManager: SoundManager;
+
+  // UI Elemente
+  public listContainer!: Phaser.GameObjects.Container;
+  public titleText!: Phaser.GameObjects.BitmapText;
+  public subtitleText!: Phaser.GameObjects.BitmapText;
+  public statusText!: Phaser.GameObjects.BitmapText;
+  public debugText!: Phaser.GameObjects.Text;
+  public nameLabel!: Phaser.GameObjects.BitmapText;
+  public playerNameInput!: Phaser.GameObjects.DOMElement;
+  public createBtn!: Phaser.GameObjects.Container;
+  public deckSelectBtn!: Phaser.GameObjects.Container;
+  public loadGameBtn!: Phaser.GameObjects.Container;
+  public reconnectBtn!: Phaser.GameObjects.Container;
+  public settingsButton!: Phaser.GameObjects.Image;
+  public helpButton!: Phaser.GameObjects.Image;
+  public legalBtn!: Phaser.GameObjects.Text;
+  public privacyBtn!: Phaser.GameObjects.Text;
+
+  // Layout Props
+  private itemHeight = 60;
+  private scrollY = 0;
+  private maxScrollY = 0;
+  private visibleItems = 0;
+  private upArrow!: Phaser.GameObjects.Image;
+  private downArrow!: Phaser.GameObjects.Image;
+  private listMaskGraphics!: Phaser.GameObjects.Graphics;
+  private helpOverlay: HTMLElement | null = null;
+
+  constructor(scene: Phaser.Scene, soundManager: SoundManager) {
+    this.scene = scene;
+    this.soundManager = soundManager;
+  }
+
+  public create() {
+    const width = this.scene.scale.width;
+    const height = this.scene.scale.height;
+
+    // Hintergrund
+    this.scene.add
+      .image(0, 0, "bg_temple")
+      .setOrigin(0.5)
+      .setAlpha(0.4)
+      .setPosition(width / 2, height / 2);
+
+    // Titel & Untertitel
+    this.titleText = this.scene.add
+      .bitmapText(
+        width / 2,
+        height * 0.1,
+        "fairydust",
+        "Redemption Coliseum",
+        64,
+      )
+      .setOrigin(0.5)
+      .setTint(0xfff0a0)
+      .setDropShadow(4, 4, 0x000000, 0.8);
+
+    this.subtitleText = this.scene.add
+      .bitmapText(width / 2, height * 0.18, "fairydust", "Lobby", 32)
+      .setOrigin(0.5)
+      .setTint(0xcccccc)
+      .setDropShadow(2, 2, 0x000000, 0.8);
+
+    // Status Text
+    this.statusText = this.scene.add
+      .bitmapText(width / 2, height - 40, "fairydust", "Initializing...", 24)
+      .setOrigin(0.5)
+      .setTint(0xaaaaaa);
+
+    // Debug Text (Bottom Right)
+    this.debugText = this.scene.add.text(width - 10, height - 10, "", {
+      fontFamily: "monospace",
+      fontSize: "12px",
+      color: "#666666",
+    }).setOrigin(1, 1);
+
+    // Name Label
+    this.nameLabel = this.scene.add
+      .bitmapText(width / 2, height * 0.28 - 40, "fairydust", "Your Name:", 24)
+      .setOrigin(0.5)
+      .setTint(0xdaa520);
+
+    // Input Name (DOM)
+    this.playerNameInput = this.scene.add.dom(width / 2, height * 0.28)
+      .createFromHTML(`
+        <input type="text" name="playerName" value="Player 1" placeholder="Enter Name" 
+               style="font-size: 24px; padding: 10px; width: 320px; text-align: center; 
+                      border-radius: 8px; border: 2px solid #daa520; background-color: rgba(0, 0, 0, 0.5); 
+                      color: #daa520; font-family: monospace; outline: none;">
+    `);
+
+    // Liste Container & Maske
+    this.listContainer = this.scene.add.container(0, 0);
+    this.listMaskGraphics = this.scene.add.graphics().setVisible(false);
+    const mask = this.listMaskGraphics.createGeometryMask();
+    this.listContainer.setMask(mask);
+
+    // Scroll Pfeile
+    this.upArrow = this.scene.add
+      .image(0, 0, "arrow_up")
+      .setInteractive({ useHandCursor: true })
+      .setVisible(false);
+    this.downArrow = this.scene.add
+      .image(0, 0, "arrow_down")
+      .setInteractive({ useHandCursor: true })
+      .setVisible(false);
+
+    // Settings & Help Buttons
+    this.settingsButton = this.scene.add
+      .image(width + 12, height * 0.18, "button_settings")
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .setDisplaySize(48, 48)
+      .setAlpha(0.6);
+
+    this.helpButton = this.scene.add
+      .image(-12, height * 0.7, "button_help")
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .setDisplaySize(48, 48)
+      .setAlpha(0.6);
+
+    // Footer Links
+    this.legalBtn = this.scene.add
+      .text(10, height - 10, "Legal / Impressum", {
+        fontFamily: "Arial",
+        fontSize: "14px",
+        color: "#666666",
+      })
+      .setOrigin(0, 1)
+      .setInteractive({ useHandCursor: true });
+
+    this.privacyBtn = this.scene.add
+      .text(160, height - 10, "Privacy Policy", {
+        fontFamily: "Arial",
+        fontSize: "14px",
+        color: "#666666",
+      })
+      .setOrigin(0, 1)
+      .setInteractive({ useHandCursor: true });
+
+    // Events für Scroll
+    this.upArrow.on("pointerdown", () => this.scrollList(100));
+    this.downArrow.on("pointerdown", () => this.scrollList(-100));
+    this.scene.input.on("wheel", (p: any, go: any, dx: number, dy: number) => {
+      if (p.y > this.listContainer.y) this.scrollList(-dy * 0.5);
+    });
+
+    // Hover Tweens für Seiten-Buttons
+    this.settingsButton.on("pointerover", () =>
+      this.scene.tweens.add({
+        targets: this.settingsButton,
+        x: this.scene.scale.width - 24,
+        duration: 200,
+        ease: "Sine.easeOut",
+      }),
+    );
+    this.settingsButton.on("pointerout", () =>
+      this.scene.tweens.add({
+        targets: this.settingsButton,
+        x: this.scene.scale.width + 12,
+        duration: 200,
+        ease: "Sine.easeOut",
+      }),
+    );
+
+    const VISIBLE_X = 24;
+    this.helpButton.on("pointerover", () =>
+      this.scene.tweens.add({
+        targets: this.helpButton,
+        x: VISIBLE_X,
+        duration: 200,
+        ease: "Sine.easeOut",
+      }),
+    );
+    this.helpButton.on("pointerout", () =>
+      this.scene.tweens.add({
+        targets: this.helpButton,
+        x: -12,
+        duration: 200,
+        ease: "Sine.easeOut",
+      }),
+    );
+  }
+
+  public createButtons(callbacks: {
+    onCreate: () => void;
+    onSelectDeck: () => void;
+    onLoad: () => void;
+    onReconnect: () => void;
+    onClearSession: () => void;
+  }) {
+    // Hilfsfunktion für Buttons
+    const createBtn = (text: string, cb: () => void, tint = 0xffffff) => {
+      const btn = this.createStyledButton(0, 0, text, cb); // Implementierung unten
+      btn.setData("defaultTint", tint);
+      return btn;
+    };
+
+    this.createBtn = createBtn("Create New Game", callbacks.onCreate);
+    this.scene.add.existing(this.createBtn);
+
+    this.deckSelectBtn = createBtn(
+      "Select Deck (Random)",
+      callbacks.onSelectDeck,
+    );
+    this.scene.add.existing(this.deckSelectBtn);
+
+    this.loadGameBtn = createBtn("Load Game", callbacks.onLoad);
+    this.scene.add.existing(this.loadGameBtn);
+
+    // Reconnect Button (nur bei Bedarf sichtbar)
+    this.reconnectBtn = createBtn(
+      "Reconnect to Game",
+      callbacks.onReconnect,
+      0xccffcc,
+    );
+    this.scene.add.existing(this.reconnectBtn);
+
+    // X Button für Reconnect
+    const dismissBtn = this.scene.add
+      .text(200, 0, "✖", {
+        fontSize: "28px",
+        color: "#ff4444",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    dismissBtn.on("pointerdown", callbacks.onClearSession);
+    this.reconnectBtn.add(dismissBtn);
+  }
+
+  public getPlayerName(): string {
+    const input = this.playerNameInput.getChildByName("playerName") as HTMLInputElement;
+    return input?.value || "";
+  }
+
+  public setPlayerName(name: string) {
+    const input = this.playerNameInput.getChildByName("playerName") as HTMLInputElement;
+    if (input) input.value = name;
+  }
+
+  public updateRoomList(
+    rooms: RoomAvailable[],
+    joinCallback: (roomId: string, btn: Phaser.GameObjects.Container) => void,
+  ) {
+    this.listContainer.removeAll(true);
+    this.scrollY = 0;
+
+    if (rooms.length === 0) {
+      const txt = this.scene.add
+        .text(0, 50, "No open games.", { color: "#888" })
+        .setOrigin(0.5);
+      this.listContainer.add(txt);
+    } else {
+      rooms.forEach((room, index) => {
+        const y = index * this.itemHeight + this.itemHeight / 2;
+        const name = room.metadata?.name || `Game ${room.roomId.substring(0, 4)}`; // Kürzere ID als Fallback
+        const label = `${name} (${room.clients}/${room.maxClients})`; // Spielername im Label anzeigen
+
+        const btn = this.createStyledButton(
+          0,
+          y,
+          label,
+          () => joinCallback(room.roomId, btn),
+          450,
+          50,
+        );
+        this.listContainer.add(btn);
+      });
+    }
+    this.updateScrollLimits(rooms.length);
+  }
+
+  public updateDeckButtonText(filename: string, count: number) {
+    const textObj = this.deckSelectBtn.getByName("text") as Phaser.GameObjects.BitmapText;
+    const shortName = filename.length > 15 ? filename.substring(0, 12) + "..." : filename;
+    textObj.setText(`Deck: ${shortName} (${count})`);
+  }
+
+  public resize(width: number, height: number) {
+    if (this.titleText) {
+      this.titleText.setPosition(width / 2, height * 0.1);
+      this.titleText.setFontSize(Math.max(32, Math.min(80, height * 0.1)));
+    }
+    if (this.subtitleText) {
+      this.subtitleText.setPosition(width / 2, height * 0.18);
+      this.subtitleText.setFontSize(Math.max(20, Math.min(40, height * 0.05)));
+    }
+
+    const baseInputY = height * 0.28;
+    let currentY = baseInputY + 80;
+
+    if (this.playerNameInput) {
+      this.playerNameInput.setPosition(width / 2, baseInputY);
+      this.nameLabel.setPosition(width / 2, baseInputY - 40);
+    }
+
+    if (this.reconnectBtn && this.reconnectBtn.visible) {
+      this.reconnectBtn.setPosition(width / 2, currentY);
+      currentY += 70;
+    }
+    if (this.createBtn) this.createBtn.setPosition(width / 2, currentY);
+    currentY += 70;
+    if (this.deckSelectBtn) this.deckSelectBtn.setPosition(width / 2, currentY);
+    currentY += 80;
+    if (this.loadGameBtn) this.loadGameBtn.setPosition(width / 2, currentY);
+    currentY += 80;
+
+    // Liste positionieren
+    const listY = Math.max(height * 0.55, currentY);
+    this.listContainer.setPosition(width / 2, listY);
+
+    // Maske und Scroll aktualisieren
+    const availableHeight = height - listY - 80;
+    this.visibleItems = Math.max(
+      1,
+      Math.floor(availableHeight / this.itemHeight),
+    );
+    const maskHeight = this.visibleItems * this.itemHeight;
+
+    this.listMaskGraphics.clear();
+    this.listMaskGraphics.fillStyle(0xffffff);
+    this.listMaskGraphics.fillRect(width / 2 - 250, listY, 500, maskHeight);
+
+    this.upArrow.setPosition(width / 2 + 280, listY + 30);
+    this.downArrow.setPosition(width / 2 + 280, listY + maskHeight - 30);
+
+    this.statusText?.setPosition(width / 2, height - 40);
+    this.debugText?.setPosition(width - 10, height - 10);
+    this.settingsButton?.setPosition(width + 12, height * 0.18);
+    this.helpButton?.setPosition(-12, height * 0.7);
+    this.legalBtn?.setPosition(10, height - 10);
+    this.privacyBtn?.setPosition(160, height - 10);
+  }
+
+  private scrollList(delta: number) {
+    this.scrollY = Phaser.Math.Clamp(this.scrollY + delta, this.maxScrollY, 0);
+    let index = 0;
+    this.listContainer.each((child: any) => {
+      if (child instanceof Phaser.GameObjects.Container) {
+        child.y = index * this.itemHeight + this.itemHeight / 2 + this.scrollY;
+        index++;
+      }
+    });
+    this.upArrow.setVisible(this.scrollY < 0);
+    this.downArrow.setVisible(this.scrollY > this.maxScrollY);
+  }
+
+  private updateScrollLimits(itemCount: number) {
+    const totalH = itemCount * this.itemHeight;
+    const visibleH = this.visibleItems * this.itemHeight;
+    this.maxScrollY = Math.min(0, visibleH - totalH);
+    this.scrollList(0); // Refresh
+  }
+
+  private createStyledButton(
+    x: number,
+    y: number,
+    label: string,
+    cb: () => void,
+    w = 300,
+    h = 50,
+  ) {
+    const container = this.scene.add.container(x, y);
+    const bg = this.scene.add
+      .image(0, 0, "button_parchment")
+      .setDisplaySize(w, h)
+      .setName("bg");
+    const text = this.scene.add
+      .bitmapText(0, -5, "fairydust", label, 24)
+      .setOrigin(0.5)
+      .setTint(0xf4f6e1)
+      .setName("text");
+
+    container.add([bg, text]);
+    container.setSize(w, h).setInteractive({ useHandCursor: true });
+    container.setData("defaultTint", 0xffffff);
+
+    container.on("pointerover", () => bg.setTint(0xdddddd));
+    container.on("pointerout", () =>
+      bg.setTint(container.getData("defaultTint")),
+    );
+    container.on("pointerdown", () => {
+      this.soundManager.playSound("UI_TOGGLE");
+      cb();
+    });
+    return container;
+  }
+
+  public toggleHelp() {
+    if (this.helpOverlay) {
+      const isVisible = this.helpOverlay.style.display !== "none";
+      this.helpOverlay.style.display = isVisible ? "none" : "flex";
+      return;
+    }
+
+    this.helpOverlay = document.createElement("div");
+    this.helpOverlay.id = "lobby-help-overlay";
+    Object.assign(this.helpOverlay.style, {
+      position: "absolute",
+      top: "10%",
+      left: "10%",
+      width: "80%",
+      height: "80%",
+      backgroundColor: "rgba(0, 0, 0, 0.9)",
+      border: "2px solid #ffd700",
+      borderRadius: "10px",
+      zIndex: "10000",
+      display: "flex",
+      flexDirection: "column",
+      boxShadow: "0 0 20px rgba(0,0,0,0.8)",
+    });
+
+    const header = document.createElement("div");
+    Object.assign(header.style, {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "10px 20px",
+      backgroundColor: "#1a1a2e",
+      borderBottom: "1px solid #444",
+      color: "#ffd700",
+      fontFamily: "serif",
+      fontSize: "24px",
+    });
+    header.innerHTML = "<span>Game Guide</span>";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "X";
+    Object.assign(closeBtn.style, {
+      background: "transparent",
+      border: "none",
+      color: "#ff6666",
+      fontSize: "24px",
+      cursor: "pointer",
+      fontWeight: "bold",
+    });
+    closeBtn.onclick = () => {
+      if (this.helpOverlay) this.helpOverlay.style.display = "none";
+    };
+    header.appendChild(closeBtn);
+
+    const iframe = document.createElement("iframe");
+    iframe.src = "help.html";
+    Object.assign(iframe.style, {
+      flex: "1",
+      border: "none",
+      background: "#fff",
+    });
+
+    this.helpOverlay.appendChild(header);
+    this.helpOverlay.appendChild(iframe);
+    document.body.appendChild(this.helpOverlay);
+  }
+
+  public openFileSelector(accept: string, callback: (content: string, fileName: string) => void) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = accept;
+    input.style.display = "none";
+
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result as string;
+        if (content) {
+          callback(content, file.name);
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    document.body.appendChild(input);
+    input.click();
+    document.body.removeChild(input);
+  }
+
+  public destroy() {
+    if (this.helpOverlay) {
+      this.helpOverlay.remove();
+      this.helpOverlay = null;
+    }
+  }
+}

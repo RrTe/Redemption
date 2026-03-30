@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { ZONES, type Zone } from "../../../shared/zones";
 import { type TypedRoom } from "./gameUI";
-import { type NetworkManager } from "../network/NetworkManager"; // ✨ NEU
+import { type NetworkManager } from "../network/GameNetworkManager"; // ✨ NEU
 import { DEBUG } from "../utils/logger";
 
 const SHADOW_CONFIG = {

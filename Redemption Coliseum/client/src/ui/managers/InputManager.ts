@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI.js";
-import { type NetworkManager } from "../../network/NetworkManager.js";
+import { type GameNetworkManager } from "../../network/GameNetworkManager.js";
 import { type AnimationManager } from "./AnimationManager.js";
 import { type PreviewManager } from "./PreviewManager";
 import { type TokenManager } from "./TokenManager.js"; // ✨ NEU
@@ -16,7 +16,7 @@ import { KeyboardHandler } from "../handlers/KeyboardHandler"; // ✨ REFACTOR
 export class InputManager {
   private scene: Phaser.Scene;
   private room: TypedRoom;
-  private networkManager: NetworkManager;
+  private networkManager: GameNetworkManager;
   private animationManager: AnimationManager;
   private previewManager: PreviewManager;
   private elementManager: ElementManager; // ✨ NEU
@@ -27,7 +27,7 @@ export class InputManager {
   constructor(
     scene: Phaser.Scene,
     room: TypedRoom,
-    networkManager: NetworkManager,
+    networkManager: GameNetworkManager,
     animationManager: AnimationManager,
     previewManager: PreviewManager,
     dragBounds: Phaser.Geom.Rectangle,

@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI";
-import { type NetworkManager } from "../../network/NetworkManager"; // ✨ NEU
+import { type NetworkManager } from "../../network/GameNetworkManager"; // ✨ NEU
 import { SoundManager } from "../../managers/SoundManager";
 import { type GameLayout } from "../layout"; // ✨ NEU
 
@@ -21,9 +21,16 @@ export class ChatManager {
   private unreadCount: number = 0;
 
   // ✨ NEU: Speichere Layout-Daten für Animationen
-  private currentLayout: { visibleX: number, hiddenX: number } = { visibleX: 24, hiddenX: -12 };
+  private currentLayout: { visibleX: number; hiddenX: number } = {
+    visibleX: 24,
+    hiddenX: -12,
+  };
 
-  constructor(scene: Phaser.Scene, room: TypedRoom, networkManager: NetworkManager) {
+  constructor(
+    scene: Phaser.Scene,
+    room: TypedRoom,
+    networkManager: NetworkManager,
+  ) {
     this.scene = scene;
     this.room = room;
     this.networkManager = networkManager; // ✨ NEU
@@ -113,26 +120,26 @@ export class ChatManager {
 
     // ✨ NEU: Hover-Effekt (Slide-In von links)
     this.toggleButton.on("pointerover", () => {
-        // ✨ FIX: Nur "Peeken", wenn geschlossen. Wenn offen, bleibt er wo er ist.
-        if (!this.isOpen) {
-            this.scene.tweens.add({
-                targets: this.toggleButton,
-                x: this.currentLayout.hiddenX + 36, // Ein Stückchen rausfahren
-                duration: 200,
-                ease: "Sine.easeOut"
-            });
-        }
+      // ✨ FIX: Nur "Peeken", wenn geschlossen. Wenn offen, bleibt er wo er ist.
+      if (!this.isOpen) {
+        this.scene.tweens.add({
+          targets: this.toggleButton,
+          x: this.currentLayout.hiddenX + 36, // Ein Stückchen rausfahren
+          duration: 200,
+          ease: "Sine.easeOut",
+        });
+      }
     });
     this.toggleButton.on("pointerout", () => {
-        // Nur zurückfahren, wenn Chat geschlossen ist
-        if (!this.isOpen) {
-            this.scene.tweens.add({
-                targets: this.toggleButton,
-                x: this.currentLayout.hiddenX,
-                duration: 200,
-                ease: "Sine.easeOut"
-            });
-        }
+      // Nur zurückfahren, wenn Chat geschlossen ist
+      if (!this.isOpen) {
+        this.scene.tweens.add({
+          targets: this.toggleButton,
+          x: this.currentLayout.hiddenX,
+          duration: 200,
+          ease: "Sine.easeOut",
+        });
+      }
     });
 
     // 4. Notification Bubble (Toast)
@@ -152,34 +159,37 @@ export class ChatManager {
 
   /** ✨ NEU: Passt die Position an das aktuelle Layout an */
   public reposition(layout: GameLayout) {
-      this.currentLayout = layout.chatButton;
-      
-      // Button positionieren (Y-Achse aktualisieren)
-      this.toggleButton.setY(layout.chatButton.y);
-      // X-Position nur setzen, wenn nicht offen/gehovert (Reset auf Hidden)
-      if (!this.isOpen) {
-          this.toggleButton.setX(layout.chatButton.hiddenX);
-      } else {
-          // ✨ FIX: Wenn offen, muss der Button an der neuen "offenen" Position sein
-          this.toggleButton.setX(layout.chatButton.visibleX);
-      }
+    this.currentLayout = layout.chatButton;
 
-      // Notification Bubble positionieren (neben dem Button)
-      this.notificationBubble.setY(layout.chatButton.y);
+    // Button positionieren (Y-Achse aktualisieren)
+    this.toggleButton.setY(layout.chatButton.y);
+    // X-Position nur setzen, wenn nicht offen/gehovert (Reset auf Hidden)
+    if (!this.isOpen) {
+      this.toggleButton.setX(layout.chatButton.hiddenX);
+    } else {
+      // ✨ FIX: Wenn offen, muss der Button an der neuen "offenen" Position sein
+      this.toggleButton.setX(layout.chatButton.visibleX);
+    }
 
-      // ✨ NEU: Höhe des Chat-Fensters anpassen
-      const newHeight = this.scene.scale.height;
-      const chatHeight = newHeight - 40;
-      
-      this.chatBackground.setY(newHeight / 2);
-      this.chatBackground.setDisplaySize(300, chatHeight);
+    // Notification Bubble positionieren (neben dem Button)
+    this.notificationBubble.setY(layout.chatButton.y);
 
-      // DOM-Element-Größe via Style updaten
-      if (this.chatDOM && this.chatDOM.node) { // ✨ FIX: Sicherheitscheck gegen Absturz bei toten Elementen
-          this.chatDOM.setY(newHeight / 2);
-          const wrapper = this.chatDOM.node.querySelector('#chat-wrapper') as HTMLElement;
-          if (wrapper) wrapper.style.height = `${chatHeight}px`;
-      }
+    // ✨ NEU: Höhe des Chat-Fensters anpassen
+    const newHeight = this.scene.scale.height;
+    const chatHeight = newHeight - 40;
+
+    this.chatBackground.setY(newHeight / 2);
+    this.chatBackground.setDisplaySize(300, chatHeight);
+
+    // DOM-Element-Größe via Style updaten
+    if (this.chatDOM && this.chatDOM.node) {
+      // ✨ FIX: Sicherheitscheck gegen Absturz bei toten Elementen
+      this.chatDOM.setY(newHeight / 2);
+      const wrapper = this.chatDOM.node.querySelector(
+        "#chat-wrapper",
+      ) as HTMLElement;
+      if (wrapper) wrapper.style.height = `${chatHeight}px`;
+    }
   }
 
   private registerHandlers() {
@@ -200,26 +210,26 @@ export class ChatManager {
 
     // ✨ NEU: Handler für die komplette Historie (beim Joinen/Laden)
     this.room.onMessage("chatHistory", (history: any[]) => {
-        history.forEach(msg => {
-            // ✨ FIX: Unterscheidung zwischen Chat und GameLog
-            if (msg.type === 'gameLog' || !msg.sender) {
-                 this.addEntry(`
+      history.forEach((msg) => {
+        // ✨ FIX: Unterscheidung zwischen Chat und GameLog
+        if (msg.type === "gameLog" || !msg.sender) {
+          this.addEntry(`
                     <div style="margin-bottom: 4px; color: #5c3a21; font-style: italic; font-size: 0.9em;">
                         ➤ ${this.escapeHtml(msg.text)}
                     </div>
                 `);
-            } else {
-                this.addEntry(`
+        } else {
+          this.addEntry(`
                     <div style="margin-bottom: 4px;">
                         <span style="color: #000000; font-weight: bold; text-decoration: underline;">${msg.sender}:</span> 
                         <span style="color: #26140c;">${this.escapeHtml(msg.text)}</span>
                     </div>
                 `);
-            }
-        });
-        // Reset unread count, da dies alte Nachrichten sind
-        this.unreadCount = 0;
-        this.toggleButton.setTint(0xcccccc);
+        }
+      });
+      // Reset unread count, da dies alte Nachrichten sind
+      this.unreadCount = 0;
+      this.toggleButton.setTint(0xcccccc);
     });
 
     this.room.onMessage("gameLog", (msg: { text: string }) => {
@@ -284,28 +294,32 @@ export class ChatManager {
       onComplete: () => {
         // ✨ NEU: Fokus setzen, wenn geöffnet
         if (this.isOpen) {
-            const input = this.chatDOM.getChildByID("chat-input") as HTMLInputElement;
-            if (input) input.focus();
+          const input = this.chatDOM.getChildByID(
+            "chat-input",
+          ) as HTMLInputElement;
+          if (input) input.focus();
         }
-      }
+      },
     });
 
     // ✨ FIX: Button synchron mit dem Container animieren
-    const targetButtonX = this.isOpen ? this.currentLayout.visibleX : this.currentLayout.hiddenX;
+    const targetButtonX = this.isOpen
+      ? this.currentLayout.visibleX
+      : this.currentLayout.hiddenX;
     this.scene.tweens.add({
-        targets: this.toggleButton,
-        x: targetButtonX,
-        duration: 300,
-        ease: "Power2"
+      targets: this.toggleButton,
+      x: targetButtonX,
+      duration: 300,
+      ease: "Power2",
     });
 
     if (this.isOpen) {
       this.unreadCount = 0;
       this.toggleButton.setTint(0xcccccc); // Reset Tint
     } else {
-        // ✨ NEU: Blur, wenn geschlossen (falls noch fokussiert)
-        const input = this.chatDOM.getChildByID("chat-input") as HTMLInputElement;
-        if (input) input.blur();
+      // ✨ NEU: Blur, wenn geschlossen (falls noch fokussiert)
+      const input = this.chatDOM.getChildByID("chat-input") as HTMLInputElement;
+      if (input) input.blur();
     }
   }
 

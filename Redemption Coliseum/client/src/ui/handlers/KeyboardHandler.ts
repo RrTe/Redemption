@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI.js";
-import { type NetworkManager } from "../../network/NetworkManager.js";
+import { type NetworkManager } from "../../network/GameNetworkManager.js";
 import { type TokenManager } from "../managers/TokenManager.js";
 import { type CardState } from "../../../../shared/types.js";
 import { log } from "../../utils/logger.js";
@@ -56,11 +56,13 @@ export class KeyboardHandler {
     });
 
     keyboard.on("keydown-UP", () => {
-      if (this.room.state.activePlayer) this.networkManager.sendChangeRedeemedSouls(1);
+      if (this.room.state.activePlayer)
+        this.networkManager.sendChangeRedeemedSouls(1);
     });
 
     keyboard.on("keydown-DOWN", () => {
-      if (this.room.state.activePlayer) this.networkManager.sendChangeRedeemedSouls(-1);
+      if (this.room.state.activePlayer)
+        this.networkManager.sendChangeRedeemedSouls(-1);
     });
 
     KeyboardHandler.KEY_BINDINGS.forEach(({ key, action }) => {
@@ -69,7 +71,10 @@ export class KeyboardHandler {
         const firstCardInHand = me?.hand[0];
         if (firstCardInHand && this.room.state.activePlayer) {
           const updates = action(firstCardInHand);
-          this.networkManager.sendUpdateCardState({ cardId: firstCardInHand.id, updates });
+          this.networkManager.sendUpdateCardState({
+            cardId: firstCardInHand.id,
+            updates,
+          });
         }
       });
     });
