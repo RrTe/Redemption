@@ -20,6 +20,7 @@ import { SoundManager } from "../managers/SoundManager.ts"; // ✨ NEU: Schritt 
 import { AnimationManager } from "./managers/AnimationManager";
 import { OverlayManager } from "./managers/OverlayManager"; // ✨ REFACTOR
 import { PersistenceManager } from "./managers/PersistenceManager"; // ✨ NEU
+import { GameStateManager } from "./managers/GameStateManager"; // ✨ NEU
 import { DialogManager } from "./managers/DialogManager"; // ✨ REFACTOR
 import { PreviewManager } from "./managers/PreviewManager"; // ✨ NEU
 import { ChatManager } from "./managers/ChatManager"; // ✨ NEU
@@ -74,6 +75,7 @@ export class GameUI {
   private dialogManager: DialogManager; // ✨ REFACTOR
   private overlayManager: OverlayManager; // ✨ REFACTOR
   private persistenceManager: PersistenceManager; // ✨ NEU
+  private gameStateManager: GameStateManager; // ✨ NEU
   private hudManager: HUDManager; // ✨ REFACTOR
   private tokenManager: TokenManager; // ✨ FIX: Property hinzufügen
 
@@ -107,6 +109,9 @@ export class GameUI {
       this.room,
       this.soundManager,
     );
+
+    // ✨ NEU: Erstelle den GameStateManager
+    this.gameStateManager = new GameStateManager(this.room, this.overlayManager);
 
     // ✨ NEU: Erstelle den PersistenceManager
     this.persistenceManager = new PersistenceManager(this.room);
@@ -291,6 +296,11 @@ export class GameUI {
 
     // ✨ NEU (SCHRITT 3): Delegiere die Registrierung der Nachrichten-Handler.
     this.networkManager.registerHandlers();
+
+    // ✨ NEU: State-Log für Debugging
+    this.room.onStateChange((state) => {
+      log("UI", `[onStateChange] State changed. Current Phase: ${state.currentPhase}`);
+    });
 
     // ✨ NEU: Delegiere die Registrierung der Phasen-Handler.
     this.phaseManager.registerHandlers();
@@ -654,63 +664,11 @@ export class GameUI {
 
   /** Hilfsmethode, um die ID des Gegners zu finden. */
   public findOpponentId(state: RoomState): string | undefined {
-    for (const sessionId of state.players.keys()) {
-      if (sessionId !== this.room.sessionId) {
-        return sessionId;
-      }
-    }
-    return undefined;
+    return this.gameStateManager.findOpponentId(state);
   }
 
   /** ✨ NEU: Prüft den Spielerstatus und zeigt/versteckt das Warte-Overlay. */
   public updateWaitingStatus() {
-    const playerCount = this.room.state.players.size;
-
-    // ✨ NEU: Prüfe auf getrennten Gegner
-    const opponentId = this.findOpponentId(this.room.state);
-    const opponent = opponentId
-      ? this.room.state.players.get(opponentId)
-      : undefined;
-
-    // ✨ FIX: Overlay erst entfernen, wenn das Spiel wirklich gestartet ist (activePlayer ist gesetzt).
-    // Das passiert erst, nachdem beide Spieler "Ready" gemeldet haben.
-    // ✨ FIX: Prüfe auch, ob der Gegner "ready" ist (Ladeszene beendet).
-    const gameStarted = !!this.room.state.activePlayer;
-
-    // ✨ FIX: Priorität 1 - Verbindungsabbruch!
-    // Wenn der Gegner existiert, aber nicht verbunden ist -> Disconnect Overlay mit Button.
-    if (opponent && !opponent.connected) {
-      this.overlayManager.showWaitingOverlay(
-        "Opponent disconnected. Waiting...",
-        true,
-      );
-      return;
-    }
-
-    // ✨ FIX: Priorität 2 - Gegner ist weg (Timeout), aber Spiel lief schon -> Disconnect Overlay mit Button.
-    if (playerCount < 2 && gameStarted) {
-      this.overlayManager.showWaitingOverlay(
-        "Opponent disconnected. Waiting...",
-        true,
-      );
-      return;
-    }
-
-    // ✨ FIX: Priorität 3 - Normales Warten (Lobby, Ladescreen, Gegner noch nicht ready) -> Kein Button.
-    if (
-      playerCount < 2 ||
-      !this.room.state.activePlayer ||
-      !gameStarted ||
-      (opponent && !opponent.ready)
-    ) {
-      this.overlayManager.showWaitingOverlay("Waiting for Opponent...");
-    } else if (opponent && !opponent.connected) {
-      this.overlayManager.showWaitingOverlay(
-        "Opponent disconnected. Waiting...",
-        true,
-      );
-    } else {
-      this.overlayManager.hideWaitingOverlay();
-    }
+    this.gameStateManager.updateWaitingStatus();
   }
 }
