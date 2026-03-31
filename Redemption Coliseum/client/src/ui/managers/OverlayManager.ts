@@ -25,6 +25,29 @@ export class OverlayManager {
     this.soundManager = soundManager;
   }
 
+  public registerHandlers() {
+    this.room.onMessage("saveGameData", (data: any) => {
+      this.downloadSaveFile(data);
+    });
+  }
+
+  private downloadSaveFile(data: any) {
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    const date = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+    a.download = `redemption_save_${date}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    log("UI", "Save game downloaded.");
+  }
+
   public destroy() {
     if (this.helpOverlay) {
       this.helpOverlay.remove();

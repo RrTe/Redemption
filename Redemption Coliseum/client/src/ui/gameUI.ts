@@ -19,6 +19,7 @@ import { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Schri
 import { SoundManager } from "../managers/SoundManager.ts"; // ✨ NEU: Schritt 1.2
 import { AnimationManager } from "./managers/AnimationManager";
 import { OverlayManager } from "./managers/OverlayManager"; // ✨ REFACTOR
+import { PersistenceManager } from "./managers/PersistenceManager"; // ✨ NEU
 import { DialogManager } from "./managers/DialogManager"; // ✨ REFACTOR
 import { PreviewManager } from "./managers/PreviewManager"; // ✨ NEU
 import { ChatManager } from "./managers/ChatManager"; // ✨ NEU
@@ -72,6 +73,7 @@ export class GameUI {
   private onRequestCardAction: ((data: any) => void) | null = null;
   private dialogManager: DialogManager; // ✨ REFACTOR
   private overlayManager: OverlayManager; // ✨ REFACTOR
+  private persistenceManager: PersistenceManager; // ✨ NEU
   private hudManager: HUDManager; // ✨ REFACTOR
   private tokenManager: TokenManager; // ✨ FIX: Property hinzufügen
 
@@ -105,6 +107,9 @@ export class GameUI {
       this.room,
       this.soundManager,
     );
+
+    // ✨ NEU: Erstelle den PersistenceManager
+    this.persistenceManager = new PersistenceManager(this.room);
 
     // ✨ FIX: NetworkManager ZUERST erstellen, da andere Manager ihn brauchen.
     this.networkManager = new GameNetworkManager(
@@ -249,9 +254,6 @@ export class GameUI {
       this.revealCards(zone, count, position);
     };
 
-    // ✨ NEU: Globaler Hook für Save Game (für SettingsDialog)
-    // @ts-ignore
-    window.saveGame = () => this.saveGame();
   }
 
   // ✨ KORREKTUR: Die Initialisierung der Handler wird jetzt von der Scene gesteuert.
@@ -296,10 +298,10 @@ export class GameUI {
     // ✨ NEU: Lausche auf das lokale Event, um die Zieh-Animation zu starten.
     // ... (bestehender Code)
 
-    // ✨ NEU: Handler für Save Game Daten vom Server
-    this.room.onMessage("saveGameData", (data: any) => {
-      this.downloadSaveFile(data);
-    });
+    // ✨ NEU: Delegiere Save-Handling an OverlayManager
+    this.overlayManager.registerHandlers();
+    // ✨ NEU: Delegiere Save-Handling an PersistenceManager
+    this.persistenceManager.registerHandlers();
 
     // ✨ FIX: Listener speichern, um ihn später zu entfernen
     this.onPlayDrawAnimation = (data: { cardIds: string[] }) => {
@@ -357,29 +359,6 @@ export class GameUI {
     });
   }
 
-  /** ✨ NEU: Fordert den Server auf, das Spiel zu speichern */
-  public saveGame() {
-    log("UI", "Requesting save game from server...");
-    this.room.send("requestSaveGame", {});
-  }
-
-  /** ✨ NEU: Lädt die JSON-Datei herunter */
-  private downloadSaveFile(data: any) {
-    const jsonStr = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    const date = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
-    a.download = `redemption_save_${date}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    log("UI", "Save game downloaded.");
-  }
 
   /** ✨ NEU: Zeigt das Game-Over-Overlay an. */
   public showGameOverOverlay(isWinner: boolean) {
