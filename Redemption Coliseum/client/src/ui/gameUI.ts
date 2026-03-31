@@ -68,10 +68,6 @@ export class GameUI {
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
   private deckPreloaded: boolean = false; // ✨ NEU: Flag für Preloading
   private chatManager: ChatManager; // ✨ NEU
-  // ✨ NEU: Referenzen für Event-Listener speichern, um sie sauber zu entfernen
-  private onPlayDrawAnimation: ((data: { cardIds: string[] }) => void) | null =
-    null;
-  private onRequestCardAction: ((data: any) => void) | null = null;
   private dialogManager: DialogManager; // ✨ REFACTOR
   private overlayManager: OverlayManager; // ✨ REFACTOR
   private persistenceManager: PersistenceManager; // ✨ NEU
@@ -111,7 +107,14 @@ export class GameUI {
     );
 
     // ✨ NEU: Erstelle den GameStateManager
-    this.gameStateManager = new GameStateManager(this.room, this.overlayManager);
+    this.gameStateManager = new GameStateManager(
+      this.room,
+      this.overlayManager,
+      this.scene,
+      this.animationManager,
+      this.settingsManager,
+      () => this.render(this.room.state, this.room.sessionId)
+    );
 
     // ✨ NEU: Erstelle den PersistenceManager
     this.persistenceManager = new PersistenceManager(this.room);
@@ -269,38 +272,13 @@ export class GameUI {
     // ✨ NEU: Melde dem Server, dass wir bereit sind (Assets geladen, UI erstellt).
     this.networkManager.sendPlayerReady();
   }
-  /** ✨ DEIN PLAN: Merkt Karten für die Zieh-Animation vor. */
-  private markCardsForDrawAnimation(cardIds: string[]) {
-    log(
-      "UI",
-      `[DEBUG] [3/3] 'markCardsForDrawAnimation' triggered. Marking cards for animation:`,
-      cardIds,
-    );
-
-    // ✨ FINALE KORREKTUR: Markiere ALLE Karten SOFORT als pending.
-    // Das verhindert, dass sie im nächsten Render-Zyklus als "normale" Handkarten (sichtbar) gerendert werden.
-    cardIds.forEach((cardId) => {
-      this.animationManager.pendingDrawAnimations.add(cardId);
-    });
-    // Stoße EINMALIG ein Re-Rendering an. Der CardRenderer kümmert sich um den Rest.
-    this.render(this.room.state, this.room.sessionId);
-  }
-
   /** Registriert Handler für Colyseus-Raum-Events. */
   public registerRoomHandlers() {
-    // ✨ NEU: Detailliertes Logging wiederhergestellt.
-    log(
-      "UI",
-      `[registerRoomHandlers] Registering handlers using the '$' proxy. Current room.sessionId: '${this.room.sessionId}'`,
-    );
-
     // ✨ NEU (SCHRITT 3): Delegiere die Registrierung der Nachrichten-Handler.
     this.networkManager.registerHandlers();
 
-    // ✨ NEU: State-Log für Debugging
-    this.room.onStateChange((state) => {
-      log("UI", `[onStateChange] State changed. Current Phase: ${state.currentPhase}`);
-    });
+    // ✨ NEU: Delegiere Event- und State-Handling an GameStateManager
+    this.gameStateManager.registerHandlers();
 
     // ✨ NEU: Delegiere die Registrierung der Phasen-Handler.
     this.phaseManager.registerHandlers();
@@ -312,61 +290,6 @@ export class GameUI {
     this.overlayManager.registerHandlers();
     // ✨ NEU: Delegiere Save-Handling an PersistenceManager
     this.persistenceManager.registerHandlers();
-
-    // ✨ FIX: Listener speichern, um ihn später zu entfernen
-    this.onPlayDrawAnimation = (data: { cardIds: string[] }) => {
-      // ✨ ARCHITEKTUR-FIX: Sound immer hier abspielen (Feedback auf Event).
-      // Das entkoppelt den Sound von der visuellen Animation.
-      this.scene.game.events.emit("playSound", "CARD_DRAW"); // ✨ FIX: Globaler Event-Bus
-
-      // ✨ Wenn Animationen deaktiviert sind, ignoriere dieses Event.
-      // Der reguläre State-Patch wird die Karten rendern, was die Race Condition vermeidet.
-      if (!this.settingsManager.areAnimationsEnabled()) {
-        return;
-      }
-      log(
-        "UI",
-        `[DEBUG] [2/3] 'playDrawAnimation' event received by GameUI. Triggering handler.`,
-      );
-      this.markCardsForDrawAnimation(data.cardIds);
-    };
-    this.scene.events.on("playDrawAnimation", this.onPlayDrawAnimation);
-
-    // ✨ NEU: Handler für Karten-Interaktionen (Drehen/Wenden per Maus)
-    // ✨ FIX: Listener speichern
-    this.onRequestCardAction = (data: {
-      cardId: string;
-      action: string;
-      currentValue: boolean;
-    }) => {
-      let updates = {};
-
-      if (data.action === "toggle-flip") {
-        updates = { isFlipped: !data.currentValue };
-      } else if (data.action === "toggle-face-down") {
-        updates = { isFaceDown: !data.currentValue };
-      }
-
-      if (Object.keys(updates).length > 0) {
-        this.room.send("updateCardState", {
-          cardId: data.cardId,
-          updates,
-        });
-      }
-    };
-    this.scene.events.on("request-card-action", this.onRequestCardAction);
-
-    // ✨ DEIN PLAN: Logge bei JEDER Zustandsänderung die Deckgrößen.
-    this.room.onStateChange((state) => {
-      log(
-        "UI",
-        `[onStateChange] State changed. Player deck size: ${
-          state.players.get(this.room.sessionId)?.deck.length
-        }, Opponent deck size: ${
-          state.players.get(this.findOpponentId(state))?.deck.length
-        }`,
-      );
-    });
   }
 
 
@@ -585,18 +508,8 @@ export class GameUI {
     this.networkManager?.destroy();
     this.chatManager?.destroy();
     this.overlayManager?.destroy(); // ✨ REFACTOR
+    this.gameStateManager?.destroy(); // ✨ NEU
     this.previewManager?.hide(); // Hide any active preview
-
-    // ✨ FIX: Event-Listener sauber entfernen!
-    // Das verhindert, dass alte UI-Instanzen auf Events der neuen Szene reagieren (Zombie-Listener).
-    if (this.onPlayDrawAnimation) {
-      this.scene.events.off("playDrawAnimation", this.onPlayDrawAnimation);
-      this.onPlayDrawAnimation = null;
-    }
-    if (this.onRequestCardAction) {
-      this.scene.events.off("request-card-action", this.onRequestCardAction);
-      this.onRequestCardAction = null;
-    }
   }
 
   /** ✨ NEU: Sendet die Auswahl des Spielers an den Server, um die Suche abzuschließen. */
