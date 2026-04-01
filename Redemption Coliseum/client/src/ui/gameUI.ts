@@ -26,6 +26,7 @@ import { PreviewManager } from "./managers/PreviewManager"; // ✨ NEU
 import { ChatManager } from "./managers/ChatManager"; // ✨ NEU
 import { HUDManager } from "./managers/HUDManager"; // ✨ REFACTOR
 import { TokenManager } from "./managers/TokenManager.js"; // ✨ FIX: Import hinzufügen
+import { AssetManager } from "./managers/AssetManager"; // ✨ NEU
 import type {
   GameRoomMessages,
   MoveCardMessage,
@@ -66,12 +67,12 @@ export class GameUI {
   private previewManager: PreviewManager; // ✨ NEU
   private dragBounds: Phaser.Geom.Rectangle;
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
-  private deckPreloaded: boolean = false; // ✨ NEU: Flag für Preloading
   private chatManager: ChatManager; // ✨ NEU
   private dialogManager: DialogManager; // ✨ REFACTOR
   private overlayManager: OverlayManager; // ✨ REFACTOR
   private persistenceManager: PersistenceManager; // ✨ NEU
   private gameStateManager: GameStateManager; // ✨ NEU
+  private assetManager: AssetManager; // ✨ NEU
   private hudManager: HUDManager; // ✨ REFACTOR
   private tokenManager: TokenManager; // ✨ FIX: Property hinzufügen
 
@@ -105,6 +106,9 @@ export class GameUI {
       this.room,
       this.soundManager,
     );
+
+    // ✨ NEU: Erstelle den AssetManager
+    this.assetManager = new AssetManager(this.scene);
 
     // ✨ NEU: Erstelle den GameStateManager
     this.gameStateManager = new GameStateManager(
@@ -399,40 +403,14 @@ export class GameUI {
     // ✨ REFACTORING: Delegiere das Rendern der Karten an den Renderer.
     this.cardRenderer.renderAllCards(player, opponent);
 
-    // ✨ NEU: Bilder des Decks vorladen, um graue Karten beim Ziehen zu vermeiden.
-    // Wir machen das nur einmalig, sobald das Deck verfügbar ist.
-    if (!this.deckPreloaded && player && player.deck.length > 0) {
-      // ✨ FINALE LÖSUNG: Sequentielles Laden per Event ("Queue Empty").
-      // Fall 1: Es laufen Animationen (z.B. Starthand). Wir warten auf das Event.
-      if (this.animationManager.activeDrawTweens.size > 0) {
-        log(
-          "UI",
-          "[PRELOAD] Animations active. Waiting for completion to preload deck.",
-        );
-        this.scene.events.once("all-draw-animations-complete", () => {
-          this.preloadDeck(player);
-        });
-      }
-      // Fall 2: Keine Animationen (z.B. Reconnect). Wir laden sofort.
-      else {
-        this.preloadDeck(player);
-      }
+    // ✨ NEU: Delegiere Preloading an den AssetManager
+    if (this.animationManager.activeDrawTweens.size > 0) {
+      this.scene.events.once("all-draw-animations-complete", () => {
+        this.assetManager.preloadDeck(player);
+      });
+    } else {
+      this.assetManager.preloadDeck(player);
     }
-  }
-
-  /** ✨ NEU: Lädt die Bilder für das gesamte Deck vor. */
-  private preloadDeck(player: PlayerState) {
-    if (this.deckPreloaded || !player || player.deck.length === 0) return;
-
-    this.deckPreloaded = true;
-    log(
-      "UI",
-      `[PRELOAD] Preloading images for ${player.deck.length} cards in deck.`,
-    );
-    player.deck.forEach((card) => {
-      CardUI.preloadContent(this.scene, card);
-    });
-    this.scene.load.start();
   }
 
   /** ✨ NEU: Berechnet ein Zwischen-Layout für die Animations-Updates. */
