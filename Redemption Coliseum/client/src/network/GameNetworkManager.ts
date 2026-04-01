@@ -47,6 +47,25 @@ export class GameNetworkManager {
       "Network",
       `[NetworkManager ${this.instanceId}] Created for room ${room.roomId}`,
     ); // ✨ FIX: Use roomId
+
+    // ✨ NEU: Debugging Hooks hierher verschoben
+    // @ts-ignore
+    window.resolveSearch = (cardIds: string[], toZone: Zone) => {
+      this.sendResolveSearch(cardIds, toZone);
+    };
+
+    // @ts-ignore
+    window.lookAtCards = (zone: Zone, count: number, position: "top" | "bottom" = "top") => {
+      this.sendLookAtCards(zone, count, position);
+    };
+
+    // @ts-ignore
+    window.revealCards = (zone: Zone, count: number, position: "top" | "bottom" = "top") => {
+      this.sendRevealCards(zone, count, position);
+    };
+
+    // @ts-ignore
+    window.saveGame = () => this.sendRequestSaveGame();
   }
 
   // ✨ REFACTOR: Setter to resolve circular dependency.

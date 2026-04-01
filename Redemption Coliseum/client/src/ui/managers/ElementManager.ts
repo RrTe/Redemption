@@ -338,4 +338,29 @@ export class ElementManager {
   public hideZoneHighlight() {
     this.staticElements.highlightOverlay.setVisible(false);
   }
+
+  /** ✨ NEU: Richtet die UI für einen beigetretenen Gegner ein. */
+  public setupOpponentUI(opponentId: string) {
+    const {
+      opponentLandOfBondageZone,
+      opponentTerritoryZone,
+      opponentDeckPile,
+      opponentDiscardPile,
+      opponentReservePile,
+      opponentLandOfRedemptionPile,
+      opponentBanishPile,
+      opponentHandZone,
+    } = this.zoneElements;
+
+    opponentLandOfBondageZone.setData("ownerId", opponentId);
+    opponentTerritoryZone.setData("ownerId", opponentId);
+    opponentDeckPile?.setData("ownerId", opponentId);
+    opponentDiscardPile?.setData("ownerId", opponentId);
+    opponentReservePile?.setData("ownerId", opponentId);
+    opponentLandOfRedemptionPile?.setData("ownerId", opponentId);
+    opponentBanishPile?.setData("ownerId", opponentId);
+    opponentHandZone.setData("ownerId", opponentId);
+
+    log("ElementManager", `Opponent zones assigned to owner: ${opponentId}`);
+  }
 }

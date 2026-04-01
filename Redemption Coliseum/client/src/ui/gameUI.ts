@@ -236,32 +236,6 @@ export class GameUI {
       this.debugGraphics = this.scene.add.graphics().setDepth(99);
     }
 
-    // ✨ NEU: Mache die resolveSearch-Methode global für Debugging-Zwecke verfügbar.
-    // @ts-ignore
-    window.resolveSearch = (cardIds: string[], toZone: string) => {
-      this.resolveSearch(cardIds, toZone);
-    };
-
-    // ✨ NEU: Mache die lookAtCards-Methode global für Debugging-Zwecke verfügbar.
-    // @ts-ignore
-    window.lookAtCards = (
-      zone: Zone,
-      count: number,
-      position: "top" | "bottom" = "top",
-    ) => {
-      this.lookAtCards(zone, count, position);
-    };
-
-    // ✨ NEU: Mache die revealCards-Methode global für Debugging-Zwecke verfügbar.
-    // @ts-ignore
-    window.revealCards = (
-      zone: Zone,
-      count: number,
-      position: "top" | "bottom" = "top",
-    ) => {
-      this.revealCards(zone, count, position);
-    };
-
   }
 
   // ✨ KORREKTUR: Die Initialisierung der Handler wird jetzt von der Scene gesteuert.
@@ -512,67 +486,9 @@ export class GameUI {
     this.previewManager?.hide(); // Hide any active preview
   }
 
-  /** ✨ NEU: Sendet die Auswahl des Spielers an den Server, um die Suche abzuschließen. */
-  private resolveSearch(
-    selectedCardIds: string[],
-    toZone: Zone,
-    coords?: MoveCardMessage["coords"],
-  ) {
-    // ✨ NEU (SCHRITT 3): Delegiere an den NetworkManager.
-    this.networkManager.sendResolveSearch(selectedCardIds, toZone, coords);
-    // Setze den Status zurück, damit der Spieler weiterspielen kann
-    this.setStatus("Resolving search...");
-  }
-
-  /** ✨ NEU: Sendet eine Anfrage an den Server, um die obersten/untersten Karten eines Stapels anzusehen. */
-  public lookAtCards(zone: Zone, count: number, position: "top" | "bottom") {
-    this.networkManager.sendLookAtCards(zone, count, position);
-    this.setStatus(`Looking at cards...`);
-  }
-
-  /** ✨ NEU: Sendet eine Anfrage an den Server, um Karten öffentlich aufzudecken. */
-  public revealCards(zone: Zone, count: number, position: "top" | "bottom") {
-    this.networkManager.sendRevealCards(zone, count, position);
-    this.setStatus(`Revealing cards...`);
-  }
   /** ✨ NEU: Richtet die UI für einen beigetretenen Gegner ein. Wird vom NetworkManager aufgerufen. */
   public setupOpponentUI(opponentId: string) {
-    this.elementManager.zoneElements.opponentLandOfBondageZone.setData(
-      "ownerId",
-      opponentId,
-    );
-    this.elementManager.zoneElements.opponentTerritoryZone.setData(
-      "ownerId",
-      opponentId,
-    );
-    this.elementManager.zoneElements.opponentDeckPile?.setData(
-      "ownerId",
-      opponentId,
-    );
-    this.elementManager.zoneElements.opponentDiscardPile?.setData(
-      "ownerId",
-      opponentId,
-    );
-    this.elementManager.zoneElements.opponentReservePile?.setData(
-      "ownerId",
-      opponentId,
-    );
-    this.elementManager.zoneElements.opponentLandOfRedemptionPile?.setData(
-      "ownerId",
-      opponentId,
-    );
-    this.elementManager.zoneElements.opponentBanishPile?.setData(
-      "ownerId",
-      opponentId,
-    );
-    this.elementManager.zoneElements.opponentHandZone.setData(
-      "ownerId",
-      opponentId,
-    );
-    log(
-      "UI",
-      `[SETUP] Opponent joined. Set ownerId to '${opponentId}' on opponent zones.`,
-    );
+    this.elementManager.setupOpponentUI(opponentId);
   }
 
   /** Hilfsmethode, um die ID des Gegners zu finden. */
