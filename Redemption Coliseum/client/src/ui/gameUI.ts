@@ -12,13 +12,13 @@ import { CardUI } from "./CardUI"; // ✨ Importiere die neue CardUI-Klasse
 import { ElementManager } from "./managers/ElementManager";
 import { LayoutManager } from "./managers/LayoutManager"; // ✨ NEU
 import { CardRenderer } from "./renderers/CardRenderer.js"; // ✨ FIX: Neuer Pfad
+import { UIRenderer } from "./renderers/UIRenderer"; // ✨ FIX: Pfad verifiziert
 import { InputManager } from "./managers/InputManager";
 import { PileUI } from "./PileUI"; // ✨ Importiere die neue PileUI-Klasse
 import { GameNetworkManager } from "../network/GameNetworkManager.ts"; // ✨ NEU (SCHRITT 3)
 import { PhaseManager } from "./managers/PhaseManager"; // ✨ NEU
 import { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Schritt 1.1
 import { SoundManager } from "../managers/SoundManager.ts"; // ✨ NEU: Schritt 1.2
-import { DebugManager } from "./managers/DebugManager"; // ✨ NEU
 import { AnimationManager } from "./managers/AnimationManager";
 import { OverlayManager } from "./managers/OverlayManager"; // ✨ REFACTOR
 import { PersistenceManager } from "./managers/PersistenceManager"; // ✨ NEU
@@ -63,13 +63,14 @@ export class GameUI {
   private inputManager: InputManager;
   private networkManager: GameNetworkManager;
   private cardRenderer: CardRenderer;
+  private uiRenderer: UIRenderer; // ✨ NEU
   private phaseManager: PhaseManager; // ✨ NEU
   public settingsManager: SettingsManager; // ✨ NEU: Öffentlich gemacht für Zugriff via Scene Registry
   public soundManager: SoundManager; // ✨ NEU: Öffentlich für Zugriff aus der Scene
   private animationManager: AnimationManager; // ✨ NEU
   private previewManager: PreviewManager; // ✨ NEU
   private dragBounds: Phaser.Geom.Rectangle;
-  private debugManager: DebugManager; // ✨ NEU
+  private debugGraphics: Phaser.GameObjects.Graphics | null = null;
   private chatManager: ChatManager; // ✨ NEU
   private dialogManager: DialogManager; // ✨ REFACTOR
   private overlayManager: OverlayManager; // ✨ REFACTOR
@@ -94,14 +95,11 @@ export class GameUI {
     // ✨ NEU: SoundManager aus der Registry holen.
     this.soundManager = this.scene.registry.get("soundManager");
 
-    // ✨ NEU: Erstelle den AnimationManager.
-    this.animationManager = new AnimationManager(
-      this.scene,
-      this.settingsManager,
-    );
-
-    // ✨ NEU: Erstelle den PreviewManager.
+    // 1. Basis-Helfer (Keine Abhängigkeiten)
+    this.animationManager = new AnimationManager(this.scene, this.settingsManager);
     this.previewManager = new PreviewManager(this.scene);
+    this.assetManager = new AssetManager(this.scene);
+    this.persistenceManager = new PersistenceManager(this.room);
 
     // ✨ REFACTOR: Erstelle den OverlayManager.
     this.overlayManager = new OverlayManager(
@@ -110,23 +108,7 @@ export class GameUI {
       this.soundManager,
     );
 
-    // ✨ NEU: Erstelle den AssetManager
-    this.assetManager = new AssetManager(this.scene);
-
-    // ✨ NEU: Erstelle den GameStateManager
-    this.gameStateManager = new GameStateManager(
-      this.room,
-      this.overlayManager,
-      this.scene,
-      this.animationManager,
-      this.settingsManager,
-      () => this.render(this.room.state, this.room.sessionId)
-    );
-
-    // ✨ NEU: Erstelle den PersistenceManager
-    this.persistenceManager = new PersistenceManager(this.room);
-
-    // ✨ FIX: NetworkManager ZUERST erstellen, da andere Manager ihn brauchen.
+    // 2. Netzwerk-Kern
     this.networkManager = new GameNetworkManager(
       this.scene,
       this.room,
@@ -135,13 +117,8 @@ export class GameUI {
       this.overlayManager,
       null!, // dialogManager wird gleich gesetzt
     );
-
-    // ✨ FIX: ChatManager erstellen (braucht NetworkManager)
-    this.chatManager = new ChatManager(
-      this.scene,
-      this.room,
-      this.networkManager,
-    );
+    this.chatManager = new ChatManager(this.scene, this.room, this.networkManager);
+    this.tokenManager = new TokenManager(this.scene, this.room, this.networkManager);
 
     log(
       "UI",
@@ -165,40 +142,33 @@ export class GameUI {
       this.room.state.currentPhase, // ✨ NEU: Übergebe die initiale Phase
     );
 
-    // ✨ REFACTORING: Erstelle die Manager-Instanzen.
-    this.elementManager = new ElementManager(
-      this.scene,
-      this.room,
-      this.layout,
-      this.networkManager, // ✨ FIX: NetworkManager übergeben
-    );
+    // 3. UI & Rendering (Reihenfolge wichtig für Abhängigkeiten)
+    this.elementManager = new ElementManager(this.scene, this.room, this.layout, this.networkManager);
     this.elementManager.createAllElements();
 
-    // Drag-Grenzen definieren
-    this.dragBounds = new Phaser.Geom.Rectangle(
-      0,
-      0,
-      this.layout.GAME_WIDTH,
-      this.layout.GAME_HEIGHT,
+    this.dragBounds = new Phaser.Geom.Rectangle(0, 0, this.layout.GAME_WIDTH, this.layout.GAME_HEIGHT);
+    this.cardRenderer = new CardRenderer(this.scene, this.room, this.layout, this.elementManager, this.animationManager, this.dragBounds);
+    this.hudManager = new HUDManager(this.scene, this.room, this.elementManager, this.layout);
+
+    // 4. Koordinatoren
+    this.uiRenderer = new UIRenderer(this.scene, this.hudManager, this.cardRenderer, this.assetManager, this.animationManager);
+    this.layoutManager = new LayoutManager(this.scene, this.elementManager, this.hudManager, this.chatManager, this.cardRenderer, this.dragBounds);
+    this.layoutManager.layout = this.layout;
+
+    // 5. State & Logic (Erst jetzt, da render() nun via uiRenderer sicher ist)
+    this.gameStateManager = new GameStateManager(
+      this.room,
+      this.overlayManager,
+      this.scene,
+      this.animationManager,
+      this.settingsManager,
+      () => this.render(this.room.state, this.room.sessionId)
     );
 
-    // ✨ REFACTOR: Erstelle den DialogManager und übergebe den NetworkManager.
-    this.dialogManager = new DialogManager(
-      this.scene,
-      this.room,
-      this.networkManager,
-    );
-    // ✨ FIX: Zirkuläre Abhängigkeit auflösen
+    // 6. Dialoge & Input
+    this.dialogManager = new DialogManager(this.scene, this.room, this.networkManager);
     this.networkManager.setDialogManager(this.dialogManager);
 
-    // ✨ FIX: TokenManager erstellen (braucht NetworkManager)
-    this.tokenManager = new TokenManager(
-      this.scene,
-      this.room,
-      this.networkManager,
-    );
-
-    // ✨ KORREKTUR: Erstelle den InputManager NACH dem NetworkManager und übergebe ihn.
     this.inputManager = new InputManager(
       this.scene,
       this.room,
@@ -211,41 +181,13 @@ export class GameUI {
       this.overlayManager, // ✨ NEU: OverlayManager übergeben
     );
 
-    this.cardRenderer = new CardRenderer(
-      this.scene,
-      this.room,
-      this.layout,
-      this.elementManager,
-      this.animationManager,
-      this.dragBounds,
-    );
-
-    // ✨ NEU: Erstelle den PhaseManager.
-    this.phaseManager = new PhaseManager(
-      this.scene,
-      this.room,
-      this,
-      this.elementManager,
-      this.networkManager,
-    );
+    this.phaseManager = new PhaseManager(this.scene, this.room, this, this.elementManager, this.networkManager);
     this.phaseManager.initialize();
 
-    // ✨ REFACTOR: Erstelle den HUDManager.
-    this.hudManager = new HUDManager(this.scene, this.room, this.elementManager, this.layout);
-
-    // ✨ NEU: Erstelle den LayoutManager
-    this.layoutManager = new LayoutManager(
-      this.scene,
-      this.elementManager,
-      this.hudManager,
-      this.chatManager,
-      this.cardRenderer,
-      this.dragBounds
-    );
-    this.layoutManager.layout = this.layout;
-
-    // ✨ NEU: Erstelle den DebugManager
-    this.debugManager = new DebugManager(this.scene, this.elementManager);
+    // 7. Debugging
+    if (DEBUG) {
+      this.debugGraphics = this.scene.add.graphics().setDepth(99);
+    }
 
   }
 
@@ -289,8 +231,40 @@ export class GameUI {
     this.layout = this.layoutManager.layout;
     this.layoutManager.repositionUI();
 
-    // ✨ REFACTORING: Delegiere Debug-Updates an den DebugManager
-    this.debugManager.update();
+    // === Visuelles Debugging (nur wenn DEBUG aktiv ist) ===
+    // ✨ KORREKTUR: Das Zeichnen der Debug-Linien erfolgt jetzt NACH der Neupositionierung.
+    if (this.debugGraphics) {
+      this.debugGraphics.clear();
+      // ✨ NEU: Positioniere die Status- und Phasentexte neu, um Platz für die Gegnerhand zu machen.
+      const drawDebug = (zone: Phaser.GameObjects.Zone, color: number) => {
+        // Wichtig: getBounds() liefert die globalen Koordinaten der Zone nach der Positionierung.
+        this.debugGraphics
+          ?.lineStyle(2, color, 0.8)
+          .strokeRectShape(zone.getBounds());
+      };
+      drawDebug(this.elementManager.zoneElements.playerTerritoryZone, 0x0000ff);
+      drawDebug(
+        this.elementManager.zoneElements.playerLandOfBondageZone,
+        0x800080,
+      ); // Lila
+      drawDebug(
+        this.elementManager.zoneElements.opponentTerritoryZone,
+        0xff0000,
+      );
+      drawDebug(
+        this.elementManager.zoneElements.opponentLandOfBondageZone,
+        0xffa500,
+      ); // Orange
+      drawDebug(this.elementManager.zoneElements.playerHandZone, 0x00ff00);
+      // ✨ KORREKTUR: Die Gegner-Handzone wird jetzt auch im Debug-Modus gezeichnet.
+      drawDebug(this.elementManager.zoneElements.opponentHandZone, 0x00ffff); // Cyan für Gegner-Hand
+
+      // ✨ DEIN WUNSCH: Zeichne die Battlefield-Dropzone in Gelb, wenn sie sichtbar ist.
+      const battlefieldZone = this.elementManager.zoneElements.battlefieldZone;
+      if (battlefieldZone.getBounds().height > 0) {
+        drawDebug(battlefieldZone, 0xffff00); // Gelb
+      }
+    }
 
     // Ein erneutes Rendering der Karten anstoßen, da sich ihre Zielpositionen geändert haben
     if (this.room?.state?.players) {
@@ -309,49 +283,10 @@ export class GameUI {
 
   /**
    * Öffentliche Haupt-Render-Methode.
-   * Koordiniert das Rendern der verschiedenen UI-Teile.
    */
   public render(state: RoomState, mySessionId: string) {
-    if (!state) return;
-
-    const player = state.players.get(mySessionId);
-    let opponent: PlayerState | undefined;
-    if (state.players.size > 1) {
-      for (const [sessionId, playerState] of state.players.entries()) {
-        if (sessionId !== mySessionId) {
-          opponent = playerState;
-          break;
-        }
-      }
-    }
-
-    log(
-      "UI",
-      `[render] Rendering with player deck size: ${player?.deck.length}`,
-    );
-
-    this.hudManager.updateGameStateUI(state, mySessionId, opponent);
-
-    if (!player) {
-      // ✨ REFACTORING: Delegiere das Aufräumen an den Renderer.
-      this.cardRenderer.cleanupAllCards();
-      // Piles für den Spieler zurücksetzen, falls er das Spiel verlässt
-      this.hudManager.updatePileCounts(null, opponent);
-      return;
-    }
-
-    this.hudManager.updatePileCounts(player, opponent);
-    // ✨ REFACTORING: Delegiere das Rendern der Karten an den Renderer.
-    this.cardRenderer.renderAllCards(player, opponent);
-
-    // ✨ NEU: Delegiere Preloading an den AssetManager
-    if (this.animationManager.activeDrawTweens.size > 0) {
-      this.scene.events.once("all-draw-animations-complete", () => {
-        this.assetManager.preloadDeck(player);
-      });
-    } else {
-      this.assetManager.preloadDeck(player);
-    }
+    // ✨ REFACTORING: Delegation an den UIRenderer
+    this.uiRenderer.render(state, mySessionId);
   }
 
   /** Setzt den Text der Statusanzeige. */
@@ -364,8 +299,10 @@ export class GameUI {
     // ✨ REFACTORING: Delegiere das Aufräumen an den Renderer.
     this.cardRenderer.cleanupAllCards();
 
-    // ✨ NEU: DebugManager aufräumen
-    this.debugManager?.destroy();
+    // Zerstöre das Debug-Grafikobjekt, falls es existiert
+    if (this.debugGraphics) {
+      this.debugGraphics.destroy();
+    }
 
     // ✨ FIX: Destroy all sub-managers to prevent memory leaks and "zombie listeners".
     // This is crucial for a clean scene transition.
@@ -389,6 +326,8 @@ export class GameUI {
 
   /** ✨ NEU: Prüft den Spielerstatus und zeigt/versteckt das Warte-Overlay. */
   public updateWaitingStatus() {
+    // ✨ FIX: Sicherheitscheck gegen verfrühte Aufrufe vom NetworkManager
+    if (!this.gameStateManager) return;
     this.gameStateManager.updateWaitingStatus();
   }
 }
