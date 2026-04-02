@@ -17,6 +17,7 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "declarationDir": "./dist/types",
+    "rootDir": "..",
     /* Linting */
     "strict": false,
     "noImplicitAny": false,
