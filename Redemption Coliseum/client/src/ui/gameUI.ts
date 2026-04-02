@@ -10,6 +10,7 @@ import { CARD_TYPES } from "../../../shared/card-constants"; // Dieser Import is
 import { calculateLayout, type GameLayout } from "../ui/layout";
 import { CardUI } from "./CardUI"; // ✨ Importiere die neue CardUI-Klasse
 import { ElementManager } from "./managers/ElementManager";
+import { LayoutManager } from "./managers/LayoutManager"; // ✨ NEU
 import { CardRenderer } from "./renderers/CardRenderer.js"; // ✨ FIX: Neuer Pfad
 import { InputManager } from "./managers/InputManager";
 import { PileUI } from "./PileUI"; // ✨ Importiere die neue PileUI-Klasse
@@ -57,6 +58,7 @@ export class GameUI {
   private opponentIdSet: boolean = false; // ✨ NEU: Flag, um zu verhindern, dass die Gegner-ID mehrmals gesetzt wird.
   private layout: GameLayout;
   private elementManager: ElementManager;
+  private layoutManager: LayoutManager; // ✨ NEU
   private inputManager: InputManager;
   private networkManager: GameNetworkManager;
   private cardRenderer: CardRenderer;
@@ -228,12 +230,18 @@ export class GameUI {
     this.phaseManager.initialize();
 
     // ✨ REFACTOR: Erstelle den HUDManager.
-    this.hudManager = new HUDManager(
+    this.hudManager = new HUDManager(this.scene, this.room, this.elementManager, this.layout);
+
+    // ✨ NEU: Erstelle den LayoutManager
+    this.layoutManager = new LayoutManager(
       this.scene,
-      this.room,
       this.elementManager,
-      this.layout,
+      this.hudManager,
+      this.chatManager,
+      this.cardRenderer,
+      this.dragBounds
     );
+    this.layoutManager.layout = this.layout;
 
     // Debug-Grafikobjekt erstellen, wenn DEBUG aktiv ist
     if (DEBUG) {
@@ -261,11 +269,6 @@ export class GameUI {
     // ✨ NEU: Delegiere die Registrierung der Phasen-Handler.
     this.phaseManager.registerHandlers();
 
-    // ✨ NEU: Lausche auf das lokale Event, um die Zieh-Animation zu starten.
-    // ... (bestehender Code)
-
-    // ✨ NEU: Delegiere Save-Handling an OverlayManager
-    this.overlayManager.registerHandlers();
     // ✨ NEU: Delegiere Save-Handling an PersistenceManager
     this.persistenceManager.registerHandlers();
   }
@@ -278,29 +281,14 @@ export class GameUI {
 
   /** Positioniert alle UI-Elemente neu, z.B. bei einer Fenstergrößen-Änderung. */
   public repositionUI() {
-    // ✨ FINALE KORREKTUR: Berechne das Layout IMMER neu basierend auf dem aktuellen Zustand.
-    // Dies stellt sicher, dass bei einer Fenstergrößenänderung die aktuelle Phase
-    // (z.B. 'battle') korrekt berücksichtigt wird und das Layout nicht zurückgesetzt wird.
-    const newLayout = calculateLayout(
+    // ✨ REFACTORING: Delegiere an den LayoutManager
+    this.layoutManager.updateLayout(
       this.scene.scale.width,
       this.scene.scale.height,
-      this.room.state.currentPhase,
+      this.room.state.currentPhase
     );
-    this.layout = newLayout;
-    this.elementManager.layout = newLayout;
-    this.cardRenderer.layout = newLayout;
-
-    // ✨ REFACTOR: Layout im HUDManager aktualisieren
-    this.hudManager.updateLayout(newLayout);
-
-    // ✨ REFACTORING: Delegiere die Neupositionierung an den ElementManager.
-    this.elementManager.repositionUI(newLayout);
-
-    // ✨ NEU: Chat-Button positionieren
-    this.chatManager.reposition(newLayout);
-
-    // Drag-Grenzen aktualisieren
-    this.dragBounds.setSize(this.layout.GAME_WIDTH, this.layout.GAME_HEIGHT);
+    this.layout = this.layoutManager.layout;
+    this.layoutManager.repositionUI();
 
     // === Visuelles Debugging (nur wenn DEBUG aktiv ist) ===
     // ✨ KORREKTUR: Das Zeichnen der Debug-Linien erfolgt jetzt NACH der Neupositionierung.
@@ -345,27 +333,13 @@ export class GameUI {
 
   /** ✨ NEU: Startet die Animation für den Phasenwechsel. Wird vom PhaseManager aufgerufen. */
   public startPhaseChangeAnimation(endLayout: GameLayout) {
-    this.scene.tweens.add({
-      targets: { value: 0 },
-      value: 1,
-      duration: 400,
-      ease: "Sine.easeInOut",
-      onUpdate: (tween) => {
-        const progress = tween.getValue();
-        if (progress === null) return;
-
-        const interpolatedLayout = this.interpolateLayout(
-          this.layout,
-          endLayout,
-          progress,
-        );
-        this.elementManager.repositionUI(interpolatedLayout);
-      },
-      onComplete: () => {
-        this.repositionUI();
-      },
+    this.layoutManager.startPhaseChangeAnimation(endLayout, () => {
+      // ✨ FIX: Nutze die zentrale repositionUI Methode für einen kompletten Refresh nach der Animation.
+      // Dies synchronisiert alle Manager (Renderer, HUD) und aktualisiert die Debug-Graphics.
+      this.repositionUI();
     });
   }
+
   /**
    * Öffentliche Haupt-Render-Methode.
    * Koordiniert das Rendern der verschiedenen UI-Teile.
@@ -411,32 +385,6 @@ export class GameUI {
     } else {
       this.assetManager.preloadDeck(player);
     }
-  }
-
-  /** ✨ NEU: Berechnet ein Zwischen-Layout für die Animations-Updates. */
-  private interpolateLayout(
-    start: GameLayout,
-    end: GameLayout,
-    t: number,
-  ): GameLayout {
-    const interpolated = { ...end }; // Beginne mit der Endstruktur
-
-    // Gehe durch alle Rechtecke im Layout und interpoliere ihre Werte.
-    // ✨ KORREKTUR 2 & 3: Sage TypeScript, dass 'key' ein gültiger Schlüssel von GameLayout ist.
-    for (const key in start) {
-      const typedKey = key as keyof GameLayout;
-      if (start[typedKey] instanceof Phaser.Geom.Rectangle) {
-        const startRect = start[typedKey] as Phaser.Geom.Rectangle;
-        const endRect = end[typedKey] as Phaser.Geom.Rectangle;
-        (interpolated as any)[typedKey] = new Phaser.Geom.Rectangle(
-          Phaser.Math.Linear(startRect.x, endRect.x, t),
-          Phaser.Math.Linear(startRect.y, endRect.y, t),
-          Phaser.Math.Linear(startRect.width, endRect.width, t),
-          Phaser.Math.Linear(startRect.height, endRect.height, t),
-        );
-      }
-    }
-    return interpolated as GameLayout;
   }
 
   /** Setzt den Text der Statusanzeige. */
