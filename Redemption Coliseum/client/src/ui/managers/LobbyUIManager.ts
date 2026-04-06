@@ -22,6 +22,7 @@ export class LobbyUIManager {
   public helpButton!: Phaser.GameObjects.Image;
   public legalBtn!: Phaser.GameObjects.Text;
   public privacyBtn!: Phaser.GameObjects.Text;
+  private background!: Phaser.GameObjects.Image; // ✨ NEU: Hintergrundbild-Referenz
 
   // Layout Props
   private itemHeight = 60;
@@ -43,12 +44,11 @@ export class LobbyUIManager {
     const height = this.scene.scale.height;
 
     // Hintergrund
-    this.scene.add
+    this.background = this.scene.add
       .image(0, 0, "bg_temple")
       .setOrigin(0.5)
       .setAlpha(0.4)
       .setPosition(width / 2, height / 2);
-
     // Titel & Untertitel
     this.titleText = this.scene.add
       .bitmapText(
@@ -287,6 +287,7 @@ export class LobbyUIManager {
 
   public resize(width: number, height: number) {
     if (this.titleText) {
+      this.background?.setPosition(width / 2, height / 2); // ✨ FIX: Hintergrund neu positionieren
       this.titleText.setPosition(width / 2, height * 0.1);
       this.titleText.setFontSize(Math.max(32, Math.min(80, height * 0.1)));
     }
