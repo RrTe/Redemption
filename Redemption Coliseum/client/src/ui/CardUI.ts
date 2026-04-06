@@ -9,6 +9,7 @@ import {
   CardPhysicsEffects, // ✨ FIX: Klasse heißt jetzt CardPhysicsEffects (laut deiner Info)
   SHADOW_CONFIG,
 } from "./effects/CardPhysicsEffects.js"; // ✨ NEU
+import { AssetManager } from "./managers/AssetManager"; // ✨ NEU: Import AssetManager
 import { CardCounterVisuals } from "./effects/CardCounterVisuals"; // ✨ NEU
 
 // ✨ Die Basis-URL, unter der die Kartenbilder zu finden sind.
@@ -38,6 +39,7 @@ export class CardUI extends Phaser.GameObjects.Container {
   private attachVisuals: CardAttachVisuals; // ✨ NEU
   private physicsHandler: CardPhysicsEffects; // ✨ FIX: Typ aktualisiert
   private counterVisuals: CardCounterVisuals; // ✨ NEU
+  private assetManager: AssetManager; // ✨ NEU: AssetManager Instanz
 
   constructor(
     scene: Phaser.Scene,
@@ -52,6 +54,13 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.cardData = cardData;
     this.isFaceDown = isFaceDown;
     this.currentZone = cardData.zone; // ✨ NEU: Initialisiere die Zone
+    this.assetManager = scene.registry.get("assetManager"); // ✨ NEU: AssetManager aus Registry holen
+    
+    if (!this.assetManager) {
+      log("CardUI", "ERROR: AssetManager not found in registry! Creating fallback.");
+      this.assetManager = new AssetManager(scene);
+    }
+
     // ✨ NEU: Weise eine eindeutige, nicht veränderbare ID zu, um dieses Objekt zu verfolgen.
     this.instanceId = Phaser.Utils.String.UUID();
 
@@ -102,7 +111,7 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.add(this.brightnessOverlay);
 
     // ✨ DEIN PLAN: Lade BEIDE Kartenbilder (Vorder- und Rückseite) sofort.
-    this.loadCardImages();
+    this.loadAndDisplayCardImages(); // ✨ NEU: Methode umbenannt
 
     // ✨ DEIN PLAN: Zeige initial das korrekte Bild an.
     this.updateImageVisibility();
@@ -140,78 +149,49 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.scene.events.on("update", this.onSceneUpdate, this);
   }
 
-  // ✨ DEIN PLAN: Überarbeitete Methode, die beide Bilder lädt.
-  private loadCardImages() {
+  /** ✨ NEU: Überarbeitete Methode, die beide Bilder über den AssetManager lädt. */
+  private loadAndDisplayCardImages() {
     // --- Lade die Kartenvorderseite ---
     const frontImageKey = `card-${this.cardData.ImageFile}`;
     const frontImageUrl = `${IMAGE_BASE_URL}${this.cardData.ImageFile}.jpg`;
-    if (this.scene.textures.exists(frontImageKey)) {
-      this.displayFrontImage(frontImageKey);
-    } else {
-      this.scene.load.once(`filecomplete-image-${frontImageKey}`, () => {
-        this.displayFrontImage(frontImageKey);
-      });
-      // ✨ NEU: Mipmaps aktivieren
-      this.scene.load.image({
-        key: frontImageKey,
-        url: frontImageUrl,
-        config: { mipmaps: true },
-      } as any); // ✨ FIX: Cast zu 'any'
-    }
+    this.assetManager.loadCardImage(frontImageKey, frontImageUrl, (key) => {
+      if (!this.scene || !this.active) return;
+      this.cardFrontImage = this.scene.add.image(0, 0, key);
+      this.cardFrontImage.setDisplaySize(this.width, this.height);
+      this.add(this.cardFrontImage);
+      this.bringToTop(this.brightnessOverlay);
+      this.updateImageVisibility();
+      this.visuals.onUpdateSize();
+    });
 
     // --- Lade die Kartenrückseite ---
     const backImageKey = "card-back";
     const backImageUrl = `${IMAGE_BASE_URL}cardback.jpg`;
-    if (this.scene.textures.exists(backImageKey)) {
-      this.displayBackImage(backImageKey);
-    } else {
-      this.scene.load.once(`filecomplete-image-${backImageKey}`, () => {
-        this.displayBackImage(backImageKey);
-      });
-      // ✨ NEU: Mipmaps aktivieren
-      this.scene.load.image({
-        key: backImageKey,
-        url: backImageUrl,
-        config: { mipmaps: true },
-      } as any); // ✨ FIX: Cast zu 'any'
-    }
-
-    this.scene.load.start();
-  }
-
-  // ✨ NEU: Separate Methode für die Vorderseite
-  private displayFrontImage(imageKey: string) {
-    if (!this.scene || !this.active) return; // Verhindere Fehler, wenn das Objekt zerstört wurde
-    this.cardFrontImage = this.scene.add.image(0, 0, imageKey);
-    this.cardFrontImage.setDisplaySize(this.width, this.height);
-    this.add(this.cardFrontImage);
-
-    this.bringToTop(this.brightnessOverlay); // ✨ FIX: Overlay muss über dem Bild liegen
-    this.updateImageVisibility();
-    this.visuals.onUpdateSize(); // ✨ FIX: Effekte aktualisieren
-  }
-
-  // ✨ NEU: Separate Methode für die Rückseite
-  private displayBackImage(imageKey: string) {
-    if (!this.scene || !this.active) return; // Sicherheitscheck
-    this.cardBackImage = this.scene.add.image(0, 0, imageKey);
-    this.cardBackImage.setDisplaySize(this.width, this.height);
-    this.add(this.cardBackImage);
-
-    this.bringToTop(this.brightnessOverlay); // ✨ FIX: Overlay muss über dem Bild liegen
-    this.updateImageVisibility();
-    this.visuals.onUpdateSize(); // ✨ FIX: Effekte aktualisieren
+    this.assetManager.loadCardImage(backImageKey, backImageUrl, (key) => {
+      if (!this.scene || !this.active) return;
+      this.cardBackImage = this.scene.add.image(0, 0, key);
+      this.cardBackImage.setDisplaySize(this.width, this.height);
+      this.add(this.cardBackImage);
+      this.bringToTop(this.brightnessOverlay);
+      this.updateImageVisibility();
+      this.visuals.onUpdateSize();
+    });
   }
 
   public updateSize(width: number, height: number) {
     // ✨ OPTIMIERUNG: Nur aktualisieren, wenn sich die Größe wirklich geändert hat.
     if (this.width === width && this.height === height) return;
 
+    // Update internal size properties
+    this.width = width;
+    this.height = height;
+
     this.setSize(width, height);
     this.background.setSize(width, height);
     // ✨ KORREKTUR: Skaliere BEIDE Bilder, falls sie existieren.
     this.cardFrontImage?.setDisplaySize(width, height);
     this.cardBackImage?.setDisplaySize(width, height);
+
     this.brightnessOverlay.setSize(width, height); // ✨ NEU: Overlay anpassen
     this.shadow.setSize(
       width + SHADOW_CONFIG.PADDING,

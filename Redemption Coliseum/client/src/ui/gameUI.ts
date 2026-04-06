@@ -106,6 +106,7 @@ export class GameUI {
     this.animationManager = new AnimationManager(this.scene, this.settingsManager);
     this.previewManager = new PreviewManager(this.scene);
     this.assetManager = new AssetManager(this.scene);
+    this.scene.registry.set("assetManager", this.assetManager); // ✨ FIX: Register for CardUI access
     this.persistenceManager = new PersistenceManager(this.room);
     this.overlayManager = new OverlayManager(this.scene, this.room, this.soundManager);
   }
