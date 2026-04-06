@@ -9,6 +9,7 @@ import { type OverlayManager } from "./OverlayManager.js"; // ✨ NEU
 import { DragDropHandler } from "../handlers/DragDropHandler.js"; // ✨ REFACTOR
 import { InteractionHandler } from "../handlers/InteractionHandler.js"; // ✨ REFACTOR
 import { KeyboardHandler } from "../handlers/KeyboardHandler"; // ✨ REFACTOR
+import { CardUI } from "../CardUI"; // ✨ NEU
 
 /**
  * Verwaltet alle globalen Input-Handler der Szene,
@@ -89,5 +90,29 @@ export class InputManager {
     this.dragDropHandler.registerHandlers();
     this.interactionHandler.registerHandlers();
     this.keyboardHandler.registerHandlers();
+  }
+
+  /**
+   * ✨ NEU: Zentralisiert die Phaser-Input-Konfiguration für eine Karte.
+   */
+  public setupCardInteractivity(card: CardUI) {
+    card.setInteractive({
+      hitArea: new Phaser.Geom.Rectangle(0, 0, card.width, card.height),
+      hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+      useHandCursor: true,
+      draggable: true,
+    });
+  }
+
+  /**
+   * ✨ NEU: Aktualisiert den interaktiven Bereich einer Karte bei Größenänderung.
+   */
+  public updateCardHitArea(card: CardUI) {
+    if (card.input && card.input.hitArea instanceof Phaser.Geom.Rectangle) {
+      card.input.hitArea.setTo(0, 0, card.width, card.height);
+    } else {
+      // Fallback falls Interaktivität verloren ging oder noch nicht gesetzt wurde
+      this.setupCardInteractivity(card);
+    }
   }
 }

@@ -9,27 +9,30 @@ import { log } from "../../utils/logger";
  */
 export class AssetManager {
   private scene: Phaser.Scene;
-  private deckPreloaded: boolean = false;
+  private preloadedSessions = new Set<string>();
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
 
   /**
-   * Preloads all card images for a given player's deck if not already done.
+   * Preloads all card images (Deck & Reserve) for a player in the background.
    */
-  public preloadDeck(player: PlayerState | null) {
-    if (this.deckPreloaded || !player || !player.deck || player.deck.length === 0) {
-      return;
-    }
+  public preloadAllPlayerCards(player: PlayerState | null) {
+    if (!player || this.preloadedSessions.has(player.sessionId)) return;
 
-    this.deckPreloaded = true;
-    log("AssetManager", `Preloading ${player.deck.length} card images...`);
-    
-    player.deck.forEach((card) => {
-      CardUI.preloadContent(this.scene, card);
-    });
-    
+    this.preloadedSessions.add(player.sessionId);
+    log(
+      "AssetManager",
+      `Background preloading all cards for ${player.name}...`,
+    );
+
+    // Preload Main Deck
+    player.deck?.forEach((card) => CardUI.preloadContent(this.scene, card));
+
+    // Preload Reserve (Fixes the "missing on first search" issue)
+    player.reserve?.forEach((card) => CardUI.preloadContent(this.scene, card));
+
     this.scene.load.start();
   }
 
@@ -38,25 +41,28 @@ export class AssetManager {
    * @param imageKey The unique key for the image in Phaser's texture cache.
    * @param imageUrl The URL to the image file.
    * @param onComplete Callback function to execute once the image is loaded.
+   * @param scene Optional: The scene whose loader should be used (important for paused scenes).
    */
   public loadCardImage(
     imageKey: string,
     imageUrl: string,
     onComplete: (key: string) => void,
+    scene?: Phaser.Scene,
   ) {
-    if (this.scene.textures.exists(imageKey)) {
+    const loaderScene = scene || this.scene;
+
+    if (loaderScene.textures.exists(imageKey)) {
       onComplete(imageKey);
       return;
     }
 
-    this.scene.load.once(`filecomplete-image-${imageKey}`, () => {
-      onComplete(imageKey);
-    });
-    this.scene.load.image({
+    // ✨ FIX: Nutze den Loader der anfragenden Szene, damit Events auch bei pausierter Hauptszene feuern
+    loaderScene.load.once(`filecomplete-image-${imageKey}`, () => onComplete(imageKey));
+    loaderScene.load.image({
       key: imageKey,
       url: imageUrl,
       config: { mipmaps: true },
     } as any);
-    this.scene.load.start();
+    loaderScene.load.start();
   }
 }

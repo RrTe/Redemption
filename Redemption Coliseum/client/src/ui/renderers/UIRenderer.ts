@@ -58,10 +58,10 @@ export class UIRenderer {
 
     // Handle Asset Preloading
     if (this.animationManager.activeDrawTweens.size === 0) {
-      this.assetManager.preloadDeck(player);
+      this.assetManager.preloadAllPlayerCards(player);
     } else {
       this.scene.events.once("all-draw-animations-complete", () => {
-        this.assetManager.preloadDeck(player);
+        this.assetManager.preloadAllPlayerCards(player);
       });
     }
   }

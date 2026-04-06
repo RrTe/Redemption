@@ -137,6 +137,7 @@ export class GameUI {
     this.dialogManager = new DialogManager(this.scene, this.room, this.networkManager);
     this.networkManager.setDialogManager(this.dialogManager);
     this.inputManager = new InputManager(this.scene, this.room, this.networkManager, this.animationManager, this.previewManager, this.dragBounds, this.elementManager, this.tokenManager, this.overlayManager);
+    this.scene.registry.set("inputManager", this.inputManager); // ✨ FIX: Register for CardUI access
     this.phaseManager = new PhaseManager(this.scene, this.room, this, this.elementManager, this.networkManager);
     this.phaseManager.initialize();
   }

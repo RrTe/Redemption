@@ -296,13 +296,6 @@ export class CardRenderer {
       // Der Tween hat die Kontrolle.
       const hasMoved = cardData.lastMoved > cardUI.cardData.lastMoved;
       if (hasMoved) {
-        const depth =
-          cardData.zone === ZONES.DISCARD
-            ? 2
-            : cardData.zone === ZONES.TERRITORY
-              ? 1
-              : 0;
-        cardUI.setDepth(depth);
         this.scene.children.bringToTop(cardUI);
       }
       cardUI.updateFaceDownStatus(isFaceDown);
@@ -334,9 +327,6 @@ export class CardRenderer {
       cardUI.y = targetY;
       cardUI.setAngle(normalizedTargetAngle);
     }
-
-    // Mache die Karte immer ziehbar.
-    this.scene.input.setDraggable(cardUI);
 
     // Wenn eine Animation für diese Karte läuft oder vorgemerkt ist, muss das Original unsichtbar sein.
     // Ansonsten ist die CardUI selbst für ihre Sichtbarkeit verantwortlich (z.B. beim Laden des Bildes).

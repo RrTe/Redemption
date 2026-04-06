@@ -104,7 +104,7 @@ export class PileRenderer {
     const cardWidth = this.layout.cardWidth;
     const cardHeight = this.layout.cardHeight;
 
-    cards.forEach((cardData) => {
+    cards.forEach((cardData, index) => {
       // ✨ Zufällige Rotation für Stapel (außer Deck/Reserve, aber die werden hier eh nicht gerendert)
       const shouldHaveRandomAngle =
         cardData.zone !== ZONES.RESERVE && cardData.zone !== ZONES.DECK;
@@ -116,7 +116,7 @@ export class PileRenderer {
       const targetY = area.centerY;
       const targetAngle = (isOpponent ? 180 : 0) + angleOffset;
 
-      this.processCard(
+      const cardUI = this.processCard(
         cardData,
         targetX,
         targetY,
@@ -126,6 +126,9 @@ export class PileRenderer {
         cardWidth,
         cardHeight,
       );
+
+      // ✨ FIX: Stapelung korrigieren (höherer Index = weiter oben)
+      cardUI.setDepth(10 + index);
     });
   }
 }

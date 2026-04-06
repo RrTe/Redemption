@@ -10,6 +10,7 @@ import {
   SHADOW_CONFIG,
 } from "./effects/CardPhysicsEffects.js"; // ✨ NEU
 import { AssetManager } from "./managers/AssetManager"; // ✨ NEU: Import AssetManager
+import { InputManager } from "./managers/InputManager"; // ✨ NEU: Import InputManager
 import { CardCounterVisuals } from "./effects/CardCounterVisuals"; // ✨ NEU
 
 // ✨ Die Basis-URL, unter der die Kartenbilder zu finden sind.
@@ -40,6 +41,7 @@ export class CardUI extends Phaser.GameObjects.Container {
   private physicsHandler: CardPhysicsEffects; // ✨ FIX: Typ aktualisiert
   private counterVisuals: CardCounterVisuals; // ✨ NEU
   private assetManager: AssetManager; // ✨ NEU: AssetManager Instanz
+  private inputManager: InputManager; // ✨ NEU: InputManager Instanz
 
   constructor(
     scene: Phaser.Scene,
@@ -55,9 +57,13 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.isFaceDown = isFaceDown;
     this.currentZone = cardData.zone; // ✨ NEU: Initialisiere die Zone
     this.assetManager = scene.registry.get("assetManager"); // ✨ NEU: AssetManager aus Registry holen
-    
+    this.inputManager = scene.registry.get("inputManager"); // ✨ FIX: InputManager aus Registry holen
+
     if (!this.assetManager) {
-      log("CardUI", "ERROR: AssetManager not found in registry! Creating fallback.");
+      log(
+        "CardUI",
+        "ERROR: AssetManager not found in registry! Creating fallback.",
+      );
       this.assetManager = new AssetManager(scene);
     }
 
@@ -120,27 +126,16 @@ export class CardUI extends Phaser.GameObjects.Container {
     // Wenn das benötigte Bild beim Erstellen noch nicht geladen ist,
     // startet die Karte unsichtbar und macht sich selbst sichtbar, sobald das Bild da ist.
     // Dies erzeugt den "Pop-in"-Effekt und verhindert graue Kästen.
-    const imageIsReady = isFaceDown
-      ? !!this.cardBackImage
-      : !!this.cardFrontImage;
-    if (!imageIsReady) {
-      this.setVisible(false);
-    }
-
+    // ✨ FIX: Die Karte ist immer sichtbar, der Hintergrund dient als Platzhalter.
+    this.setVisible(true);
     // Initialen Zustand der Counter setzen
     this.updateCounters();
 
     // Füge den Container zur Szene hinzu
     scene.add.existing(this);
 
-    // Mache die Karte interaktiv (für Klicks, Drag & Drop etc.)
-    // ✨ FIX: Setze explizite HitArea, damit Klicks auf Container zuverlässig funktionieren.
-    this.setInteractive({
-      hitArea: new Phaser.Geom.Rectangle(0, 0, width, height),
-      hitAreaCallback: Phaser.Geom.Rectangle.Contains,
-      useHandCursor: true,
-      draggable: true,
-    });
+    // ✨ REFACTOR: Delegiere Input-Konfiguration an den InputManager
+    this.inputManager?.setupCardInteractivity(this);
 
     // ✨ NEU: Lausche auf Einstellungsänderungen, um Effekte live an-/abschalten zu können.
     this.scene.events.on("settings-changed", this.onSettingsChanged, this);
@@ -154,28 +149,40 @@ export class CardUI extends Phaser.GameObjects.Container {
     // --- Lade die Kartenvorderseite ---
     const frontImageKey = `card-${this.cardData.ImageFile}`;
     const frontImageUrl = `${IMAGE_BASE_URL}${this.cardData.ImageFile}.jpg`;
-    this.assetManager.loadCardImage(frontImageKey, frontImageUrl, (key) => {
-      if (!this.scene || !this.active) return;
-      this.cardFrontImage = this.scene.add.image(0, 0, key);
-      this.cardFrontImage.setDisplaySize(this.width, this.height);
-      this.add(this.cardFrontImage);
-      this.bringToTop(this.brightnessOverlay);
-      this.updateImageVisibility();
-      this.visuals.onUpdateSize();
-    });
+    this.assetManager.loadCardImage(
+      frontImageKey,
+      frontImageUrl,
+      (key) => {
+        if (!this.scene || !this.active) return;
+        this.cardFrontImage = this.scene.add.image(0, 0, key);
+        this.cardFrontImage.setDisplaySize(this.width, this.height);
+        this.add(this.cardFrontImage);
+        this.bringToTop(this.brightnessOverlay);
+        this.counterVisuals.onUpdateSize(); // ✨ Sicherstellen, dass Texte oben bleiben
+        this.updateImageVisibility();
+        this.visuals.onUpdateSize();
+      },
+      this.scene,
+    );
 
     // --- Lade die Kartenrückseite ---
     const backImageKey = "card-back";
     const backImageUrl = `${IMAGE_BASE_URL}cardback.jpg`;
-    this.assetManager.loadCardImage(backImageKey, backImageUrl, (key) => {
-      if (!this.scene || !this.active) return;
-      this.cardBackImage = this.scene.add.image(0, 0, key);
-      this.cardBackImage.setDisplaySize(this.width, this.height);
-      this.add(this.cardBackImage);
-      this.bringToTop(this.brightnessOverlay);
-      this.updateImageVisibility();
-      this.visuals.onUpdateSize();
-    });
+    this.assetManager.loadCardImage(
+      backImageKey,
+      backImageUrl,
+      (key) => {
+        if (!this.scene || !this.active) return;
+        this.cardBackImage = this.scene.add.image(0, 0, key);
+        this.cardBackImage.setDisplaySize(this.width, this.height);
+        this.add(this.cardBackImage);
+        this.bringToTop(this.brightnessOverlay);
+        this.counterVisuals.onUpdateSize(); // ✨ Sicherstellen, dass Texte oben bleiben
+        this.updateImageVisibility();
+        this.visuals.onUpdateSize();
+      },
+      this.scene,
+    );
   }
 
   public updateSize(width: number, height: number) {
@@ -201,19 +208,8 @@ export class CardUI extends Phaser.GameObjects.Container {
     // ✨ NEU: Counter-Texte anpassen via Sub-Komponente
     this.counterVisuals.onUpdateSize();
 
-    // ✨ ENTSCHEIDENDE KORREKTUR: Stelle sicher, dass die Karte interaktiv UND ziehbar bleibt.
-    // Ein setInteractive()-Aufruf ohne draggable:true würde die Drag-Fähigkeit entfernen.
-    // ✨ FIX: Aktualisiere das existierende HitArea-Objekt, statt ein neues zu setzen.
-    if (this.input && this.input.hitArea instanceof Phaser.Geom.Rectangle) {
-      this.input.hitArea.setTo(0, 0, width, height);
-    } else {
-      this.setInteractive({
-        hitArea: new Phaser.Geom.Rectangle(0, 0, width, height),
-        hitAreaCallback: Phaser.Geom.Rectangle.Contains,
-        useHandCursor: true,
-        draggable: true,
-      });
-    }
+    // ✨ REFACTOR: Delegiere HitArea-Update an den InputManager
+    this.inputManager?.updateCardHitArea(this);
 
     // ✨ FIX: Maske sofort initial positionieren, damit sie beim ersten Render-Frame stimmt.
     // ✨ FIX: Wenn sich die Größe ändert, müssen wir auch die Emitter-Zone und das Debug-Rechteck anpassen.
@@ -329,17 +325,20 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.background.setVisible(currentImageMissing);
 
     // ✨ KORREKTUR: Respektiere die Sperre.
+    // Wenn die Karte gesperrt ist (z.B. wegen Animation), soll sie unsichtbar bleiben.
     if (this.isLockedHidden) {
+      this.setVisible(false); // Sicherstellen, dass sie unsichtbar ist, wenn gesperrt.
       return;
     }
 
-    // ✨ LOGIK: Zeige die Karte NUR, wenn das Bild da ist. Verstecke sie, wenn es fehlt.
-    // Das verhindert graue Kästen (Issue 2) und respektiert die Sperre (Issue 1).
-    if (currentImageMissing) {
-      this.setVisible(false);
-    } else {
-      this.setVisible(true);
-    }
+    // Wenn nicht gesperrt, soll die Karte sichtbar sein,
+    // sobald entweder das Bild oder der Hintergrund angezeigt werden kann.
+    const shouldBeVisible =
+      (this.cardFrontImage?.visible && this.cardFrontImage.active) ||
+      (this.cardBackImage?.visible && this.cardBackImage.active) ||
+      this.background.visible;
+
+    this.setVisible(shouldBeVisible);
   }
 
   // ✨ DEBUGGING: Überschreibe setVisible, um Änderungen zu loggen.

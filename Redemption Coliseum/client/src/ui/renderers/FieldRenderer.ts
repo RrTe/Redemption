@@ -205,7 +205,10 @@ export class FieldRenderer {
 
     cards.forEach((cardData, index) => {
       const targetX = startX + cardWidth / 2 + index * spacing;
-      this.processCard(cardData, targetX, targetY, angle, attachmentMap, renderedCardIds, cardWidth, cardHeight);
+      const cardUI = this.processCard(cardData, targetX, targetY, angle, attachmentMap, renderedCardIds, cardWidth, cardHeight);
+      
+      // ✨ FIX: Basistiefe für Territory (1-9)
+      cardUI.setDepth(1 + index);
     });
   }
 
@@ -246,7 +249,10 @@ export class FieldRenderer {
         targetX = 2 * this.dragBounds.centerX - targetX;
       }
 
-      this.processCard(cardData, targetX, targetY, angle, attachmentMap, renderedCardIds, cardWidth, cardHeight);
+      const cardUI = this.processCard(cardData, targetX, targetY, angle, attachmentMap, renderedCardIds, cardWidth, cardHeight);
+
+      // ✨ FIX: Basistiefe für unmanaged Territory
+      cardUI.setDepth(1 + index);
     });
   }
 
@@ -271,7 +277,10 @@ export class FieldRenderer {
 
     cards.forEach((cardData, index) => {
       const targetX = area.centerX - ((cards.length - 1) * cardSpacing) / 2 + index * cardSpacing;
-      this.processCard(cardData, targetX, targetY, targetAngle, attachmentMap, renderedCardIds, cardWidth, cardHeight);
+      const cardUI = this.processCard(cardData, targetX, targetY, targetAngle, attachmentMap, renderedCardIds, cardWidth, cardHeight);
+
+      // ✨ FIX: Battlefield liegt über dem Territory (50+)
+      cardUI.setDepth(50 + index);
     });
   }
 }
