@@ -37,6 +37,7 @@ import { PHASES } from "../../../shared/phases.js";
 import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones";
 import type { CardState, PlayerState, RoomState } from "../../../shared/types";
 import { log, DEBUG } from "../utils/logger";
+import { DebugManager } from "./managers/DebugManager.ts";
 
 // 🆕 Typisiertes Room-Interface
 export type TypedRoom = Room & {
@@ -70,7 +71,7 @@ export class GameUI {
   private animationManager: AnimationManager; // ✨ NEU
   private previewManager: PreviewManager; // ✨ NEU
   private dragBounds: Phaser.Geom.Rectangle;
-  private debugGraphics: Phaser.GameObjects.Graphics | null = null;
+  private debugManager: DebugManager; // ✨ NEU
   private chatManager: ChatManager; // ✨ NEU
   private dialogManager: DialogManager; // ✨ REFACTOR
   private overlayManager: OverlayManager; // ✨ REFACTOR
@@ -96,10 +97,9 @@ export class GameUI {
     this.initNetworking();
     this.initLayoutAndRendering();
     this.initLogicAndInput();
-
-    if (DEBUG) {
-      this.debugGraphics = this.scene.add.graphics().setDepth(99);
-    }
+    
+    // ✨ NEU: DebugManager initialisieren
+    this.debugManager = new DebugManager(this.scene, this.elementManager);
   }
 
   private initCoreSystems() {
@@ -180,40 +180,8 @@ export class GameUI {
     this.layout = this.layoutManager.layout;
     this.layoutManager.repositionUI();
 
-    // === Visuelles Debugging (nur wenn DEBUG aktiv ist) ===
-    // ✨ KORREKTUR: Das Zeichnen der Debug-Linien erfolgt jetzt NACH der Neupositionierung.
-    if (this.debugGraphics) {
-      this.debugGraphics.clear();
-      // ✨ NEU: Positioniere die Status- und Phasentexte neu, um Platz für die Gegnerhand zu machen.
-      const drawDebug = (zone: Phaser.GameObjects.Zone, color: number) => {
-        // Wichtig: getBounds() liefert die globalen Koordinaten der Zone nach der Positionierung.
-        this.debugGraphics
-          ?.lineStyle(2, color, 0.8)
-          .strokeRectShape(zone.getBounds());
-      };
-      drawDebug(this.elementManager.zoneElements.playerTerritoryZone, 0x0000ff);
-      drawDebug(
-        this.elementManager.zoneElements.playerLandOfBondageZone,
-        0x800080,
-      ); // Lila
-      drawDebug(
-        this.elementManager.zoneElements.opponentTerritoryZone,
-        0xff0000,
-      );
-      drawDebug(
-        this.elementManager.zoneElements.opponentLandOfBondageZone,
-        0xffa500,
-      ); // Orange
-      drawDebug(this.elementManager.zoneElements.playerHandZone, 0x00ff00);
-      // ✨ KORREKTUR: Die Gegner-Handzone wird jetzt auch im Debug-Modus gezeichnet.
-      drawDebug(this.elementManager.zoneElements.opponentHandZone, 0x00ffff); // Cyan für Gegner-Hand
-
-      // ✨ DEIN WUNSCH: Zeichne die Battlefield-Dropzone in Gelb, wenn sie sichtbar ist.
-      const battlefieldZone = this.elementManager.zoneElements.battlefieldZone;
-      if (battlefieldZone.getBounds().height > 0) {
-        drawDebug(battlefieldZone, 0xffff00); // Gelb
-      }
-    }
+    // ✨ REFACTORING: Delegiere Debug-Updates an den DebugManager
+    this.debugManager.update();
 
     // Ein erneutes Rendering der Karten anstoßen, da sich ihre Zielpositionen geändert haben
     if (this.room?.state?.players) {
@@ -248,10 +216,8 @@ export class GameUI {
     // ✨ REFACTORING: Delegiere das Aufräumen an den Renderer.
     this.cardRenderer.cleanupAllCards();
 
-    // Zerstöre das Debug-Grafikobjekt, falls es existiert
-    if (this.debugGraphics) {
-      this.debugGraphics.destroy();
-    }
+    // ✨ NEU: DebugManager aufräumen
+    this.debugManager?.destroy();
 
     // ✨ FIX: Destroy all sub-managers to prevent memory leaks and "zombie listeners".
     // This is crucial for a clean scene transition.
