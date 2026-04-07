@@ -1,0 +1,40 @@
+# Virtuelle Umgebungen
+.venv/
+venv/
+env/
+
+# Sensible Daten & Konfigurationen
+.env
+*.env
+
+# Python Caches & Compiled Files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Laufzeit-Daten (Logs & Bot-Status generisch)
+*.log
+pagination_progress.json
+
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ----------------------------------------------------
+# DATEN KONTROLLE (Ressourcen & Datenbanken)
+# ----------------------------------------------------
+
+# Ignoriere erstmal ALLES in data/ und ragdata/
+data/*
+ragdata/*
+
+# ABER ERLAUBE (Keep) explizit diese notwendigen System-Dateien:
+!data/REG.pdf
+!data/ORDIR.pdf
+!ragdata/carddata.json
+
+# (Dadurch werden riesige Dateien wie DiscordRulings.txt 
+# oder processed_rulings_final.json ab sofort blockiert!)

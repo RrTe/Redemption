@@ -1,0 +1,6 @@
+discord.py==2.7.1
+PyMuPDF==1.27.2.2
+python-dotenv==1.0.1
+pinecone-client==5.0.1
+groq==0.11.0
+requests==2.32.3
