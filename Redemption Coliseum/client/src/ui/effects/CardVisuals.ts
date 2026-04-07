@@ -64,8 +64,6 @@ export class CardVisuals {
     this.cardFrontImage = this.scene.add.image(0, 0, key);
     this.cardFrontImage.setDisplaySize(this.cardUI.width, this.cardUI.height);
     this.cardUI.add(this.cardFrontImage);
-    this.cardUI.sendToBack(this.cardFrontImage); // Hinter Overlays
-    this.cardUI.sendToBack(this.background);     // Hintergrund ganz nach hinten
   }
 
   /** Setzt das Rückseiten-Bild nach dem Laden. */
@@ -74,8 +72,6 @@ export class CardVisuals {
     this.cardBackImage = this.scene.add.image(0, 0, key);
     this.cardBackImage.setDisplaySize(this.cardUI.width, this.cardUI.height);
     this.cardUI.add(this.cardBackImage);
-    this.cardUI.sendToBack(this.cardBackImage);
-    this.cardUI.sendToBack(this.background);
   }
 
   /** Zentrale Steuerung der Sichtbarkeit aller Layer. */

@@ -97,48 +97,136 @@ export class GameUI {
     this.initNetworking();
     this.initLayoutAndRendering();
     this.initLogicAndInput();
-    
+
     // ✨ NEU: DebugManager initialisieren
     this.debugManager = new DebugManager(this.scene, this.elementManager);
   }
 
   private initCoreSystems() {
-    this.animationManager = new AnimationManager(this.scene, this.settingsManager);
+    this.animationManager = new AnimationManager(
+      this.scene,
+      this.settingsManager,
+    );
     this.previewManager = new PreviewManager(this.scene);
     this.assetManager = new AssetManager(this.scene);
     this.scene.registry.set("assetManager", this.assetManager); // ✨ FIX: Register for CardUI access
     this.persistenceManager = new PersistenceManager(this.room);
-    this.overlayManager = new OverlayManager(this.scene, this.room, this.soundManager);
+    this.overlayManager = new OverlayManager(
+      this.scene,
+      this.room,
+      this.soundManager,
+    );
   }
 
   private initNetworking() {
-    this.networkManager = new GameNetworkManager(this.scene, this.room, this, this.$, this.overlayManager, null!);
-    this.chatManager = new ChatManager(this.scene, this.room, this.networkManager);
-    this.tokenManager = new TokenManager(this.scene, this.room, this.networkManager);
+    this.networkManager = new GameNetworkManager(
+      this.scene,
+      this.room,
+      this,
+      this.$,
+      this.overlayManager,
+      null!,
+    );
+    this.chatManager = new ChatManager(
+      this.scene,
+      this.room,
+      this.networkManager,
+    );
+    this.tokenManager = new TokenManager(
+      this.scene,
+      this.room,
+      this.networkManager,
+    );
   }
 
   private initLayoutAndRendering() {
-    this.layout = calculateLayout(this.scene.scale.width, this.scene.scale.height, this.room.state.currentPhase);
-    this.elementManager = new ElementManager(this.scene, this.room, this.layout, this.networkManager);
+    this.layout = calculateLayout(
+      this.scene.scale.width,
+      this.scene.scale.height,
+      this.room.state.currentPhase,
+    );
+    this.elementManager = new ElementManager(
+      this.scene,
+      this.room,
+      this.layout,
+      this.networkManager,
+    );
     this.elementManager.createAllElements();
 
-    this.dragBounds = new Phaser.Geom.Rectangle(0, 0, this.layout.GAME_WIDTH, this.layout.GAME_HEIGHT);
-    this.cardRenderer = new CardRenderer(this.scene, this.room, this.layout, this.elementManager, this.animationManager, this.dragBounds);
-    this.hudManager = new HUDManager(this.scene, this.room, this.elementManager, this.layout);
-    
+    this.dragBounds = new Phaser.Geom.Rectangle(
+      0,
+      0,
+      this.layout.GAME_WIDTH,
+      this.layout.GAME_HEIGHT,
+    );
+    this.cardRenderer = new CardRenderer(
+      this.scene,
+      this.room,
+      this.layout,
+      this.elementManager,
+      this.animationManager,
+      this.dragBounds,
+    );
+    this.hudManager = new HUDManager(
+      this.scene,
+      this.room,
+      this.elementManager,
+      this.layout,
+    );
+
     // Coordinator Initialization
-    this.uiRenderer = new UIRenderer(this.scene, this.hudManager, this.cardRenderer, this.assetManager, this.animationManager);
-    this.layoutManager = new LayoutManager(this.scene, this.elementManager, this.hudManager, this.chatManager, this.cardRenderer, this.dragBounds);
+    this.uiRenderer = new UIRenderer(
+      this.scene,
+      this.hudManager,
+      this.cardRenderer,
+      this.assetManager,
+      this.animationManager,
+    );
+    this.layoutManager = new LayoutManager(
+      this.scene,
+      this.elementManager,
+      this.hudManager,
+      this.chatManager,
+      this.cardRenderer,
+      this.dragBounds,
+    );
     this.layoutManager.layout = this.layout;
   }
 
   private initLogicAndInput() {
-    this.gameStateManager = new GameStateManager(this.room, this.overlayManager, this.scene, this.animationManager, this.settingsManager, () => this.render(this.room.state, this.room.sessionId));
-    this.dialogManager = new DialogManager(this.scene, this.room, this.networkManager);
+    this.gameStateManager = new GameStateManager(
+      this.room,
+      this.overlayManager,
+      this.scene,
+      this.animationManager,
+      this.settingsManager,
+      () => this.render(this.room.state, this.room.sessionId),
+    );
+    this.dialogManager = new DialogManager(
+      this.scene,
+      this.room,
+      this.networkManager,
+    );
     this.networkManager.setDialogManager(this.dialogManager);
-    this.inputManager = new InputManager(this.scene, this.room, this.networkManager, this.animationManager, this.previewManager, this.dragBounds, this.elementManager, this.tokenManager, this.overlayManager);
+    this.inputManager = new InputManager(
+      this.scene,
+      this.room,
+      this.networkManager,
+      this.animationManager,
+      this.previewManager,
+      this.dragBounds,
+      this.elementManager,
+      this.tokenManager,
+      this.overlayManager,
+    );
     this.scene.registry.set("inputManager", this.inputManager); // ✨ FIX: Register for CardUI access
-    this.phaseManager = new PhaseManager(this.scene, this.room, this, this.elementManager, this.networkManager);
+    this.phaseManager = new PhaseManager(
+      this.scene,
+      this.room,
+      this,
+      this.elementManager,
+      this.networkManager,
+    );
     this.phaseManager.initialize();
   }
 
@@ -165,7 +253,6 @@ export class GameUI {
     this.persistenceManager.registerHandlers();
   }
 
-
   /** ✨ NEU: Zeigt das Game-Over-Overlay an. */
   public showGameOverOverlay(isWinner: boolean) {
     this.overlayManager.showGameOverOverlay(isWinner);
@@ -177,7 +264,7 @@ export class GameUI {
     this.layoutManager.updateLayout(
       this.scene.scale.width,
       this.scene.scale.height,
-      this.room.state.currentPhase
+      this.room.state.currentPhase,
     );
     this.layout = this.layoutManager.layout;
     this.layoutManager.repositionUI();
@@ -216,7 +303,7 @@ export class GameUI {
   /** Zerstört alle UI-Elemente. */
   public destroy() {
     // ✨ REFACTORING: Delegiere das Aufräumen an den Renderer.
-    this.cardRenderer.cleanupAllCards();
+    this.cardRenderer.destroy();
 
     // ✨ NEU: DebugManager aufräumen
     this.debugManager?.destroy();

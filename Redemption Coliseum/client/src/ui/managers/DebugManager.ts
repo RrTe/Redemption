@@ -15,7 +15,8 @@ export class DebugManager {
     this.elementManager = elementManager;
 
     if (DEBUG) {
-      this.graphics = this.scene.add.graphics().setDepth(99);
+      // ✨ FIX: Tiefe auf 0 setzen, damit Karten (Tiefe 1+) darüber liegen.
+      this.graphics = this.scene.add.graphics().setDepth(0);
     }
   }
 

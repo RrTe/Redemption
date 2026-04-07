@@ -20,4 +20,5 @@ client/public/assets/
 *.jpg
 *.svg
 *.pdf
+*.mp3
 docs/

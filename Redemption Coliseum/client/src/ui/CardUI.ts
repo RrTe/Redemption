@@ -106,6 +106,10 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.brightnessOverlay.setVisible(false);
     this.add(this.brightnessOverlay);
 
+    // ✨ FIX: Initiales Stacking sicherstellen (Overlay über Hintergrund)
+    this.bringToTop(this.brightnessOverlay);
+    this.counterVisuals.onUpdateSize();
+
     // ✨ DEIN PLAN: Lade BEIDE Kartenbilder (Vorder- und Rückseite) sofort.
     this.loadAndDisplayCardImages(); // ✨ NEU: Methode umbenannt
 
@@ -129,9 +133,6 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     // ✨ NEU: Lausche auf Einstellungsänderungen, um Effekte live an-/abschalten zu können.
     this.scene.events.on("settings-changed", this.onSettingsChanged, this);
-
-    // ✨ NEU: Permanente Update-Schleife für Physik und Masken-Sync
-    this.scene.events.on("update", this.onSceneUpdate, this);
   }
 
   /** ✨ NEU: Überarbeitete Methode, die beide Bilder über den AssetManager lädt. */
@@ -369,11 +370,11 @@ export class CardUI extends Phaser.GameObjects.Container {
   }
 
   /**
-   * ✨ NEU: Zentrale Update-Methode für Physik und Synchronisation.
-   * Ersetzt updateMaskTransform und fügt Drag-Physik hinzu.
+   * ✨ REFACTOR: Wird nun zentral vom CardRenderer aufgerufen.
+   * Verarbeitet Physik und Effekt-Synchronisation.
    */
-  private onSceneUpdate(time: number, delta: number) {
-    // ✨ FIX: Sicherheitscheck. Wenn das Objekt zerstört oder inaktiv ist, nichts tun.
+  public update(time: number, delta: number) {
+    // Sicherheitscheck: Falls das Objekt inaktiv ist
     if (!this.scene || !this.active) return;
 
     this.visuals.onUpdate(); // ✨ FIX: Effekte aktualisieren
@@ -383,13 +384,10 @@ export class CardUI extends Phaser.GameObjects.Container {
   }
 
   /**
-   * ✨ NEU: Override destroy, um sicherzustellen, dass der Update-Listener entfernt wird.
+   * ✨ NEU: Override destroy, um sicherzustellen, dass Event-Listener entfernt werden.
    */
   destroy(fromScene?: boolean) {
-    // ✨ FIX: Prüfen, ob die Scene noch existiert. Falls das Objekt bereits durch
-    // den Shutdown der Scene zerstört wurde, ist this.scene hier undefined.
     if (this.scene) {
-      this.scene.events.off("update", this.onSceneUpdate, this);
       this.scene.events.off("settings-changed", this.onSettingsChanged, this);
     }
     this.visuals.destroy(); // ✨ NEU: Aufräumen

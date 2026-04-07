@@ -63,6 +63,18 @@ export class CardRenderer {
       this.layout,
       this.processCard.bind(this),
     );
+
+    // ✨ NEU: Einzelner Listener für alle Karten-Updates (Performance)
+    this.scene.events.on("update", this.update, this);
+  }
+
+  /** ✨ NEU: Zentrales Update für alle aktiven Karten. */
+  public update(time: number, delta: number) {
+    this.cardUIs.forEach((cardUI) => {
+      if (cardUI.active) {
+        cardUI.update(time, delta);
+      }
+    });
   }
 
   /** ✨ FIX: Setter, der Änderungen an die Sub-Renderer weitergibt */
@@ -433,6 +445,12 @@ export class CardRenderer {
         this.scene.children.bringToTop(attUI);
       }
     });
+  }
+
+  /** ✨ NEU: Bereinigt den Renderer und stoppt die Update-Schleife. */
+  public destroy() {
+    this.scene.events.off("update", this.update, this);
+    this.cleanupAllCards();
   }
 
   public cleanupAllCards() {
