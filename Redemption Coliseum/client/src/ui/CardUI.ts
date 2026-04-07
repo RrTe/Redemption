@@ -18,11 +18,8 @@ const IMAGE_BASE_URL = "/assets/cards/";
 
 export class CardUI extends Phaser.GameObjects.Container {
   public cardData: CardState;
-  private background: Phaser.GameObjects.Rectangle;
   private isFaceDown: boolean;
   public readonly instanceId: string; // ✨ NEU: Eindeutige ID für diese Instanz
-  private cardFrontImage: Phaser.GameObjects.Image | null = null; // ✨ NEU: Explizit für die Vorderseite
-  private cardBackImage: Phaser.GameObjects.Image | null = null; // ✨ NEU: Explizit für die Rückseite
   // ✨ FINALE LÖSUNG: Speichere die Zielposition direkt auf der Karte.
   public targetX: number = 0;
   public targetY: number = 0;
@@ -102,13 +99,6 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.shadow.setTint(0x000000); // Sicherstellen, dass der Schatten schwarz ist
     this.shadow.setOrigin(0.5);
     this.add(this.shadow);
-    // WICHTIG: Schatten ganz nach hinten schieben, aber vor eventuelle Partikel, die "hinter" der Karte sein sollen.
-    // Da wir hier im Constructor sind, ist er das erste Kind -> ganz hinten.
-
-    // Erstelle einen einfachen Hintergrund als Platzhalter, während das Bild lädt
-    this.background = scene.add.rectangle(0, 0, width, height, 0x222222);
-    this.background.setStrokeStyle(2, 0xeeeeee);
-    this.add(this.background);
 
     // ✨ NEU: Overlay für Helligkeitseffekte (Additiv)
     this.brightnessOverlay = scene.add.rectangle(0, 0, width, height, 0xffffff);
@@ -120,7 +110,7 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.loadAndDisplayCardImages(); // ✨ NEU: Methode umbenannt
 
     // ✨ DEIN PLAN: Zeige initial das korrekte Bild an.
-    this.updateImageVisibility();
+    this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
 
     // ✨ FINALE LÖSUNG: Die Karte ist für ihre eigene Sichtbarkeit verantwortlich.
     // Wenn das benötigte Bild beim Erstellen noch nicht geladen ist,
@@ -154,12 +144,10 @@ export class CardUI extends Phaser.GameObjects.Container {
       frontImageUrl,
       (key) => {
         if (!this.scene || !this.active) return;
-        this.cardFrontImage = this.scene.add.image(0, 0, key);
-        this.cardFrontImage.setDisplaySize(this.width, this.height);
-        this.add(this.cardFrontImage);
+        this.visuals.setFrontImage(key);
         this.bringToTop(this.brightnessOverlay);
         this.counterVisuals.onUpdateSize(); // ✨ Sicherstellen, dass Texte oben bleiben
-        this.updateImageVisibility();
+        this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
         this.visuals.onUpdateSize();
       },
       this.scene,
@@ -173,12 +161,10 @@ export class CardUI extends Phaser.GameObjects.Container {
       backImageUrl,
       (key) => {
         if (!this.scene || !this.active) return;
-        this.cardBackImage = this.scene.add.image(0, 0, key);
-        this.cardBackImage.setDisplaySize(this.width, this.height);
-        this.add(this.cardBackImage);
+        this.visuals.setBackImage(key);
         this.bringToTop(this.brightnessOverlay);
         this.counterVisuals.onUpdateSize(); // ✨ Sicherstellen, dass Texte oben bleiben
-        this.updateImageVisibility();
+        this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
         this.visuals.onUpdateSize();
       },
       this.scene,
@@ -194,11 +180,6 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.height = height;
 
     this.setSize(width, height);
-    this.background.setSize(width, height);
-    // ✨ KORREKTUR: Skaliere BEIDE Bilder, falls sie existieren.
-    this.cardFrontImage?.setDisplaySize(width, height);
-    this.cardBackImage?.setDisplaySize(width, height);
-
     this.brightnessOverlay.setSize(width, height); // ✨ NEU: Overlay anpassen
     this.shadow.setSize(
       width + SHADOW_CONFIG.PADDING,
@@ -218,15 +199,12 @@ export class CardUI extends Phaser.GameObjects.Container {
 
   /** ✨ NEU: Wendet einen Tint-Effekt auf die Karte an. */
   public setTint(color: number) {
-    // ✨ FIX: Tint auf beide Seiten anwenden, damit es auch verdeckt funktioniert
-    this.cardFrontImage?.setTint(color);
-    this.cardBackImage?.setTint(color);
+    this.visuals.setTint(color);
   }
 
   /** ✨ NEU: Entfernt alle Tint-Effekte von der Karte. */
   public clearTint() {
-    this.cardFrontImage?.clearTint();
-    this.cardBackImage?.clearTint();
+    this.visuals.setTint(undefined);
   }
 
   /** ✨ NEU: Aktualisiert den Face-Down-Status und lädt das Bild bei Bedarf neu. */
@@ -238,7 +216,7 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     this.isFaceDown = isFaceDown;
     // ✨ DEIN PLAN: Ändere nur die Sichtbarkeit der bereits geladenen Bilder.
-    this.updateImageVisibility();
+    this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
   }
 
   /** ✨ NEU: Aktualisiert die Anzeige der Paralyze- und Set-Aside-Counter. */
@@ -271,7 +249,7 @@ export class CardUI extends Phaser.GameObjects.Container {
     if (locked) {
       this.setVisible(false);
     } else {
-      this.updateImageVisibility(); // Prüfe, ob wir uns jetzt zeigen dürfen
+      this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden); // ✨ FIX: Delegation an Visuals
     }
   }
 
@@ -307,38 +285,6 @@ export class CardUI extends Phaser.GameObjects.Container {
    */
   public playAttachAnimation() {
     this.attachVisuals.playAttachAnimation();
-  }
-
-  // ✨ NEU: Zentrale Methode zur Steuerung der Sichtbarkeit
-  private updateImageVisibility() {
-    // Zeige das korrekte Bild an
-    this.cardFrontImage?.setVisible(!this.isFaceDown);
-    this.cardBackImage?.setVisible(this.isFaceDown);
-
-    // ✨ FINALE KORREKTUR: Zeige den Hintergrund, wenn das AKTUELL benötigte Bild fehlt.
-    // Vorher wurde der Hintergrund ausgeblendet, sobald IRGENDEIN Bild da war.
-    // Das führte dazu, dass beim Aufdecken (Flip) die Karte unsichtbar wurde,
-    // wenn die Vorderseite noch nicht geladen war, aber die Rückseite schon da war.
-    const currentImageMissing = this.isFaceDown
-      ? !this.cardBackImage
-      : !this.cardFrontImage;
-    this.background.setVisible(currentImageMissing);
-
-    // ✨ KORREKTUR: Respektiere die Sperre.
-    // Wenn die Karte gesperrt ist (z.B. wegen Animation), soll sie unsichtbar bleiben.
-    if (this.isLockedHidden) {
-      this.setVisible(false); // Sicherstellen, dass sie unsichtbar ist, wenn gesperrt.
-      return;
-    }
-
-    // Wenn nicht gesperrt, soll die Karte sichtbar sein,
-    // sobald entweder das Bild oder der Hintergrund angezeigt werden kann.
-    const shouldBeVisible =
-      (this.cardFrontImage?.visible && this.cardFrontImage.active) ||
-      (this.cardBackImage?.visible && this.cardBackImage.active) ||
-      this.background.visible;
-
-    this.setVisible(shouldBeVisible);
   }
 
   // ✨ DEBUGGING: Überschreibe setVisible, um Änderungen zu loggen.

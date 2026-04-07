@@ -12,6 +12,11 @@ export class CardVisuals {
   private scene: Phaser.Scene;
   private cardUI: CardUI;
 
+  // Core Visuals
+  private cardFrontImage: Phaser.GameObjects.Image | null = null;
+  private cardBackImage: Phaser.GameObjects.Image | null = null;
+  private background: Phaser.GameObjects.Rectangle;
+
   // Glow / Spark Effect
   private glowEmitter: Phaser.GameObjects.Particles.ParticleEmitter | null =
     null;
@@ -38,6 +43,11 @@ export class CardVisuals {
   constructor(scene: Phaser.Scene, cardUI: CardUI) {
     this.scene = scene;
     this.cardUI = cardUI;
+
+    // Erstelle Platzhalter-Hintergrund
+    this.background = scene.add.rectangle(0, 0, cardUI.width, cardUI.height, 0x222222);
+    this.background.setStrokeStyle(2, 0xeeeeee);
+    this.cardUI.add(this.background);
   }
 
   /** Prüft globale Einstellungen. */
@@ -46,6 +56,64 @@ export class CardVisuals {
       "settingsManager",
     ) as SettingsManager;
     return settings ? settings.areAnimationsEnabled() : true;
+  }
+
+  /** Setzt das Vorderseiten-Bild nach dem Laden. */
+  public setFrontImage(key: string) {
+    if (this.cardFrontImage) this.cardFrontImage.destroy();
+    this.cardFrontImage = this.scene.add.image(0, 0, key);
+    this.cardFrontImage.setDisplaySize(this.cardUI.width, this.cardUI.height);
+    this.cardUI.add(this.cardFrontImage);
+    this.cardUI.sendToBack(this.cardFrontImage); // Hinter Overlays
+    this.cardUI.sendToBack(this.background);     // Hintergrund ganz nach hinten
+  }
+
+  /** Setzt das Rückseiten-Bild nach dem Laden. */
+  public setBackImage(key: string) {
+    if (this.cardBackImage) this.cardBackImage.destroy();
+    this.cardBackImage = this.scene.add.image(0, 0, key);
+    this.cardBackImage.setDisplaySize(this.cardUI.width, this.cardUI.height);
+    this.cardUI.add(this.cardBackImage);
+    this.cardUI.sendToBack(this.cardBackImage);
+    this.cardUI.sendToBack(this.background);
+  }
+
+  /** Zentrale Steuerung der Sichtbarkeit aller Layer. */
+  public updateVisibility(isFaceDown: boolean, isLockedHidden: boolean) {
+    const hasFront = !!this.cardFrontImage;
+    const hasBack = !!this.cardBackImage;
+
+    // 1. Layer-Sichtbarkeit
+    if (this.cardFrontImage) this.cardFrontImage.setVisible(!isFaceDown);
+    if (this.cardBackImage) this.cardBackImage.setVisible(isFaceDown);
+
+    // 2. Platzhalter zeigen, wenn das benötigte Bild fehlt
+    const currentImageMissing = isFaceDown ? !hasBack : !hasFront;
+    this.background.setVisible(currentImageMissing);
+
+    // 3. Container-Sichtbarkeit (Sperre berücksichtigen)
+    if (isLockedHidden) {
+      this.cardUI.setVisible(false);
+      return;
+    }
+
+    const shouldBeVisible = 
+      (this.cardFrontImage?.visible && this.cardFrontImage.active) ||
+      (this.cardBackImage?.visible && this.cardBackImage.active) ||
+      this.background.visible;
+
+    this.cardUI.setVisible(shouldBeVisible);
+  }
+
+  /** Wendet Tint auf die Bilder an. */
+  public setTint(color: number | undefined) {
+    if (color === undefined) {
+      this.cardFrontImage?.clearTint();
+      this.cardBackImage?.clearTint();
+    } else {
+      this.cardFrontImage?.setTint(color);
+      this.cardBackImage?.setTint(color);
+    }
   }
 
   /** Startet den Glow-Effekt (z.B. bei Mouseover). */
@@ -77,6 +145,11 @@ export class CardVisuals {
 
   /** Wird bei Größenänderung der Karte aufgerufen. */
   public onUpdateSize() {
+    const { width, height } = this.cardUI;
+    this.background.setSize(width, height);
+    this.cardFrontImage?.setDisplaySize(width, height);
+    this.cardBackImage?.setDisplaySize(width, height);
+
     this.updateGlowZone();
     this.updateParalyzeZone();
     this.syncMaskState();
