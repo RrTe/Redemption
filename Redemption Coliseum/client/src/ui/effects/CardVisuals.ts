@@ -3,6 +3,10 @@ import { DEBUG } from "../../utils/logger";
 import type { SettingsManager } from "../../managers/SettingsManager";
 import type { CardUI } from "../CardUI";
 import { PILE_ZONES } from "../../../../shared/zones";
+import { SHADOW_CONFIG } from "./CardPhysicsEffects";
+import { AssetManager } from "../managers/AssetManager";
+
+const IMAGE_BASE_URL = "/assets/cards/";
 
 /**
  * Steuert die visuellen Effekte einer einzelnen Karte (Glow, Paralyze, Noise).
@@ -16,6 +20,8 @@ export class CardVisuals {
   private cardFrontImage: Phaser.GameObjects.Image | null = null;
   private cardBackImage: Phaser.GameObjects.Image | null = null;
   private background: Phaser.GameObjects.Rectangle;
+  private shadow: Phaser.GameObjects.NineSlice;
+  private brightnessOverlay: Phaser.GameObjects.Rectangle;
 
   // Glow / Spark Effect
   private glowEmitter: Phaser.GameObjects.Particles.ParticleEmitter | null =
@@ -44,10 +50,48 @@ export class CardVisuals {
     this.scene = scene;
     this.cardUI = cardUI;
 
-    // Erstelle Platzhalter-Hintergrund
-    this.background = scene.add.rectangle(0, 0, cardUI.width, cardUI.height, 0x222222);
+    // 1. Schatten (NineSlice) - Ganz nach hinten
+    this.shadow = scene.add.nineslice(
+      SHADOW_CONFIG.OFFSET_REST,
+      SHADOW_CONFIG.OFFSET_REST,
+      "drop_shadow",
+      undefined,
+      cardUI.width + SHADOW_CONFIG.PADDING,
+      cardUI.height + SHADOW_CONFIG.PADDING,
+      SHADOW_CONFIG.SLICE,
+      SHADOW_CONFIG.SLICE,
+      SHADOW_CONFIG.SLICE,
+      SHADOW_CONFIG.SLICE,
+    );
+    this.shadow
+      .setAlpha(SHADOW_CONFIG.ALPHA_REST)
+      .setTint(0x000000)
+      .setOrigin(0.5);
+    this.cardUI.add(this.shadow);
+
+    // 2. Platzhalter-Hintergrund
+    this.background = scene.add.rectangle(
+      0,
+      0,
+      cardUI.width,
+      cardUI.height,
+      0x222222,
+    );
     this.background.setStrokeStyle(2, 0xeeeeee);
     this.cardUI.add(this.background);
+
+    // 3. Brightness Overlay (Additiv)
+    this.brightnessOverlay = scene.add.rectangle(
+      0,
+      0,
+      cardUI.width,
+      cardUI.height,
+      0xffffff,
+    );
+    this.brightnessOverlay
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setVisible(false);
+    this.cardUI.add(this.brightnessOverlay);
   }
 
   /** Prüft globale Einstellungen. */
@@ -56,6 +100,51 @@ export class CardVisuals {
       "settingsManager",
     ) as SettingsManager;
     return settings ? settings.areAnimationsEnabled() : true;
+  }
+
+  /** Orchestriert das Laden der Bilder via AssetManager. */
+  public loadImages(assetManager: AssetManager) {
+    const { cardData } = this.cardUI;
+
+    // Vorderseite
+    const frontKey = `card-${cardData.ImageFile}`;
+    const frontUrl = `${IMAGE_BASE_URL}${cardData.ImageFile}.jpg`;
+    assetManager.loadCardImage(
+      frontKey,
+      frontUrl,
+      (key) => {
+        if (!this.scene || !this.cardUI.active) return;
+        this.setFrontImage(key);
+        this.finalizeImageSetup();
+      },
+      this.scene,
+    );
+
+    // Rückseite
+    const backKey = "card-back";
+    const backUrl = `${IMAGE_BASE_URL}cardback.jpg`;
+    assetManager.loadCardImage(
+      backKey,
+      backUrl,
+      (key) => {
+        if (!this.scene || !this.cardUI.active) return;
+        this.setBackImage(key);
+        this.finalizeImageSetup();
+      },
+      this.scene,
+    );
+  }
+
+  private finalizeImageSetup() {
+    this.cardUI.bringToTop(this.brightnessOverlay);
+    // @ts-ignore - Zugriff auf private Komponente für Re-Stacking
+    this.cardUI.counterVisuals?.onUpdateSize();
+    // ✨ FIX: Nutze den tatsächlichen Sperrstatus der Karte
+    this.updateVisibility(
+      this.cardUI.isCurrentlyFaceDown(),
+      this.cardUI.isLocked,
+    );
+    this.onUpdateSize();
   }
 
   /** Setzt das Vorderseiten-Bild nach dem Laden. */
@@ -93,7 +182,7 @@ export class CardVisuals {
       return;
     }
 
-    const shouldBeVisible = 
+    const shouldBeVisible =
       (this.cardFrontImage?.visible && this.cardFrontImage.active) ||
       (this.cardBackImage?.visible && this.cardBackImage.active) ||
       this.background.visible;
@@ -110,6 +199,39 @@ export class CardVisuals {
       this.cardFrontImage?.setTint(color);
       this.cardBackImage?.setTint(color);
     }
+  }
+
+  /** Steuert den Helligkeitseffekt. */
+  public applyBrightnessEffect(
+    isLight: boolean,
+    alpha: number,
+    tintColor?: number,
+  ) {
+    if (isLight) {
+      this.setTint(undefined);
+      this.brightnessOverlay.setVisible(true).setAlpha(alpha);
+    } else if (tintColor !== undefined) {
+      this.brightnessOverlay.setVisible(false);
+      this.setTint(tintColor);
+    }
+  }
+
+  /** Aktualisiert den Schattenzustand. */
+  public updateShadowState(offset: number, alpha: number, scale: number) {
+    const rad = -this.cardUI.rotation;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    this.shadow.setPosition(
+      offset * cos - offset * sin,
+      offset * sin + offset * cos,
+    );
+    this.shadow.setAlpha(alpha).setScale(scale);
+  }
+
+  /** Setzt Drag-Effekte zurück. */
+  public resetEffects() {
+    this.brightnessOverlay.setVisible(false);
+    this.setTint(undefined);
   }
 
   /** Startet den Glow-Effekt (z.B. bei Mouseover). */
@@ -143,6 +265,11 @@ export class CardVisuals {
   public onUpdateSize() {
     const { width, height } = this.cardUI;
     this.background.setSize(width, height);
+    this.brightnessOverlay.setSize(width, height);
+    this.shadow.setSize(
+      width + SHADOW_CONFIG.PADDING,
+      height + SHADOW_CONFIG.PADDING,
+    );
     this.cardFrontImage?.setDisplaySize(width, height);
     this.cardBackImage?.setDisplaySize(width, height);
 

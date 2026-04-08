@@ -32,8 +32,6 @@ export class CardUI extends Phaser.GameObjects.Container {
   public dragTargetY: number | null = null;
   // ✨ NEU: Noise/Glitter Effekt
   private visuals: CardVisuals; // ✨ NEU: Umbenannt
-  private brightnessOverlay: Phaser.GameObjects.Rectangle; // ✨ NEU: Overlay für Helligkeitseffekte
-  private shadow: Phaser.GameObjects.NineSlice; // ✨ NEU: Schatten
   private attachVisuals: CardAttachVisuals; // ✨ NEU
   private physicsHandler: CardPhysicsEffects; // ✨ FIX: Typ aktualisiert
   private counterVisuals: CardCounterVisuals; // ✨ NEU
@@ -81,37 +79,8 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     this.setSize(width, height);
 
-    // ✨ NEU: Schlagschatten (NineSlice)
-    // Wir nutzen jetzt die zentrale SHADOW_CONFIG
-    this.shadow = scene.add.nineslice(
-      SHADOW_CONFIG.OFFSET_REST,
-      SHADOW_CONFIG.OFFSET_REST,
-      "drop_shadow",
-      undefined,
-      width + SHADOW_CONFIG.PADDING,
-      height + SHADOW_CONFIG.PADDING,
-      SHADOW_CONFIG.SLICE,
-      SHADOW_CONFIG.SLICE,
-      SHADOW_CONFIG.SLICE,
-      SHADOW_CONFIG.SLICE,
-    );
-    this.shadow.setAlpha(SHADOW_CONFIG.ALPHA_REST);
-    this.shadow.setTint(0x000000); // Sicherstellen, dass der Schatten schwarz ist
-    this.shadow.setOrigin(0.5);
-    this.add(this.shadow);
-
-    // ✨ NEU: Overlay für Helligkeitseffekte (Additiv)
-    this.brightnessOverlay = scene.add.rectangle(0, 0, width, height, 0xffffff);
-    this.brightnessOverlay.setBlendMode(Phaser.BlendModes.ADD);
-    this.brightnessOverlay.setVisible(false);
-    this.add(this.brightnessOverlay);
-
-    // ✨ FIX: Initiales Stacking sicherstellen (Overlay über Hintergrund)
-    this.bringToTop(this.brightnessOverlay);
-    this.counterVisuals.onUpdateSize();
-
     // ✨ DEIN PLAN: Lade BEIDE Kartenbilder (Vorder- und Rückseite) sofort.
-    this.loadAndDisplayCardImages(); // ✨ NEU: Methode umbenannt
+    this.visuals.loadImages(this.assetManager);
 
     // ✨ DEIN PLAN: Zeige initial das korrekte Bild an.
     this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
@@ -135,43 +104,6 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.scene.events.on("settings-changed", this.onSettingsChanged, this);
   }
 
-  /** ✨ NEU: Überarbeitete Methode, die beide Bilder über den AssetManager lädt. */
-  private loadAndDisplayCardImages() {
-    // --- Lade die Kartenvorderseite ---
-    const frontImageKey = `card-${this.cardData.ImageFile}`;
-    const frontImageUrl = `${IMAGE_BASE_URL}${this.cardData.ImageFile}.jpg`;
-    this.assetManager.loadCardImage(
-      frontImageKey,
-      frontImageUrl,
-      (key) => {
-        if (!this.scene || !this.active) return;
-        this.visuals.setFrontImage(key);
-        this.bringToTop(this.brightnessOverlay);
-        this.counterVisuals.onUpdateSize(); // ✨ Sicherstellen, dass Texte oben bleiben
-        this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
-        this.visuals.onUpdateSize();
-      },
-      this.scene,
-    );
-
-    // --- Lade die Kartenrückseite ---
-    const backImageKey = "card-back";
-    const backImageUrl = `${IMAGE_BASE_URL}cardback.jpg`;
-    this.assetManager.loadCardImage(
-      backImageKey,
-      backImageUrl,
-      (key) => {
-        if (!this.scene || !this.active) return;
-        this.visuals.setBackImage(key);
-        this.bringToTop(this.brightnessOverlay);
-        this.counterVisuals.onUpdateSize(); // ✨ Sicherstellen, dass Texte oben bleiben
-        this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
-        this.visuals.onUpdateSize();
-      },
-      this.scene,
-    );
-  }
-
   public updateSize(width: number, height: number) {
     // ✨ OPTIMIERUNG: Nur aktualisieren, wenn sich die Größe wirklich geändert hat.
     if (this.width === width && this.height === height) return;
@@ -181,12 +113,6 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.height = height;
 
     this.setSize(width, height);
-    this.brightnessOverlay.setSize(width, height); // ✨ NEU: Overlay anpassen
-    this.shadow.setSize(
-      width + SHADOW_CONFIG.PADDING,
-      height + SHADOW_CONFIG.PADDING,
-    ); // ✨ FIX: Konsistente Größe
-
     // ✨ NEU: Counter-Texte anpassen via Sub-Komponente
     this.counterVisuals.onUpdateSize();
 
@@ -230,6 +156,11 @@ export class CardUI extends Phaser.GameObjects.Container {
     return this.isFaceDown;
   }
 
+  /** ✨ NEU: Gibt zurück, ob die Karte aktuell visuell gesperrt ist. */
+  public get isLocked(): boolean {
+    return this.isLockedHidden;
+  }
+
   /**
    * ✨ NEU: Gibt zurück, ob die Karte paralysiert ist (Counter > 0).
    */
@@ -260,8 +191,7 @@ export class CardUI extends Phaser.GameObjects.Container {
   public resetDragEffects() {
     this.setRotation(0);
     this.setScale(1);
-    this.clearTint();
-    this.brightnessOverlay.setVisible(false);
+    this.visuals.resetEffects();
   }
 
   /**
@@ -338,16 +268,7 @@ export class CardUI extends Phaser.GameObjects.Container {
    * egal wie die Karte gedreht ist (z.B. beim Gegner um 180 Grad).
    */
   public updateShadowState(offset: number, alpha: number, scale: number) {
-    const rad = -this.rotation; // Gegenrotation
-    const cos = Math.cos(rad);
-    const sin = Math.sin(rad);
-
-    const x = offset * cos - offset * sin;
-    const y = offset * sin + offset * cos;
-
-    this.shadow.setPosition(x, y);
-    this.shadow.setAlpha(alpha);
-    this.shadow.setScale(scale);
+    this.visuals.updateShadowState(offset, alpha, scale);
   }
 
   /**
@@ -359,14 +280,7 @@ export class CardUI extends Phaser.GameObjects.Container {
     alpha: number,
     tintColor?: number,
   ) {
-    if (isLight) {
-      this.clearTint();
-      this.brightnessOverlay.setVisible(true);
-      this.brightnessOverlay.setAlpha(alpha);
-    } else if (tintColor !== undefined) {
-      this.brightnessOverlay.setVisible(false);
-      this.setTint(tintColor);
-    }
+    this.visuals.applyBrightnessEffect(isLight, alpha, tintColor);
   }
 
   /**
