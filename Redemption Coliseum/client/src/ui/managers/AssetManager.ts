@@ -4,6 +4,8 @@ import { CardUI } from "../CardUI";
 import type { CardState } from "../../../../shared/types";
 import { log } from "../../utils/logger";
 
+const IMAGE_BASE_URL = "/assets/cards/";
+
 /**
  * Manages on-the-fly asset loading, such as card images for the deck.
  */
@@ -28,12 +30,27 @@ export class AssetManager {
     );
 
     // Preload Main Deck
-    player.deck?.forEach((card) => CardUI.preloadContent(this.scene, card));
+    player.deck?.forEach((card) => this.preloadCard(card));
 
     // Preload Reserve (Fixes the "missing on first search" issue)
-    player.reserve?.forEach((card) => CardUI.preloadContent(this.scene, card));
+    player.reserve?.forEach((card) => this.preloadCard(card));
 
     this.scene.load.start();
+  }
+
+  /** ✨ NEU: Interne Kapselung der Preload-Logik */
+  private preloadCard(cardData: CardState) {
+    if (!cardData.ImageFile) return;
+    const key = `card-${cardData.ImageFile}`;
+    const url = `${IMAGE_BASE_URL}${cardData.ImageFile}.jpg`;
+
+    if (!this.scene.textures.exists(key)) {
+      this.scene.load.image({
+        key: key,
+        url: url,
+        config: { mipmaps: true },
+      } as any);
+    }
   }
 
   /**
@@ -57,7 +74,9 @@ export class AssetManager {
     }
 
     // ✨ FIX: Nutze den Loader der anfragenden Szene, damit Events auch bei pausierter Hauptszene feuern
-    loaderScene.load.once(`filecomplete-image-${imageKey}`, () => onComplete(imageKey));
+    loaderScene.load.once(`filecomplete-image-${imageKey}`, () =>
+      onComplete(imageKey),
+    );
     loaderScene.load.image({
       key: imageKey,
       url: imageUrl,

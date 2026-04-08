@@ -227,23 +227,6 @@ export class CardUI extends Phaser.GameObjects.Container {
     return this;
   }
 
-  /** ✨ NEU: Lädt das Bild für eine Karte vor, ohne sie anzuzeigen. */
-  public static preloadContent(scene: Phaser.Scene, cardData: CardState) {
-    if (!cardData.ImageFile) return;
-
-    const frontImageKey = `card-${cardData.ImageFile}`;
-    const frontImageUrl = `${IMAGE_BASE_URL}${cardData.ImageFile}.jpg`;
-
-    if (!scene.textures.exists(frontImageKey)) {
-      // ✨ NEU: Mipmaps auch beim Preload aktivieren
-      scene.load.image({
-        key: frontImageKey,
-        url: frontImageUrl,
-        config: { mipmaps: true },
-      } as any); // ✨ FIX: Cast zu 'any'
-    }
-  }
-
   /**
    * ✨ NEU: Erstellt den Partikel-Emitter für den Flammen-Effekt.
    * Ausgelagert, um ihn bei Größenänderungen neu erstellen zu können.
