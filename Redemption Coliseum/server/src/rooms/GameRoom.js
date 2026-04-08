@@ -73,7 +73,8 @@ class GameRoom extends colyseus.Room {
   }
 
   onCreate(options) {
-    logGameEvent("started");
+    this.startTime = Date.now(); // Startzeit speichern
+    logGameEvent("started", { startedAt: this.startTime });
 
     this.state = new RoomState();
     // ✨ DEINE IDEE: Eine zentrale, nicht-synchronisierte Map für schnellen Kartenzugriff.
@@ -501,11 +502,20 @@ class GameRoom extends colyseus.Room {
 
       for (const card of cardsToDiscard) {
         moveCard(
-          targetPlayer, this.state, this.cardLookup, ZONES.DECK, ZONES.DISCARD, card.id, 1, null,
+          targetPlayer,
+          this.state,
+          this.cardLookup,
+          ZONES.DECK,
+          ZONES.DISCARD,
+          card.id,
+          1,
+          null,
         );
       }
 
-      this.broadcastGameLog(`${actingPlayer.name} discards ${count} card(s) from ${targetPlayer.name}'s deck.`);
+      this.broadcastGameLog(
+        `${actingPlayer.name} discards ${count} card(s) from ${targetPlayer.name}'s deck.`,
+      );
     });
 
     // ✨ NEU: Handler für das Erstellen von Tokens
@@ -628,7 +638,14 @@ class GameRoom extends colyseus.Room {
   }
 
   onDispose() {
-    logGameEvent("finished");
+    const finishedAt = Date.now();
+    const durationSec = Math.floor((finishedAt - this.startTime) / 1000);
+
+    logGameEvent("finished", {
+      startedAt: this.startTime,
+      finishedAt,
+      duration: durationSec,
+    });
   }
 
   onJoin(client, options) {
