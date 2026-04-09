@@ -141,9 +141,15 @@ export class CardUI extends Phaser.GameObjects.Container {
       return;
     }
 
-    this.isFaceDown = isFaceDown;
-    // ✨ DEIN PLAN: Ändere nur die Sichtbarkeit der bereits geladenen Bilder.
-    this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
+    if (this.isFaceDown !== isFaceDown) {
+      this.isFaceDown = isFaceDown;
+      this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
+    }
+
+    // ✨ FIX: Wenn die Zone vom Server bestätigt wurde, beende den "Drag-Limbo"
+    if (this.currentZone !== this.cardData.zone) {
+      this.isBeingDragged = false;
+    }
   }
 
   /** ✨ NEU: Aktualisiert die Anzeige der Paralyze- und Set-Aside-Counter. */

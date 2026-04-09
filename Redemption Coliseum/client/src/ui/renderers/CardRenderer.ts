@@ -332,9 +332,12 @@ export class CardRenderer {
       Math.abs(cardUI.y - targetY) < 0.1 &&
       Math.abs(cardUI.angle - normalizedTargetAngle) < 0.1;
 
-    // ✨ FINALE KORREKTUR: Setze die Position nur, wenn die Karte NICHT animiert wird.
-    // Dies ist die wahrscheinlichste Ursache des Problems: Wir kämpfen gegen den Animation-Tween.
-    if (!isAtTarget && !isAnimating) {
+    // ✨ FINALE KORREKTUR: Teleport-Schutz
+    // Wir positionieren die Karte nur hart, wenn:
+    // 1. Sie nicht am Ziel ist
+    // 2. KEINE Animation läuft (frische Prüfung!)
+    // 3. Sie NICHT gerade vom User gezogen wird (oder auf Server-Drop-Bestätigung wartet)
+    if (!isAtTarget && !isAnimating && !cardUI.isBeingDragged) {
       cardUI.x = targetX;
       cardUI.y = targetY;
       cardUI.setAngle(normalizedTargetAngle);
