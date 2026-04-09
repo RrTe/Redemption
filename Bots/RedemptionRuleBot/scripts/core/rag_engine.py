@@ -63,24 +63,43 @@ class RAGEngine:
         raise Exception("HuggingFace Inference API failed after retries.")
 
     def retrieve_context(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
-        """
-        Retrieves relevant context from Pinecone based on the query.
+        """Retrieves relevant context from Pinecone based on the query.
+
+        Each returned dict is the Pinecone metadata enriched with a
+        '_score' key (cosine similarity, 0–1) so downstream logic can
+        surface relevance information to the user or the LLM.
+
+        Args:
+            query: The natural-language question to embed and search for.
+            top_k: Number of nearest-neighbour results to return.
+
+        Returns:
+            A list of metadata dicts (sorted by descending similarity),
+            each containing an extra '_score' field, or None on error.
         """
         try:
-            # 1. Embed query via HuggingFace (FREE & Unlimited for this month)
+            # 1. Embed query via HuggingFace
             vector = self._embed_query(query)
-            
-            # 2. Query index (Pinecone)
+
+            # 2. Query Pinecone — results are already ranked by score desc
             results = self.index.query(
                 namespace="__default__",
                 vector=vector,
                 top_k=top_k,
                 include_metadata=True
             )
-            return [match['metadata'] for match in results['matches']]
+
+            # 3. Inject the similarity score into each metadata dict so callers
+            #    can forward it to the LLM or display it in source citations.
+            enriched = []
+            for match in results['matches']:
+                meta = dict(match['metadata'])  # shallow copy to avoid mutation
+                meta['_score'] = round(float(match['score']), 3)
+                enriched.append(meta)
+            return enriched
         except Exception as e:
             print(f"Retrieval error: {e}")
-            return None # Return None to indicate a technical failure
+            return None  # Return None to indicate a technical failure
 
     def upsert_ruling(self, question: str, answer: str, author: str, date: str, is_judge: bool, source_id: str) -> bool:
         """
@@ -146,14 +165,16 @@ class RAGEngine:
         for meta in metadata_list:
             text = meta.get('text', '')
             source = meta.get('source', 'Unknown')
-            # Extract citation metadata
-            author = meta.get('author', 'Unknown')
             date = meta.get('date', 'Unknown')
+            time = meta.get('time', 'Unknown')
             is_judge = "Official Judge" if meta.get('is_judge') else "Community User"
-            
+            # Score: cosine similarity injected by retrieve_context (0 = unrelated, 1 = identical)
+            score = meta.get('_score', 'N/A')
+            relevance_pct = f"{int(score * 100)}%" if isinstance(score, float) else score
+
             context_parts.append(
                 f"SOURCE: {source}\n"
-                f"CITATION_DATA: Date: {date}, Author: {author}, Status: {is_judge}\n"
+                f"CITATION_DATA: Date: {date}, Time: {time}, Status: {is_judge}, Relevance: {relevance_pct}\n"
                 f"CONTENT: {text}"
             )
             

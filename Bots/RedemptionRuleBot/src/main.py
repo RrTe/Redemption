@@ -1,10 +1,33 @@
+import sys
+import os
+
+# Wispbyte Start-Fix: Ensure the root directory is in sys.path
+# This allows Wispbyte to find the "scripts" package when running src/main.py
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+
+# --- One-time cleanup for Wispbyte migration ---
+# pinecone==8.1.1 actively raises DeprecatedPluginError if it detects the old
+# pinecone-plugin-inference package (a leftover from pinecone-client==5.0.1).
+# We uninstall it here, before any pinecone import is triggered.
+import subprocess
+_cleanup_result = subprocess.run(
+    [sys.executable, "-m", "pip", "uninstall", "-y", "pinecone-plugin-inference"],
+    capture_output=True, text=True
+)
+if "Successfully uninstalled" in _cleanup_result.stdout:
+    print("[CLEANUP] Removed deprecated pinecone-plugin-inference.")
+# ------------------------------------------------
+
+
 import discord
 from discord.ext import commands
 import fitz  # PyMuPDF - used for parsing PDF content
 import logging
 import json
 import time
-import os
 from discord import app_commands
 from discord.ext import tasks
 from discord.ui import Button, View
@@ -40,7 +63,12 @@ except Exception as e:
 # ---------------------------
 # Auto-Sync Background Task
 # ---------------------------
-SYNC_STATE_FILE = "data/sync_state.json"
+# SYNC_STATE_FILE uses BASE_DIR to be robust regardless of the working directory
+SYNC_STATE_FILE = os.path.join(BASE_DIR, "data", "sync_state.json")
+
+# SYNC_INTERVAL_MINUTES can be overridden via .env for local testing (e.g. 5 minutes).
+# Defaults to 1440 minutes (24 hours) for production.
+SYNC_INTERVAL_MINUTES = int(os.getenv("SYNC_INTERVAL_MINUTES", "1440"))
 
 def get_last_synced_id():
     if os.path.exists(SYNC_STATE_FILE):
@@ -54,7 +82,7 @@ def set_last_synced_id(msg_id):
     with open(SYNC_STATE_FILE, "w") as f:
         json.dump({"last_message_id": msg_id}, f)
 
-@tasks.loop(hours=24)
+@tasks.loop(minutes=SYNC_INTERVAL_MINUTES)
 async def auto_sync_rulings():
     channel_id = os.getenv("RULING_CHANNEL_ID")
     if not channel_id or not rag_engine:
