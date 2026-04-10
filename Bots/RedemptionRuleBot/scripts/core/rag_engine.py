@@ -5,6 +5,7 @@ from typing import List, Dict, Any
 from pinecone import Pinecone
 from groq import Groq
 from dotenv import load_dotenv
+from scripts.core.knowledge_manager import KnowledgeManager
 
 load_dotenv()
 
@@ -35,6 +36,9 @@ class RAGEngine:
             
         with open(prompt_path, "r", encoding="utf-8") as f:
             self.system_prompt = f.read()
+
+        # Initialize Knowledge Manager for Ground Truth lookups
+        self.km = KnowledgeManager()
 
     def _embed_query(self, text: str) -> List[float]:
         """
@@ -152,13 +156,24 @@ class RAGEngine:
         """
         Retrieves context and generates a response from the AI Judge.
         """
-        # Get context
+        # Get semantic context from Pinecone
         metadata_list = self.retrieve_context(question)
+        
+        # GROUND TRUTH: Find exact cards and rules mentioned in question
+        card_matches = self.km.find_cards_in_text(question)
+        rule_snippets = self.km.find_rules_by_keyword(question)
         
         # Security check: If retrieval failed (429, etc.), do not let LLM hallucinate
         if metadata_list is None:
             return ("⚠️ **TECHNICAL ERROR**: I currently cannot access the knowledge base due to API limits or connection issues. "
                     "Please try again later or contact the administrator.")
+
+        # Build Card & Rule context strings
+        card_context = self.km.format_card_context(card_matches)
+        rule_context = ""
+        if rule_snippets:
+            rule_context = "--- GROUND TRUTH RULE DEFINITIONS ---\n" + "\n".join(rule_snippets) + "\n\n"
+
 
         # Build context string
         context_parts = []
@@ -185,7 +200,13 @@ class RAGEngine:
             {"role": "system", "content": self.system_prompt},
             {
                 "role": "user", 
-                "content": f"CONTEXT FROM KNOWLEDGE BASE:\n{context_str}\n\nUSER QUESTION: {question}"
+                "content": (
+                    f"{card_context}\n"
+                    f"{rule_context}\n"
+                    f"--- DISCORD RULINGS (REFERENCE) ---\n"
+                    f"{context_str}\n\n"
+                    f"USER QUESTION: {question}"
+                )
             }
         ]
         

@@ -16,12 +16,19 @@ __pycache__/
 # Laufzeit-Daten (Logs & Bot-Status generisch)
 *.log
 pagination_progress.json
+data/sync_state.json
 
 # IDE & OS Files
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Scratch & Planning
+scratch/
+implementation_plan.md
+task.md
+walkthrough.md
 
 # ----------------------------------------------------
 # DATEN KONTROLLE (Ressourcen & Datenbanken)
