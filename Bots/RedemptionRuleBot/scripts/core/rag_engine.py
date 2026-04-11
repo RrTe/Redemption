@@ -146,54 +146,70 @@ class RAGEngine:
                 vectors=[record],
                 namespace="__default__"
             )
-            print(f"Successfully upserted ruling {source_id} to Pinecone.")
+            print(f"Successfully upserted ruling {source_id} to Pinecone.", flush=True)
             return True
         except Exception as e:
-            print(f"Error upserting ruling {source_id}: {e}")
+            print(f"Error upserting ruling {source_id}: {e}", flush=True)
             return False
 
     def ask_judge(self, question: str) -> str:
         """
         Retrieves context and generates a response from the AI Judge.
         """
+        print(f"\n[ENGINE] Processing question: '{question}'", flush=True)
+        
         # Get semantic context from Pinecone
+        print("[ENGINE] Retrieving semantic context from Pinecone...", flush=True)
         metadata_list = self.retrieve_context(question)
         
         # GROUND TRUTH: Find exact cards and rules mentioned in question
+        print("[ENGINE] Identifying cards and rules from Ground Truth...", flush=True)
         card_matches = self.km.find_cards_in_text(question)
         rule_snippets = self.km.find_rules_by_keyword(question)
         
-        # Security check: If retrieval failed (429, etc.), do not let LLM hallucinate
+        # Security check
         if metadata_list is None:
+            print("[ENGINE] ERROR: Retrieval failed.", flush=True)
             return ("⚠️ **TECHNICAL ERROR**: I currently cannot access the knowledge base due to API limits or connection issues. "
                     "Please try again later or contact the administrator.")
 
         # Build Card & Rule context strings
+        print("[ENGINE] Formatting card and rule context...", flush=True)
         card_context = self.km.format_card_context(card_matches)
         rule_context = ""
         if rule_snippets:
-            rule_context = "--- GROUND TRUTH RULE DEFINITIONS ---\n" + "\n".join(rule_snippets) + "\n\n"
-
-
-        # Build context string
+            rule_context = "--- OFFICIAL REDEMPTION RULES ---\n"
+            for r in rule_snippets:
+                rule_context += f"SOURCE: {r['doc']}\nKEYWORD: {r['keyword']}\nCONTENT: {r['snippet']}\n\n"
+        
+        # Build context string with HARD FILTER for Discord Rulings
+        print(f"[ENGINE] Applying Hard Filter to {len(metadata_list)} rulings...", flush=True)
         context_parts = []
+        identified_card_names = list(card_matches.keys())
+        
         for meta in metadata_list:
             text = meta.get('text', '')
-            source = meta.get('source', 'Unknown')
+            
+            # HARD FILTER
+            unauthorized_card = self.km.contains_unauthorized_cards(text, identified_card_names)
+            if unauthorized_card:
+                print(f"  [FILTER] Skipping ruling mentioning '{unauthorized_card}'", flush=True)
+                continue
+
             date = meta.get('date', 'Unknown')
             time = meta.get('time', 'Unknown')
             is_judge = "Official Judge" if meta.get('is_judge') else "Community User"
-            # Score: cosine similarity injected by retrieve_context (0 = unrelated, 1 = identical)
             score = meta.get('_score', 'N/A')
             relevance_pct = f"{int(score * 100)}%" if isinstance(score, float) else score
 
             context_parts.append(
-                f"SOURCE: {source}\n"
+                f"SOURCE: Discord Ruling\n"
                 f"CITATION_DATA: Date: {date}, Time: {time}, Status: {is_judge}, Relevance: {relevance_pct}\n"
                 f"CONTENT: {text}"
             )
             
-        context_str = "\n\n---\n\n".join(context_parts) if context_parts else "No relevant context found in database."
+        context_str = "\n\n---\n\n".join(context_parts) if context_parts else "No relevant Discord rulings found for these specific cards."
+        print(f"[ENGINE] Final context size: {len(context_parts)} rulings. Calling LLM...", flush=True)
         
         # Prepare LLM messages
         messages = [
@@ -210,13 +226,14 @@ class RAGEngine:
             }
         ]
         
-        # Call Groq (or OpenRouter in future)
         try:
             completion = self.groq_client.chat.completions.create(
                 model=self.llm_model,
                 messages=messages,
                 temperature=0.0
             )
+            print("[ENGINE] LLM response received successfully.", flush=True)
             return completion.choices[0].message.content
         except Exception as e:
+            print(f"[ENGINE] ERROR in LLM call: {e}", flush=True)
             return f"Error generating response: {e}"
