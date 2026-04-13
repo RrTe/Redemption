@@ -6,7 +6,7 @@ def test_over_anonymization():
     """
     Test that card names and biblical terms are NOT anonymized even in text.
     """
-    card_data_path = "ragdata/carddata.json"
+    card_data_path = "data/carddata.json"
     if not os.path.exists(card_data_path):
         print("Skipping test: carddata.json not found.")
         return

@@ -35,8 +35,8 @@ if __name__ == "__main__":
     
     # Final Paths for 10MB check
     source_file = "data/DiscordRulings.txt"
-    output_file = "ragdata/processed_rulings_final.json"
-    card_data = "ragdata/carddata.json"
+    output_file = "data/processed_rulings_final.json"
+    card_data = "data/carddata.json"
     
     print(f"Running Leak-Check: {source_file} -> {output_file}")
     

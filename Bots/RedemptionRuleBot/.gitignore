@@ -16,7 +16,6 @@ __pycache__/
 # Laufzeit-Daten (Logs & Bot-Status generisch)
 *.log
 pagination_progress.json
-data/sync_state.json
 
 # IDE & OS Files
 .vscode/
@@ -31,17 +30,19 @@ task.md
 walkthrough.md
 
 # ----------------------------------------------------
-# DATEN KONTROLLE (Ressourcen & Datenbanken)
-# ----------------------------------------------------
+# DATEN KONTROLLE (Konsole & Ressourcen)
+# ---------------------------
 
-# Ignoriere erstmal ALLES in data/ und ragdata/
+# Ignoriere ALLES in data/ standardmäßig
 data/*
-ragdata/*
 
-# ABER ERLAUBE (Keep) explizit diese notwendigen System-Dateien:
-!data/REG.pdf
-!data/ORDIR.pdf
-!ragdata/carddata.json
+# ERLAUBE explizit Regel-Dokumente und Card Data
+!data/*.pdf
+!data/carddata.json
+!data/sync_state.json
+!data/prompts/
 
-# (Dadurch werden riesige Dateien wie DiscordRulings.txt 
-# oder processed_rulings_final.json ab sofort blockiert!)
+# BLOCKIERE explizit große Produktions-Logs und Zwischenergebnisse
+data/processed_rulings_final.json
+data/DiscordRulings*.txt
+data/embeddings_cache.json

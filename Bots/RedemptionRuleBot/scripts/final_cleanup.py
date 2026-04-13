@@ -30,4 +30,4 @@ if __name__ == "__main__":
         "cthetree": "USER_PII",
         "aggie": "JUDGE_001"
     }
-    brute_force_cleanup("ragdata/processed_rulings_final.json", replacements)
+    brute_force_cleanup("data/processed_rulings_final.json", replacements)

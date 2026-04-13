@@ -21,8 +21,8 @@ def process_chunk(messages_chunk: List[DiscordMessage], user_map: Dict[str, str]
 def main():
     parser = argparse.ArgumentParser(description="TCG-Rule-Bot-Architect Optimized Pipeline")
     parser.add_argument("--input", type=str, default="data/DiscordRulings.txt", help="Input log file")
-    parser.add_argument("--output", type=str, default="ragdata/processed_rulings_final.json", help="Output JSON file")
-    parser.add_argument("--carddata", type=str, default="ragdata/carddata.json", help="Card data JSON path")
+    parser.add_argument("--output", type=str, default="data/processed_rulings_final.json", help="Output JSON file")
+    parser.add_argument("--carddata", type=str, default="data/carddata.json", help="Card data JSON path")
     parser.add_argument("--chunks", type=int, default=8, help="Number of parallel processes")
     args = parser.parse_args()
 

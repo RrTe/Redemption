@@ -170,7 +170,7 @@ if __name__ == "__main__":
         index = get_pinecone_client()
         
         # Only process rulings as requested to save time and fix metadata
-        rulings_path = "ragdata/processed_rulings_final.json"
+        rulings_path = "data/processed_rulings_final.json"
         
         if os.path.exists(rulings_path):
             records = process_rulings(rulings_path)
