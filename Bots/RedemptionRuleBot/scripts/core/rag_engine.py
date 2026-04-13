@@ -77,45 +77,23 @@ class RAGEngine:
 
     def search_only(self, query: str) -> str:
         """
-        Performs a pure RAG search and returns the formatted context without AI generation.
+        Performs a pure RAG search ONLY for Discord rulings.
+        No LLM synthesis, no card data, no rulebook snippets.
         """
         metadata_list = self.retrieve_context(query)
-        card_matches = self.km.find_cards_in_text(query)
         
-        # Determine extra rule keywords
-        extra_keywords = []
-        query_lower = query.lower()
-        for phase in ["battle", "preparation", "upkeep", "draw", "discard", "phase"]:
-            if phase in query_lower:
-                extra_keywords.append(phase.capitalize())
-        
-        mechanical_verbs = [
-            "reserve", "negate", "protect", "discard", "draw", "search", 
-            "activate", "choose", "reveal", "place", "remove", "add",
-            "modifier", "effect", "identifier"
-        ]
-        
-        for name, versions in card_matches.items():
-            for v in versions:
-                if v.get("Type"): extra_keywords.append(v["Type"])
-                ability_lower = v.get("SpecialAbility", "").lower()
-                for kw in mechanical_verbs:
-                    if kw in ability_lower: extra_keywords.append(kw.capitalize())
-        
-        rule_snippets = self.km.find_rules_by_keyword(query, extra_keywords=list(set(extra_keywords)))
-        card_context = self.km.format_card_context(card_matches)
-        
-        rule_context = ""
-        if rule_snippets:
-            rule_context = "### OFFICIAL RULES ###\n"
-            for r in rule_snippets:
-                rule_context += f"**{r.get('title', 'Unknown')}** ({r.get('doc', 'Unknown')}):\n{r.get('content')}\n\n"
-        
+        if not metadata_list:
+            return "❌ No matching rulings found in the ruling-questions channel."
+            
         context_parts = []
+        # Get card names in the query to potentially filter irrelevant results
+        card_matches = self.km.find_cards_in_text(query)
         identified_card_names = list(card_matches.keys())
+        
         for meta in metadata_list:
             text = meta.get('text', '')
-            if card_matches:
+            # Optional check to keep it relevant to the cards in the query
+            if identified_card_names:
                 unauthorized_card = self.km.contains_unauthorized_cards(text, identified_card_names)
                 if unauthorized_card: continue
 
@@ -123,9 +101,11 @@ class RAGEngine:
             is_judge = "Official Judge" if meta.get('is_judge') else "Community User"
             context_parts.append(f"**Discord Ruling ({date}, {is_judge})**:\n{text}")
             
-        context_str = "\n\n---\n\n".join(context_parts) if context_parts else "No relevant Discord rulings found."
-        
-        return f"{card_context}\n\n{rule_context}\n\n### DISCORD RULINGS ###\n{context_str}"
+        if not context_parts:
+            return "❌ No specific rulings found in the ruling-questions channel for this card/situation."
+            
+        context_str = "\n\n---\n\n".join(context_parts)
+        return f"### FOUND DISCORD RULINGS ###\n\n{context_str}"
 
     def ask_judge(self, question: str) -> str:
         print(f"\n[ENGINE] Processing question: '{question}'", flush=True)

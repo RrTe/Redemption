@@ -132,10 +132,22 @@ class KnowledgeManager:
         return output
 
     def contains_unauthorized_cards(self, text: str, authorized_names: List[str]) -> Optional[str]:
+        if not authorized_names:
+            return None  # No targeted cards, so no filtering
+            
         text_lower = text.lower()
         auth_lower = {name.lower() for name in authorized_names}
+        
+        # If the text contains at least one of the authorized cards, we trust it.
+        # This allows for rulings that mention related cards (e.g., Shadrach and Daniel).
+        for auth_name in auth_lower:
+            if auth_name in text_lower:
+                return None
+        
+        # If NO authorized cards are found, but OTHER cards are, it's likely irrelevant.
         for name in self.cards_by_name.keys():
             if name in self.blacklist or len(name) < 5: continue
-            if name.lower() in text_lower and name.lower() not in auth_lower:
-                return name
+            if name.lower() in text_lower:
+                return name # Found an unauthorized card and no authorized card
+                
         return None

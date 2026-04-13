@@ -618,7 +618,7 @@ async def search_rulings(interaction: discord.Interaction, query: str):
 
         paginated = PaginatedText(results)
         embed = discord.Embed(
-            title=f"Suchergebnisse: {query}",
+            title=f"Search Results: {query}",
             color=discord.Color.blue(),
             description=paginated.pages[0]
         )
