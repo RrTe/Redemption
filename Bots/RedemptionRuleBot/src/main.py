@@ -93,6 +93,13 @@ async def auto_sync_rulings():
     try:
         channel = bot.get_channel(int(channel_id))
         if not channel:
+            logger.warning(f"Auto-Sync: Channel {channel_id} not found.")
+            return
+
+        # Check for history permissions to avoid 403 Forbidden
+        permissions = channel.permissions_for(channel.guild.me)
+        if not permissions.read_message_history:
+            logger.warning(f"Auto-Sync: Missing 'Read Message History' permission in channel {channel.name}.")
             return
             
         last_id = get_last_synced_id()
@@ -595,15 +602,52 @@ async def ruling(interaction: discord.Interaction, question: str):
         await interaction.followup.send("Fehler bei der Abfrage der Regel.", ephemeral=True)
 
 # ---------------------------
+# Slash command: /find
+# Pure factual search for Discord rulings and rule snippets (No AI)
+# ---------------------------
+@bot.tree.command(name="find", description="Sucht direkt in Discord-Rulings und Regeln (ohne KI-Interpretation)")
+@app_commands.describe(query="Suchbegriff oder Frage")
+async def search_rulings(interaction: discord.Interaction, query: str):
+    await interaction.response.defer(thinking=True)
+    if not rag_engine:
+        await interaction.followup.send("RAG Engine ist zurzeit nicht verfügbar.", ephemeral=True)
+        return
+
+    try:
+        results = rag_engine.search_only(query)
+
+        paginated = PaginatedText(results)
+        embed = discord.Embed(
+            title=f"Suchergebnisse: {query}",
+            color=discord.Color.blue(),
+            description=paginated.pages[0]
+        )
+        embed.set_footer(text=f"Page 1/{paginated.total_pages}")
+        
+        message = await interaction.followup.send(embed=embed, ephemeral=False)
+        if paginated.total_pages > 1:
+            view = PersistentPagination(paginated, embed, message, interaction.user.id, query)
+            await message.edit(view=view)
+    except Exception as e:
+        logger.error(f"Search error: {e}")
+        await interaction.followup.send("Fehler bei der Suche.", ephemeral=True)
+
+# ---------------------------
 # Prefix command: !search
 # Lets users search for a section directly via text commands
 # Useful in environments without slash command support
 # ---------------------------
 @bot.command(name='search')
-async def search_pdf(ctx, doc: str, keyword: str,
+async def search_pdf(ctx, doc: str = None, keyword: str = None,
                      section_size: int = 30,
                      glossary_size: int = 14,
                      heading_font: str = "Arial"):
+
+    if not doc or not keyword:
+        # Provide a helpful usage instruction instead of crashing
+        available_docs = ", ".join(pdfs.keys()) if 'pdfs' in globals() else "Unbekannt"
+        await ctx.send(f"❌ **Fehlende Argumente!**\nVerwendung: `!search <Dokument> <Suchbegriff>`\nBeispiel: `!search REG Abomination`\nVerfügbare Dokumente: {available_docs}")
+        return
 
     pdf_path = pdfs.get(doc)
     if not pdf_path:
@@ -630,6 +674,24 @@ async def search_pdf(ctx, doc: str, keyword: str,
     if paginated.total_pages > 1:
         view = PersistentPagination(paginated, embed, message, ctx.author.id, keyword)
         await message.edit(view=view)
+
+# ---------------------------
+# Prefix command: !sync
+# Forces synchronization of slash commands for the current guild
+# ---------------------------
+@bot.command(name='sync')
+async def sync_commands(ctx):
+    try:
+        # Syncing to the current guild for immediate results
+        synced = await bot.tree.sync()
+        await ctx.send(f"✅ Synchronisierte {len(synced)} Slash-Commands global.")
+        
+        # Also sync to this specific guild for instant updates
+        bot.tree.copy_global_to(guild=ctx.guild)
+        synced_guild = await bot.tree.sync(guild=ctx.guild)
+        await ctx.send(f"🚀 Sofort-Update für diesen Server durchgeführt ({len(synced_guild)} Kommandos).")
+    except Exception as e:
+        await ctx.send(f"❌ Fehler beim Synchronisieren: {e}")
 
 # ---------------------------
 # Bot token loading and startup

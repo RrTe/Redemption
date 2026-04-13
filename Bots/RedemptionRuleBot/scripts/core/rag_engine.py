@@ -13,6 +13,7 @@ class RAGEngine:
     """
     Handles Retrieval-Augmented Generation using HuggingFace for local embeddings
     and Pinecone for vector search, with Groq for response generation.
+    Supports a Draft -> Review self-correction loop.
     """
     
     def __init__(self):
@@ -26,13 +27,20 @@ class RAGEngine:
         
         self.llm_model = "llama-3.3-70b-versatile"
         
+        # Load System Prompt (Drafter)
         prompt_path = os.path.join("scripts", "prompts", "judge_system_prompt.txt")
         if not os.path.exists(prompt_path):
-            # Fallback if the above path fails for any reason
             prompt_path = "judge_system_prompt.txt"
-            
         with open(prompt_path, "r", encoding="utf-8") as f:
             self.system_prompt = f.read()
+
+        # Load Reviewer Prompt
+        review_prompt_path = os.path.join("scripts", "prompts", "judge_review_prompt.txt")
+        if os.path.exists(review_prompt_path):
+            with open(review_prompt_path, "r", encoding="utf-8") as f:
+                self.review_prompt = f.read()
+        else:
+            self.review_prompt = None
 
         self.km = KnowledgeManager()
 
@@ -67,25 +75,20 @@ class RAGEngine:
             print(f"Retrieval error: {e}")
             return None
 
-    def ask_judge(self, question: str) -> str:
-        print(f"\n[ENGINE] Processing question: '{question}'", flush=True)
-        metadata_list = self.retrieve_context(question)
-        card_matches = self.km.find_cards_in_text(question)
+    def search_only(self, query: str) -> str:
+        """
+        Performs a pure RAG search and returns the formatted context without AI generation.
+        """
+        metadata_list = self.retrieve_context(query)
+        card_matches = self.km.find_cards_in_text(query)
         
-        # Determine extra rule keywords based on card types, ability text, and phases
+        # Determine extra rule keywords
         extra_keywords = []
-        
-        # 1. Phase Detection (Ensures Rulebook sections are prioritized)
-        question_lower = question.lower()
-        phases = ["battle", "preparation", "upkeep", "draw", "discard", "phase"]
-        for phase in phases:
-            if phase in question_lower:
+        query_lower = query.lower()
+        for phase in ["battle", "preparation", "upkeep", "draw", "discard", "phase"]:
+            if phase in query_lower:
                 extra_keywords.append(phase.capitalize())
-                # If a phase is mentioned, we ALWAYS want context from the Rulebook
-                extra_keywords.append("Rulebook")
-                extra_keywords.append("Phases")
-
-        # 2. Card Type and Mechanical Keyword Detection from card text
+        
         mechanical_verbs = [
             "reserve", "negate", "protect", "discard", "draw", "search", 
             "activate", "choose", "reveal", "place", "remove", "add",
@@ -94,17 +97,66 @@ class RAGEngine:
         
         for name, versions in card_matches.items():
             for v in versions:
-                # Add card type to search
+                if v.get("Type"): extra_keywords.append(v["Type"])
+                ability_lower = v.get("SpecialAbility", "").lower()
+                for kw in mechanical_verbs:
+                    if kw in ability_lower: extra_keywords.append(kw.capitalize())
+        
+        rule_snippets = self.km.find_rules_by_keyword(query, extra_keywords=list(set(extra_keywords)))
+        card_context = self.km.format_card_context(card_matches)
+        
+        rule_context = ""
+        if rule_snippets:
+            rule_context = "### OFFICIAL RULES ###\n"
+            for r in rule_snippets:
+                rule_context += f"**{r.get('title', 'Unknown')}** ({r.get('doc', 'Unknown')}):\n{r.get('content')}\n\n"
+        
+        context_parts = []
+        identified_card_names = list(card_matches.keys())
+        for meta in metadata_list:
+            text = meta.get('text', '')
+            if card_matches:
+                unauthorized_card = self.km.contains_unauthorized_cards(text, identified_card_names)
+                if unauthorized_card: continue
+
+            date = meta.get('date', 'Unknown')
+            is_judge = "Official Judge" if meta.get('is_judge') else "Community User"
+            context_parts.append(f"**Discord Ruling ({date}, {is_judge})**:\n{text}")
+            
+        context_str = "\n\n---\n\n".join(context_parts) if context_parts else "No relevant Discord rulings found."
+        
+        return f"{card_context}\n\n{rule_context}\n\n### DISCORD RULINGS ###\n{context_str}"
+
+    def ask_judge(self, question: str) -> str:
+        print(f"\n[ENGINE] Processing question: '{question}'", flush=True)
+        metadata_list = self.retrieve_context(question)
+        card_matches = self.km.find_cards_in_text(question)
+        
+        # Determine extra rule keywords
+        extra_keywords = []
+        question_lower = question.lower()
+        phases = ["battle", "preparation", "upkeep", "draw", "discard", "phase"]
+        for phase in phases:
+            if phase in question_lower:
+                extra_keywords.append(phase.capitalize())
+                extra_keywords.append("Rulebook")
+                extra_keywords.append("Phases")
+
+        mechanical_verbs = [
+            "reserve", "negate", "protect", "discard", "draw", "search", 
+            "activate", "choose", "reveal", "place", "remove", "add",
+            "modifier", "effect", "identifier"
+        ]
+        
+        for name, versions in card_matches.items():
+            for v in versions:
                 if v.get("Type"):
                     extra_keywords.append(v["Type"])
-                
-                # Extract mechanical verbs from the Special Ability itself
                 ability_lower = v.get("SpecialAbility", "").lower()
                 for kw in mechanical_verbs:
                     if kw in ability_lower:
                         extra_keywords.append(kw.capitalize())
         
-        # Unique list of keywords
         distinct_keywords = list(set(extra_keywords))
         rule_snippets = self.km.find_rules_by_keyword(question, extra_keywords=distinct_keywords)
         
@@ -116,7 +168,6 @@ class RAGEngine:
         if rule_snippets:
             rule_context = "--- OFFICIAL REDEMPTION RULES ---\n"
             for r in rule_snippets:
-                # FIXED: Using title and content instead of legacy keyword field
                 rule_context += f"SECTION: {r.get('title', 'Unknown')}\nSOURCE: {r.get('doc', 'Unknown')}\nCONTENT: {r.get('content', 'No content available')}\n\n"
         
         context_parts = []
@@ -126,12 +177,10 @@ class RAGEngine:
             unauthorized_card = self.km.contains_unauthorized_cards(text, identified_card_names)
             if unauthorized_card:
                 continue
-
             date = meta.get('date', 'Unknown')
             is_judge = "Official Judge" if meta.get('is_judge') else "Community User"
             score = meta.get('_score', 'N/A')
             relevance_pct = f"{int(score * 100)}%" if isinstance(score, float) else score
-
             context_parts.append(
                 f"SOURCE: Discord Ruling\n"
                 f"CITATION_DATA: Date: {date}, Status: {is_judge}, Relevance: {relevance_pct}\n"
@@ -140,6 +189,7 @@ class RAGEngine:
             
         context_str = "\n\n---\n\n".join(context_parts) if context_parts else "No relevant Discord rulings found."
         
+        # --- STAGE 1: Generate Draft ---
         messages = [
             {"role": "system", "content": self.system_prompt},
             {
@@ -149,7 +199,28 @@ class RAGEngine:
         ]
         
         try:
-            completion = self.groq_client.chat.completions.create(model=self.llm_model, messages=messages, temperature=0.0)
-            return completion.choices[0].message.content
+            draft_completion = self.groq_client.chat.completions.create(model=self.llm_model, messages=messages, temperature=0.0)
+            draft_answer = draft_completion.choices[0].message.content
+            
+            # --- STAGE 2: Review & Edit ---
+            if self.review_prompt:
+                print(f"[ENGINE] Auditing draft answer...", flush=True)
+                reviewer_input = (
+                    f"DRAFT_ANSWER: {draft_answer}\n"
+                    f"USER_QUESTION: {question}\n"
+                    f"CARD_TEXT: {card_context}\n"
+                    f"RULINGS: {rule_context}\n{context_str}"
+                )
+                
+                review_messages = [
+                    {"role": "system", "content": self.review_prompt},
+                    {"role": "user", "content": reviewer_input}
+                ]
+                
+                final_completion = self.groq_client.chat.completions.create(model=self.llm_model, messages=review_messages, temperature=0.0)
+                return final_completion.choices[0].message.content
+            
+            return draft_answer
+            
         except Exception as e:
             return f"Error generating response: {e}"
