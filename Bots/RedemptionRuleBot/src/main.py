@@ -181,53 +181,8 @@ async def auto_sync_rulings():
 async def before_auto_sync():
     await bot.wait_until_ready()
 
-def discover_pdfs(directory="data"):
-    """
-    Scans the directory for PDFs and creates a mapping.
-    Category is the first part of the filename (e.g. REG_v11.pdf -> REG).
-    """
-    found_pdfs = {}
-    if not os.path.exists(directory):
-        return found_pdfs
-        
-    # Default categories in case the config file is missing
-    known_categories = ["REG", "ORDIR", "Rulebook", "DeckBuilding"]
-    
-    # Try to load categories from an external file for easier management
-    cat_file = os.path.join(directory, "categories.txt")
-    if os.path.exists(cat_file):
-        try:
-            with open(cat_file, "r", encoding="utf-8") as f:
-                custom_cats = [line.strip() for line in f if line.strip()]
-                if custom_cats:
-                    known_categories = custom_cats
-                    logger.info(f"Loaded {len(known_categories)} categories from {cat_file}")
-        except Exception as e:
-            logger.error(f"Failed to read {cat_file}: {e}")
-    
-    for file_path in glob.glob(os.path.join(directory, "*.pdf")):
-        filename = os.path.basename(file_path)
-        filename_upper = filename.upper()
-        
-        # Try to find a known category in the name first
-        assigned_category = None
-        for cat in known_categories:
-            if cat.upper() in filename_upper:
-                assigned_category = cat
-                break
-        
-        # Fallback for unknown documents: use first part of filename
-        if not assigned_category:
-            assigned_category = re.split(r'[_ ]', filename)[0].replace(".pdf", "")
-            
-        if assigned_category not in found_pdfs:
-            found_pdfs[assigned_category] = file_path
-            
-    return found_pdfs
-
-# Global mapping of logical document identifiers to actual PDF files
-# Populated at startup via discover_pdfs()
-pdfs = {}
+# Document and mapping handled by KnowledgeManager
+section_titles_by_doc = {}
 
 # ---------------------------
 # In-memory storage for section titles by document
@@ -251,88 +206,7 @@ class PaginatedText:
 # Triggered once at startup per document to support autocomplete
 # Uses two phases: main content and glossary based on heading triggers
 # ---------------------------
-def extract_sections(pdf_path, heading_size1, heading_size2, heading_font):
-    """
-    Extracts structured sections (Title -> Metadata) from a PDF at startup.
-    Captures content between identified headers and tracks glossary status.
-    """
-    try:
-        doc = fitz.open(pdf_path)
-        sections = {}
-        current_title = None
-        current_content = []
-        is_glossary_mode = False
-        
-        tracking = False
-        use_heading_size2 = False
-
-        for page in doc:
-            blocks = page.get_text("dict")["blocks"]
-            for block in blocks:
-                for line in block.get("lines", []):
-                    line_text = ""
-                    line_font = None
-                    line_size = None
-
-                    for span in line.get("spans", []):
-                        text = span["text"].strip()
-                        font_size = round(span["size"])
-                        font_name = span["font"]
-
-                        if line_text:
-                            line_text += " "
-                        line_text += text
-
-                        if line_font is None:
-                            line_font = font_name
-                            line_size = font_size
-
-                    if not line_text:
-                        continue
-
-                    # Identical triggers to main.py's original logic
-                    if line_text == "Special Ability Structure" and font_size == 36 and "Arial" in font_name:
-                        tracking = True
-                        use_heading_size2 = False
-                        is_glossary_mode = False
-                    if line_text == "Glossary of Terms" and font_size == 36 and "Arial" in font_name:
-                        use_heading_size2 = True
-                        tracking = True
-                        is_glossary_mode = True
-                        continue
-
-                    is_heading = False
-                    if tracking:
-                        font_matches = heading_font.lower() in (line_font or "").lower()
-                        if not use_heading_size2:
-                            if font_size == heading_size1 and font_matches:
-                                is_heading = True
-                        else:
-                            if font_size == heading_size2 and font_matches:
-                                is_heading = True
-
-                    if is_heading:
-                        if current_title and current_content:
-                            sections[current_title] = {
-                                "content": "\n".join(current_content).strip(),
-                                "is_glossary": is_glossary_mode
-                            }
-                        current_title = line_text
-                        current_content = []
-                    elif current_title:
-                        current_content.append(line_text)
-
-        if current_title and current_content:
-            sections[current_title] = {
-                "content": "\n".join(current_content).strip(),
-                "is_glossary": is_glossary_mode
-            }
-            
-        return sections
-
-    except Exception as e:
-        logger.error(f"Error extracting sections from {pdf_path}: {str(e)}")
-        return {}
+# PDF Extraction functions moved to KnowledgeManager.PdfRuleParser
 
 # ---------------------------
 # Function to extract a specific section's content from a PDF
@@ -423,25 +297,14 @@ async def on_ready():
     invite_link = discord.utils.oauth_url(bot.user.id, permissions=permissions)
     logger.info(f'Invite link: {invite_link}')
 
-    # Load section data dynamically from found PDFs
-    global pdfs
-    pdfs = discover_pdfs("data")
-    logger.info(f"Discovered {len(pdfs)} PDF categories: {list(pdfs.keys())}")
-
-    all_sections = {}
-    for doc_key, path in pdfs.items():
-        if os.path.exists(path):
-            sections = extract_sections(path, heading_size1=30, heading_size2=14, heading_font="Arial")
+    # Populate autocomplete titles from RAG KnowledgeManager (Safer & Faster)
+    if rag_engine and rag_engine.km:
+        all_sections = rag_engine.km.rule_sections
+        for doc_key, sections in all_sections.items():
             section_titles_by_doc[doc_key] = sorted(list(sections.keys()))
-            all_sections[doc_key] = sections
-            logger.info(f"{doc_key}: Extracted {len(sections)} sections (titles + content)")
-        else:
-            logger.warning(f"{doc_key} PDF not found at {path}")
-
-    # Inject the captured rule sections into the RAG KnowledgeManager
-    if all_sections:
-        rag_engine.km.rule_sections = all_sections
-        logger.info("RAG Engine updated with live PDF rule sections.")
+            logger.info(f"{doc_key}: Linked {len(sections)} sections for lookup/autocomplete.")
+    else:
+        logger.warning("RAG Engine not initialized. /lookup will be limited.")
 
     # Register slash commands with Discord
     await bot.tree.sync()
@@ -583,7 +446,8 @@ async def ruling(interaction: discord.Interaction, question: str):
         return
 
     try:
-        answer = rag_engine.ask_judge(question)
+        import asyncio
+        answer = await asyncio.to_thread(rag_engine.ask_judge, question)
 
         paginated = PaginatedText(answer)
         embed = discord.Embed(

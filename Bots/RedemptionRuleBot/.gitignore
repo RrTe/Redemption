@@ -46,3 +46,6 @@ data/*
 data/processed_rulings_final.json
 data/DiscordRulings*.txt
 data/embeddings_cache.json
+
+# Developer scratchpads and debug tools
+_dev_tools/
