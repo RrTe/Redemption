@@ -22,8 +22,19 @@ class KnowledgeManager:
     def __init__(self, data_dir: str = "data"):
         self.data_dir = data_dir
         self.cards_by_name: Dict[str, List[Dict[str, Any]]] = {}
-        self.rule_sections: Dict[str, Dict[str, Any]] = {}  # Category -> Title -> {content, is_glossary}
-        self.blacklist = {"Evil", "Good", "Neutral", "Search", "Take", "Draw", "Hand", "Deck", "Play"}
+        self.rule_sections: Dict[str, Dict[str, Any]] = {}
+        
+        # Load Config (Agnostic Design)
+        self.config = {"alias_blacklist": [], "mandatory_sections": []}
+        config_path = os.path.join(self.data_dir, "engine_config.json")
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, "r", encoding="utf-8") as f:
+                    self.config = json.load(f)
+            except Exception as e:
+                logger.error(f"[KM] Error loading engine_config.json: {e}")
+        
+        self.blacklist = set(self.config.get("alias_blacklist", []))
         
         # Load Card Data
         card_path = os.path.join(self.data_dir, "carddata.json")
@@ -128,21 +139,29 @@ class KnowledgeManager:
         for name in all_names:
             if len(name) < 4 or name in self.blacklist:
                 continue
-            if name.lower() in query_text:
+            
+            pattern = r'\b' + re.escape(name.lower()) + r'\b'
+            if re.search(pattern, query_text):
                 if name not in found:
                     found[name] = self.cards_by_name[name]
                     
         return found
 
-    def format_card_context(self, card_map: Dict[str, List[Dict[str, Any]]]) -> str:
+    def format_card_context(self, card_map: Dict[str, List[Dict[str, Any]]], selected_cards: Dict[str, List[Dict[str, Any]]] = None) -> str:
         if not card_map: return ""
         output = "--- OFFICIAL REDEMPTION CARD DATA ---\n"
         for name, versions in card_map.items():
             output += f"CARD NAME: {name}\n"
             for i, v in enumerate(versions):
                 set_name = v.get('OfficialSet', 'Unknown')
+                is_selected = False
+                if selected_cards and name in selected_cards:
+                    if v in selected_cards[name]:
+                        is_selected = True
+                
+                prefix = "[SELECTED TARGET FOR ANALYSIS] " if is_selected else ""
                 output += (
-                    f"  Version {i+1} ({set_name}):\n"
+                    f"  {prefix}Version {i+1} ({set_name}):\n"
                     f"    Type: {v.get('Type')}, Alignment: {v.get('Alignment')}\n"
                     f"    Special Ability: {v.get('SpecialAbility', 'None')}\n"
                 )
@@ -159,7 +178,10 @@ class KnowledgeManager:
             if name.lower() in text_lower: return name
         return None
 
-    def get_comprehensive_context(self, question: str, researcher_specs: List[str] = None, selected_cards: Dict[str, Any] = None) -> str:
+    def get_comprehensive_context(self, question: str, researcher_specs: List[str] = None, 
+                                  selected_cards: Dict[str, Any] = None, 
+                                  all_candidates: Dict[str, Any] = None,
+                                  pinned_rules: List[str] = None) -> str:
         """
         Assembles all 3 layers of deterministic context.
         Step 5: Prioritized Context Assembly.
@@ -168,8 +190,9 @@ class KnowledgeManager:
         # If the RagEngine already performed selection, we use those cards.
         primary_cards = selected_cards if selected_cards else self.find_cards_in_text(question)
         
-        # Determine the types and abilities ONLY for these selected cards
-        card_context = self.format_card_context(primary_cards)
+        # Format ALL candidates for the LLM to see, but explicitly mark the selected target
+        context_cards = all_candidates if all_candidates else primary_cards
+        card_context = self.format_card_context(context_cards, selected_cards)
         
         # 2. Extract technical keywords (Steps 1 & 4)
         # Use ONLY the question and the SELECTED subjects
@@ -188,13 +211,24 @@ class KnowledgeManager:
             technical_keywords.update(researcher_specs)
 
         # 3. Pull Rule Sections (Step 5) with Type-Prioritization
-        dynamic_rules = self.get_verb_definitions(search_base, list(technical_keywords), question, list(primary_types))
+        dynamic_rules = self.get_verb_definitions(
+            search_base, 
+            list(technical_keywords), 
+            question, 
+            list(primary_types),
+            pinned_rules=pinned_rules
+        )
         
-        # 4. Mandatory Core (always included for grounding)
+        # 4. Mandatory Core (Agnostic: defined in engine_config.json)
+        # Deduplication: Only add if not already in dynamic_rules
         reg_sections = self.rule_sections.get("REG", {})
         core_parts = []
-        if "Special Ability Structure" in reg_sections:
-            core_parts.append(f"#### [CORE RULE] Special Ability Structure\n{reg_sections['Special Ability Structure']['content']}")
+        for section_title in self.config.get("mandatory_sections", []):
+            if section_title in reg_sections:
+                # Check if this section header is already present in dynamic_rules (V5.8 Robust check)
+                header_prefix = f"#### [TERM] {section_title}"
+                if header_prefix not in dynamic_rules:
+                    core_parts.append(f"#### [CORE RULE] {section_title}\n{reg_sections[section_title]['content']}")
 
         core_context = "\n\n".join(core_parts)
 
@@ -204,10 +238,13 @@ class KnowledgeManager:
             f"### LAYER 3: OFFICIAL CARD DATA\n{card_context}"
         )
 
-    def get_verb_definitions(self, search_base: str, concepts: List[str] = None, original_question: str = "", primary_types: List[str] = None) -> str:
+    def get_verb_definitions(self, search_base: str, concepts: List[str] = None, 
+                             original_question: str = "", primary_types: List[str] = None,
+                             only_titles: bool = False,
+                             pinned_rules: List[str] = None) -> Any:
         """
-        Finds technical definitions for terms with strict deduplication (REG > ORDIR > Rulebook).
-        Implements Type-Prioritization and expanded Direct Header Matching.
+        Finds technical definitions. 
+        If pinned_rules is provided, only returns the content of those specific rules (ignoring scores).
         """
         found_defs = []
         concept_set = {c.lower() for c in concepts} if concepts else set()
@@ -245,15 +282,33 @@ class KnowledgeManager:
                 if title_words:
                     is_direct_match = all(re.search(r'\b' + re.escape(w), sb_lower) for w in title_words)
                 
-                # Priority 4: Word match (GENERAL)
-                is_match = is_priority or is_type_match or is_direct_match
-                if not is_match:
-                    for concept in concept_set:
-                        if re.search(r'\b' + re.escape(concept) + r'\b', title_l):
-                            is_match = True
-                            break
+                # V5.8: If pinned_rules is active, the Librarian has FULL AUTHORITY.
+                # We only match if it's in the pinned list.
+                is_pinned = False
+                if pinned_rules:
+                    # Robust check for titles like "Artifact (REG)" vs norm_title "artifact"
+                    is_pinned = any(p.lower().startswith(norm_title) for p in pinned_rules)
+                    is_match = is_pinned
+                else:
+                    # Standard logic if no librarian is present
+                    is_match = is_priority or is_type_match or is_direct_match
+                    if not is_match:
+                        for concept in concept_set:
+                            if re.search(r'\b' + re.escape(concept) + r'\b', title_l):
+                                is_match = True
+                                break
                 
                 if is_match:
+                    # SCORING LOGIC (Initialize before use)
+                    score = 10
+                    
+                    # Ensure pinned items get a high score to stay at the top
+                    if is_pinned: score += 1000
+                    if is_priority: score += 100
+                    if is_type_match: score += 150
+                    if is_direct_match: score += 200
+                    if doc_name == "REG": score += 20
+                    
                     content = data['content']
                     
                     # --- ORDIR Precision Logic ---
@@ -261,13 +316,6 @@ class KnowledgeManager:
                         is_specifically_requested = any(c in q_lower for c in ["is a", "are a", "count as", "considered"])
                         if (len(title) > 25 or "following" in content) and not is_specifically_requested:
                             continue
-                        
-                    # SCORING LOGIC
-                    score = 10
-                    if is_priority: score += 100
-                    if is_type_match: score += 150 # Prioritize Type-rules
-                    if is_direct_match: score += 200 # HIGHEST: Term found specifically in question or technical text
-                    if doc_name == "REG": score += 20  # REG is primary technical source
                     
                     found_defs.append({
                         "header": f"#### [TERM] {title} ({doc_name})",
@@ -275,6 +323,9 @@ class KnowledgeManager:
                         "score": score
                     })
                     added_normalized_titles.add(norm_title)
+
+        if only_titles:
+            return [d["header"].replace("#### [TERM] ", "") for d in found_defs]
 
         # Deduplicate and sort by score
         found_defs.sort(key=lambda x: x["score"], reverse=True)

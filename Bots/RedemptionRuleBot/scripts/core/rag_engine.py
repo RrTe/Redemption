@@ -60,7 +60,16 @@ class RAGEngine:
             with open(selector_path, "r", encoding="utf-8") as f:
                 self.selector_prompt = f.read()
         else:
-            self.selector_prompt = "Select the most relevant object version based on the query targets."
+            self.selector_prompt = None
+
+        # Librarian instructions (V5.8)
+        self.librarian_model = "llama-3.1-8b-instant"
+        librarian_path = os.path.join("scripts", "prompts", "librarian_prompt.txt")
+        if os.path.exists(librarian_path):
+            with open(librarian_path, "r", encoding="utf-8") as f:
+                self.librarian_prompt = f.read()
+        else:
+            self.librarian_prompt = None
 
     def _embed_query(self, text: str) -> List[float]:
         payload = {"inputs": [f"query: {text}"]}
@@ -125,47 +134,47 @@ class RAGEngine:
             
         context_str = "\n\n---\n\n".join(context_parts)
         return f"### FOUND DISCORD RULINGS ###\n\n{context_str}"
+    def _prune_rule_candidates(self, question: str, candidate_titles: List[str], card_context: str = "") -> List[str]:
+        """
+        Stage 1.5: Use Librarian LLM to prune irrelevant rule titles.
+        """
+        if not candidate_titles or not self.librarian_prompt:
+            return candidate_titles
+
+        user_content = f"QUESTION: {question}\n"
+        if card_context:
+            user_content += f"\nRELEVANT CARD DATA:\n{card_context}\n"
+        user_content += f"\nCANDIDATES: {candidate_titles}"
+
+        messages = [
+            {"role": "system", "content": self.librarian_prompt},
+            {"role": "user", "content": user_content}
+        ]
+
+        try:
+            completion = self.groq_client.chat.completions.create(
+                model=self.librarian_model, 
+                messages=messages, 
+                temperature=0.0
+            )
+            raw_output = completion.choices[0].message.content
+            
+            # Extract JSON list
+            match = re.search(r'\[.*\]', raw_output, re.DOTALL)
+            if match:
+                selected_titles = eval(match.group(0))
+                print(f"[ENGINE] Librarian selected: {selected_titles}", flush=True)
+                return selected_titles
+        except Exception as e:
+            print(f"WARN: Librarian pruning failed: {e}", flush=True)
+        return candidate_titles[:10] # Fallback to top 10
 
     def _extract_research_specs(self, question: str, card_matches: Dict[str, Any]) -> List[str]:
-        """Stage 1: Identify keywords and types for deterministic rule injection."""
-        card_context = ""
-        for name, versions in card_matches.items():
-            for v in versions:
-                card_context += f"Card: {name}, Type: {v.get('Type')}\n"
-        
-        messages = [
-            {"role": "system", "content": self.researcher_prompt},
-            {"role": "user", "content": f"QUESTION: {question}\n\nCARDS INVOLVED:\n{card_context}"}
-        ]
-        
-        try:
-            # Use a fast model for the researcher stage
-            completion = self.groq_client.chat.completions.create(model="llama-3.1-8b-instant", messages=messages, temperature=0.0)
-            spec_str = completion.choices[0].message.content
-            # Clean and split (Handle potential LLM formatting noise)
-            raw_terms = [t.strip() for t in spec_str.replace(".", "").split(",")]
-            terms = []
-            for t in raw_terms:
-                # Extract clean words from potential "1. Type: X" noise
-                words = re.findall(r'\b[A-Za-z]{4,}\b', t) # 4+ letters
-                terms.extend(words)
-            
-            # Remove generic words that cause bloat
-            blacklist = {
-                "Card", "Type", "Types", "Keywords", "Game", "Phases", "Question", 
-                "Involved", "Character", "Characters", "Ability", "Abilities",
-                "Rule", "Rules", "Phase", "Special", "Effect", "Effects"
-            }
-            terms = [t for t in terms if t.title() not in blacklist and t not in blacklist]
-            
-            # Limit to top 6 most specific keywords
-            terms = list(dict.fromkeys(terms))[:6]
-            
-            print(f"[ENGINE] Researcher identified (Strictly Cleaned): {terms}", flush=True)
-            return terms
-        except Exception as e:
-            print(f"[ENGINE] Researcher stage failed: {e}", flush=True)
-            return []
+        """
+        Token-Optimized V5.7.1: Researcher LLM disabled.
+        Technical keywords are now extracted deterministically in KnowledgeManager.
+        """
+        return []
 
     def _select_primary_version(self, question: str, card_matches: Dict[str, Any]) -> Dict[str, Any]:
         """Stage 2 Gate: Decide which card version is the primary subject to avoid pollution."""
@@ -242,11 +251,50 @@ class RAGEngine:
             names = ", ".join(card_matches["AMBIGUITY"])
             return f"⚠️ **CLARIFICATION REQUIRED**: I found multiple versions of the card(s) '{names}'. To give you a precise ruling, please specify which version or capability you are referring to (e.g., target or card type)."
 
-        # 3. STAGE 1: RESEARCHER EXTRACTION
-        research_keywords = self._extract_research_specs(question, card_matches)
+        # 3. STAGE 1: LIBRARIAN RULE SELECTION (V5.8.5)
+        # Upgrade to 70B for expert selection
+        self.librarian_model = "llama-3.3-70b-versatile"
+
+        # Build a search base that includes the question, card types, AND Special Ability texts
+        # This restores the logic the user correctly pointed out.
+        type_keywords = set()
+        ability_texts = []
+        card_text_for_librarian = ""
+        for name, versions in card_matches.items():
+            for v in versions:
+                v_type = v.get('Type', '')
+                v_ability = v.get('SpecialAbility', '')
+                type_keywords.add(v_type)
+                ability_texts.append(v_ability)
+                card_text_for_librarian += f"CARD: {name}\nTEXT: {v_ability}\nTYPE: {v_type}\n"
         
-        # 4. GET LAYERED CONTEXT (Deterministic injection based on ONLY the selected version)
-        layered_context = self.km.get_comprehensive_context(question, research_keywords, card_matches)
+        rule_search_query = question + " " + " ".join(type_keywords) + " " + " ".join(ability_texts)
+        
+        # Get candidate titles based on FULL search base
+        # V5.8.6: Use explicit keywords to avoid positional argument bugs
+        candidate_titles = self.km.get_verb_definitions(
+            search_base=rule_search_query, 
+            concepts=list(type_keywords),
+            only_titles=True
+        )
+        
+        # Add Infrastructure rules from config
+        infra_rules = self.km.config.get("infrastructure_rules", [])
+        for infra in infra_rules:
+            infra_full = f"{infra} (REG)"
+            if infra_full not in candidate_titles:
+                candidate_titles.append(infra_full)
+        
+        # Second, prune the list using the 70B Librarian
+        pruned_titles = self._prune_rule_candidates(question, candidate_titles, card_context=card_text_for_librarian)
+        
+        # 4. GET LAYERED CONTEXT (Deterministic injection with pinned rules)
+        layered_context = self.km.get_comprehensive_context(
+            question, 
+            selected_cards=card_matches, 
+            all_candidates=all_candidate_matches,
+            pinned_rules=pruned_titles
+        )
         
         # Token Estimation Logic
         def estimate_tokens(text: str) -> int:
@@ -292,7 +340,19 @@ class RAGEngine:
         if total_est_tokens > 8000:
             print(f"WARN: High Token usage: {total_est_tokens} tokens!", flush=True)
         
-        # --- STAGE 1: Generate Draft ---
+        # Write the context to a log file for debugging (V5.7.1 Transparency)
+        try:
+            log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'data')
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+            log_path = os.path.join(log_dir, 'latest_context.log')
+            with open(log_path, 'w', encoding='utf-8') as f:
+                f.write(layered_context)
+            print(f"[ENGINE] Context logged to {log_path}", flush=True)
+        except Exception as e:
+            print(f"WARN: Failed to write context log: {e}", flush=True)
+
+        # Assemble messages for the Judge LLM
         messages = [
             {"role": "system", "content": self.system_prompt},
             {
@@ -321,9 +381,10 @@ class RAGEngine:
                 ]
                 
                 final_completion = self.groq_client.chat.completions.create(model=self.llm_model, messages=review_messages, temperature=0.0)
-                return final_completion.choices[0].message.content
+                final_answer = final_completion.choices[0].message.content
+                return f"**Question:** {question}\n\n{final_answer}"
             
-            return draft_answer
+            return f"**Question:** {question}\n\n{draft_answer}"
             
         except Exception as e:
             return f"Error generating response: {e}"
