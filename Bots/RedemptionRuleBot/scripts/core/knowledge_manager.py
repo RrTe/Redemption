@@ -70,10 +70,43 @@ class KnowledgeManager:
             except Exception as e:
                 logger.error(f"[KM] ERROR loading carddata.json: {e}")
 
-        # Initialize and load PDF Rule Parser
-        self.pdf_parser = PdfRuleParser(self.data_dir)
-        self.pdf_parser.load_all_rules()
-        self.rule_sections = self.pdf_parser.all_sections
+        # Load Rule Sections (Smart Cache: re-parse if PDFs are newer than JSON)
+        json_rule_path = os.path.join(self.data_dir, "rule_sections.json")
+        pdf_files = [os.path.join(self.data_dir, f) for f in ["REG.pdf", "ORDIR.pdf"] if os.path.exists(os.path.join(self.data_dir, f))]
+        
+        latest_pdf_mtime = 0
+        if pdf_files:
+            latest_pdf_mtime = max(os.path.getmtime(f) for f in pdf_files)
+        
+        json_mtime = 0
+        if os.path.exists(json_rule_path):
+            json_mtime = os.path.getmtime(json_rule_path)
+            
+        # Decision: Load from JSON or parse PDFs
+        needs_parsing = not os.path.exists(json_rule_path) or latest_pdf_mtime > json_mtime
+        
+        if not needs_parsing:
+            try:
+                with open(json_rule_path, "r", encoding="utf-8") as f:
+                    self.rule_sections = json.load(f)
+                logger.info(f"[KM] Loaded {len(self.rule_sections)} rule categories from JSON cache.")
+            except Exception as e:
+                logger.error(f"[KM] Error loading rule_sections.json: {e}")
+                needs_parsing = True
+        
+        if needs_parsing:
+            logger.info(f"[KM] Rule cache missing or stale. Parsing PDFs...")
+            self.pdf_parser = PdfRuleParser(self.data_dir)
+            self.pdf_parser.load_all_rules()
+            self.rule_sections = self.pdf_parser.all_sections
+            
+            # Save to JSON for next time
+            try:
+                with open(json_rule_path, "w", encoding="utf-8") as f:
+                    json.dump(self.rule_sections, f, indent=4, ensure_ascii=False)
+                logger.info(f"[KM] Saved {len(self.rule_sections)} categories to rule_sections.json")
+            except Exception as e:
+                logger.warning(f"[KM] Could not save rule_sections.json: {e}")
 
     def get_technical_keywords(self, text: str) -> Set[str]:
         """
@@ -228,7 +261,10 @@ class KnowledgeManager:
                 # Check if this section header is already present in dynamic_rules (V5.8 Robust check)
                 header_prefix = f"#### [TERM] {section_title}"
                 if header_prefix not in dynamic_rules:
-                    core_parts.append(f"#### [CORE RULE] {section_title}\n{reg_sections[section_title]['content']}")
+                    # Robust check for dictionary vs string format
+                    section_data = reg_sections[section_title]
+                    content = section_data['content'] if isinstance(section_data, dict) else section_data
+                    core_parts.append(f"#### [CORE RULE] {section_title}\n{content}")
 
         core_context = "\n\n".join(core_parts)
 
@@ -256,8 +292,8 @@ class KnowledgeManager:
         # We normalize titles to catch "Control (REG)" and "Control: (Rulebook)" as same
         added_normalized_titles = set()
         
-        # Process in Priority Order: REG -> ORDIR -> Rulebook
-        priority_order = ["REG", "ORDIR", "Rulebook"]
+        # Process in Priority Order: REG -> ORDIR
+        priority_order = ["REG", "ORDIR"]
         for doc_name in priority_order:
             sections = self.rule_sections.get(doc_name, {})
             for title, data in sections.items():
@@ -309,7 +345,8 @@ class KnowledgeManager:
                     if is_direct_match: score += 200
                     if doc_name == "REG": score += 20
                     
-                    content = data['content']
+                    # Robust check for dictionary vs string format
+                    content = data['content'] if isinstance(data, dict) else data
                     
                     # --- ORDIR Precision Logic ---
                     if doc_name == "ORDIR":
@@ -357,13 +394,11 @@ class PdfRuleParser:
         # Document-specific configurations based on font analysis
         configs = {
             "REG": {"h1": 36, "h2": 14, "font": "Arial"},
-            "ORDIR": {"h1": 36, "h2": 14, "font": "Arial"},
-            "Rulebook": {"h1": 24, "h2": 14, "font": "Times"}
+            "ORDIR": {"h1": 36, "h2": 14, "font": "Arial"}
         }
         
         categories = {
             "REG": ["REG.pdf", "REG*.pdf"],
-            "Rulebook": ["Rulebook.pdf", "*Rulebook.pdf"],
             "ORDIR": ["ORDIR.pdf", "ORDIR*.pdf"]
         }
         
@@ -414,9 +449,8 @@ class PdfRuleParser:
                         # Trigger Tracking - More flexible font/size matching
                         is_structure_trigger = "Special Ability Structure" in line_text and abs(line_size - 36) < 1.5
                         is_glossary_trigger = "Glossary of Terms" in line_text and (abs(line_size - 36) < 1.5 or abs(line_size - 24) < 1.5)
-                        is_rulebook_start = ("Turn Outline" in line_text or "Draw Phase" in line_text) and abs(line_size - 24) < 1.5
 
-                        if not tracking and (is_structure_trigger or is_rulebook_start):
+                        if not tracking and (is_structure_trigger):
                             logger.info(f"[PDF] STARTING TRACKING for {pdf_path} at: {line_text}")
                             tracking = True; use_heading_size2 = False; is_glossary_mode = False
                         if not is_glossary_mode and is_glossary_trigger:
