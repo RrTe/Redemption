@@ -49,6 +49,7 @@ export interface RoomState {
   activePlayer: string;
   currentPhase: string;
   revealedCards: ArraySchema<CardState>;
-  actionTakerId: string;
+  actionTakerId: string; // General flag for who is taking an action
+  activeActionPiles: MapSchema<string>; // ✨ REFACTOR: pileId -> sessionId
   battlefield: ArraySchema<CardState>;
 }

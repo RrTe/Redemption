@@ -334,7 +334,8 @@ export class CardVisuals {
         });
 
         this.cardUI.add(this.glowEmitter);
-        this.cardUI.sendToBack(this.glowEmitter);
+        // ✨ FIX: Place above shadow (index 0) but below card contents
+        this.cardUI.moveTo(this.glowEmitter, 1);
 
         if (shouldBeVisible) {
           this.glowEmitter.start();
@@ -414,7 +415,8 @@ export class CardVisuals {
       emitZone: { type: "random", source: rect, quantity: 1 },
     });
     this.cardUI.add(spark);
-    this.cardUI.sendToBack(spark);
+    // ✨ FIX: Place above shadow (index 0)
+    this.cardUI.moveTo(spark, 1);
     this.paralyzeEmitters.push(spark);
 
     const aura = this.scene.add.particles(0, 0, "blue_aura_small", {
@@ -429,7 +431,8 @@ export class CardVisuals {
       emitZone: { type: "random", source: rect, quantity: 1 },
     });
     this.cardUI.add(aura);
-    this.cardUI.sendToBack(aura);
+    // ✨ FIX: Place above shadow (index 0)
+    this.cardUI.moveTo(aura, 1);
     this.paralyzeEmitters.push(aura);
 
     const lightning = this.scene.add.particles(0, 0, "blue_lightning", {

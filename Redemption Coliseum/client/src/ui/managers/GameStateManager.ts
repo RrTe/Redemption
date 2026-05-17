@@ -4,6 +4,7 @@ import { type AnimationManager } from "./AnimationManager";
 import { type SettingsManager } from "../../managers/SettingsManager";
 import { type RoomState } from "../../../../shared/types";
 import { log } from "../../utils/logger";
+import { GameEvents } from "../../constants/EventNames";
 
 /**
  * Manages high-level game state synchronization, player connections,
@@ -23,7 +24,7 @@ export class GameStateManager {
     scene: Phaser.Scene,
     animationManager: AnimationManager,
     settingsManager: SettingsManager,
-    renderCallback: () => void
+    renderCallback: () => void,
   ) {
     this.room = room;
     this.overlayManager = overlayManager;
@@ -53,10 +54,16 @@ export class GameStateManager {
     const playerCount = state.players.size;
     const opponentId = this.findOpponentId(state);
     const opponent = opponentId ? state.players.get(opponentId) : undefined;
-    const gameStarted = !!state.activePlayer;
+    const gameStarted = !!state.activePlayer && state.activePlayer !== "";
+
+    log(
+      "GameState",
+      `[WaitingStatus] Players: ${playerCount}, Started: ${gameStarted}, OpponentConn: ${opponent?.connected}`,
+    );
 
     // Priority 1: Disconnection
     if (opponent && !opponent.connected) {
+      log("GameState", "Showing overlay: Opponent disconnected");
       this.overlayManager.showWaitingOverlay(
         "Opponent disconnected. Waiting...",
         true,
@@ -66,6 +73,7 @@ export class GameStateManager {
 
     // Priority 2: Opponent timeout after start
     if (playerCount < 2 && gameStarted) {
+      log("GameState", "Showing overlay: Opponent left room");
       this.overlayManager.showWaitingOverlay(
         "Opponent disconnected. Waiting...",
         true,
@@ -74,14 +82,11 @@ export class GameStateManager {
     }
 
     // Priority 3: Normal waiting (Lobby/Ready check)
-    if (
-      playerCount < 2 ||
-      !state.activePlayer ||
-      !gameStarted ||
-      (opponent && !opponent.ready)
-    ) {
+    if (playerCount < 2 || !gameStarted || (opponent && !opponent.ready)) {
+      log("GameState", "Showing overlay: Generic waiting");
       this.overlayManager.showWaitingOverlay("Waiting for Opponent...");
     } else {
+      log("GameState", "Hiding waiting overlay");
       this.overlayManager.hideWaitingOverlay();
     }
   }
@@ -95,54 +100,80 @@ export class GameStateManager {
       log("GameState", `[onStateChange] Phase: ${state.currentPhase}`);
       log(
         "GameState",
-        `[onStateChange] Decks -> Player: ${state.players.get(this.room.sessionId)?.deck.length}, Opponent: ${state.players.get(this.findOpponentId(state))?.deck.length}`
+        `[onStateChange] Decks -> Player: ${state.players.get(this.room.sessionId)?.deck.length}, Opponent: ${state.players.get(this.findOpponentId(state))?.deck.length}`,
       );
     });
 
-    // 2. Draw Animation Event
-    this.scene.events.on("playDrawAnimation", (data: { cardIds: string[] }) => {
-      this.scene.game.events.emit("playSound", "CARD_DRAW");
+    // 2. Listen for network events from GameEventCoordinator
+    this.scene.events.on(
+      GameEvents.NET_CARDS_DRAWN,
+      (data: { cardIds: string[] }) => {
+        this.scene.game.events.emit(GameEvents.SYSTEM_PLAY_SOUND, "CARD_DRAW");
 
-      if (!this.settingsManager.areAnimationsEnabled()) {
-        return;
-      }
+        if (!this.settingsManager.areAnimationsEnabled()) {
+          return;
+        }
 
-      log("GameState", `Marking cards for animation: ${data.cardIds}`);
-      data.cardIds.forEach((cardId) => {
-        this.animationManager.pendingDrawAnimations.add(cardId);
-      });
-      
-      this.renderCallback();
+        log(
+          "GameState",
+          `[net:cardsDrawn] Marking cards for animation: ${data.cardIds}`,
+        );
+        data.cardIds.forEach((cardId) => {
+          this.animationManager.pendingDrawAnimations.add(cardId);
+        });
+
+        this.renderCallback();
+      },
+    );
+
+    // 2.1 Listen for network events from GameEventCoordinator
+    this.scene.events.on("net:pileShuffled", () => {
+      this.scene.game.events.emit("playSound", "CARD_SHUFFLE");
+    });
+
+    // 2.2 Re-check waiting status on every state change
+    this.scene.events.on("net:stateChanged", () => this.updateWaitingStatus());
+
+    // ✨ FIX: Initialen Status sofort prüfen, falls Events bereits gefeuert wurden
+    this.updateWaitingStatus();
+
+    this.scene.events.on("net:gameOver", (data: { winnerId: string }) => {
+      if (!data.winnerId) return; // ✨ FIX: Verhindert "Geister"-Game-Overs
+      this.overlayManager.showGameOverOverlay(
+        data.winnerId === this.room.sessionId,
+      );
     });
 
     // 3. Card Interaction Actions
-    this.scene.events.on("request-card-action", (data: {
-      cardId: string;
-      action: string;
-      currentValue: boolean;
-    }) => {
-      let updates = {};
+    this.scene.events.on(
+      "request-card-action",
+      (data: { cardId: string; action: string; currentValue: boolean }) => {
+        let updates = {};
 
-      if (data.action === "toggle-flip") {
-        updates = { isFlipped: !data.currentValue };
-      } else if (data.action === "toggle-face-down") {
-        updates = { isFaceDown: !data.currentValue };
-      }
+        if (data.action === "toggle-flip") {
+          updates = { isFlipped: !data.currentValue };
+        } else if (data.action === "toggle-face-down") {
+          updates = { isFaceDown: !data.currentValue };
+        }
 
-      if (Object.keys(updates).length > 0) {
-        this.room.send("updateCardState", {
-          cardId: data.cardId,
-          updates,
-        });
-      }
-    });
+        if (Object.keys(updates).length > 0) {
+          this.room.send("updateCardState", {
+            cardId: data.cardId,
+            updates,
+          });
+        }
+      },
+    );
   }
 
   /**
    * Cleans up scene event listeners.
    */
   public destroy() {
-    this.scene.events.off("playDrawAnimation");
+    this.scene.events.off("net:cardsDrawn");
+    this.scene.events.off("net:pileShuffled");
+    this.scene.events.off("net:stateChanged");
+    this.scene.events.off("net:gameOver");
     this.scene.events.off("request-card-action");
   }
 }

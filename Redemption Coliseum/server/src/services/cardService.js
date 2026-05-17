@@ -65,12 +65,12 @@ function _validateMove(
   cardControllerId,
   targetPlayerId,
   fromZone,
-  toZone
+  toZone,
 ) {
   // ✨ PHASE 1: Karten im Land of Redemption sind permanent aus dem Spiel.
   if (fromZone === ZONES.LAND_OF_REDEMPTION) {
     logger.warn(
-      `Ungültiger Zug: Versuch, eine Karte aus dem '${ZONES.LAND_OF_REDEMPTION}' zu bewegen.`
+      `Ungültiger Zug: Versuch, eine Karte aus dem '${ZONES.LAND_OF_REDEMPTION}' zu bewegen.`,
     );
     return false;
   }
@@ -99,7 +99,7 @@ function _validateMove(
 
     // Wenn keine der obigen Regeln zutrifft, ist der Zug für eine Lost Soul ungültig.
     logger.warn(
-      `Ungültiger Zug für Lost Soul von '${fromZone}' nach '${toZone}'.`
+      `Ungültiger Zug für Lost Soul von '${fromZone}' nach '${toZone}'.`,
     );
     return false;
   }
@@ -107,7 +107,7 @@ function _validateMove(
   // ✨ Regel: Karten dürfen nicht in die Pile-Zonen (Deck, Discard) eines anderen Spielers gelegt werden.
   if (PILE_ZONES.includes(toZone) && card.originalOwnerId !== targetPlayerId) {
     logger.warn(
-      `Ungültiger Zug: Versuch, eine Karte in die Zone '${toZone}' eines anderen Spielers zu legen. Aktion wird abgebrochen.`
+      `Ungültiger Zug: Versuch, eine Karte in die Zone '${toZone}' eines anderen Spielers zu legen. Aktion wird abgebrochen.`,
     );
     return false;
   }
@@ -132,7 +132,7 @@ function _validateMove(
 function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
   if (!cardId || typeof cardId !== "string") {
     logger.error(
-      `[FIND_CARD_ERROR] Invalid cardId provided: ${cardId} (type: ${typeof cardId})`
+      `[FIND_CARD_ERROR] Invalid cardId provided: ${cardId} (type: ${typeof cardId})`,
     );
     return null;
   }
@@ -140,19 +140,19 @@ function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
   const card = cardLookup.get(cardId);
   if (!card) {
     logger.warn(
-      `[FIND_CARD] Karte mit ID '${cardId}' in der globalen Lookup-Map nicht gefunden.`
+      `[FIND_CARD] Karte mit ID '${cardId}' in der globalen Lookup-Map nicht gefunden.`,
     );
     return null;
   }
 
-  logger.info(
-    `[FIND_CARD] Found card '${card.Name}' (${card.id}). Its controllerId is '${card.controllerId}'.`
+  logger.debug(
+    `[FIND_CARD] Found card '${card.Name}' (${card.id}). Its controllerId is '${card.controllerId}'.`,
   );
 
   const controller = state.players.get(card.controllerId);
   if (!controller) {
     logger.error(
-      `[FIND_CARD_ERROR] Controller with ID '${card.controllerId}' not found in state for card '${cardId}'.`
+      `[FIND_CARD_ERROR] Controller with ID '${card.controllerId}' not found in state for card '${cardId}'.`,
     );
     return null;
   }
@@ -162,7 +162,7 @@ function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
 
   if (cardIndex === -1) {
     logger.warn(
-      `[FIND_CARD] Karte '${cardId}' wurde im State gefunden, aber nicht in der erwarteten Zone '${fromZone}' des Controllers '${card.controllerId}'. Aktuelle Zone: '${card.zone}'.`
+      `[FIND_CARD] Karte '${cardId}' wurde im State gefunden, aber nicht in der erwarteten Zone '${fromZone}' des Controllers '${card.controllerId}'. Aktuelle Zone: '${card.zone}'.`,
     );
     return null;
   }
@@ -195,8 +195,8 @@ function _drawCardsWithLostSoulRule(player, state, count) {
 
     if (card.Type === CARD_TYPES.LOST_SOUL) {
       // Fall A: Es ist eine Lost Soul -> umleiten
-      logger.info(
-        `[LOST_SOUL_RULE] Lost Soul '${card.Name}' vom Deck gezogen. Wird nach ${ZONES.LAND_OF_BONDAGE} umgeleitet.`
+      logger.debug(
+        `[LOST_SOUL_RULE] Lost Soul '${card.Name}' vom Deck gezogen. Wird nach ${ZONES.LAND_OF_BONDAGE} umgeleitet.`,
       );
       card.zone = ZONES.LAND_OF_BONDAGE;
       card.lastMoved = Date.now();
@@ -231,10 +231,10 @@ function _moveCardById(
   from,
   to,
   cardId,
-  coords = null
+  coords = null,
 ) {
-  logger.info(
-    `[MOVE_BY_ID] Attempting to move card '${cardId}' from '${from}' to '${to}' by player '${actingPlayer.sessionId}'.`
+  logger.debug(
+    `[MOVE_BY_ID] Attempting to move card '${cardId}' from '${from}' to '${to}' by player '${actingPlayer.sessionId}'.`,
   );
 
   // Lost Soul redirection logic - this needs to be here as it's specific to the card being moved
@@ -243,8 +243,8 @@ function _moveCardById(
     if (to === ZONES.TERRITORY || to === ZONES.HAND) {
       const owner = state.players.get(cardForCheck.originalOwnerId);
       if (owner) {
-        logger.info(
-          `[MOVE_REDIRECT] Lost Soul '${cardForCheck.Name}' will be redirected from '${to}' to '${ZONES.LAND_OF_BONDAGE}'.`
+        logger.debug(
+          `[MOVE_REDIRECT] Lost Soul '${cardForCheck.Name}' will be redirected from '${to}' to '${ZONES.LAND_OF_BONDAGE}'.`,
         );
         to = ZONES.LAND_OF_BONDAGE;
         coords = { ...coords, targetPlayerId: owner.sessionId };
@@ -255,13 +255,13 @@ function _moveCardById(
   const findResult = _findCardAndOwner(cardLookup, state, cardId, from);
   if (!findResult) {
     logger.warn(
-      `[MOVE_BY_ID_FAIL] Keine Karte mit ID '${cardId}' in Zone '${from}' gefunden oder Controller-Info fehlt.`
+      `[MOVE_BY_ID_FAIL] Keine Karte mit ID '${cardId}' in Zone '${from}' gefunden oder Controller-Info fehlt.`,
     );
     return;
   }
   const { fromArr, controllerId, cardIndex, card } = findResult;
-  logger.info(
-    `[MOVE_BY_ID] Card Controller determined via cardId: ${controllerId}`
+  logger.debug(
+    `[MOVE_BY_ID] Card Controller determined via cardId: ${controllerId}`,
   );
 
   // ✨ FINALE KORREKTUR: Der Zielspieler MUSS aus den Coords ermittelt werden, wenn vorhanden.
@@ -273,21 +273,21 @@ function _moveCardById(
 
   if (!targetPlayer) {
     logger.error(
-      `[MOVE_BY_ID_FATAL] Critical error: targetPlayer could not be determined. ID from Coords: '${targetPlayerIdFromCoords}', Fallback player: '${actingPlayer?.sessionId}'`
+      `[MOVE_BY_ID_FATAL] Critical error: targetPlayer could not be determined. ID from Coords: '${targetPlayerIdFromCoords}', Fallback player: '${actingPlayer?.sessionId}'`,
     );
     return;
   }
   // ✨ ENDE DER KORREKTUR
 
-  logger.info(
-    `[MOVE_BY_ID] moveCard determined targetPlayer: ${targetPlayer.sessionId}`
+  logger.debug(
+    `[MOVE_BY_ID] moveCard determined targetPlayer: ${targetPlayer.sessionId}`,
   );
   if (
     !_validateMove(card, state, controllerId, targetPlayer.sessionId, from, to)
   ) {
     card.lastMoved = Date.now(); // Update timestamp to trigger client snap-back
     logger.warn(
-      `[MOVE_BY_ID_FAIL] Move validation failed for card '${cardId}' from ${from} to ${to}.`
+      `[MOVE_BY_ID_FAIL] Move validation failed for card '${cardId}' from ${from} to ${to}.`,
     );
     return;
   }
@@ -295,18 +295,18 @@ function _moveCardById(
   const pileController = state.players.get(controllerId);
   if (!pileController) {
     logger.error(
-      `[MOVE_BY_ID_FATAL] Pile controller with ID '${controllerId}' not found in state. Aborting move.`
+      `[MOVE_BY_ID_FATAL] Pile controller with ID '${controllerId}' not found in state. Aborting move.`,
     );
     return;
   }
   const actualFromArr = getZoneCollection(pileController, state, from);
 
-  logger.info(
-    `[MOVE_BY_ID] About to splice card from '${from}'. fromArr length BEFORE: ${actualFromArr.length}`
+  logger.debug(
+    `[MOVE_BY_ID] About to splice card from '${from}'. fromArr length BEFORE: ${actualFromArr.length}`,
   );
   const [movedCard] = actualFromArr.splice(cardIndex, 1);
-  logger.info(
-    `[MOVE_BY_ID] Spliced card from '${from}'. fromArr length AFTER: ${actualFromArr.length}`
+  logger.debug(
+    `[MOVE_BY_ID] Spliced card from '${from}'. fromArr length AFTER: ${actualFromArr.length}`,
   );
 
   movedCard.zone = to;
@@ -324,21 +324,26 @@ function _moveCardById(
 
   if (to === ZONES.DECK && position === "bottom") {
     toArr.push(movedCard);
-    logger.info(`[MOVE_BY_ID] Card placed at the bottom of the deck.`);
   } else if (to === ZONES.DECK) {
     toArr.unshift(movedCard);
-    logger.info(`[MOVE_BY_ID] Card placed at the top of the deck.`);
   } else {
     toArr.push(movedCard);
-    logger.info(`[MOVE_BY_ID] Card added to target zone '${to}'.`);
   }
 
-  logger.info(
-    `[MOVE_BY_ID] Card moved ${util.inspect(
-      { card: movedCard.Name, from, to, id: cardId },
-      { colors: true, depth: null }
-    )}`
+  // ✨ FIX: Nutze util.inspect innerhalb eines Template-Literals, um die Ausgabe zu erzwingen
+  const cardLog = util.inspect(
+    {
+      name: movedCard.Name,
+      from,
+      to,
+      id: cardId,
+      owner: movedCard.originalOwnerId,
+      controller: movedCard.controllerId,
+    },
+    { colors: true, depth: null },
   );
+
+  logger.debug(`[MOVE_BY_ID] SUCCESS: ${cardLog}`);
 }
 
 /**
@@ -357,10 +362,10 @@ function _drawCardsFromDeck(
   cardLookup,
   to,
   count,
-  coords = null
+  coords = null,
 ) {
-  logger.info(
-    `[DRAW_FROM_DECK] Player '${player.sessionId}' drawing ${count} cards to '${to}'.`
+  logger.debug(
+    `[DRAW_FROM_DECK] Player '${player.sessionId}' drawing ${count} cards to '${to}'.`,
   );
   const validCards = _drawCardsWithLostSoulRule(player, state, count);
 
@@ -373,8 +378,8 @@ function _drawCardsFromDeck(
       // Controller remains the same as the player drawing
     }
     toArr.push(...validCards);
-    logger.info(
-      `[DRAW_FROM_DECK] Moved ${validCards.length} valid card(s) to ${to}.`
+    logger.debug(
+      `[DRAW_FROM_DECK] Moved ${validCards.length} valid card(s) to ${to}.`,
     );
   }
 
@@ -402,15 +407,15 @@ function moveCard(
   to,
   cardIdOrIndex,
   count = 1,
-  coords = null
+  coords = null,
 ) {
-  logger.info(
+  logger.debug(
     `[moveCard_DISPATCHER] Entered moveCard with player.sessionId=${player?.sessionId}, from=${from}, to=${to}, cardIdOrIndex=${cardIdOrIndex}, count=${count}, coords=`,
-    coords
+    coords,
   );
   if (!player) {
     logger.error(
-      "[moveCard_DISPATCHER_ERROR] moveCard wurde ohne gültiges player-Objekt aufgerufen."
+      "[moveCard_DISPATCHER_ERROR] moveCard wurde ohne gültiges player-Objekt aufgerufen.",
     );
     return;
   }
@@ -427,13 +432,13 @@ function moveCard(
     return []; // Kein Kartenziehen, also leeres Array zurückgeben.
   } else {
     logger.error(
-      `[moveCard_DISPATCHER_ERROR] Ungültiger Aufruf von moveCard. 'from' Zone ist nicht DECK, aber 'cardIdOrIndex' ist keine string ID. from=${from}, cardIdOrIndex=${cardIdOrIndex}`
+      `[moveCard_DISPATCHER_ERROR] Ungültiger Aufruf von moveCard. 'from' Zone ist nicht DECK, aber 'cardIdOrIndex' ist keine string ID. from=${from}, cardIdOrIndex=${cardIdOrIndex}`,
     );
   }
 }
 
 /**
- * Findet eine Karte anhand ihrer ID über alle Zonen hinweg.  
+ * Findet eine Karte anhand ihrer ID über alle Zonen hinweg.
  * @param {RoomState} state - Der globale Raumzustand.
  * @param {string} cardId - Die ID der zu suchenden Karte.
  * @returns {Card | null} Die gefundene Karte oder null.

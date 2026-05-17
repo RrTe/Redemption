@@ -1,7 +1,6 @@
 import Phaser from "phaser";
 import { connectToRoom, getStateCallbacks } from "../network/connection"; // ✨ NEU: getStateCallbacks importieren
 import { GameUI, type StateCallback, type TypedRoom } from "../ui/gameUI"; // ✨ NEU: StateCallback importieren
-import { MapSchema } from "@colyseus/schema";
 import { calculateLayout } from "../ui/layout.js";
 import type { RoomState } from "../../../shared/types";
 import { QuantitySelectionDialogScene } from "./QuantitySelectionDialogScene";
@@ -9,6 +8,7 @@ import {
   SelectionDialogScene,
   type SelectionDialogData,
 } from "./SelectionDialogScene"; // ✨ NEU
+import { ErrorDialogScene } from "./ErrorDialogScene";
 import { SettingsDialogScene } from "./SettingsDialogScene"; // ✨ NEU
 import type { GameBackground } from "../ui/backgrounds/GameBackground";
 import { TempleBackground } from "../ui/backgrounds/TempleBackground";
@@ -57,6 +57,11 @@ export default class CardGameScene extends Phaser.Scene {
           false,
         );
       }
+      
+      if (!this.scene.get("ErrorDialogScene")) {
+        this.scene.add("ErrorDialogScene", ErrorDialogScene, false);
+      }
+
       // SelectionDialogScene ist bereits global in main.ts registriert.
 
       // ✨ NEU: Registriere die Settings-Szene

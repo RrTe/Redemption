@@ -12,6 +12,7 @@ export class LobbyNetworkManager {
   public endpoint!: string;
   public httpEndpoint!: string;
   private soundManager: SoundManager;
+  private isTransitioning: boolean = false; // ✨ NEU: Verhindert Doppel-Klicks/Lobby-Updates
 
   // Callbacks für UI-Updates
   public onRoomsUpdated?: (rooms: RoomAvailable[]) => void;
@@ -56,6 +57,9 @@ export class LobbyNetworkManager {
 
   public async connectToLobby() {
     try {
+      // ✨ FIX: Alle Sperr-Flags zurücksetzen, wenn wir die Lobby (neu) betreten
+      this.isTransitioning = false;
+
       this.onStatusChange?.("Joining Lobby...");
       this.lobbyRoom = await this.client.joinOrCreate("lobby");
 
@@ -63,6 +67,9 @@ export class LobbyNetworkManager {
       this.onStatusChange?.("Ready");
 
       this.lobbyRoom.onMessage("rooms", (rooms: RoomAvailable[]) => {
+        // ✨ FIX: Wenn wir gerade ein Spiel erstellen/beitreten, ignorieren wir Liste-Updates
+        // Aber wir blockieren nicht komplett, falls nur die UI gesperrt ist.
+
         log("LobbyNetwork", "Received rooms update", rooms);
 
         // ✨ NEU: Filtere den Raum aus, für den wir eine aktive Sitzung haben
@@ -99,6 +106,15 @@ export class LobbyNetworkManager {
     deck: DeckData;
     savedState?: any;
   }) {
+    log("LobbyNetwork", "createGame called. Current isTransitioning:", this.isTransitioning);
+
+    if (this.isTransitioning) {
+      log("LobbyNetwork", "Create Game blocked: isTransitioning is true");
+      return;
+    }
+    this.isTransitioning = true;
+    this.onStatusChange?.("Creating Game...");
+
     try {
       const roomOptions = {
         roomName: `${options.playerName}'s Game`,
@@ -111,6 +127,7 @@ export class LobbyNetworkManager {
       const room = await this.client.create("game_room", roomOptions);
       this.handleJoinSuccess(room as TypedRoom);
     } catch (e: any) {
+      this.isTransitioning = false; // Reset bei Fehler
       throw e; // Fehler an UI weitergeben
     }
   }
@@ -119,6 +136,14 @@ export class LobbyNetworkManager {
     roomId: string,
     options: { playerName: string; deck: DeckData },
   ) {
+    log("LobbyNetwork", "joinGame called. Current isTransitioning:", this.isTransitioning);
+
+    if (this.isTransitioning) {
+      log("LobbyNetwork", "Join Game blocked: isTransitioning is true");
+      return;
+    }
+    this.isTransitioning = true;
+
     try {
       const joinOptions = {
         deck: options.deck,
@@ -128,6 +153,7 @@ export class LobbyNetworkManager {
       const room = await this.client.joinById(roomId, joinOptions);
       this.handleJoinSuccess(room as TypedRoom);
     } catch (e: any) {
+      this.isTransitioning = false;
       throw e;
     }
   }
@@ -141,11 +167,17 @@ export class LobbyNetworkManager {
     }
   }
 
+  /** ✨ NEU: Erlaubt der UI, den Sperrzustand bei Fehlern aufzuheben */
+  public resetTransition() {
+    this.isTransitioning = false;
+  }
+
   public hasActiveSession(): boolean {
     return !!localStorage.getItem("reconnectionToken");
   }
 
   public clearSession() {
+    this.isTransitioning = false;
     localStorage.removeItem("reconnectionToken");
     localStorage.removeItem("reconnectionRoomId");
   }

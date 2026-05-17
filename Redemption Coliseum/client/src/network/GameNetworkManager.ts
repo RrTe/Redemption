@@ -8,9 +8,9 @@ import type {
   MoveCardMessage,
 } from "../../../shared/messages.js";
 import { log, DEBUG } from "../utils/logger.js";
-import { type OverlayManager } from "../ui/managers/OverlayManager.js"; // ✨ FIX
 import { type DialogManager } from "../ui/managers/DialogManager.js"; // ✨ REFACTOR
 import { getClient } from "./connection.js"; // ✨ NEU
+import { GameEventCoordinator } from "./GameEventCoordinator.js"; // ✨ NEU
 
 /**
  * ✨ NEU (SCHRITT 3): Verwaltet die gesamte Netzwerkkommunikation mit dem Colyseus-Raum.
@@ -21,32 +21,24 @@ export class GameNetworkManager {
   private scene: Phaser.Scene;
   private ui: GameUI;
   private $: StateCallback;
-  private overlayManager: OverlayManager; // ✨ FIX
-  private dialogManager: DialogManager | null = null; // ✨ REFACTOR
   private heartbeatInterval: number | null = null; // ✨ NEU
   private isReconnecting: boolean = false; // ✨ NEU
   private onLeaveListener: any; // ✨ FIX: To store and remove the listener on destroy
   private instanceId: string; // ✨ NEU: Für Debugging
+  private dialogManager!: DialogManager; // ✨ FIX: Eigenschaft deklariert
 
   constructor(
     scene: Phaser.Scene,
     room: TypedRoom,
     ui: GameUI,
     stateCallback: StateCallback,
-    overlayManager: OverlayManager,
-    dialogManager: DialogManager | null, // ✨ REFACTOR
   ) {
     this.scene = scene;
     this.room = room;
     this.ui = ui;
     this.$ = stateCallback;
-    this.overlayManager = overlayManager; // ✨ FIX
-    this.dialogManager = dialogManager; // ✨ REFACTOR
     this.instanceId = Phaser.Utils.String.UUID().slice(0, 8); // ✨ FIX: Use slice() instead of deprecated substr()
-    log(
-      "Network",
-      `[NetworkManager ${this.instanceId}] Created for room ${room.roomId}`,
-    ); // ✨ FIX: Use roomId
+    log("Network", `[NetworkManager ${this.instanceId}] Created for room ${room.roomId}`);
 
     // ✨ NEU: Debugging Hooks hierher verschoben
     // @ts-ignore
@@ -55,22 +47,25 @@ export class GameNetworkManager {
     };
 
     // @ts-ignore
-    window.lookAtCards = (zone: Zone, count: number, position: "top" | "bottom" = "top") => {
+    window.lookAtCards = (
+      zone: Zone,
+      count: number,
+      position: "top" | "bottom" = "top",
+    ) => {
       this.sendLookAtCards(zone, count, position);
     };
 
     // @ts-ignore
-    window.revealCards = (zone: Zone, count: number, position: "top" | "bottom" = "top") => {
+    window.revealCards = (
+      zone: Zone,
+      count: number,
+      position: "top" | "bottom" = "top",
+    ) => {
       this.sendRevealCards(zone, count, position);
     };
 
     // @ts-ignore
     window.saveGame = () => this.sendRequestSaveGame();
-  }
-
-  // ✨ REFACTOR: Setter to resolve circular dependency.
-  public setDialogManager(dialogManager: DialogManager) {
-    this.dialogManager = dialogManager;
   }
 
   /** ✨ NEU: Spezifische Methode zum Erstellen von Tokens. */
@@ -114,6 +109,11 @@ export class GameNetworkManager {
     (this.room as any).send("chat", { text });
   }
 
+  /** ✨ NEU: Setter zur Vermeidung zirkulärer Abhängigkeiten */
+  public setDialogManager(dialogManager: DialogManager) {
+    this.dialogManager = dialogManager;
+  }
+
   /** Registriert alle Handler für eingehende Server-Nachrichten. */
   public registerHandlers() {
     log(
@@ -127,18 +127,14 @@ export class GameNetworkManager {
     // ✨ NEU: Browser-Events für sofortiges Feedback beim lokalen Testen ("Offline"-Modus)
     window.addEventListener("offline", () => {
       log("Network", "Browser went offline (Event).");
-      this.overlayManager.showWaitingOverlay(
-        "Connection lost. Waiting for network...",
-        false,
-      );
+      this.scene.events.emit("net:offline", { message: "Connection lost. Waiting for network..." });
     });
 
     window.addEventListener("online", () => {
       log("Network", "Browser went online (Event).");
       // Wenn der Socket noch offen ist (kein onLeave gefeuert), Overlay entfernen.
       if (this.room && this.room.connection && this.room.connection.isOpen) {
-        this.overlayManager.showWaitingOverlay("Network restored.", false);
-        setTimeout(() => this.overlayManager.hideWaitingOverlay(), 1000);
+        this.scene.events.emit("net:online", { message: "Network restored." });
       }
     });
 
@@ -162,10 +158,7 @@ export class GameNetworkManager {
 
       // ✨ NEU: Spezifische Behandlung für "Game Over" (Zombie Room)
       if (code === 4000) {
-        this.overlayManager.showWaitingOverlay(
-          "Game is already over. Please return to lobby.",
-          true,
-        );
+        this.scene.events.emit("net:disconnected", { message: "Game is already over. Please return to lobby.", fatal: true });
         return;
       }
 
@@ -175,98 +168,6 @@ export class GameNetworkManager {
         this.handleDisconnect();
       }
     });
-
-    // Lausche auf die Suchergebnisse vom Server.
-    this.room.onMessage("presentPileSearchResult", (message) => {
-      // ✨ REFACTOR: Delegate to DialogManager
-      this.dialogManager?.showSearchDialog(message);
-    });
-
-    // Lausche auf Änderungen am `revealedCards`-Array.
-    this.$(this.room.state).revealedCards.onAdd((card, index) => {
-      // ✨ FIX: Wenn ich selbst der Auslöser bin (actionTakerId), zeige ich NICHT den passiven Dialog,
-      // da ich bereits den interaktiven Dialog (via presentPileSearchResult) erhalte.
-      if (this.room.state.actionTakerId === this.room.sessionId) return;
-
-      if (index === 0) {
-        setTimeout(() => this.dialogManager?.showRevealDialog(), 0);
-      }
-    });
-
-    this.$(this.room.state).revealedCards.onRemove(() => {
-      if (this.room.state.revealedCards.length === 0) {
-        this.dialogManager?.closeSelectionDialog();
-      }
-    });
-
-    // ✨ FIX: Lausche auf Änderungen am globalen Zustand, insbesondere am activePlayer.
-    // Dies ist der zuverlässigste Weg, um das Spiel-Start-Signal zu empfangen.
-    // Wir nutzen den Proxy $, da direkter Zugriff auf .onChange fehlschlagen kann.
-    // Wir ignorieren die Argumente, da sie inkonsistent sein können, und prüfen den State direkt.
-    this.$(this.room.state).onChange(() => {
-      this.ui.updateWaitingStatus();
-    });
-
-    // ✨ NEU: Handler für das Spielende
-    this.$(this.room.state).listen("winnerId", (winnerId, previousWinnerId) => {
-      if (winnerId && !previousWinnerId) {
-        // Nur beim ersten Mal auslösen
-        const isWinner = winnerId === this.room.sessionId;
-        this.ui.showGameOverOverlay(isWinner);
-      }
-    });
-
-    // Lausche darauf, wenn Spieler dem Spiel beitreten (oder bereits da sind).
-    this.$(this.room.state).players.onAdd((player, sessionId) => {
-      log(
-        "Network",
-        `[onAdd] Player added to state. Current client's room.sessionId: '${this.room.sessionId}', Added player's sessionId: '${sessionId}'`,
-      );
-
-      if (sessionId !== this.room.sessionId) {
-        // Informiere die UI, dass sie die Gegner-Elemente einrichten soll.
-        this.ui.setupOpponentUI(sessionId);
-      }
-      // ✨ NEU: Prüfe, ob wir auf einen Gegner warten (Overlay anzeigen/ausblenden)
-      this.ui.updateWaitingStatus();
-
-      // ✨ NEU: Lausche auf Änderungen am Spieler-Objekt (z.B. connected status)
-      this.$(player).onChange(() => {
-        this.ui.updateWaitingStatus();
-      });
-    }, true); // `true` sorgt dafür, dass der Handler auch für bereits vorhandene Spieler ausgeführt wird.
-
-    // ✨ NEU: Handler für die Zieh-Animation
-    this.room.onMessage("cardsDrawn", (message: { cardIds: string[] }) => {
-      log(
-        "Network",
-        `[DEBUG] [1/3] 'cardsDrawn' message received from server for cards:`,
-        message.cardIds,
-      );
-      this.scene.events.emit("playDrawAnimation", { cardIds: message.cardIds });
-    });
-
-    // Lausche darauf, wenn Spieler das Spiel verlassen.
-    this.$(this.room.state).players.onRemove((player, sessionId) => {
-      log("Network", `[onRemove] Player left: ${sessionId}`);
-      // Aktuell keine UI-Aktion nötig, da das `render`-Loop das Aufräumen übernimmt.
-      // ✨ NEU: Wenn der Gegner geht, zeige das Overlay wieder an.
-      this.ui.updateWaitingStatus();
-    });
-
-    // ✨ NEU: Handler für den Misch-Sound
-    this.room.onMessage(
-      "pileShuffled",
-      (message: { zone: string; playerId: string }) => {
-        log(
-          "Network",
-          `[NetworkManager] Received 'pileShuffled' for zone ${message.zone} of player ${message.playerId}`,
-        );
-        // Spiele den Sound ab, egal wessen Deck gemischt wird.
-        // Hier könnte man später auch eine visuelle Animation anstoßen.
-        this.scene.game.events.emit("playSound", "CARD_SHUFFLE"); // ✨ FIX: Globaler Event-Bus
-      },
-    );
   }
 
   // ✨ NEU: Heartbeat-Methoden
@@ -292,19 +193,13 @@ export class GameNetworkManager {
   // ✨ NEU: Reconnect-Logik
   private async handleDisconnect() {
     this.isReconnecting = true;
-    this.overlayManager.showWaitingOverlay(
-      "Connection lost. Reconnecting...",
-      false,
-    );
+    this.scene.events.emit("net:reconnecting", { message: "Connection lost. Reconnecting..." });
 
     const token = localStorage.getItem("reconnectionToken");
     const client = getClient();
 
     if (!token || !client) {
-      this.overlayManager.showWaitingOverlay(
-        "Connection lost. Please return to lobby.",
-        true,
-      );
+      this.scene.events.emit("net:disconnected", { message: "Connection lost. Please return to lobby.", fatal: true });
       return;
     }
 
@@ -319,11 +214,7 @@ export class GameNetworkManager {
       this.scene.scene.restart({ room: newRoom });
     } catch (e) {
       log("Network", "Reconnect failed:", e);
-      // Wenn es fehlschlägt, zeige den Exit-Button
-      this.overlayManager.showWaitingOverlay(
-        "Connection failed. Please return to lobby.",
-        true,
-      );
+      this.scene.events.emit("net:disconnected", { message: "Connection failed. Please return to lobby.", fatal: true });
     } finally {
       this.isReconnecting = false;
     }

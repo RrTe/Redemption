@@ -7,11 +7,13 @@ import { DeckUtils, type DeckData } from "../utils/DeckUtils"; // ✨ NEU: Impor
 import { LobbyUIManager } from "../ui/managers/LobbyUIManager";
 import { LobbyDataManager } from "../ui/managers/LobbyDataManager";
 import { LobbyNetworkManager } from "../network/LobbyNetworkManager";
+import { LobbyDomManager } from "../ui/managers/LobbyDomManager";
 
 export class LobbyScene extends Phaser.Scene {
   private uiManager!: LobbyUIManager;
   private networkManager!: LobbyNetworkManager;
   private dataManager!: LobbyDataManager;
+  private domManager!: LobbyDomManager;
   private soundManager!: SoundManager; // ✨ NEU
 
   constructor() {
@@ -68,14 +70,12 @@ export class LobbyScene extends Phaser.Scene {
 
     this.soundManager = this.registry.get("soundManager");
     this.uiManager = new LobbyUIManager(this, this.soundManager);
+    this.domManager = new LobbyDomManager(this);
     this.networkManager = new LobbyNetworkManager(this);
     this.dataManager = new LobbyDataManager();
 
     this.uiManager.create();
-    const nameInput = this.uiManager.playerNameInput.getChildByName(
-      "playerName",
-    ) as HTMLInputElement;
-    if (nameInput) nameInput.value = this.dataManager.playerName;
+    this.domManager.createPlayerNameInput(this.scale.width / 2, this.scale.height * 0.28, this.dataManager.playerName);
 
     // Debug Infos setzen
     this.uiManager.debugText.setText(
@@ -100,7 +100,7 @@ export class LobbyScene extends Phaser.Scene {
 
     this.uiManager.helpButton.on("pointerdown", () => {
       this.soundManager.playSound("UI_TOGGLE");
-      this.uiManager.toggleHelp();
+      this.domManager.toggleHelp();
     });
 
     // Musik-Logik verknüpfen (Delegation an NetworkManager)
@@ -136,16 +136,18 @@ export class LobbyScene extends Phaser.Scene {
     // ✨ NEU: Aufräumen beim Beenden der Szene
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.uiManager.destroy();
+      this.domManager.destroy();
     });
     this.resize({ width: this.scale.width, height: this.scale.height });
   }
 
   resize(gameSize: { width: number; height: number }) {
     this.uiManager?.resize(gameSize.width, gameSize.height);
+    this.domManager?.setInputPosition(gameSize.width / 2, gameSize.height * 0.28);
   }
 
   openDeckSelection() {
-    this.uiManager.openFileSelector(".txt,.json", (content, fileName) => {
+    this.domManager.openFileSelector(".txt,.json", (content, fileName) => {
       try {
         const deck = DeckUtils.parseDeck(content, fileName);
         this.dataManager.selectedDeck = deck;
@@ -162,7 +164,7 @@ export class LobbyScene extends Phaser.Scene {
   }
 
   openLoadGameDialog() {
-    this.uiManager.openFileSelector(".json", (content) => {
+    this.domManager.openFileSelector(".json", (content) => {
       try {
         this.createGame(JSON.parse(content));
       } catch (err) {
@@ -173,7 +175,9 @@ export class LobbyScene extends Phaser.Scene {
   }
 
   checkActiveSession() {
-    this.uiManager.reconnectBtn?.setVisible(this.networkManager.hasActiveSession());
+    this.uiManager.reconnectBtn?.setVisible(
+      this.networkManager.hasActiveSession(),
+    );
   }
 
   clearSession() {
@@ -187,18 +191,25 @@ export class LobbyScene extends Phaser.Scene {
     try {
       await this.networkManager.reconnectToGame(reconnectionToken);
     } catch (e: any) {
-      this.uiManager.statusText.setText("Session expired.");
+      this.uiManager.statusText.setText(
+        "Reconnect not possible. Session expired.",
+      );
+      this.uiManager.unlockInput(); // ✨ FIX: UI wieder freigeben
       this.clearSession();
     }
   }
 
   async createGame(savedState?: any) {
-    const nameInput = this.uiManager.playerNameInput.getChildByName(
-      "playerName",
-    ) as HTMLInputElement;
-    this.dataManager.updateNameFromInput(nameInput);
-    this.uiManager.statusText.setText("Creating game...");
+    console.log("[LobbyScene] createGame triggered");
+
     try {
+      const name = this.domManager.getPlayerName();
+      if (name) this.dataManager.playerName = name;
+
+      // ✨ FIX: Erst hier alles sperren, da dies eine Start-Aktion ist
+      this.uiManager.lockAllButtons();
+      this.uiManager.statusText.setText("Creating game...");
+
       await this.networkManager.createGame({
         playerName: this.dataManager.playerName,
         deck: this.dataManager.selectedDeck,
@@ -206,22 +217,30 @@ export class LobbyScene extends Phaser.Scene {
       });
     } catch (e: any) {
       this.uiManager.statusText.setText("Error: " + e.message);
+      this.uiManager.unlockInput();
+      this.networkManager.resetTransition();
     }
   }
 
   async joinGame(roomId: string, btn: Phaser.GameObjects.Container) {
-    const nameInput = this.uiManager.playerNameInput.getChildByName(
-      "playerName",
-    ) as HTMLInputElement;
-    this.dataManager.updateNameFromInput(nameInput);
-    this.uiManager.statusText.setText("Connecting...");
+    console.log("[LobbyScene] joinGame triggered for room:", roomId);
+
     try {
+      const name = this.domManager.getPlayerName();
+      if (name) this.dataManager.playerName = name;
+
+      // ✨ FIX: Erst hier alles sperren
+      this.uiManager.lockAllButtons();
+      this.uiManager.statusText.setText("Connecting...");
+
       await this.networkManager.joinGame(roomId, {
         playerName: this.dataManager.playerName,
         deck: this.dataManager.selectedDeck,
       });
     } catch (e: any) {
       this.uiManager.statusText.setText("Join Error: " + e.message);
+      this.uiManager.unlockInput();
+      this.networkManager.resetTransition();
     }
   }
 

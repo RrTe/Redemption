@@ -14,6 +14,11 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "allowJs": true,
+    "paths": {
+      "@colyseus/schema": [
+        "./node_modules/@colyseus/schema"
+      ]
+    },
     "declaration": true,
     "emitDeclarationOnly": true,
     "declarationDir": "./dist/types",
@@ -33,8 +38,7 @@
   },
   "include": [
     "src",
-    "../shared",
-    "../server/src/services/actionService.js"
+    "../shared"
   ],
   "exclude": [
     "../shared/**/*.d.ts"

@@ -27,6 +27,14 @@ export class DialogManager {
     this.networkManager = networkManager;
   }
 
+  public registerHandlers() {
+    this.scene.events.on("net:searchResult", (msg: any) => this.showSearchDialog(msg));
+    this.scene.events.on("net:revealedCardsAdded", () => this.showRevealDialog());
+    this.scene.events.on("net:revealedCardsRemoved", () => this.closeSelectionDialog());
+    this.scene.events.on("net:gameError", (data: { message: string }) => 
+      this.showErrorDialog(data.message));
+  }
+
   public showSearchDialog(message: any) {
     log(
       "Network",
@@ -87,7 +95,7 @@ export class DialogManager {
     } as SelectionDialogData);
   }
 
-  public showRevealDialog() {
+  public showRevealDialog() { // ✨ FIX: Titel für RevealDialog
     if (this.room.state.revealedCards.length === 0) return;
 
     const actionTakerId = this.room.state.actionTakerId;
@@ -95,7 +103,7 @@ export class DialogManager {
 
     this.scene.scene.pause("CardGame");
     this.scene.scene.launch("SelectionDialogScene", {
-      title: "Revealed Cards",
+      title: isMyAction ? "Your Revealed Cards" : "Opponent's Revealed Cards",
       cards: [...this.room.state.revealedCards],
       room: this.room,
       showCloseButton: isMyAction,
@@ -105,6 +113,25 @@ export class DialogManager {
         if (isMyAction) this.networkManager.sendResolveReveal();
       },
     } as SelectionDialogData);
+  }
+
+  /**
+   * Displays a modal error dialog with an OK button.
+   * @param message The error message to display.
+   * @param onOk Optional callback function when the OK button is pressed.
+   */
+  public showErrorDialog(message: string, onOk?: () => void) { // ✨ FIX: Methode war bereits vorhanden, keine Änderung nötig.
+    if (this.scene.scene.isActive("ErrorDialogScene")) {
+      return; // Ensure only one error dialog is open at a time
+    }
+
+    this.scene.scene.launch("ErrorDialogScene", {
+      message: message,
+      onOk: () => {
+        this.scene.scene.stop("ErrorDialogScene");
+        onOk?.();
+      },
+    });
   }
 
   public closeSelectionDialog() {

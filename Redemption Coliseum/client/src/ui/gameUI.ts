@@ -14,6 +14,7 @@ import { LayoutManager } from "./managers/LayoutManager"; // ✨ NEU
 import { CardRenderer } from "./renderers/CardRenderer.js"; // ✨ FIX: Neuer Pfad
 import { UIRenderer } from "./renderers/UIRenderer"; // ✨ NEU
 import { InputManager } from "./managers/InputManager";
+import { GameEventCoordinator } from "../network/GameEventCoordinator"; // ✨ NEU
 import { PileUI } from "./PileUI"; // ✨ Importiere die neue PileUI-Klasse
 import { GameNetworkManager } from "../network/GameNetworkManager.ts"; // ✨ NEU (SCHRITT 3)
 import { PhaseManager } from "./managers/PhaseManager"; // ✨ NEU
@@ -21,6 +22,7 @@ import { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Schri
 import { SoundManager } from "../managers/SoundManager.ts"; // ✨ NEU: Schritt 1.2
 import { AnimationManager } from "./managers/AnimationManager";
 import { OverlayManager } from "./managers/OverlayManager"; // ✨ REFACTOR
+import { DomUIManager } from "./managers/GameDomManager.ts"; // ✨ NEU
 import { PersistenceManager } from "./managers/PersistenceManager"; // ✨ NEU
 import { GameStateManager } from "./managers/GameStateManager"; // ✨ NEU
 import { DialogManager } from "./managers/DialogManager"; // ✨ REFACTOR
@@ -62,6 +64,7 @@ export class GameUI {
   private elementManager: ElementManager;
   private layoutManager: LayoutManager; // ✨ NEU
   private inputManager: InputManager;
+  private eventCoordinator: GameEventCoordinator; // ✨ NEU
   private networkManager: GameNetworkManager;
   private cardRenderer: CardRenderer;
   private uiRenderer: UIRenderer; // ✨ NEU
@@ -76,6 +79,7 @@ export class GameUI {
   private dialogManager: DialogManager; // ✨ REFACTOR
   private overlayManager: OverlayManager; // ✨ REFACTOR
   private persistenceManager: PersistenceManager; // ✨ NEU
+  private domUIManager: DomUIManager; // ✨ NEU
   private gameStateManager: GameStateManager; // ✨ NEU
   private assetManager: AssetManager; // ✨ NEU
   private hudManager: HUDManager; // ✨ REFACTOR
@@ -110,12 +114,14 @@ export class GameUI {
     this.previewManager = new PreviewManager(this.scene);
     this.assetManager = new AssetManager(this.scene);
     this.scene.registry.set("assetManager", this.assetManager); // ✨ FIX: Register for CardUI access
+    this.domUIManager = new DomUIManager(this.scene, this.room); // ✨ NEU
     this.persistenceManager = new PersistenceManager(this.room);
     this.overlayManager = new OverlayManager(
       this.scene,
       this.room,
       this.soundManager,
     );
+    // this.overlayManager.setDialogManager(this.dialogManager); // ✨ VERSCHOBEN: Wird später aufgerufen
   }
 
   private initNetworking() {
@@ -124,9 +130,12 @@ export class GameUI {
       this.room,
       this,
       this.$,
-      this.overlayManager,
-      null!,
     );
+    this.eventCoordinator = new GameEventCoordinator(
+      this.scene,
+      this.room,
+      this.$,
+    ); // ✨ FIX: Initialisierung hier
     this.chatManager = new ChatManager(
       this.scene,
       this.room,
@@ -208,7 +217,7 @@ export class GameUI {
       this.networkManager,
     );
     this.networkManager.setDialogManager(this.dialogManager);
-    this.inputManager = new InputManager(
+    this.inputManager = new InputManager( // ✨ FIX: dialogManager-Parameter entfernt
       this.scene,
       this.room,
       this.networkManager,
@@ -218,7 +227,10 @@ export class GameUI {
       this.elementManager,
       this.tokenManager,
       this.overlayManager,
+      this.domUIManager, // ✨ NEU: DomUIManager übergeben
     );
+    this.overlayManager.setDialogManager(this.dialogManager); // ✨ FIX: Erst hier aufrufen, wenn dialogManager existiert
+
     this.scene.registry.set("inputManager", this.inputManager); // ✨ FIX: Register for CardUI access
     this.phaseManager = new PhaseManager(
       this.scene,
@@ -240,17 +252,57 @@ export class GameUI {
   }
   /** Registriert Handler für Colyseus-Raum-Events. */
   public registerRoomHandlers() {
-    // ✨ NEU (SCHRITT 3): Delegiere die Registrierung der Nachrichten-Handler.
+    // ✨ REFACTOR: NetworkManager kümmert sich nur noch um Connection/Heartbeat
     this.networkManager.registerHandlers();
+
+    // --- Bridge Coordinator Events to UI Logic ---
+    this.scene.events.on("net:playerJoined", (data: { sessionId: string }) => {
+      if (data.sessionId !== this.room.sessionId) {
+        this.setupOpponentUI(data.sessionId);
+      }
+      this.updateWaitingStatus();
+    });
+
+    this.scene.events.on("net:playerLeft", () => this.updateWaitingStatus());
+    this.scene.events.on("net:stateChanged", () => this.updateWaitingStatus());
+
+    // --- Bridge Connection Events to OverlayManager ---
+    this.scene.events.on("net:offline", (data: { message: string }) =>
+      this.overlayManager.showWaitingOverlay(data.message, false),
+    );
+
+    this.scene.events.on("net:online", (data: { message: string }) => {
+      this.overlayManager.showWaitingOverlay(data.message, false);
+      this.scene.time.delayedCall(1000, () =>
+        this.overlayManager.hideWaitingOverlay(),
+      );
+    });
+
+    this.scene.events.on("net:reconnecting", (data: { message: string }) =>
+      this.overlayManager.showWaitingOverlay(data.message, false),
+    );
+
+    this.scene.events.on(
+      "net:disconnected",
+      (data: { message: string; fatal: boolean }) =>
+        this.overlayManager.showWaitingOverlay(data.message, data.fatal),
+    );
 
     // ✨ NEU: Delegiere Event- und State-Handling an GameStateManager
     this.gameStateManager.registerHandlers();
+
+    // ✨ NEU: Delegiere Dialog-Handling
+    this.dialogManager.registerHandlers();
 
     // ✨ NEU: Delegiere die Registrierung der Phasen-Handler.
     this.phaseManager.registerHandlers();
 
     // ✨ NEU: Delegiere Save-Handling an PersistenceManager
     this.persistenceManager.registerHandlers();
+
+    // ✨ FIX: Erst GANZ AM ENDE registrieren, damit alle obigen Listener aktiv sind,
+    // wenn die initialen State-Events (playerJoined) feuern!
+    this.eventCoordinator.registerHandlers();
   }
 
   /** ✨ NEU: Zeigt das Game-Over-Overlay an. */

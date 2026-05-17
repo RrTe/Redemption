@@ -1,19 +1,22 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI";
 import { type SoundManager } from "../../managers/SoundManager";
+import { type DialogManager } from "./DialogManager"; // ✨ NEU
 import { log } from "../../utils/logger";
+import { DomUIManager } from "./GameDomManager"; // ✨ NEU
 
 /**
  * Manages all UI overlays like "Waiting for Player", "Game Over", and the help screen.
  */
 export class OverlayManager {
   private scene: Phaser.Scene;
-  private room: TypedRoom;
+  private room: TypedRoom; // ✨ FIX: Muss Member sein für Buttons
   private soundManager: SoundManager;
+  private domUIManager: DomUIManager; // ✨ NEU
+  private dialogManager!: DialogManager; // ✨ NEU: Setter-Injection für zirkuläre Abhängigkeit
 
   private waitingOverlay: Phaser.GameObjects.Container | null = null;
   private gameOverOverlay: Phaser.GameObjects.Container | null = null;
-  private helpOverlay: HTMLElement | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -23,36 +26,19 @@ export class OverlayManager {
     this.scene = scene;
     this.room = room;
     this.soundManager = soundManager;
+    this.domUIManager = new DomUIManager(scene, room); // ✨ NEU
   }
 
   public registerHandlers() {
-    this.room.onMessage("saveGameData", (data: any) => {
-      this.downloadSaveFile(data);
-    });
+    this.domUIManager.registerHandlers(); // ✨ NEU
   }
 
-  private downloadSaveFile(data: any) {
-    const jsonStr = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    const date = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
-    a.download = `redemption_save_${date}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    log("UI", "Save game downloaded.");
+  public setDialogManager(dialogManager: DialogManager) {
+    this.dialogManager = dialogManager;
   }
 
   public destroy() {
-    if (this.helpOverlay) {
-      this.helpOverlay.remove();
-      this.helpOverlay = null;
-    }
+    this.domUIManager.destroy(); // ✨ NEU
     this.hideWaitingOverlay();
     if (this.gameOverOverlay) {
       this.gameOverOverlay.destroy();
@@ -61,7 +47,10 @@ export class OverlayManager {
   }
 
   public showGameOverOverlay(isWinner: boolean) {
-    if (this.gameOverOverlay) return;
+    if (this.gameOverOverlay) {
+      this.gameOverOverlay.destroy();
+      this.gameOverOverlay = null;
+    }
 
     log(
       "UI",
@@ -91,7 +80,7 @@ export class OverlayManager {
       "Back to Lobby",
       () => {
         this.soundManager?.stopMusic();
-        this.soundManager?.stopEverything();
+        this.soundManager?.stopEverything(); // Sicherstellen, dass alle Sounds gestoppt werden
         this.room.leave();
         localStorage.removeItem("reconnectionToken");
         localStorage.removeItem("reconnectionRoomId"); // ✨ NEU: Filter löschen
@@ -110,70 +99,49 @@ export class OverlayManager {
     });
   }
 
+  /**
+   * Displays a modal error dialog with an OK button.
+   * @param message The error message to display.
+   * @param onOk Optional callback function when the OK button is pressed.
+   */
+  public showErrorDialog(message: string, onOk?: () => void) {
+    this.dialogManager.showErrorDialog(message, onOk); // ✨ NEU: Delegation an DialogManager
+  }
+
+  /**
+   * Displays a temporary notification text that fades out.
+   */
+  public showNotification(message: string, color: number = 0xff6666) {
+    // For temporary notifications, we can still use the fading text,
+    // or decide to use the modal dialog for all errors.
+    // For now, let's keep the fading text for non-critical notifications
+    // and use the modal for gameError messages.
+    // If you want all notifications to be modal, uncomment the line below:
+    // this.showErrorDialog(message);
+    // return;
+
+    const { width } = this.scene.scale;
+
+    const text = this.scene.add
+      .bitmapText(width / 2, 100, "fairydust", message, 32)
+      .setOrigin(0.5)
+      .setDepth(20000) // High depth to stay above everything
+      .setTint(color)
+      .setDropShadow(2, 2, 0x000000, 0.8);
+
+    this.scene.tweens.add({
+      targets: text,
+      y: 70,
+      alpha: 0,
+      delay: 2000,
+      duration: 1000,
+      ease: "Power2",
+      onComplete: () => text.destroy(),
+    });
+  }
+
   public toggleHelp() {
-    if (this.helpOverlay) {
-      const isVisible = this.helpOverlay.style.display !== "none";
-      this.helpOverlay.style.display = isVisible ? "none" : "flex";
-      return;
-    }
-
-    this.helpOverlay = document.createElement("div");
-    this.helpOverlay.id = "game-help-overlay";
-    Object.assign(this.helpOverlay.style, {
-      position: "absolute",
-      top: "10%",
-      left: "10%",
-      width: "80%",
-      height: "80%",
-      backgroundColor: "rgba(0, 0, 0, 0.9)",
-      border: "2px solid #ffd700",
-      borderRadius: "10px",
-      zIndex: "10000",
-      display: "flex",
-      flexDirection: "column",
-      boxShadow: "0 0 20px rgba(0,0,0,0.8)",
-    });
-
-    const header = document.createElement("div");
-    Object.assign(header.style, {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "10px 20px",
-      backgroundColor: "#1a1a2e",
-      borderBottom: "1px solid #444",
-      color: "#ffd700",
-      fontFamily: "serif",
-      fontSize: "24px",
-    });
-    header.innerHTML = "<span>Game Guide</span>";
-
-    const closeBtn = document.createElement("button");
-    closeBtn.textContent = "X";
-    Object.assign(closeBtn.style, {
-      background: "transparent",
-      border: "none",
-      color: "#ff6666",
-      fontSize: "24px",
-      cursor: "pointer",
-      fontWeight: "bold",
-    });
-    closeBtn.onclick = () => {
-      if (this.helpOverlay) this.helpOverlay.style.display = "none";
-    };
-    header.appendChild(closeBtn);
-
-    const iframe = document.createElement("iframe");
-    iframe.src = "help.html";
-    Object.assign(iframe.style, {
-      flex: "1",
-      border: "none",
-      background: "#fff",
-    });
-
-    this.helpOverlay.appendChild(header);
-    this.helpOverlay.appendChild(iframe);
-    document.body.appendChild(this.helpOverlay);
+    this.domUIManager.toggleHelp(); // ✨ NEU: Delegation an DomUIManager
   }
 
   public showWaitingOverlay(message: string, showBackButton: boolean = false) {

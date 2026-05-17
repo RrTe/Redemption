@@ -7,9 +7,13 @@ import { type TokenManager } from "./TokenManager.js"; // ✨ NEU
 import { ElementManager } from "./ElementManager.js"; // ✨ NEU
 import { type OverlayManager } from "./OverlayManager.js"; // ✨ NEU
 import { DragDropHandler } from "../handlers/DragDropHandler.js"; // ✨ REFACTOR
-import { InteractionHandler } from "../handlers/InteractionHandler.js"; // ✨ REFACTOR
+import { CardInteractionHandler } from "../handlers/CardInteractionHandler.js"; // ✨ NEU
+import { PileInteractionHandler } from "../handlers/PileInteractionHandler.js"; // ✨ NEU
+import { InteractionHandler } from "../handlers/InteractionHandler.js";
 import { KeyboardHandler } from "../handlers/KeyboardHandler"; // ✨ REFACTOR
+import { MenuFactory } from "../factories/MenuFactory.js"; // ✨ NEU
 import { CardUI } from "../CardUI"; // ✨ NEU
+import { DomUIManager } from "./GameDomManager.js"; // ✨ NEU
 
 /**
  * Verwaltet alle globalen Input-Handler der Szene,
@@ -23,8 +27,11 @@ export class InputManager {
   private previewManager: PreviewManager;
   private elementManager: ElementManager; // ✨ NEU
   private dragDropHandler: DragDropHandler; // ✨ REFACTOR
-  private interactionHandler: InteractionHandler; // ✨ REFACTOR
+  private cardInteractionHandler: CardInteractionHandler; // ✨ NEU
+  private pileInteractionHandler: PileInteractionHandler; // ✨ NEU
+  private domUIManager: DomUIManager; // ✨ NEU
   private keyboardHandler: KeyboardHandler; // ✨ REFACTOR
+  private interactionHandler: InteractionHandler;
 
   constructor(
     scene: Phaser.Scene,
@@ -36,6 +43,7 @@ export class InputManager {
     elementManager: ElementManager, // ✨ NEU
     tokenManager: TokenManager, // ✨ NEU
     overlayManager: OverlayManager, // ✨ NEU
+    domUIManager: DomUIManager, // ✨ NEU
   ) {
     this.scene = scene;
     this.room = room;
@@ -43,6 +51,7 @@ export class InputManager {
     this.animationManager = animationManager;
     this.previewManager = previewManager;
     this.elementManager = elementManager; // ✨ NEU
+    this.domUIManager = domUIManager; // ✨ NEU
 
     // ✨ REFACTOR: Create the dedicated handler for drag and drop.
     this.dragDropHandler = new DragDropHandler(
@@ -55,16 +64,35 @@ export class InputManager {
       dragBounds,
     );
 
-    // ✨ REFACTOR: Create the dedicated handler for interactions (clicks, hover, menu).
-    this.interactionHandler = new InteractionHandler(
+    // ✨ NEU: Factory für Menü-Aktionen (wird von Handlern benötigt)
+    const menuFactory = new MenuFactory(scene, room, networkManager);
+
+    // ✨ NEU: Spezialisierter Handler für Karten-Interaktionen
+    this.cardInteractionHandler = new CardInteractionHandler(
       scene,
       room,
       networkManager,
+      menuFactory,
       animationManager,
       previewManager,
+    );
+
+    // ✨ NEU: Spezialisierter Handler für Stapel-Interaktionen
+    this.pileInteractionHandler = new PileInteractionHandler(
+      scene,
+      room,
+      menuFactory,
+      overlayManager,
+    );
+
+    // ✨ REFACTOR: InteractionHandler koordiniert nun die Sub-Handler
+    this.interactionHandler = new InteractionHandler(
+      scene,
+      room,
+      this.cardInteractionHandler,
+      this.pileInteractionHandler,
       this.dragDropHandler,
-      elementManager, // ✨ NEU
-      overlayManager, // ✨ NEU
+      elementManager,
     );
 
     // ✨ REFACTOR: Create handler for keyboard inputs.
@@ -80,6 +108,7 @@ export class InputManager {
   public destroy() {
     // ✨ REFACTOR: Delegate cleanup to the handler.
     this.dragDropHandler.destroy();
+    this.cardInteractionHandler.destroy(); // CardInteractionHandler hat keine destroy, aber für Konsistenz
     this.interactionHandler.destroy();
     // Scene-Input-Listener werden von Phaser beim Scene-Shutdown automatisch entfernt.
   }
@@ -96,23 +125,13 @@ export class InputManager {
    * ✨ NEU: Zentralisiert die Phaser-Input-Konfiguration für eine Karte.
    */
   public setupCardInteractivity(card: CardUI) {
-    card.setInteractive({
-      hitArea: new Phaser.Geom.Rectangle(0, 0, card.width, card.height),
-      hitAreaCallback: Phaser.Geom.Rectangle.Contains,
-      useHandCursor: true,
-      draggable: true,
-    });
+    this.cardInteractionHandler.setupCardInteractivity(card);
   }
 
   /**
    * ✨ NEU: Aktualisiert den interaktiven Bereich einer Karte bei Größenänderung.
    */
   public updateCardHitArea(card: CardUI) {
-    if (card.input && card.input.hitArea instanceof Phaser.Geom.Rectangle) {
-      card.input.hitArea.setTo(0, 0, card.width, card.height);
-    } else {
-      // Fallback falls Interaktivität verloren ging oder noch nicht gesetzt wurde
-      this.setupCardInteractivity(card);
-    }
+    this.cardInteractionHandler.updateCardHitArea(card);
   }
 }

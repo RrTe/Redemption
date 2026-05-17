@@ -1,6 +1,6 @@
 import type { TypedRoom, GameUI } from "../gameUI";
 import type { ElementManager } from "./ElementManager";
-import type { NetworkManager } from "../../network/GameNetworkManager";
+import type { GameNetworkManager } from "../../network/GameNetworkManager";
 import type { RoomState } from "../../../../shared/types";
 import { calculateLayout } from "../layout";
 
@@ -17,7 +17,7 @@ export class PhaseManager {
   private room: TypedRoom;
   private ui: GameUI;
   private elementManager: ElementManager;
-  private networkManager: NetworkManager;
+  private networkManager: GameNetworkManager;
   private currentPhase: string = "";
 
   constructor(
@@ -25,7 +25,7 @@ export class PhaseManager {
     room: TypedRoom,
     ui: GameUI,
     elementManager: ElementManager,
-    networkManager: NetworkManager,
+    networkManager: GameNetworkManager,
   ) {
     this.scene = scene;
     this.room = room;

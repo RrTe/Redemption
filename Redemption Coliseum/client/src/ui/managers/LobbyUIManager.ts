@@ -13,7 +13,6 @@ export class LobbyUIManager {
   public statusText!: Phaser.GameObjects.BitmapText;
   public debugText!: Phaser.GameObjects.Text;
   public nameLabel!: Phaser.GameObjects.BitmapText;
-  public playerNameInput!: Phaser.GameObjects.DOMElement;
   public createBtn!: Phaser.GameObjects.Container;
   public deckSelectBtn!: Phaser.GameObjects.Container;
   public loadGameBtn!: Phaser.GameObjects.Container;
@@ -32,7 +31,6 @@ export class LobbyUIManager {
   private upArrow!: Phaser.GameObjects.Image;
   private downArrow!: Phaser.GameObjects.Image;
   private listMaskGraphics!: Phaser.GameObjects.Graphics;
-  private helpOverlay: HTMLElement | null = null;
 
   constructor(scene: Phaser.Scene, soundManager: SoundManager) {
     this.scene = scene;
@@ -75,26 +73,19 @@ export class LobbyUIManager {
       .setTint(0xaaaaaa);
 
     // Debug Text (Bottom Right)
-    this.debugText = this.scene.add.text(width - 10, height - 10, "", {
-      fontFamily: "monospace",
-      fontSize: "12px",
-      color: "#666666",
-    }).setOrigin(1, 1);
+    this.debugText = this.scene.add
+      .text(width - 10, height - 10, "", {
+        fontFamily: "monospace",
+        fontSize: "12px",
+        color: "#666666",
+      })
+      .setOrigin(1, 1);
 
     // Name Label
     this.nameLabel = this.scene.add
       .bitmapText(width / 2, height * 0.28 - 40, "fairydust", "Your Name:", 24)
       .setOrigin(0.5)
       .setTint(0xdaa520);
-
-    // Input Name (DOM)
-    this.playerNameInput = this.scene.add.dom(width / 2, height * 0.28)
-      .createFromHTML(`
-        <input type="text" name="playerName" value="Player 1" placeholder="Enter Name" 
-               style="font-size: 24px; padding: 10px; width: 320px; text-align: center; 
-                      border-radius: 8px; border: 2px solid #daa520; background-color: rgba(0, 0, 0, 0.5); 
-                      color: #daa520; font-family: monospace; outline: none;">
-    `);
 
     // Liste Container & Maske
     this.listContainer = this.scene.add.container(0, 0);
@@ -190,6 +181,12 @@ export class LobbyUIManager {
     );
   }
 
+  /** ✨ FIX: Fehlende destroy-Methode für Type-Safety hinzugefügt */
+  public destroy() {
+    // Phaser GameObjects werden beim Scene-Shutdown automatisch zerstört.
+    // Diese Methode dient aktuell der Konsistenz für den Aufruf in LobbyScene.
+  }
+
   public createButtons(callbacks: {
     onCreate: () => void;
     onSelectDeck: () => void;
@@ -237,16 +234,6 @@ export class LobbyUIManager {
     this.reconnectBtn.add(dismissBtn);
   }
 
-  public getPlayerName(): string {
-    const input = this.playerNameInput.getChildByName("playerName") as HTMLInputElement;
-    return input?.value || "";
-  }
-
-  public setPlayerName(name: string) {
-    const input = this.playerNameInput.getChildByName("playerName") as HTMLInputElement;
-    if (input) input.value = name;
-  }
-
   public updateRoomList(
     rooms: RoomAvailable[],
     joinCallback: (roomId: string, btn: Phaser.GameObjects.Container) => void,
@@ -262,7 +249,8 @@ export class LobbyUIManager {
     } else {
       rooms.forEach((room, index) => {
         const y = index * this.itemHeight + this.itemHeight / 2;
-        const name = room.metadata?.name || `Game ${room.roomId.substring(0, 4)}`; // Kürzere ID als Fallback
+        const name =
+          room.metadata?.name || `Game ${room.roomId.substring(0, 4)}`; // Kürzere ID als Fallback
         const label = `${name} (${room.clients}/${room.maxClients})`; // Spielername im Label anzeigen
 
         const btn = this.createStyledButton(
@@ -280,8 +268,11 @@ export class LobbyUIManager {
   }
 
   public updateDeckButtonText(filename: string, count: number) {
-    const textObj = this.deckSelectBtn.getByName("text") as Phaser.GameObjects.BitmapText;
-    const shortName = filename.length > 15 ? filename.substring(0, 12) + "..." : filename;
+    const textObj = this.deckSelectBtn.getByName(
+      "text",
+    ) as Phaser.GameObjects.BitmapText;
+    const shortName =
+      filename.length > 15 ? filename.substring(0, 12) + "..." : filename;
     textObj.setText(`Deck: ${shortName} (${count})`);
   }
 
@@ -299,10 +290,7 @@ export class LobbyUIManager {
     const baseInputY = height * 0.28;
     let currentY = baseInputY + 80;
 
-    if (this.playerNameInput) {
-      this.playerNameInput.setPosition(width / 2, baseInputY);
-      this.nameLabel.setPosition(width / 2, baseInputY - 40);
-    }
+    this.nameLabel.setPosition(width / 2, baseInputY - 40);
 
     if (this.reconnectBtn && this.reconnectBtn.visible) {
       this.reconnectBtn.setPosition(width / 2, currentY);
@@ -362,6 +350,21 @@ export class LobbyUIManager {
     this.scrollList(0); // Refresh
   }
 
+  /** ✨ REFACTOR: Schaltet die Eingaben wieder frei (bei Fehlern) */
+  public unlockInput() {
+    this.createBtn?.setAlpha(1.0);
+    this.deckSelectBtn?.setAlpha(1.0);
+    this.loadGameBtn?.setAlpha(1.0);
+  }
+
+  /** ✨ NEU: Sperrt die UI visuell (wird beim Start-Versuch gerufen) */
+  public lockAllButtons() {
+    this.createBtn?.setAlpha(0.5);
+    this.deckSelectBtn?.setAlpha(0.5);
+    this.loadGameBtn?.setAlpha(0.5);
+    this.reconnectBtn?.setAlpha(0.5);
+  }
+
   private createStyledButton(
     x: number,
     y: number,
@@ -390,107 +393,11 @@ export class LobbyUIManager {
       bg.setTint(container.getData("defaultTint")),
     );
     container.on("pointerdown", () => {
+      console.log(`[LobbyUI] Button clicked: "${label}"`);
+
       this.soundManager.playSound("UI_TOGGLE");
       cb();
     });
     return container;
-  }
-
-  public toggleHelp() {
-    if (this.helpOverlay) {
-      const isVisible = this.helpOverlay.style.display !== "none";
-      this.helpOverlay.style.display = isVisible ? "none" : "flex";
-      return;
-    }
-
-    this.helpOverlay = document.createElement("div");
-    this.helpOverlay.id = "lobby-help-overlay";
-    Object.assign(this.helpOverlay.style, {
-      position: "absolute",
-      top: "10%",
-      left: "10%",
-      width: "80%",
-      height: "80%",
-      backgroundColor: "rgba(0, 0, 0, 0.9)",
-      border: "2px solid #ffd700",
-      borderRadius: "10px",
-      zIndex: "10000",
-      display: "flex",
-      flexDirection: "column",
-      boxShadow: "0 0 20px rgba(0,0,0,0.8)",
-    });
-
-    const header = document.createElement("div");
-    Object.assign(header.style, {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "10px 20px",
-      backgroundColor: "#1a1a2e",
-      borderBottom: "1px solid #444",
-      color: "#ffd700",
-      fontFamily: "serif",
-      fontSize: "24px",
-    });
-    header.innerHTML = "<span>Game Guide</span>";
-
-    const closeBtn = document.createElement("button");
-    closeBtn.textContent = "X";
-    Object.assign(closeBtn.style, {
-      background: "transparent",
-      border: "none",
-      color: "#ff6666",
-      fontSize: "24px",
-      cursor: "pointer",
-      fontWeight: "bold",
-    });
-    closeBtn.onclick = () => {
-      if (this.helpOverlay) this.helpOverlay.style.display = "none";
-    };
-    header.appendChild(closeBtn);
-
-    const iframe = document.createElement("iframe");
-    iframe.src = "help.html";
-    Object.assign(iframe.style, {
-      flex: "1",
-      border: "none",
-      background: "#fff",
-    });
-
-    this.helpOverlay.appendChild(header);
-    this.helpOverlay.appendChild(iframe);
-    document.body.appendChild(this.helpOverlay);
-  }
-
-  public openFileSelector(accept: string, callback: (content: string, fileName: string) => void) {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = accept;
-    input.style.display = "none";
-
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const content = event.target?.result as string;
-        if (content) {
-          callback(content, file.name);
-        }
-      };
-      reader.readAsText(file);
-    };
-
-    document.body.appendChild(input);
-    input.click();
-    document.body.removeChild(input);
-  }
-
-  public destroy() {
-    if (this.helpOverlay) {
-      this.helpOverlay.remove();
-      this.helpOverlay = null;
-    }
   }
 }

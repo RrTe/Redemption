@@ -20,7 +20,8 @@ class RoomState extends Schema {
     this.revealedCards = new ArraySchema();
     // ✨ NEU: ID des Spielers, der eine öffentliche Aktion (Reveal, Search) auslöst.
     this.actionTakerId = "";
-    // ✨ NEU: Eine öffentliche Zone für den Kampf.
+    // ✨ REFACTOR: Map für aktive Stapel-Sperren (pileId -> sessionId)
+    this.activeActionPiles = new MapSchema(); 
     this.battlefield = new ArraySchema();
     // ✨ NEU: Game Over Status
     this.winnerId = "";
@@ -38,6 +39,7 @@ type("string")(RoomState.prototype, "currentPhase");
 // Aufgedeckte Karten (Array von Card)
 type([Card])(RoomState.prototype, "revealedCards");
 type("string")(RoomState.prototype, "actionTakerId");
+type({ map: "string" })(RoomState.prototype, "activeActionPiles"); // ✨ REFACTOR
 
 // ✨ NEU: Game Over Status
 type("string")(RoomState.prototype, "winnerId");

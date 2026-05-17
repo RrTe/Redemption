@@ -1,13 +1,13 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI";
-import { type NetworkManager } from "../../network/GameNetworkManager"; // ✨ NEU
+import { type GameNetworkManager } from "../../network/GameNetworkManager"; // ✨ NEU
 import { SoundManager } from "../../managers/SoundManager";
 import { type GameLayout } from "../layout"; // ✨ NEU
 
 export class ChatManager {
   private scene: Phaser.Scene;
   private room: TypedRoom;
-  private networkManager: NetworkManager; // ✨ NEU
+  private networkManager: GameNetworkManager; // ✨ NEU
   private soundManager: SoundManager;
 
   private container!: Phaser.GameObjects.Container; // ✨ FIX: Definite Assignment (!)
@@ -29,7 +29,7 @@ export class ChatManager {
   constructor(
     scene: Phaser.Scene,
     room: TypedRoom,
-    networkManager: NetworkManager,
+    networkManager: GameNetworkManager,
   ) {
     this.scene = scene;
     this.room = room;

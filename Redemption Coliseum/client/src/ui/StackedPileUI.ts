@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { type TypedRoom } from "./gameUI";
-import { type NetworkManager } from "../network/GameNetworkManager"; // ✨ NEU
+import { type GameNetworkManager } from "../network/GameNetworkManager"; // ✨ NEU
 import { ZONES, type Zone } from "../../../shared/zones";
 
 const INITIAL_POOL_SIZE = 15; // Startgröße des Pools für die Grafiken
@@ -38,7 +38,7 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
     width: number,
     height: number,
     room: TypedRoom,
-    networkManager: NetworkManager, // ✨ NEU: Pflichtparameter hier
+    networkManager: GameNetworkManager, // ✨ NEU: Pflichtparameter hier
     isOpponent: boolean = false,
   ) {
     super(scene, x, y);
