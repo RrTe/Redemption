@@ -61,6 +61,15 @@ def get_protective_shield(card_data_path: str) -> Set[str]:
 
 def get_official_judges() -> Set[str]:
     """
-    Return the set of official judge nicknames.
+    Return the set of official judge nicknames, prioritizing data/official_judges.json.
     """
+    json_path = os.path.join("data", "official_judges.json")
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                judges = json.load(f)
+                return {j.lower() for j in judges if j}
+        except Exception as e:
+            print(f"Warning: Could not load official_judges.json: {e}")
+            
     return OFFICIAL_JUDGES_LOWER

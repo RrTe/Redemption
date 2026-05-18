@@ -44,6 +44,7 @@ data/*
 
 # BLOCKIERE explizit große Produktions-Logs und Zwischenergebnisse
 data/processed_rulings_final.json
+data/official_judges.json
 data/DiscordRulings*.txt
 data/embeddings_cache.json
 
