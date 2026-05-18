@@ -4,7 +4,8 @@ from mappings.set_alias import SET_ALIAS
 def normalize_name(name: str) -> str:
     """
     Strips trailing periods, condenses spaces, standardizes quotes.
-    Crucially, it DOES NOT strip brackets or articles. It preserves the unique name structure.
+    Crucially, it harmonizes brackets [] and parentheses () to ensure
+    'New Covenant [Jeremiah]' matches 'New Covenant (Jeremiah)'.
     """
     if not name:
         return ""
@@ -14,25 +15,38 @@ def normalize_name(name: str) -> str:
     # Optional: lowercase for matching
     name = name.lower()
     
-    # Remove trailing/leading spaces and punctuation edge cases
-    name = re.sub(r'[\r\n\t]+', ' ', name)
-    name = re.sub(r'\s+', ' ', name).strip()
-    
     # Remove weird trailing periods or commas
     name = re.sub(r'[.,;:]+$', '', name)
     
-    # Standardize parentheses: If a name has an open paren but no close paren, or vice versa,
-    # normalize to NO parentheses or fix THEM.
-    # Actually, the most robust way is to strip trailing/extra parens for matching.
-    name = name.replace("(", " ").replace(")", " ")
+    # Harmonize brackets and parentheses: treat [] and () as equivalent spaces
+    # This helps matching New Covenant [Jeremiah] vs New Covenant (Jeremiah)
+    name = name.replace("[", " ").replace("]", " ").replace("(", " ").replace(")", " ")
     
     # Remove trailing stray integers that ORDIR uses for footnotes (e.g. "Daniel 27" -> "Daniel")
     name = re.sub(r'\s+\d+$', '', name)
     
-    # Final cleanup
+    # Final cleanup of whitespace
     name = re.sub(r'\s+', ' ', name).strip()
     
     return name
+
+def has_year_mismatch(ordir_set_str: str, card_name: str) -> bool:
+    """
+    Checks if there is a conflict between a 4-digit year mentioned in the ORDIR set
+    requirement (e.g. P-2018) and a different 4-digit year in the card name.
+    
+    Returns True if a mismatch is detected (e.g., ORDIR says 2018, but card is 2016).
+    Returns False if NO years are found OR if the same year exists in both.
+    """
+    o_years = re.findall(r'20\d\d', str(ordir_set_str))
+    c_years = re.findall(r'20\d\d', str(card_name))
+    
+    if o_years and c_years:
+        for oy in o_years:
+            if oy in c_years:
+                return False
+        return True # Mismatch found
+    return False
 
 def extract_all_raw_sets_from_card(card_data: dict) -> list[str]:
     """
@@ -46,8 +60,8 @@ def extract_all_raw_sets_from_card(card_data: dict) -> list[str]:
     
     # We ALSO want to extract sets that are hidden in the card's Name property (e.g. "Barnabas (B)")
     raw_name = card_data.get("Name", "")
-    # Check if the name ends with a parenthesis
-    match = re.search(r"\(([^)]+)\)$", raw_name.strip())
+    # Check if the name ends with a parenthesis (1-5 chars typical for sets)
+    match = re.search(r"\(([^)]{1,5})\)$", raw_name.strip())
     if match:
         parts.append(match.group(1))
         

@@ -1,4 +1,4 @@
-\"\"\"
+"""
 Pipeline 01: ORDIR Extractor
 
 Purpose:
@@ -7,7 +7,7 @@ It ignores descriptive rules and only grabs actual lists of cards belonging to r
 
 Outputs:
 data/ordir_extracted_raw.json -> Contains a dictionary mapping categories to lists of extracted card string data.
-\"\"\"
+"""
 import json
 import re
 from pathlib import Path
@@ -16,7 +16,13 @@ from collections import defaultdict
 # Setup paths based on the current scripts directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
-ORDIR_FILE = DATA_DIR / "ORDIR_PDF_6.0.0.txt"
+
+# Read configuration from config.json
+CONFIG_FILE = BASE_DIR / "config.json"
+with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
+    _config = json.load(_cf)
+
+ORDIR_FILE = BASE_DIR / _config["ordir_file"]
 RAW_OUT_FILE = DATA_DIR / "ordir_extracted_raw.json"
 
 # Import valid ORDIR categories from mappings (we trust this list)
@@ -261,12 +267,18 @@ def extract_ordir():
                 if lines[i] in CATEGORY_SET:
                     break
                 
+                # Create a 2-line window to catch markers that are split across lines 
+                # (e.g. "The following Redemption cards\nrefer to...")
+                window = lines[i]
+                if i > 0 and not is_bullet(lines[i]) and not is_bullet(lines[i-1]):
+                    window = lines[i-1] + " " + lines[i]
+                
                 # Check for markers
-                if is_membership_marker(lines[i]):
+                if is_membership_marker(window):
                     extracting_enabled = True
                     i += 1
                     continue
-                elif is_reference_marker(lines[i]):
+                elif is_reference_marker(window):
                     extracting_enabled = False # Stop on "refer to"
                     i += 1
                     continue
@@ -277,7 +289,12 @@ def extract_ordir():
                         block = lines[i]
                         i += 1
                         while i < len(lines):
-                            if is_bullet(lines[i]) or is_membership_marker(lines[i]) or is_reference_marker(lines[i]) or lines[i] in CATEGORY_SET or re.match(r"^[A-Z]$", lines[i]):
+                            # Same window check for breaking out of the block
+                            break_window = lines[i]
+                            if i > 0 and not is_bullet(lines[i]) and not is_bullet(lines[i-1]):
+                                break_window = lines[i-1] + " " + lines[i]
+                                
+                            if is_bullet(lines[i]) or is_membership_marker(break_window) or is_reference_marker(break_window) or lines[i] in CATEGORY_SET or re.match(r"^[A-Z]$", lines[i]):
                                 break
                             block += " " + lines[i]
                             i += 1

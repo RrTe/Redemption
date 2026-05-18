@@ -23,3 +23,8 @@ Prompts
 # Generierte Logs und Zwischenstände
 data/*.log
 data/ordir_extracted_raw.json
+
+Tools/RedemptionCardData/data/ORDIR_PDF_7.0.0.txt
+Tools/RedemptionCardData/data/REG_PDF_11.0.0.txt
+Tools/RedemptionCardData/data/ORDIR.txt
+Tools/RedemptionCardData/data/REG.txt

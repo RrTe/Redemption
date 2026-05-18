@@ -7,16 +7,15 @@ import json
 from datetime import datetime
 from models.card import Card
 from models.card_side import CardSide
-from extend_types import expand_and_inherit_types
+from utils.extend_types import expand_and_inherit_types
 from models.enums.brigade import ALL_BRIGADES
 from models.enums.alignment import Alignment
 from models.enums.card_type import CardType
 from mappings.card_type_metadata import TYPE_ALIGNMENT_MAP, TYPES_WITH_BRIGADES, TYPES_WITH_STATS
 from mappings.ordir_map import ORDIR_MAP
 
-CARDDATA_DIR = Path("../../Phaser/Redemption Deck Editor/assets/")
-DATA_DIR = Path("../data")
-INPUT_FILE = CARDDATA_DIR / "carddata.json"
+DATA_DIR = Path("data")
+INPUT_FILE = DATA_DIR / "carddata.json"
 OUTPUT_FILE = DATA_DIR / "cards_extended.json"
 
 def parse_brigades(raw_brigade: str, types: list[str]) -> dict:

@@ -1,4 +1,4 @@
-\"\"\"
+"""
 Pipeline 03: Deterministic Verifier
 
 Purpose:
@@ -14,7 +14,7 @@ Checks Performed:
 
 Outputs:
 data/verification_report.log -> A human-readable text file containing all suspicious matches for manual/LLM review.
-\"\"\"
+"""
 import json
 import re
 from pathlib import Path
@@ -85,6 +85,36 @@ def verify():
             if "lost soul" in cat_lower and "lost soul" not in types:
                 suspicious.append(f"Type Mismatch: '{name}' in Lost Soul category '{cat}' but is not a Lost Soul")
 
+            # 3. Class checks
+            if "cloud" in cat_lower:
+                card_class = c.get("Class", "")
+                if "cloud" not in card_class.lower():
+                    suspicious.append(f"Class Mismatch: '{name}' in Cloud category '{cat}' but Class is '{card_class}'")
+                    
+            # 4. Nativity scope check
+            if cat_lower == "nativity card":
+                ref = c.get("Reference", "").lower()
+                is_nativity = False
+                # Matthew 1:18-25
+                m_math = re.search(r'matthew\s+1[:\s](\d+)', ref)
+                if m_math and 18 <= int(m_math.group(1)) <= 25:
+                    is_nativity = True
+                # Matthew 2
+                if "matthew 2" in ref:
+                    is_nativity = True
+                # Luke 1-2
+                if "luke 1" in ref or "luke 2" in ref:
+                    is_nativity = True
+                
+                if not is_nativity:
+                    suspicious.append(f"Nativity Mismatch: '{name}' in Nativity category but reference ({ref}) does not match Nativity scope.")
+
+            # 5. Star card check
+            if cat_lower == "star card":
+                card_class = c.get("Class", "")
+                if "star" not in card_class.lower():
+                    suspicious.append(f"Class Mismatch: '{name}' in Star category but Class is '{card_class}'")
+
     # Check 3: The "High-Category Anomaly" (Ausreißer-Check)
     # If a card is mapped to an unusually high number of ORDIR categories (> 10), it's highly suspicious.
     for c in data:
@@ -113,13 +143,32 @@ def verify():
             
             # Rule A: If the category is a "XYZ Card" (e.g. "Isaiah Card", "James Card"),
             # the card name MUST contain "XYZ" OR its Biblical Reference MUST contain "XYZ".
-            if " card" in cat_lower and not "duplicate" in cat_lower and not "star" in cat_lower:
+            if " card" in cat_lower and not any(x in cat_lower for x in ["duplicate", "star", "nativity", "cloud"]):
                 prefix = cat_lower.split(" card")[0].strip()
                 ref = c.get("Reference", "").lower()
                 # Exclude generic terms like 'n.t.' or 'o.t.'
                 if len(prefix) > 3 and prefix not in ["n.t.", "o.t."]:
-                    if prefix not in name_lower and prefix not in ref:
-                        suspicious.append(f"Category Reverse Anomaly: '{name}' is in '{cat}' but neither its name nor its reference ({ref}) contains '{prefix}'.")
+                    
+                    # Smart check for bible ranges (e.g., "genesis 37-50" or "acts 12")
+                    m_pref = re.search(r'^([a-z0-9\s\.]+?)\s+(\d+)(?:-(\d+))?$', prefix)
+                    
+                    found_ref = False
+                    if prefix in name_lower or prefix in ref:
+                        found_ref = True
+                    elif m_pref:
+                        book = m_pref.group(1).strip()
+                        start_chap = int(m_pref.group(2))
+                        end_chap = int(m_pref.group(3)) if m_pref.group(3) else start_chap
+                        
+                        # Find all mentions of 'book chapter' in the reference
+                        matches = re.findall(rf'{re.escape(book)}\s+(\d+)\b', ref)
+                        for m in matches:
+                            if start_chap <= int(m) <= end_chap:
+                                found_ref = True
+                                break
+                                
+                    if not found_ref:
+                        suspicious.append(f"Category Reverse Anomaly: '{name}' is in '{cat}' but neither its name nor its reference ({ref}) satisfies '{prefix}'.")
                         
             # Rule B: Specific Book Checks (e.g. "Genesis 12-24 Hero")
             # If the category specifies a Bible book, the card's reference is highly expected to match.
