@@ -9,10 +9,14 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from datetime import datetime
 from mappings.pipeline_constants import OT_BOOKS, NT_BOOKS, GOSPEL_BOOKS, BASE_ALIGNMENT_MAP, DA_TYPES
 
-# Configuration
-DATA_DIR = Path("data")
-INPUT_FILE = DATA_DIR / "carddata.txt"
-OUTPUT_FILE = DATA_DIR / "carddata.json"
+# Load config from config.json
+BASE_DIR = Path(__file__).resolve().parent.parent
+CONFIG_FILE = BASE_DIR / "config.json"
+with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
+    _config = json.load(_cf)
+
+INPUT_FILE = BASE_DIR / _config["carddata_txt"]
+OUTPUT_FILE = BASE_DIR / _config["carddata_json"]
 
 def clean_text(text: str) -> str:
     """Replaces smart quotes and other problematic characters."""

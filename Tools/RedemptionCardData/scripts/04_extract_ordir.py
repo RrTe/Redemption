@@ -23,7 +23,7 @@ with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
     _config = json.load(_cf)
 
 ORDIR_FILE = BASE_DIR / _config["ordir_file"]
-RAW_OUT_FILE = DATA_DIR / "ordir_extracted_raw.json"
+RAW_OUT_FILE = BASE_DIR / _config["ordir_extracted_raw"]
 
 # Import valid ORDIR categories from mappings (we trust this list)
 import sys

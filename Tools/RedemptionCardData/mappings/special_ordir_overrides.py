@@ -1,14 +1,37 @@
 # Harte Overrides für bekannte Fehlprints oder Sonderfälle,
 # die parser-unabhängig in die Maps geschrieben werden sollen.
 
-# Struktur:
-#   ("Name wie im ORDIR", "SetCode") -> {"as_reference": bool}
-#
-# Hinweis:
-# - categories werden wie gewohnt über den ORDIR-Kategorie-Kontext zugeordnet.
-# - as_reference steuert, ob der Eintrag in reference_map (True) oder category_map (False) geht.
-
 SPECIAL_ORDIR_OVERRIDES = {
-    # Fehlprint: Karte mit fehlender schließender Klammer
-    ("James (half-brother of Jesus", "Ap"): {"as_reference": False},
+    ("\"Humble\"]", "P"): "Humble Seeker",
+    ("\"Humble\"]", "RJ"): "Lost Soul \"Humble\" [James 4:6 / Proverbs 3:34 - RoJ]",
+    ("Adam (Man", "LR"): "Adam, the Exile / Adam (Man) (LoC)",
+    ("Burial", "P-1995"): "Burial (Promo)",
+    ("Burial", "P-2025"): "Burial (GoC)",
+    ("Conquer", "RJ"): "Conqueror over Death",
+    ("David's Sin", "Wa"): "David's Sin",
+    ("David's Sling", "Wa"): "David's Sling (Ki)",
+    ("Elders of Jerusalem", "Ap"): "Elders of Jerusalem - Black Background",
+    ("Ezekiel's Stick", "B-L"): "Ezekiel's Stick (L)",
+    ("Famine", "RJ"): "Famine in the Land (LoC)",
+    ("Haman", "P-2009"): "Haman ( C)",
+    ("Haman", "P-2025"): "Haman (2019) (Promo)",
+    ("Isaiah, Prince of Prophets", "PoC"): "Isaiah",
+    ("James (half-brother of Jesus", "Ap"): {'as_reference': False},
+    ("Jonah's Anger", "PoC"): "God's Mercy (Jonah's Anger)",
+    ("Justice Seekers", "RJ"): "Fifth Seal, Justice Seekers (RoJ)",
+    ("Pharisees", "Ap"): "Pharisees - John 8:3-4",
+    ("Pillar of a Cloud", "A-L"): "Pillar of a Cloud (B)",
+    ("Roman Centurion [Capernaum] (GC", "Ap"): "Roman Jailer",
+    ("Sadducees", "Ap"): "Sadducees - Group of 10",
+    ("Shadow", "AW"): "Shadow - Hand",
+    ("Son of God", "P-2022 Seasonal"): "Son of God \"Manger\" (Promo)",
+    ("Son of God", "P-2023 Baptism"): "Son of God ( C)",
+    ("Son of God", "P-2023 Greek"): "Son of God (Greek)",
+    ("Son of God", "P-2023 Nationals"): "Son of God (2019) (Promo)",
+    ("Task Master", "A-L"): "Abusive Taskmaster [K]",
+    ("Terror", "RJ"): "Invoking Terror",
+    ("The Dove", "CW"): "The Dove Returns",
+    ("The Harlot", "RJ"): "Babylon The Harlot (RoJ)",
+    ("The Murdering Pharaoh (K, CW", "II"): "Pharaoh (L)",
+    ("War", "RJ"): "Second Seal, War (RoJ)",
 }

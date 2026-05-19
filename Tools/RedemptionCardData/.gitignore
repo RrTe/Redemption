@@ -7,11 +7,7 @@ venv/
 .venv/
 env/
 
-# Falls du mit Daten arbeitest (große JSON/PDF Backups, die nicht ins Git sollen)
-*.pdf
-# data/  <-- Falls dein Datenordner zu groß für GitHub ist
-
-# Konfig Dateien
+# Konfig Dateien und Workspace Logs
 cline-python-openrouter
 Cline_Startprompt.txt
 .clinerules
@@ -19,12 +15,30 @@ Cline_Startprompt.txt
 log.txt
 *.code-workspace
 Prompts
+Prompts/
 
-# Generierte Logs und Zwischenstände
-data/*.log
+# Local Environment Secrets (NIE einchecken!)
+.env
+
+# Dokumente und PDFs
+*.pdf
+data/ORDIR_PDF_*.txt
+data/REG_PDF_*.txt
+data/ORDIR.txt
+data/REG.txt
+
+# Generierte Logs, Berichte und Zwischenstände (große JSON/Log Backups)
+data/carddata.txt
+data/carddata.json
+data/cards_extended.json
+data/cards_extended_samples.json
+data/cards_extended_with_ordir.json
 data/ordir_extracted_raw.json
+data/cards_extended_with_ordir_fuzzy.json
+data/unmatched_ordir_entries.log
+data/verification_report.log
+verification_report.log
 
-Tools/RedemptionCardData/data/ORDIR_PDF_7.0.0.txt
-Tools/RedemptionCardData/data/REG_PDF_11.0.0.txt
-Tools/RedemptionCardData/data/ORDIR.txt
-Tools/RedemptionCardData/data/REG.txt
+# Ausnahmen (Config und Template müssen eingecheckt werden)
+!config.json
+!.env.template

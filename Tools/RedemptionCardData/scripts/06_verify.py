@@ -20,8 +20,13 @@ import re
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_FILE = BASE_DIR / "data" / "cards_extended_with_ordir_fuzzy.json"
-LOG_FILE = BASE_DIR / "data" / "verification_report.log"
+# Load config from config.json
+CONFIG_FILE = BASE_DIR / "config.json"
+with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
+    _config = json.load(_cf)
+
+DATA_FILE = BASE_DIR / _config["cards_extended_with_ordir_fuzzy"]
+LOG_FILE = BASE_DIR / _config["verification_report_log"]
 
 def verify():
     """

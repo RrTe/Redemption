@@ -6,10 +6,16 @@ from pathlib import Path
 # Add project root to sys.path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-# Configuration
-RAW_URL = "https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/master/RedemptionQuick/sets/carddata.txt"
-DATA_DIR = Path("data")
-OUTPUT_FILE = DATA_DIR / "carddata.txt"
+# Load config from config.json
+import json
+BASE_DIR = Path(__file__).resolve().parent.parent
+CONFIG_FILE = BASE_DIR / "config.json"
+with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
+    _config = json.load(_cf)
+
+RAW_URL = _config["carddata_url"]
+OUTPUT_FILE = BASE_DIR / _config["carddata_txt"]
+DATA_DIR = OUTPUT_FILE.parent
 
 def download_carddata():
     """

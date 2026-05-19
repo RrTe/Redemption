@@ -14,9 +14,14 @@ from models.enums.card_type import CardType
 from mappings.card_type_metadata import TYPE_ALIGNMENT_MAP, TYPES_WITH_BRIGADES, TYPES_WITH_STATS
 from mappings.ordir_map import ORDIR_MAP
 
-DATA_DIR = Path("data")
-INPUT_FILE = DATA_DIR / "carddata.json"
-OUTPUT_FILE = DATA_DIR / "cards_extended.json"
+# Load config from config.json
+BASE_DIR = Path(__file__).resolve().parent.parent
+CONFIG_FILE = BASE_DIR / "config.json"
+with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
+    _config = json.load(_cf)
+
+INPUT_FILE = BASE_DIR / _config["carddata_json"]
+OUTPUT_FILE = BASE_DIR / _config["cards_file"]
 
 def parse_brigades(raw_brigade: str, types: list[str]) -> dict:
     if not raw_brigade:
