@@ -28,8 +28,8 @@ export class LobbyUIManager {
   private scrollY = 0;
   private maxScrollY = 0;
   private visibleItems = 0;
-  private upArrow!: Phaser.GameObjects.Image;
-  private downArrow!: Phaser.GameObjects.Image;
+  public upArrow!: Phaser.GameObjects.Image;
+  public downArrow!: Phaser.GameObjects.Image;
   private listMaskGraphics!: Phaser.GameObjects.Graphics;
 
   constructor(scene: Phaser.Scene, soundManager: SoundManager) {
@@ -136,49 +136,6 @@ export class LobbyUIManager {
       })
       .setOrigin(0, 1)
       .setInteractive({ useHandCursor: true });
-
-    // Events für Scroll
-    this.upArrow.on("pointerdown", () => this.scrollList(100));
-    this.downArrow.on("pointerdown", () => this.scrollList(-100));
-    this.scene.input.on("wheel", (p: any, go: any, dx: number, dy: number) => {
-      if (p.y > this.listContainer.y) this.scrollList(-dy * 0.5);
-    });
-
-    // Hover Tweens für Seiten-Buttons
-    this.settingsButton.on("pointerover", () =>
-      this.scene.tweens.add({
-        targets: this.settingsButton,
-        x: this.scene.scale.width - 24,
-        duration: 200,
-        ease: "Sine.easeOut",
-      }),
-    );
-    this.settingsButton.on("pointerout", () =>
-      this.scene.tweens.add({
-        targets: this.settingsButton,
-        x: this.scene.scale.width + 12,
-        duration: 200,
-        ease: "Sine.easeOut",
-      }),
-    );
-
-    const VISIBLE_X = 24;
-    this.helpButton.on("pointerover", () =>
-      this.scene.tweens.add({
-        targets: this.helpButton,
-        x: VISIBLE_X,
-        duration: 200,
-        ease: "Sine.easeOut",
-      }),
-    );
-    this.helpButton.on("pointerout", () =>
-      this.scene.tweens.add({
-        targets: this.helpButton,
-        x: -12,
-        duration: 200,
-        ease: "Sine.easeOut",
-      }),
-    );
   }
 
   /** ✨ FIX: Fehlende destroy-Methode für Type-Safety hinzugefügt */
@@ -330,7 +287,7 @@ export class LobbyUIManager {
     this.privacyBtn?.setPosition(160, height - 10);
   }
 
-  private scrollList(delta: number) {
+  public scrollList(delta: number) {
     this.scrollY = Phaser.Math.Clamp(this.scrollY + delta, this.maxScrollY, 0);
     let index = 0;
     this.listContainer.each((child: any) => {

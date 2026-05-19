@@ -13,12 +13,20 @@ export class DeckUtils {
    */
   static parseDeck(content: string, fileName: string): DeckData {
     const trimmed = content.trim();
+    let deck: DeckData;
 
     if (fileName.endsWith(".json") || trimmed.startsWith("{")) {
-      return this.parseJsonDeck(trimmed);
+      deck = this.parseJsonDeck(trimmed);
     } else {
-      return this.parseTxtDeck(trimmed);
+      deck = this.parseTxtDeck(trimmed);
     }
+
+    // ✨ NEU: Verhindert das Laden von ungültigen/leeren Dateien
+    if (deck.main.length === 0) {
+      throw new Error("The file contains no valid cards or has a wrong format.");
+    }
+
+    return deck;
   }
 
   /**

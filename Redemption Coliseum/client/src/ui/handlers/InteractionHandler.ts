@@ -96,8 +96,7 @@ export class InteractionHandler {
       // ✨ Delegation an CardInteractionHandler
       else if (
         gameObject instanceof CardUI &&
-        this.cardInteractionHandler.isInteractable(gameObject) &&
-        gameObject.currentZone !== ZONES.HAND
+        this.cardInteractionHandler.isInteractable(gameObject)
       ) {
         this.activeMenu = this.cardInteractionHandler.openCardMenu(
           pointer,

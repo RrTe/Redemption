@@ -102,6 +102,7 @@ export class GameStateManager {
         "GameState",
         `[onStateChange] Decks -> Player: ${state.players.get(this.room.sessionId)?.deck.length}, Opponent: ${state.players.get(this.findOpponentId(state))?.deck.length}`,
       );
+      this.updateWaitingStatus(); // ✨ Sicherstellen, dass bei JEDEM State-Update (auch Disconnect) geprüft wird
     });
 
     // 2. Listen for network events from GameEventCoordinator
