@@ -50,3 +50,6 @@ data/embeddings_cache.json
 
 # Developer scratchpads and debug tools
 _dev_tools/
+
+# Private/Backup Prompts
+scripts/prompts/_*

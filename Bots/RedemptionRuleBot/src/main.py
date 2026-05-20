@@ -1,6 +1,7 @@
 import sys
 import os
 import re
+import traceback
 
 # Wispbyte Start-Fix: Ensure the root directory is in sys.path
 # This allows Wispbyte to find the "scripts" package when running src/main.py
@@ -59,8 +60,14 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 try:
     rag_engine = RAGEngine()
 except Exception as e:
-    logger.error(f"Failed to initialize RAGEngine: {e}")
+    logger.error(f"Failed to initialize RAGEngine: {e}\n{traceback.format_exc()}")
     rag_engine = None
+
+# Define PDF paths for quick reference
+pdfs = {
+    "REG": os.path.join(BASE_DIR, "data", "REG.pdf"),
+    "ORDIR": os.path.join(BASE_DIR, "data", "ORDIR.pdf")
+}
 
 # ---------------------------
 # Auto-Sync Background Task
@@ -175,7 +182,7 @@ async def auto_sync_rulings():
         set_last_synced_id(highest_id)
         logger.info(f"Auto-Sync complete: Processed {len(new_messages)} messages, found {len(qa_pairs)} QA pairs.")
     except Exception as e:
-        logger.error(f"Auto-Sync error: {e}")
+        logger.error(f"Auto-Sync error: {e}\n{traceback.format_exc()}")
 
 @auto_sync_rulings.before_loop
 async def before_auto_sync():
@@ -280,7 +287,7 @@ def extract_section_with_specific_format(pdf_path, main_heading, heading_size1, 
         return None, False
 
     except Exception as e:
-        logger.error(f"Error processing PDF: {str(e)}")
+        logger.error(f"Error processing PDF: {str(e)}\n{traceback.format_exc()}")
         return None, False
 
 # ---------------------------
@@ -318,6 +325,15 @@ async def on_ready():
 # Suggests matching section titles based on user input
 # ---------------------------
 async def section_autocomplete(interaction: discord.Interaction, current: str):
+    """Generates autocomplete suggestions for the rule sections.
+
+    Args:
+        interaction (discord.Interaction): The Discord interaction context.
+        current (str): The current text typed by the user.
+
+    Returns:
+        List[app_commands.Choice]: A list of matching autocomplete choices.
+    """
     choices = []
     for doc_key, titles in section_titles_by_doc.items():
         filtered = [title for title in titles if current.lower() in title.lower()][:5]
@@ -400,6 +416,15 @@ class PersistentPagination(View):
 @app_commands.describe(section="Type to select a document and section")
 @app_commands.autocomplete(section=section_autocomplete)
 async def lookup(interaction: discord.Interaction, section: str):
+    """Look up a section from a specific rule document and return it with pagination.
+
+    Args:
+        interaction (discord.Interaction): The Discord interaction context.
+        section (str): The combined document key and section title in the format 'doc_key|section_title'.
+
+    Returns:
+        None
+    """
     await interaction.response.defer(thinking=True)
 
     try:
@@ -413,8 +438,13 @@ async def lookup(interaction: discord.Interaction, section: str):
             await interaction.followup.send(f"'{section_title}' content not found for {doc_key}. Please restart bot if PDFs were updated.", ephemeral=True)
             return
 
-        section_text = section_data["content"]
-        is_glossary_result = section_data["is_glossary"]
+        # Support both dictionary format and legacy string format for section data
+        if isinstance(section_data, dict):
+            section_text = section_data.get("content", "")
+            is_glossary_result = section_data.get("is_glossary", False)
+        else:
+            section_text = section_data
+            is_glossary_result = False
 
         paginated = PaginatedText(section_text)
         embed = discord.Embed(
@@ -430,7 +460,7 @@ async def lookup(interaction: discord.Interaction, section: str):
             await message.edit(view=view)
 
     except Exception as e:
-        logger.error(f"Lookup error: {e}")
+        logger.error(f"Lookup error: {e}\n{traceback.format_exc()}")
         await interaction.followup.send("Failed to perform lookup.", ephemeral=True)
 
 # ---------------------------
@@ -440,6 +470,15 @@ async def lookup(interaction: discord.Interaction, section: str):
 @bot.tree.command(name="ruling", description="Frage den AI-Judge nach einer Regel (Redemption TCG)")
 @app_commands.describe(question="Deine Regelfrage")
 async def ruling(interaction: discord.Interaction, question: str):
+    """Queries the AI Judge RAG engine with a rule question.
+
+    Args:
+        interaction (discord.Interaction): The Discord interaction context.
+        question (str): The user's rule question.
+
+    Returns:
+        None
+    """
     await interaction.response.defer(thinking=True)
     if not rag_engine:
         await interaction.followup.send("RAG Engine ist zurzeit nicht verfügbar.", ephemeral=True)
@@ -462,7 +501,7 @@ async def ruling(interaction: discord.Interaction, question: str):
             view = PersistentPagination(paginated, embed, message, interaction.user.id, question)
             await message.edit(view=view)
     except Exception as e:
-        logger.error(f"Ruling error: {e}")
+        logger.error(f"Ruling error: {e}\n{traceback.format_exc()}")
         await interaction.followup.send("Fehler bei der Abfrage der Regel.", ephemeral=True)
 
 # ---------------------------
@@ -472,6 +511,15 @@ async def ruling(interaction: discord.Interaction, question: str):
 @bot.tree.command(name="find", description="Sucht direkt in Discord-Rulings und Regeln (ohne KI-Interpretation)")
 @app_commands.describe(query="Suchbegriff oder Frage")
 async def search_rulings(interaction: discord.Interaction, query: str):
+    """Performs a direct factual search in Discord rulings and rule snippets without AI synthesis.
+
+    Args:
+        interaction (discord.Interaction): The Discord interaction context.
+        query (str): The search term or query.
+
+    Returns:
+        None
+    """
     await interaction.response.defer(thinking=True)
     if not rag_engine:
         await interaction.followup.send("RAG Engine ist zurzeit nicht verfügbar.", ephemeral=True)
@@ -493,7 +541,7 @@ async def search_rulings(interaction: discord.Interaction, query: str):
             view = PersistentPagination(paginated, embed, message, interaction.user.id, query)
             await message.edit(view=view)
     except Exception as e:
-        logger.error(f"Search error: {e}")
+        logger.error(f"Search error: {e}\n{traceback.format_exc()}")
         await interaction.followup.send("Fehler bei der Suche.", ephemeral=True)
 
 # ---------------------------
@@ -506,7 +554,19 @@ async def search_pdf(ctx, doc: str = None, keyword: str = None,
                      section_size: int = 30,
                      glossary_size: int = 14,
                      heading_font: str = "Arial"):
+    """Searches for a specific section within a PDF rule document and prints the result.
 
+    Args:
+        ctx (commands.Context): The Discord message context.
+        doc (str, optional): The document shorthand (e.g. 'REG'). Defaults to None.
+        keyword (str, optional): The search term or section title. Defaults to None.
+        section_size (int, optional): The font size for main headings. Defaults to 30.
+        glossary_size (int, optional): The font size for glossary headings. Defaults to 14.
+        heading_font (str, optional): The font family name. Defaults to "Arial".
+
+    Returns:
+        None
+    """
     if not doc or not keyword:
         # Provide a helpful usage instruction instead of crashing
         available_docs = ", ".join(pdfs.keys()) if 'pdfs' in globals() else "Unbekannt"
@@ -545,6 +605,14 @@ async def search_pdf(ctx, doc: str = None, keyword: str = None,
 # ---------------------------
 @bot.command(name='sync')
 async def sync_commands(ctx):
+    """Synchronizes slash commands globally and for the current guild.
+
+    Args:
+        ctx (commands.Context): The Discord message context.
+
+    Returns:
+        None
+    """
     try:
         # Syncing to the current guild for immediate results
         synced = await bot.tree.sync()
@@ -555,6 +623,7 @@ async def sync_commands(ctx):
         synced_guild = await bot.tree.sync(guild=ctx.guild)
         await ctx.send(f"🚀 Sofort-Update für diesen Server durchgeführt ({len(synced_guild)} Kommandos).")
     except Exception as e:
+        logger.error(f"Sync error: {e}\n{traceback.format_exc()}")
         await ctx.send(f"❌ Fehler beim Synchronisieren: {e}")
 
 # ---------------------------
