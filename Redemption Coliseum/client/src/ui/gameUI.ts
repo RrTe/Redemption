@@ -31,6 +31,7 @@ import { ChatManager } from "./managers/ChatManager"; // ✨ NEU
 import { HUDManager } from "./managers/HUDManager"; // ✨ REFACTOR
 import { TokenManager } from "./managers/TokenManager.js"; // ✨ FIX: Import hinzufügen
 import { AssetManager } from "./managers/AssetManager"; // ✨ NEU
+import { StaticUIHandler } from "./handlers/StaticUIHandler"; // Fix: was never imported
 import type {
   GameRoomMessages,
   MoveCardMessage,
@@ -84,6 +85,7 @@ export class GameUI {
   private assetManager: AssetManager; // ✨ NEU
   private hudManager: HUDManager; // ✨ REFACTOR
   private tokenManager: TokenManager; // ✨ FIX: Property hinzufügen
+  private staticUIHandler: StaticUIHandler; // Fix: handles Help/Settings/Save/Concede buttons
 
   constructor(
     scene: Phaser.Scene,
@@ -240,12 +242,24 @@ export class GameUI {
       this.networkManager,
     );
     this.phaseManager.initialize();
+
+    // Fix: Instantiate StaticUIHandler to wire up Help, Settings, Save, and Concede buttons.
+    // Without this, the help button had no pointerdown listener during gameplay.
+    this.staticUIHandler = new StaticUIHandler(
+      this.scene,
+      this.room,
+      this.elementManager,
+      this.domUIManager,
+    );
   }
 
   // ✨ KORREKTUR: Die Initialisierung der Handler wird jetzt von der Scene gesteuert.
   public initializeScene() {
     // ✨ REFACTORING: Delegiere die Registrierung an den InputManager.
     this.inputManager.registerInputHandlers();
+
+    // Fix: Register static UI button handlers (Help, Settings, Save, Concede).
+    this.staticUIHandler.registerHandlers();
 
     // ✨ NEU: Melde dem Server, dass wir bereit sind (Assets geladen, UI erstellt).
     this.networkManager.sendPlayerReady();

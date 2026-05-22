@@ -25,9 +25,9 @@ class Card extends Schema {
     this.Sound = "";
     this.Alignment = "";
     this.Legality = "";
-    this.IsCharacter = "";
-    this.IsEnhancement = "";
-    this.IsGospel = "";
+    this.IsCharacter = false; // Boolean: true if card is a character
+    this.IsEnhancement = false; // Boolean: true if card is an enhancement
+    this.IsGospel = false; // Boolean: true if card belongs to the Gospel
     this.Testament = "";
     this.isTapped = false;
     this.isFaceDown = false;
@@ -61,9 +61,9 @@ type("string")(Card.prototype, "Reference");
 type("string")(Card.prototype, "Sound");
 type("string")(Card.prototype, "Alignment");
 type("string")(Card.prototype, "Legality");
-type("string")(Card.prototype, "IsCharacter");
-type("string")(Card.prototype, "IsEnhancement");
-type("string")(Card.prototype, "IsGospel");
+type("boolean")(Card.prototype, "IsCharacter");
+type("boolean")(Card.prototype, "IsEnhancement");
+type("boolean")(Card.prototype, "IsGospel");
 type("string")(Card.prototype, "Testament");
 type("boolean")(Card.prototype, "isTapped");
 type("boolean")(Card.prototype, "isFaceDown");

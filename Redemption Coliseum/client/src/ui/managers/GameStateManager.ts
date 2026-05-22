@@ -17,6 +17,9 @@ export class GameStateManager {
   private animationManager: AnimationManager;
   private settingsManager: SettingsManager;
   private renderCallback: () => void;
+  // Fix Bug D: Timer to debounce the disconnect overlay, avoiding false alarms on Render.com
+  private disconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly DISCONNECT_DEBOUNCE_MS = 5000; // Wait 5s before treating a drop as a real disconnect
 
   constructor(
     room: TypedRoom,
@@ -48,6 +51,9 @@ export class GameStateManager {
 
   /**
    * Checks player status and toggles the waiting overlay.
+   * Uses a debounce for disconnect events to avoid false alarms on high-latency
+   * deployments (e.g. Render.com), where a WebSocket drop followed by a fast
+   * Colyseus reconnect should not show a scary "disconnected" message.
    */
   public updateWaitingStatus() {
     const state = this.room.state;
@@ -61,14 +67,34 @@ export class GameStateManager {
       `[WaitingStatus] Players: ${playerCount}, Started: ${gameStarted}, OpponentConn: ${opponent?.connected}`,
     );
 
-    // Priority 1: Disconnection
+    // Priority 1: Disconnection – debounced to avoid false alarms on reconnect
     if (opponent && !opponent.connected) {
-      log("GameState", "Showing overlay: Opponent disconnected");
-      this.overlayManager.showWaitingOverlay(
-        "Opponent disconnected. Waiting...",
-        true,
-      );
+      if (!this.disconnectTimer) {
+        log("GameState", "Opponent disconnected signal received, starting debounce timer...");
+        this.disconnectTimer = setTimeout(() => {
+          // Re-check connection state after the debounce period has elapsed.
+          const currentOpponentId = this.findOpponentId(this.room.state);
+          const currentOpponent = currentOpponentId
+            ? this.room.state.players.get(currentOpponentId)
+            : undefined;
+          if (currentOpponent && !currentOpponent.connected) {
+            log("GameState", "Showing overlay: Opponent disconnected (confirmed after debounce)");
+            this.overlayManager.showWaitingOverlay(
+              "Opponent disconnected. Waiting...",
+              true,
+            );
+          }
+          this.disconnectTimer = null;
+        }, this.DISCONNECT_DEBOUNCE_MS);
+      }
       return;
+    }
+
+    // Opponent is connected (or no opponent yet) – cancel any pending disconnect timer.
+    if (this.disconnectTimer) {
+      log("GameState", "Opponent reconnected before debounce elapsed – cancelling disconnect overlay.");
+      clearTimeout(this.disconnectTimer);
+      this.disconnectTimer = null;
     }
 
     // Priority 2: Opponent timeout after start
@@ -168,9 +194,14 @@ export class GameStateManager {
   }
 
   /**
-   * Cleans up scene event listeners.
+   * Cleans up scene event listeners and any pending timers.
    */
   public destroy() {
+    // Cancel pending disconnect timer to prevent ghost overlays after scene teardown.
+    if (this.disconnectTimer) {
+      clearTimeout(this.disconnectTimer);
+      this.disconnectTimer = null;
+    }
     this.scene.events.off("net:cardsDrawn");
     this.scene.events.off("net:pileShuffled");
     this.scene.events.off("net:stateChanged");

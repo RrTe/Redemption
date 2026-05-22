@@ -29,9 +29,11 @@ export class GameEventCoordinator {
 
     // --- Message Mapping ---
     this.roomListeners.push(
-      this.room.onMessage("gameError", (data) =>
-        this.scene.events.emit(GameEvents.NET_GAME_ERROR, data),
-      ),
+      this.room.onMessage("gameError", (data) => {
+        // Log to browser console so errors are visible in DevTools even without a UI dialog.
+        console.error("[NET GAME ERROR]", data);
+        this.scene.events.emit(GameEvents.NET_GAME_ERROR, data);
+      }),
     );
 
     this.roomListeners.push(

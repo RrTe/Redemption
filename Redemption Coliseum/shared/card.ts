@@ -15,8 +15,8 @@ export interface CardData {
   Sound: string;
   Alignment: string;
   Legality: string;
-  IsCharacter: string;
-  IsEnhancement: string;
-  IsGospel: string;
+  IsCharacter: boolean;
+  IsEnhancement: boolean;
+  IsGospel: boolean;
   Testament: string;
 }
