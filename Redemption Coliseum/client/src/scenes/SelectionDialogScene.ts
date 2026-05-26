@@ -7,7 +7,6 @@ import { SoundManager } from "../managers/SoundManager";
 import { PreviewManager } from "../ui/managers/PreviewManager";
 import { log, DEBUG } from "../utils/logger";
 
-
 // Konstante für die Anzahl der Karten pro Seite.
 const CARDS_PER_PAGE = 7;
 
@@ -16,6 +15,11 @@ export interface SelectionAction {
   actionId: string;
   toZone: Zone;
   target?: "me" | "opponent"; // ✨ NEU: Ziel-Spieler für die Filterung
+}
+
+export interface SelectedCardInfo {
+  id: string;
+  position: "top" | "bottom";
 }
 
 /**
@@ -27,15 +31,29 @@ export interface SelectionDialogData {
   room: TypedRoom;
   showCloseButton: boolean;
   isInteractive: boolean;
+  isMyAction: boolean; // ✨ NEU: Kennzeichnet den auslösenden Spieler
   selectionRules?: { min: number; max: number };
+  toZone?: Zone; // ✨ NEU: Erlaubt die Angabe einer Zielzone direkt in den Daten
+  fromZone?: Zone; // ✨ NEU: Kennzeichnet den Ursprung der Karten (z.B. Deck)
+  actionType?: "search" | "look" | "reveal";
+  /** Pre-selects the top/bottom toggle for all cards (mirrors the QuantitySelectionDialog choice). */
+  initialPosition?: "top" | "bottom";
   possibleActions?: SelectionAction[];
+
   onComplete: (result: {
     actionId: string;
-    selectedCardIds: string[];
+    selectedCards: SelectedCardInfo[];
+    remainingPositions?: SelectedCardInfo[];
     toZone: Zone;
-    target?: "opponent" | "me"; // ✨ NEU: Ziel-Spieler explizit angeben
+    target?: "opponent" | "me";
   }) => void;
-  onCancel: () => void;
+
+  /**
+   * Called when the dialog is closed without a zone-button selection.
+   * For Reveal/Look dialogs: carries the top/bottom positions of every card
+   * so the server can return them to the correct deck position.
+   */
+  onCancel: (remainingPositions?: SelectedCardInfo[]) => void;
 }
 
 /**
@@ -45,6 +63,7 @@ export interface SelectionDialogData {
 export class SelectionDialogScene extends Phaser.Scene {
   private cardUIs: CardUI[] = [];
   private selectedCards = new Set<string>();
+  private cardPositions = new Map<string, "top" | "bottom">(); // ✨ NEU
   private room!: TypedRoom;
   private dialogData!: SelectionDialogData;
   // ✨ KORREKTUR: Wir speichern jetzt ein Array von Buttons.
@@ -91,7 +110,8 @@ export class SelectionDialogScene extends Phaser.Scene {
     // ✨ FIX: Alte Referenzen löschen. Da die Szene gestoppt wurde, hat Phaser die Objekte bereits zerstört.
     this.cardUIs = [];
     this.actionButtons = [];
-    if (this.selectedCardsContainer) this.selectedCardsContainer.removeAll(true);
+    if (this.selectedCardsContainer)
+      this.selectedCardsContainer.removeAll(true);
 
     this.totalPages = Math.ceil(this.allCards.length / CARDS_PER_PAGE);
   }
@@ -114,7 +134,10 @@ export class SelectionDialogScene extends Phaser.Scene {
 
     // ✨ NEU: Container für ausgewählte Karten erstellen (Position: Oberes Drittel)
     // Wir platzieren ihn mittig bei ca. 25% der Höhe, also über der Hauptliste.
-    this.selectedCardsContainer = this.add.container(this.scale.width / 2, this.scale.height * 0.25);
+    this.selectedCardsContainer = this.add.container(
+      this.scale.width / 2,
+      this.scale.height * 0.25,
+    );
 
     // 3. Karten und Paginierung (verwenden die zurückgesetzten Werte)
     this.createPaginationControls();
@@ -136,9 +159,9 @@ export class SelectionDialogScene extends Phaser.Scene {
 
       closeButton.on("pointerdown", () => {
         this.soundManager.playSound("UI_TOGGLE");
-        this.dialogData.onCancel();
         this.closeDialog();
       });
+
     }
 
     // 5. Aktions-Buttons
@@ -243,7 +266,11 @@ export class SelectionDialogScene extends Phaser.Scene {
   }
 
   /** ✨ NEU: Ersetzt displayCardsForCurrentPage und unterstützt Animationen */
-  private renderPage(animate: boolean = false, direction: number = 0, startFast: boolean = false) {
+  private renderPage(
+    animate: boolean = false,
+    direction: number = 0,
+    startFast: boolean = false,
+  ) {
     const startIndex = this.currentPage * CARDS_PER_PAGE;
     const endIndex = startIndex + CARDS_PER_PAGE;
     const cardsToShow = this.allCards.slice(startIndex, endIndex);
@@ -344,6 +371,28 @@ export class SelectionDialogScene extends Phaser.Scene {
       this.setupCardInteractivity(cardUI);
       this.cardUIs.push(cardUI);
 
+      // Show top/bottom position toggles whenever the acting player looks at/reveals
+      // cards from the deck.
+      const isDeckSource = this.dialogData.fromZone === "deck";
+      const isLookOrReveal = this.dialogData.actionType === "look" || this.dialogData.actionType === "reveal";
+      const showToggles = this.dialogData.isMyAction && isDeckSource && isLookOrReveal;
+
+
+      // ✨ NEU: Position-Toggle unter der Karte erstellen
+      const toggle = this.createPositionToggle(
+        targetX,
+        centerY + cardHeight / 2 + 35,
+        cardData.id,
+      );
+      toggle.setVisible(showToggles);
+      cardUI.setData("positionToggle", toggle); // ✨ NEU: Verknüpfung speichern
+      this.add.existing(toggle);
+      // Initialzustand setzen (falls Karte bereits auf anderer Seite gewählt war)
+      this.setToggleInteractivity(
+        cardData.id,
+        !this.selectedCards.has(cardData.id),
+      );
+
       if (animate) {
         // Ziehharmonika für neue Karten
         const delay =
@@ -352,7 +401,7 @@ export class SelectionDialogScene extends Phaser.Scene {
             : (cardsToShow.length - 1 - index) * staggerTime;
 
         const tween = this.tweens.add({
-          targets: cardUI,
+          targets: [cardUI, toggle], // ✨ Toggle mit animieren
           x: targetX,
           delay: baseDelay + delay, // ✨ NEU: Basis-Verzögerung + individueller Stagger
           duration: 600, // Etwas langsamer beim Reinkommen für "Smoothness"
@@ -393,6 +442,95 @@ export class SelectionDialogScene extends Phaser.Scene {
       // Rufe changePage auf, was jetzt den "else"-Block ausführt, da isTransitioning false ist.
       this.changePage(delta, true); // ✨ FIX: Nächste Seite auch schnell abspielen
     }
+  }
+
+  /** ✨ NEU: Erstellt die Top/Bottom Buttons unter einer Karte */
+  private createPositionToggle(
+    x: number,
+    y: number,
+    cardId: string,
+  ): Phaser.GameObjects.Container {
+    const container = this.add.container(x, y);
+
+    // Default: use the position chosen in the QuantitySelectionDialog (top/bottom),
+    // falling back to "top" if not specified. This mirrors the card-source selection
+    // so non-selected cards automatically return to the same end of the deck.
+    if (!this.cardPositions.has(cardId)) {
+      this.cardPositions.set(cardId, this.dialogData.initialPosition ?? "top");
+    }
+
+    const createBtn = (type: "top" | "bottom", offset: number) => {
+      const btn = this.add.container(offset, 0);
+      const bg = this.add
+        .rectangle(0, 0, 45, 30, 0x333333)
+        .setStrokeStyle(2, 0x666666);
+
+      // ✨ KORREKTUR: Richtige Asset-Keys verwenden
+      const iconKey =
+        type === "top" ? "icon_from_top_of_pile" : "icon_from_bottom_of_pile";
+      const icon = this.add.image(0, 0, iconKey);
+
+      icon.setDisplaySize(20, 20);
+
+      btn.add([bg, icon]);
+      btn.setSize(45, 30);
+      btn.setInteractive({ useHandCursor: true });
+
+      btn.on("pointerdown", () => {
+        this.cardPositions.set(cardId, type);
+        this.updatePositionToggles(container, cardId);
+      });
+
+      btn.setData("bg", bg);
+      return btn;
+    };
+
+    const topBtn = createBtn("top", -25);
+    const botBtn = createBtn("bottom", 25);
+
+    container.add([topBtn, botBtn]);
+    container.setData("topBtn", topBtn);
+    container.setData("botBtn", botBtn);
+
+    this.updatePositionToggles(container, cardId);
+    return container;
+  }
+
+  private updatePositionToggles(
+    container: Phaser.GameObjects.Container,
+    cardId: string,
+  ) {
+    const current = this.cardPositions.get(cardId);
+    const topBtn = container.getData("topBtn") as Phaser.GameObjects.Container;
+    const botBtn = container.getData("botBtn") as Phaser.GameObjects.Container;
+
+    const updateStyle = (
+      btn: Phaser.GameObjects.Container,
+      isActive: boolean,
+    ) => {
+      const bg = btn.getData("bg") as Phaser.GameObjects.Rectangle;
+      bg.setStrokeStyle(2, isActive ? 0x00ff00 : 0x666666);
+      btn.setAlpha(isActive ? 1 : 0.6);
+    };
+
+    updateStyle(topBtn, current === "top");
+    updateStyle(botBtn, current === "bottom");
+  }
+
+  /** ✨ NEU: Steuert die Aktivität der Top/Bottom Buttons basierend auf der Kartenauswahl */
+  private setToggleInteractivity(cardId: string, enabled: boolean) {
+    const cardUI = this.cardUIs.find((c) => c.cardData.id === cardId);
+    const toggle = cardUI?.getData(
+      "positionToggle",
+    ) as Phaser.GameObjects.Container;
+    if (!toggle) return;
+
+    const topBtn = toggle.getData("topBtn") as Phaser.GameObjects.Container;
+    const botBtn = toggle.getData("botBtn") as Phaser.GameObjects.Container;
+
+    toggle.setAlpha(enabled ? 1 : 0.3); // ✨ Visuelles Feedback (ausgegraut)
+    if (topBtn.input) topBtn.input.enabled = enabled;
+    if (botBtn.input) botBtn.input.enabled = enabled;
   }
 
   /** ✨ NEU: Interaktivität ausgelagert, um renderPage sauber zu halten */
@@ -498,7 +636,7 @@ export class SelectionDialogScene extends Phaser.Scene {
       // Interaktivität
       container.setSize(buttonWidth, 50);
       container.setInteractive({ useHandCursor: true });
-      
+
       // ✨ NEU: Metadaten für die Filterung speichern
       container.setData("zone", z.zone);
       container.setData("target", isOpponent ? "opponent" : "me");
@@ -512,23 +650,37 @@ export class SelectionDialogScene extends Phaser.Scene {
           // ✨ NEU: Ermittle die korrekte Action-ID aus den possibleActions (falls vorhanden)
           let actionId = "custom_selection";
           if (this.dialogData.possibleActions) {
-             const targetStr = isOpponent ? "opponent" : "me";
-             const match = this.dialogData.possibleActions.find(a => 
-                 a.toZone === z.zone && 
-                 (a.target === targetStr || (!a.target && !isOpponent))
-             );
-             if (match) actionId = match.actionId;
+            const targetStr = isOpponent ? "opponent" : "me";
+            const match = this.dialogData.possibleActions.find(
+              (a) =>
+                a.toZone === z.zone &&
+                (a.target === targetStr || (!a.target && !isOpponent)),
+            );
+            if (match) actionId = match.actionId;
           }
 
+          const selectedCards: SelectedCardInfo[] = Array.from(
+            this.selectedCards,
+          ).map((id) => ({
+            id,
+            position: this.cardPositions.get(id) || "top",
+          }));
+
+          const remainingPositions = this.getRemainingCardPositions();
+
           this.dialogData.onComplete({
-            actionId: actionId, // ✨ FIX: Sende die echte ID (z.B. "my_lob")
-            selectedCardIds: Array.from(this.selectedCards),
+            actionId: actionId,
+            selectedCards: selectedCards,
+            remainingPositions: remainingPositions,
             toZone: z.zone as any,
             target: isOpponent ? "opponent" : "me",
           });
-          this.closeDialog();
+          // Pass silent=true so closeDialog() does NOT fire onCancel again
+          // (onComplete already handled the network message).
+          this.closeDialog(true);
         }
       });
+
 
       this.actionButtons.push(container);
       startX += buttonWidth + spacing;
@@ -548,7 +700,10 @@ export class SelectionDialogScene extends Phaser.Scene {
       this.selectedCards.add(cardId);
       cardUI.setTint(0x00ff00);
     }
-    
+
+    // ✨ NEU: Buttons deaktivieren, wenn Karte ausgewählt ist
+    this.setToggleInteractivity(cardId, !this.selectedCards.has(cardId));
+
     // ✨ NEU: Anzeige der ausgewählten Karten aktualisieren
     this.updateSelectedCardsDisplay();
     this.updateConfirmButtonState();
@@ -583,14 +738,22 @@ export class SelectionDialogScene extends Phaser.Scene {
     }
 
     // Startposition (zentriert)
-    const startX = -(totalWidthNeeded * scale) / 2 + (baseCardWidth * scale) / 2;
+    const startX =
+      -(totalWidthNeeded * scale) / 2 + (baseCardWidth * scale) / 2;
 
     // 5. Karten erstellen
     cards.forEach((cardData, index) => {
       const x = startX + index * (baseCardWidth + spacing) * scale;
       const y = 0;
 
-      const cardUI = new CardUI(this, x, y, cardData, baseCardWidth, baseCardHeight);
+      const cardUI = new CardUI(
+        this,
+        x,
+        y,
+        cardData,
+        baseCardWidth,
+        baseCardHeight,
+      );
       cardUI.setScale(scale);
 
       // Interaktivität für Preview (Mouseover)
@@ -617,17 +780,18 @@ export class SelectionDialogScene extends Phaser.Scene {
     this.actionButtons.forEach((button) => {
       // ✨ NEU: Prüfe, ob dieser Button erlaubt ist
       let isAllowed = true;
-      
+
       if (possibleActions && possibleActions.length > 0) {
-          const zone = button.getData("zone");
-          const target = button.getData("target");
-          
-          // Button ist nur erlaubt, wenn er in der Liste der möglichen Aktionen steht
-          // ✨ FIX: Berücksichtige implizites "me", wenn a.target undefined ist.
-          isAllowed = possibleActions.some(a => 
-            a.toZone === zone && 
-            (a.target === target || (!a.target && target === "me"))
-          );
+        const zone = button.getData("zone");
+        const target = button.getData("target");
+
+        // Button ist nur erlaubt, wenn er in der Liste der möglichen Aktionen steht
+        // ✨ FIX: Berücksichtige implizites "me", wenn a.target undefined ist.
+        isAllowed = possibleActions.some(
+          (a) =>
+            a.toZone === zone &&
+            (a.target === target || (!a.target && target === "me")),
+        );
       }
 
       if (isValid && isAllowed) {
@@ -640,14 +804,42 @@ export class SelectionDialogScene extends Phaser.Scene {
     });
   }
 
-  public closeDialog() {
-    // ✨ NEU: Sound abspielen (konsistent mit SettingsDialog)
+  /**
+   * Builds the list of cards that were NOT selected by the player,
+   * along with their chosen top/bottom position.
+   * For non-interactive dialogs (Reveal) this returns ALL cards.
+   */
+  public getRemainingCardPositions(): SelectedCardInfo[] {
+    return this.allCards
+      .filter((c) => !this.selectedCards.has(c.id))
+      .map((c) => ({
+        id: c.id,
+        position: this.cardPositions.get(c.id) ?? "top",
+      }));
+  }
+
+  /**
+   * Closes the dialog and resumes the main game scene.
+   * @param silent - When true, skips the onCancel callback (used after onComplete fires).
+   */
+  public closeDialog(silent = false) {
     this.soundManager.playSound("MENU_SELECT");
 
-    // ✨ KORREKTUR: Setze den Auswahlstatus zurück, damit die Karten bei der nächsten
-    // Öffnung des Dialogs nicht fälschlicherweise noch als ausgewählt angezeigt werden.
+    // Collect remaining-card positions BEFORE clearing state so the onCancel
+    // callback can forward them to the network layer.
+    const remaining = this.getRemainingCardPositions();
+
+    // Reset selection state so the next dialog open is clean.
     this.selectedCards.clear();
+    this.cardPositions.clear();
+
     this.scene.resume("CardGame");
     this.scene.stop();
+
+    // Notify the caller with the positions of non-selected (or all) cards,
+    // but only if this was not already handled by onComplete.
+    if (!silent) {
+      this.dialogData.onCancel(remaining);
+    }
   }
 }

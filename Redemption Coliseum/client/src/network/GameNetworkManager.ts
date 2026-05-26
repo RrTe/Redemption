@@ -1,6 +1,9 @@
 import type { TypedRoom, StateCallback } from "../ui/gameUI.js";
 import type { GameUI } from "../ui/gameUI.js";
-import type { SelectionDialogData } from "../scenes/SelectionDialogScene.js";
+import type {
+  SelectionDialogData,
+  SelectedCardInfo,
+} from "../scenes/SelectionDialogScene.js";
 import { SelectionDialogScene } from "../scenes/SelectionDialogScene.js";
 import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones.js";
 import type {
@@ -43,7 +46,9 @@ export class GameNetworkManager {
     // ✨ NEU: Debugging Hooks hierher verschoben
     // @ts-ignore
     window.resolveSearch = (cardIds: string[], toZone: Zone) => {
-      this.sendResolveSearch(cardIds, toZone);
+      // ✨ KORREKTUR: Mappt einfache IDs auf das vom Server erwartete Objekt-Format
+      const mappedCards = cardIds.map(id => ({ id, position: "top" as const }));
+      this.sendResolveSearch(mappedCards, toZone);
     };
 
     // @ts-ignore
@@ -223,18 +228,23 @@ export class GameNetworkManager {
   // --- Methoden zum Senden von Nachrichten ---
 
   public sendResolveSearch(
-    selectedCardIds: string[],
+    selectedCards: { id: string; position: "top" | "bottom" }[],
     toZone: Zone,
     coords?: MoveCardMessage["coords"],
+    remainingPositions?: SelectedCardInfo[],
   ) {
     log(
       "Network",
-      `Sending 'resolveSearchPile' with cards: ${selectedCardIds.join(
-        ", ",
-      )} to zone: ${toZone} for player: ${coords?.targetPlayerId || "self"}`,
+      `Sending 'resolveSearchPile' with ${selectedCards.length} cards to zone: ${toZone}`,
     );
-    this.room.send("resolveSearchPile", { selectedCardIds, toZone, coords });
+    this.room.send("resolveSearchPile", {
+      selectedCards,
+      toZone,
+      coords,
+      remainingPositions,
+    });
   }
+
 
   // ✨ NEU: Methode zum Anfordern einer Stapelsuche.
   public sendRequestSearchPile(zone: Zone, targetPlayerId?: string) {
@@ -294,9 +304,10 @@ export class GameNetworkManager {
   }
 
   // ✨ NEU: Methode zum Schließen des "Reveal"-Dialogs.
-  public sendResolveReveal() {
-    log("Network", `Sending 'resolveReveal' message.`);
-    this.room.send("resolveReveal");
+  // cardPositions: top/bottom position for each card being returned to the deck.
+  public sendResolveReveal(cardPositions: SelectedCardInfo[] = []) {
+    log("Network", `Sending 'resolveReveal' with ${cardPositions.length} card positions.`);
+    this.room.send("resolveReveal", { cardPositions });
   }
 
   // ✨ NEU: Methode zum Senden der "Next Phase"-Aktion.

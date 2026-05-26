@@ -32,12 +32,6 @@ class RequestRevealCardsCommand extends BaseCommand {
     const pile = getZoneCollection(targetPlayer, this.state, zone);
     const cardsToReveal = SearchHelper.slicePile(pile, count, position);
 
-    // 1. Public Reveal
-    this.state.revealedCards.clear();
-    cardsToReveal.forEach((card) =>
-      this.state.revealedCards.push(card.clone()),
-    );
-
     SearchHelper.setupContext(requestingPlayer, this.state, {
       zone,
       cards: cardsToReveal,
@@ -46,15 +40,27 @@ class RequestRevealCardsCommand extends BaseCommand {
       actionTakerId: this.client.sessionId,
     });
 
+    // 1. Public Reveal
+    this.state.revealedCards.clear();
+    cardsToReveal.forEach((card) =>
+      this.state.revealedCards.push(card.clone()),
+    );
+
+
     logger.info(
       `[RequestRevealCardsCommand] ${this.client.sessionId} revealed ${count} from ${zone}`,
     );
 
     this.client.send("presentPileSearchResult", {
       cards: cardsToReveal.map((c) => c.toJSON()),
+      zone: zone,
+      actionType: "reveal",
+      position: position,
       possibleActions: SearchHelper.getPossibleActions(zone),
     });
+
   }
 }
+
 
 module.exports = { RequestRevealCardsCommand };

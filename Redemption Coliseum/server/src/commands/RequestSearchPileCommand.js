@@ -56,9 +56,12 @@ class RequestSearchPileCommand extends BaseCommand {
     // Send result to the requesting client
     this.client.send("presentPileSearchResult", {
       cards: Array.from(pileToSearch).map((c) => c.toJSON()),
+      zone: zone,
+      actionType: "search",
       possibleActions: SearchHelper.getPossibleActions(zone),
     });
   }
 }
+
 
 module.exports = { RequestSearchPileCommand };

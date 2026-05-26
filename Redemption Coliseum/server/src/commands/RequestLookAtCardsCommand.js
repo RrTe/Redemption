@@ -48,9 +48,13 @@ class RequestLookAtCardsCommand extends BaseCommand {
 
     this.client.send("presentPileSearchResult", {
       cards: cardsToLookAt.map((c) => c.toJSON()),
+      zone: zone,
+      actionType: "look",
+      position: position,
       possibleActions: SearchHelper.getPossibleActions(zone),
     });
   }
 }
+
 
 module.exports = { RequestLookAtCardsCommand };

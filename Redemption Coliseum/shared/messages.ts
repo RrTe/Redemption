@@ -10,10 +10,16 @@ export interface MoveCardMessage {
   coords?: {
     x?: number; // ✨ KORREKTUR: x und y sind optional
     y?: number; // ✨ KORREKTUR: x und y sind optional
-    targetPlayerId?: string;
+    targetPlayerId?: string; // ✨ NEU: Zielspieler für die Bewegung
     position?: "bottom";
     attachTo?: string; // ✨ NEU: ID der Zielkarte für Attach-Aktionen
   }; // ✨ Erweitert um die ID des Zielspielers
+}
+
+export interface ResolveSearchPileMessage {
+  selectedCards: { id: string; position: "top" | "bottom" }[];
+  toZone: Zone;
+  coords?: MoveCardMessage["coords"];
 }
 
 export interface GameRoomMessages {

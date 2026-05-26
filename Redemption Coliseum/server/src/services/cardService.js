@@ -407,7 +407,7 @@ function moveCard(
   to,
   cardIdOrIndex,
   count = 1,
-  coords = null,
+  coords = {}, // ✨ FIX: Standardwert von null auf {} geändert, damit coords?.position funktioniert
 ) {
   logger.debug(
     `[moveCard_DISPATCHER] Entered moveCard with player.sessionId=${player?.sessionId}, from=${from}, to=${to}, cardIdOrIndex=${cardIdOrIndex}, count=${count}, coords=`,
