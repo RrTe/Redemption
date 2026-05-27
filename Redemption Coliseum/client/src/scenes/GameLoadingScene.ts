@@ -60,7 +60,10 @@ export class GameLoadingScene extends BaseLoadingScene {
       "assets/ui/buttons/Button_Help_Copilot_20260216_130131_small.png",
     );
     // ✨ NEU: Concede Button
-    this.load.image("button_concede", "assets/ui/buttons/white_flag_small_compressed.png");
+    this.load.image(
+      "button_concede",
+      "assets/ui/buttons/white_flag_small_compressed.png",
+    );
     this.load.image("arrow_left", "assets/ui/buttons/arrow-left_small.png");
     this.load.image("arrow_right", "assets/ui/buttons/arrow-right_small.png");
     // Parchment button is already loaded in LobbyScene, but we load it here again for safety
@@ -71,7 +74,6 @@ export class GameLoadingScene extends BaseLoadingScene {
     // ✨ NEU: Scroll-Hintergrund für Settings
     this.load.image("scroll_bg", "assets/ui/paper-8527340_optimised.png");
     this.load.image("chat_bg", "assets/ui/paper-548643_small_optimised.jpg"); // ✨ NEU: Chat-Hintergrund
-    // ✨ NEU: Paginierungs-Pfeile
     this.load.image(
       "icon_from_top_of_pile",
       "assets/ui/icons/icon_from_top_of_pile.png",
@@ -80,6 +82,8 @@ export class GameLoadingScene extends BaseLoadingScene {
       "icon_from_bottom_of_pile",
       "assets/ui/icons/icon_from_bottom_of_pile.png",
     );
+    this.load.image("icon_topdeck", "assets/ui/icons/icon_topdeck.png");
+    this.load.image("icon_underdeck", "assets/ui/icons/icon_underdeck.png");
 
     // === Phasen Icons ===
     this.load.image("icon_preparation", "assets/ui/icons/icon_preparation.png");

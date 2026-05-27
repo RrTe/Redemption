@@ -63,6 +63,7 @@ export interface SelectionDialogData {
 export class SelectionDialogScene extends Phaser.Scene {
   private cardUIs: CardUI[] = [];
   private selectedCards = new Set<string>();
+  private toggleContainers: Phaser.GameObjects.Container[] = []; // ✨ NEU: Tracking für Toggles
   private cardPositions = new Map<string, "top" | "bottom">(); // ✨ NEU
   private room!: TypedRoom;
   private dialogData!: SelectionDialogData;
@@ -110,6 +111,9 @@ export class SelectionDialogScene extends Phaser.Scene {
     // ✨ FIX: Alte Referenzen löschen. Da die Szene gestoppt wurde, hat Phaser die Objekte bereits zerstört.
     this.cardUIs = [];
     this.actionButtons = [];
+    this.toggleContainers.forEach((t) => t.destroy()); // ✨ NEU: Cleanup
+    this.toggleContainers = [];
+
     if (this.selectedCardsContainer)
       this.selectedCardsContainer.removeAll(true);
 
@@ -161,7 +165,6 @@ export class SelectionDialogScene extends Phaser.Scene {
         this.soundManager.playSound("UI_TOGGLE");
         this.closeDialog();
       });
-
     }
 
     // 5. Aktions-Buttons
@@ -178,7 +181,7 @@ export class SelectionDialogScene extends Phaser.Scene {
     // um eine Überlappung mit den Karten zu vermeiden.
     // Wir berechnen die Y-Position basierend auf der Kartenhöhe, um sicherzustellen, dass sie immer darunter liegen.
     const cardHeight = (this.scale.width / 8) * 1.4;
-    const buttonY = this.scale.height / 2 + cardHeight / 2 + 40;
+    const buttonY = this.scale.height / 2 + cardHeight / 2 + 150; // ✨ FIX: Tiefer gesetzt (von 100 auf 150)
     const buttonXOffset = this.scale.width * 0.4;
 
     this.prevButton = this.add
@@ -290,6 +293,7 @@ export class SelectionDialogScene extends Phaser.Scene {
 
     // --- Schritt 1: Alte Karten rausfliegen lassen ---
     const oldCards = [...this.cardUIs];
+    const oldToggles = [...this.toggleContainers]; // ✨ NEU
     const staggerTime = 50; // ms Verzögerung pro Karte für den Ziehharmonika-Effekt
     const animDuration = 500; // ✨ NEU: Konstante für die Dauer
 
@@ -306,14 +310,17 @@ export class SelectionDialogScene extends Phaser.Scene {
             ? index * staggerTime
             : (oldCards.length - 1 - index) * staggerTime;
 
+        const toggle = oldToggles[index]; // ✨ NEU
+
         const tween = this.tweens.add({
-          targets: cardUI,
+          targets: toggle ? [cardUI, toggle] : cardUI, // ✨ NEU: Toggle mit animieren
           x: cardUI.x + offset,
           duration: animDuration,
           delay: delay, // ✨ NEU: Individuelle Verzögerung
           ease: "Cubic.easeIn", // ✨ FIX: Beschleunigen beim Rausfliegen
           onComplete: () => {
             cardUI.destroy();
+            toggle?.destroy(); // ✨ NEU: Toggle zerstören
           },
         });
         if (startFast) {
@@ -327,6 +334,7 @@ export class SelectionDialogScene extends Phaser.Scene {
 
     // --- Schritt 2: Neue Karten (ggf. verzögert) einfliegen lassen ---
     this.cardUIs = []; // Liste für die neuen Karten leeren
+    this.toggleContainers = []; // ✨ NEU: Liste für Toggles leeren
 
     // Startverzögerung für die neuen Karten (damit die alten schon KOMPLETT weg sind)
     // ✨ FIX: Dynamische Berechnung für sequentiellen Ablauf (kein Überlappen)
@@ -374,18 +382,21 @@ export class SelectionDialogScene extends Phaser.Scene {
       // Show top/bottom position toggles whenever the acting player looks at/reveals
       // cards from the deck.
       const isDeckSource = this.dialogData.fromZone === "deck";
-      const isLookOrReveal = this.dialogData.actionType === "look" || this.dialogData.actionType === "reveal";
-      const showToggles = this.dialogData.isMyAction && isDeckSource && isLookOrReveal;
-
+      const isLookOrReveal =
+        this.dialogData.actionType === "look" ||
+        this.dialogData.actionType === "reveal";
+      const showToggles =
+        this.dialogData.isMyAction && isDeckSource && isLookOrReveal;
 
       // ✨ NEU: Position-Toggle unter der Karte erstellen
       const toggle = this.createPositionToggle(
-        targetX,
+        initialX,
         centerY + cardHeight / 2 + 35,
         cardData.id,
       );
       toggle.setVisible(showToggles);
       cardUI.setData("positionToggle", toggle); // ✨ NEU: Verknüpfung speichern
+      this.toggleContainers.push(toggle); // ✨ NEU: In Tracking-Array aufnehmen
       this.add.existing(toggle);
       // Initialzustand setzen (falls Karte bereits auf anderer Seite gewählt war)
       this.setToggleInteractivity(
@@ -466,8 +477,7 @@ export class SelectionDialogScene extends Phaser.Scene {
         .setStrokeStyle(2, 0x666666);
 
       // ✨ KORREKTUR: Richtige Asset-Keys verwenden
-      const iconKey =
-        type === "top" ? "icon_from_top_of_pile" : "icon_from_bottom_of_pile";
+      const iconKey = type === "top" ? "icon_topdeck" : "icon_underdeck";
       const icon = this.add.image(0, 0, iconKey);
 
       icon.setDisplaySize(20, 20);
@@ -680,7 +690,6 @@ export class SelectionDialogScene extends Phaser.Scene {
           this.closeDialog(true);
         }
       });
-
 
       this.actionButtons.push(container);
       startX += buttonWidth + spacing;

@@ -207,6 +207,14 @@
       background: url("./assets/ui/icons/icon_from_bottom_of_pile.png") no-repeat left center / 2.5rem auto;
     }
 
+    .bullet-topdeck {
+      background: url("./assets/ui/icons/icon_topdeck.png") no-repeat left center / 2.5rem auto;
+    }
+
+    .bullet-underdeck {
+      background: url("./assets/ui/icons/icon_underdeck.png") no-repeat left center / 2.5rem auto;
+    }
+
     .list-label {
       font-family: "FairyDustB", serif;
       font-size: 1.4rem;
@@ -237,14 +245,16 @@
       left: 0;
       width: 280px;
       height: 100%;
-      background: rgba(255, 255, 255, 0.5); /* Semitransparent, passend zum Stil */
-      border-right: 1px solid rgba(0,0,0,0.2);
-      transform: translateX(-280px); /* Initial versteckt */
+      background: rgba(255, 255, 255, 0.5);
+      /* Semitransparent, passend zum Stil */
+      border-right: 1px solid rgba(0, 0, 0, 0.2);
+      transform: translateX(-280px);
+      /* Initial versteckt */
       transition: transform 0.3s ease-in-out;
       z-index: 10000;
       overflow-y: auto;
       padding-top: 40px;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
     }
 
     #sidebar.open {
@@ -257,7 +267,7 @@
       left: 15px;
       z-index: 10001;
       background: rgba(255, 255, 255, 0.6);
-      border: 1px solid rgba(0,0,0,0.4);
+      border: 1px solid rgba(0, 0, 0, 0.4);
       border-radius: 4px;
       padding: 5px 12px;
       cursor: pointer;
@@ -266,8 +276,16 @@
       color: #333;
     }
 
-    #sidebar nav ul { list-style: none; padding: 0; margin: 0; }
-    #sidebar nav ul li { border-bottom: 1px solid rgba(0,0,0,0.05); }
+    #sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #sidebar nav ul li {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
     #sidebar nav ul li a {
       display: block;
       padding: 4px 20px;
@@ -276,15 +294,27 @@
       font-family: "FairyDustB", system-ui, sans-serif;
       font-size: 1.5rem;
     }
+
     #sidebar nav ul li ul li a {
       padding-left: 40px;
       font-family: system-ui, sans-serif;
       font-size: 0.95rem;
     }
-    #sidebar nav ul li a:hover { background: rgba(0,0,0,0.1); }
-    .menu-header { text-align: center; font-family: "FairyDustB"; font-size: 2rem; margin-bottom: 1rem; color: #444; }
+
+    #sidebar nav ul li a:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .menu-header {
+      text-align: center;
+      font-family: "FairyDustB";
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #444;
+    }
 
     @media (max-width: 700px) {
+
       .row,
       .row.alt {
         flex-direction: column;
@@ -804,6 +834,14 @@
           When you are done select the appropriate zone or pile of you (bottom button row) or your opponent (top button
           row) to move the cards there. (At the moment cards moved to hands, or any piles are not displayed but can be
           looked up inside the Chat and Log panel.)</br>
+          For actions Look and Reveal every card which is not selected has two active buttons below it.
+          <ul class="custom-bullets">
+            <li class="bullet-topdeck">Topdeck</li>
+            <li class="bullet-underdeck">Underdeck</li>
+          </ul>
+          With those you can choose to either topdeck that card or to underdeck it after looking at it or revealing it.</br>
+          Default is that topdeck button or underdeck button is preselected for all cards depending on whether you chose
+          to activate the action from the top of a pile or from the bottom of a pile.</br>
           Click on the red cross to close the dialog.
         </p>
       </div>
