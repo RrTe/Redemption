@@ -1,3 +1,17 @@
+# Nachbarprojekte im Mono-Repo komplett ausblenden
+../Redemption Deck Editor/
+../TestStuff/
+../RedemptionMSETemplates/
+../RedemptionLandingPage/
+../Magic Simulator ChatGPT/
+../TestNetPlayJS/
+../Python/
+../Tools/
+
+# Blockiere die carddata.json standardmäßig komplett für das RAG-System
+shared/carddata.json
+**/carddata.json
+
 # Verzeichnisse, die die KI ignorieren soll
 node_modules/
 dist/
@@ -14,7 +28,7 @@ obj/
 *.dll
 *.pdb
 
-# Medien und Dokumente (spart massiv Kontext-Platz)
+# Medien und Dokumente
 client/public/assets/
 *.png
 *.jpg

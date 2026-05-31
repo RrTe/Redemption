@@ -100,8 +100,22 @@ export class TokenManager {
       possibleActions: possibleActions,
       onComplete: (result: any) => {
         this.scene.scene.stop("SelectionDialogScene");
-        if (result.selectedCardIds.length > 0 && result.actionId) {
-          this.launchQuantityDialog(result, tokenPreviews);
+
+        // Enrich result with action data (toZone, target)
+        const action = possibleActions.find(
+          (a) => a.actionId === result.actionId,
+        );
+        const enrichedResult = {
+          ...result,
+          toZone: result.toZone || action?.toZone,
+          target: result.target || action?.target,
+        };
+
+        if (
+          enrichedResult.selectedCards.length > 0 &&
+          enrichedResult.actionId
+        ) {
+          this.launchQuantityDialog(enrichedResult, tokenPreviews);
         } else {
           this.scene.scene.resume("CardGame");
         }
@@ -140,8 +154,11 @@ export class TokenManager {
     tokenPreviews: CardState[],
     count: number,
   ) {
-    selectionResult.selectedCardIds.forEach((selectedId: string) => {
+    selectionResult.selectedCards.forEach((selected: any) => {
+      // selected is { id: string, position: string }
+      const selectedId = typeof selected === "string" ? selected : selected.id;
       const selectedToken = tokenPreviews.find((t: any) => t.id === selectedId);
+
       if (selectedToken) {
         const opponentId = this.findOpponentId();
         const targetOwnerId =
