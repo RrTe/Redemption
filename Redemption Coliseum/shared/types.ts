@@ -13,6 +13,7 @@ export interface CardState extends CardData {
   isTapped: boolean;
   isFaceDown: boolean;
   isFlipped: boolean;
+  isToken: boolean; // ✨ NEU: Kennzeichnet temporäre Token-Karten
   notes: string;
   counters: MapSchema<number>;
   attachedTo: string | null; // ✨ NEU: ID der Karte, an die diese Karte angehängt ist

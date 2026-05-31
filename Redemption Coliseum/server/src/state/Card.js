@@ -33,6 +33,7 @@ class Card extends Schema {
     this.isFaceDown = false;
     this.isFlipped = false;
     this.notes = "";
+    this.isToken = false; // ✨ NEU: Initialisierung für Token-Karten
     this.zone = "";
     this.lastMoved = 0; // ✨ Neue Eigenschaft für den Zeitstempel
     this.x = 0;
@@ -68,6 +69,7 @@ type("string")(Card.prototype, "Testament");
 type("boolean")(Card.prototype, "isTapped");
 type("boolean")(Card.prototype, "isFaceDown");
 type("boolean")(Card.prototype, "isFlipped");
+type("boolean")(Card.prototype, "isToken"); // ✨ NEU: Schema-Definition für isToken
 type("string")(Card.prototype, "zone");
 type("string")(Card.prototype, "notes");
 type("number")(Card.prototype, "lastMoved"); // ✨ Schema-Typ deklarieren

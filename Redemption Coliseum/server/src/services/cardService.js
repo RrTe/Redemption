@@ -309,6 +309,13 @@ function _moveCardById(
     `[MOVE_BY_ID] Spliced card from '${from}'. fromArr length AFTER: ${actualFromArr.length}`,
   );
 
+  // ✨ NEU: Token werden vollständig aufgelöst, wenn sie in Discard oder Banish verschoben werden.
+  if (movedCard.isToken && (to === ZONES.DISCARD || to === ZONES.BANISH)) {
+    cardLookup.delete(cardId);
+    logger.info(`[TOKEN_DISSOLVE] Token '${movedCard.Name}' (${cardId}) was moved to ${to} and has been removed from the game state.`);
+    return;
+  }
+
   movedCard.zone = to;
   movedCard.lastMoved = Date.now();
   movedCard.controllerId = targetPlayer.sessionId;
