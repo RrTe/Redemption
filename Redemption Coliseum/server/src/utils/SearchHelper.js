@@ -50,9 +50,10 @@ class SearchHelper {
 
     player.searchContext.cards.clear();
     cards.forEach((card) => {
-      const cardClone = card.clone();
-      cardClone.controllerId = card.controllerId;
-      player.searchContext.cards.push(cardClone);
+      // ✨ FIX: Use original references instead of clones to maintain
+      // object identity and prevent state desync during Resolve.
+      // The reference itself is enough here.
+      player.searchContext.cards.push(card);
     });
 
     const pileId = this.generatePileId(originalOwnerId, zone);
@@ -64,7 +65,10 @@ class SearchHelper {
    * Resets the player status and search context.
    */
   static resetContext(player, roomState) {
-    const pileId = this.generatePileId(player.searchContext.originalOwnerId, player.searchContext.zone);
+    const pileId = this.generatePileId(
+      player.searchContext.originalOwnerId,
+      player.searchContext.zone,
+    );
     roomState.activeActionPiles.delete(pileId);
 
     player.status = "playing";
@@ -72,9 +76,9 @@ class SearchHelper {
     player.searchContext.zone = "";
     player.searchContext.originalOwnerId = "";
     player.searchContext.isInteractive = false;
-    
+
     if (roomState.actionTakerId === player.sessionId) {
-        roomState.actionTakerId = "";
+      roomState.actionTakerId = "";
     }
   }
 

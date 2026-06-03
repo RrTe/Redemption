@@ -53,7 +53,10 @@ class MatchService {
       client.send("chatHistory", room.chatHistory);
     }
 
-    if (room.clients.length === room.maxClients && room.readyClients.size === room.maxClients) {
+    if (
+      room.clients.length === room.maxClients &&
+      room.readyClients.size === room.maxClients
+    ) {
       if (!room.state.currentPhase) {
         room.clock.setTimeout(() => MatchService.initializeGame(room), 500);
       }
@@ -78,7 +81,9 @@ class MatchService {
     room.lock();
 
     room.clock.setTimeout(() => {
-      room.disconnect().catch((e) => logger.error("[MatchService] Disconnect error:", e));
+      room
+        .disconnect()
+        .catch((e) => logger.error("[MatchService] Disconnect error:", e));
     }, 5000);
   }
 
@@ -92,7 +97,7 @@ class MatchService {
         `[MatchService] Drawing starting hand for ${player.name} (${sessionId})`,
       );
 
-      const drawnCards = moveCard(
+      const result = moveCard(
         player,
         room.state,
         room.cardLookup,
@@ -102,15 +107,19 @@ class MatchService {
         STARTING_HAND_SIZE,
       );
 
-      if (drawnCards && drawnCards.length > 0) {
-        const cardIds = drawnCards.map((c) => c.id);
+      const movedCards = result.movedCards || [];
+
+      if (movedCards.length > 0) {
+        const cardIds = movedCards.map((c) => c.id);
+
         const client = room.clients.find((c) => c.sessionId === sessionId);
 
         if (client) {
           client.send("cardsDrawn", { cardIds });
         }
 
-        room.broadcastGameLog(`${player.name} draws starting hand.`);
+        // Correct log for initial game setup
+        room.broadcastGameLog(`${player.name} draws their starting hand.`);
       }
     } catch (err) {
       logger.error(
@@ -126,7 +135,9 @@ class MatchService {
    */
   static handleUpkeepPhase(room) {
     const activePlayerId = room.state.activePlayer;
-    logger.debug(`[MatchService] Processing Upkeep Phase for player ${activePlayerId}`);
+    logger.debug(
+      `[MatchService] Processing Upkeep Phase for player ${activePlayerId}`,
+    );
 
     for (const card of room.cardLookup.values()) {
       // Only reduce counters on cards controlled by the active player

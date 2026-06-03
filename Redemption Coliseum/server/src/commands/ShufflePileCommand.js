@@ -1,5 +1,6 @@
 const { BaseCommand } = require("./BaseCommand");
-const { shuffle } = require("../services/cardService");
+const { shuffle, getZoneDisplayName } = require("../services/cardService");
+const { ZONES } = require("../../../shared/zones");
 const logger = require("../utils/logger");
 
 class ShufflePileCommand extends BaseCommand {
@@ -15,7 +16,9 @@ class ShufflePileCommand extends BaseCommand {
           zone: zone,
           playerId: this.client.sessionId,
         });
-        this.room.broadcastGameLog(`${this.client.userData.playerName} shuffled ${zone}.`);
+        this.room.broadcastGameLog(
+          `${this.client.userData.playerName} shuffled their ${getZoneDisplayName(zone)}.`,
+        );
       }
     }
   }

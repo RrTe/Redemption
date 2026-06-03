@@ -10,10 +10,10 @@ class NextPhaseCommand extends BaseCommand {
     const player = this.state.players.get(this.client.sessionId);
     if (!player) return;
 
-    let drawnCards = [];
+    let result = null;
     try {
       // Delegate to phaseService (attached to room)
-      drawnCards = this.room.phaseService.advancePhase(
+      result = this.room.phaseService.advancePhase(
         this.state,
         player,
         this.room.clients,
@@ -25,14 +25,17 @@ class NextPhaseCommand extends BaseCommand {
         MatchService.handleUpkeepPhase(this.room);
       }
 
-      this._handlePhaseDraw(drawnCards, player);
+      if (result) {
+        this._handlePhaseDraw(result, player);
+      }
     } catch (err) {
       logger.error(`[NextPhaseCommand] Critical error:`, err);
     }
   }
 
-  _handlePhaseDraw(drawnCards, player) {
-    if (!drawnCards || drawnCards.length === 0) return;
+  _handlePhaseDraw(result, player) {
+    const movedCards = result.movedCards || [];
+    if (movedCards.length === 0) return;
 
     // Find client for the (potentially new) active player
     const receivingClient = this.room.clients.find(
@@ -41,14 +44,13 @@ class NextPhaseCommand extends BaseCommand {
 
     if (receivingClient) {
       receivingClient.send("cardsDrawn", {
-        cardIds: drawnCards.map((c) => c.id),
+        cardIds: movedCards.map((c) => c.id),
       });
     }
 
-    const pName = player.name || "Player";
-    this.room.broadcastGameLog(
-      `${pName} draws ${drawnCards.length} card(s) for turn.`,
-    );
+    if (result.logEntry) {
+      this.room.broadcastGameLog(result.logEntry);
+    }
   }
 }
 

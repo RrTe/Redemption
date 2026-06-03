@@ -220,6 +220,8 @@ export class SelectionDialogUIManager {
       const tx = startX + i * (cardWidth + 20);
       const card = new CardUI(this.scene, tx, this.scene.scale.height / 2, data, cardWidth, cardHeight);
       
+      // ✨ FIX: Disable standard drag-and-drop for cards inside the Selection Dialog
+      // This
       this.setupCardInteractivity(card, isInteractive, previewManager, (this.scene as any).room.sessionId, transitionHandler, () => onCardClicked(card));
       this.cardUIs.push(card);
 

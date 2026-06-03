@@ -1,5 +1,8 @@
 const { BaseCommand } = require("./BaseCommand");
-const { getZoneCollection } = require("../services/cardService");
+const {
+  getZoneCollection,
+  getZoneDisplayName,
+} = require("../services/cardService");
 const SearchHelper = require("../utils/SearchHelper");
 const logger = require("../utils/logger");
 
@@ -49,8 +52,10 @@ class RequestSearchPileCommand extends BaseCommand {
       actionTakerId: this.client.sessionId,
     });
 
-    logger.info(
-      `[RequestSearchPileCommand] Player ${this.client.sessionId} searching ${zone} of ${targetPlayer.sessionId}`,
+    const isOpponent = targetPlayer.sessionId !== this.client.sessionId;
+    const zoneName = getZoneDisplayName(zone, isOpponent);
+    this.room.broadcastGameLog(
+      `${this.client.userData.playerName} is searching ${zoneName}.`,
     );
 
     // Send result to the requesting client
@@ -62,6 +67,5 @@ class RequestSearchPileCommand extends BaseCommand {
     });
   }
 }
-
 
 module.exports = { RequestSearchPileCommand };

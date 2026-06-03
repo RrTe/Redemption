@@ -10,6 +10,23 @@ const { PlayerState } = require("../state/PlayerState");
 const util = require("util");
 
 /**
+ * Helper function for human-readable zone names in the log.
+ */
+function getZoneDisplayName(zone, isOpponent = false) {
+  const prefix = isOpponent ? "opponent's " : "their ";
+  
+  switch (zone) {
+    case ZONES.DECK: return prefix + "Deck";
+    case ZONES.HAND: return prefix + "Hand";
+    case ZONES.DISCARD: return prefix + "Discard Pile";
+    case ZONES.RESERVE: return prefix + "Reserve";
+    case ZONES.BANISH: return prefix + "Banish Zone";
+    case ZONES.TERRITORY: return prefix + "Territory";
+    default: return zone;
+  }
+}
+
+/**
  * Hilfsfunktion: Gibt die richtige Zone-Collection zurück.
  * Nutzt ZONES für konsistente Referenzen.
  */
@@ -157,14 +174,20 @@ function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
     return null;
   }
 
-  const fromArr = getZoneCollection(controller, state, fromZone);
+  // ✨ FIX: Use the actual current zone of the card if it doesn't match 'fromZone'
+  const actualZone = card.zone || fromZone || "unknown";
+  const fromArr = getZoneCollection(controller, state, actualZone);
   const cardIndex = fromArr.findIndex((c) => c.id === cardId);
 
   if (cardIndex === -1) {
     logger.warn(
-      `[FIND_CARD] Karte '${cardId}' wurde im State gefunden, aber nicht in der erwarteten Zone '${fromZone}' des Controllers '${card.controllerId}'. Aktuelle Zone: '${card.zone}'.`,
+      `[FIND_CARD_FAIL] Card '${cardId}' not found in its reported zone '${actualZone}'. State inconsistency detected.`,
     );
     return null;
+  }
+
+  if (actualZone !== fromZone) {
+    logger.debug(`[FIND_CARD_RECOVER] Card '${cardId}' found in '${actualZone}' instead of expected '${fromZone}'. Proceeding with actual zone.`);
   }
 
   return {
@@ -172,6 +195,7 @@ function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
     controller,
     fromArr,
     cardIndex,
+    actualZone,
     controllerId: card.controllerId,
   };
 }
@@ -235,6 +259,7 @@ function _moveCardById(
 ) {
   logger.debug(
     `[MOVE_BY_ID] Attempting to move card '${cardId}' from '${from}' to '${to}' by player '${actingPlayer.sessionId}'.`,
+    `[MOVE_BY_ID] Attempting to move card '${cardId}' from '${from}' to '${to}' by player '${actingPlayer.name}'.`,
   );
 
   // Lost Soul redirection logic - this needs to be here as it's specific to the card being moved
@@ -255,14 +280,13 @@ function _moveCardById(
   const findResult = _findCardAndOwner(cardLookup, state, cardId, from);
   if (!findResult) {
     logger.warn(
-      `[MOVE_BY_ID_FAIL] Keine Karte mit ID '${cardId}' in Zone '${from}' gefunden oder Controller-Info fehlt.`,
+      `[MOVE_BY_ID_FAIL] Card '${cardId}' not found in zone '${from}' or controller info missing.`,
     );
-    return;
+    return { movedCards: [], logEntry: "" };
   }
-  const { fromArr, controllerId, cardIndex, card } = findResult;
-  logger.debug(
-    `[MOVE_BY_ID] Card Controller determined via cardId: ${controllerId}`,
-  );
+  const { fromArr: actualFromArr, controllerId, cardIndex, card, actualZone: detectedZone } = findResult;
+
+  const effectiveFromZone = detectedZone || from || card.zone || "unknown";
 
   // ✨ FINALE KORREKTUR: Der Zielspieler MUSS aus den Coords ermittelt werden, wenn vorhanden.
   // `actingPlayer` ist nur der Fallback, wenn kein Ziel angegeben ist (z.B. Karte auf sich selbst ziehen).
@@ -271,17 +295,30 @@ function _moveCardById(
     ? state.players.get(targetPlayerIdFromCoords)
     : actingPlayer;
 
+  // ✨ FIX: Prevent moving the card if it's already in the target zone to avoid 
+  // index corruption and double-move side effects.
+  if (effectiveFromZone === to && card.controllerId === targetPlayer?.sessionId) {
+    logger.debug(`[MOVE_SKIP] Card '${card.id}' is already in target zone '${to}'. Skipping.`);
+    // ✨ FIX: Even if skip, ensure visibility is correct for the zone.
+    if (to === ZONES.HAND || to === ZONES.TERRITORY) {
+      card.isFaceUp = true;
+    }
+    return { movedCards: [card], logEntry: "" };
+  }
+
+  logger.debug(
+    `[MOVE_BY_ID] Card Controller determined via cardId: ${controllerId}`,
+    `[MOVE_STATE] Card: ${card.Name}, FaceUp: ${card.isFaceUp}, Zone: ${effectiveFromZone}`
+  );
+
   if (!targetPlayer) {
     logger.error(
       `[MOVE_BY_ID_FATAL] Critical error: targetPlayer could not be determined. ID from Coords: '${targetPlayerIdFromCoords}', Fallback player: '${actingPlayer?.sessionId}'`,
     );
-    return;
+    return { movedCards: [], logEntry: "" };
   }
-  // ✨ ENDE DER KORREKTUR
 
-  logger.debug(
-    `[MOVE_BY_ID] moveCard determined targetPlayer: ${targetPlayer.sessionId}`,
-  );
+  logger.debug(`[MOVE_BY_ID] moveCard determined targetPlayer: ${targetPlayer.sessionId}`);
   if (
     !_validateMove(card, state, controllerId, targetPlayer.sessionId, from, to)
   ) {
@@ -289,7 +326,7 @@ function _moveCardById(
     logger.warn(
       `[MOVE_BY_ID_FAIL] Move validation failed for card '${cardId}' from ${from} to ${to}.`,
     );
-    return;
+    return { movedCards: [], logEntry: "" };
   }
 
   const pileController = state.players.get(controllerId);
@@ -297,28 +334,31 @@ function _moveCardById(
     logger.error(
       `[MOVE_BY_ID_FATAL] Pile controller with ID '${controllerId}' not found in state. Aborting move.`,
     );
-    return;
+    return { movedCards: [], logEntry: "" };
   }
-  const actualFromArr = getZoneCollection(pileController, state, from);
 
   logger.debug(
-    `[MOVE_BY_ID] About to splice card from '${from}'. fromArr length BEFORE: ${actualFromArr.length}`,
+    `[MOVE_BY_ID] About to splice card from '${effectiveFromZone}'. fromArr length BEFORE: ${actualFromArr.length}`,
   );
   const [movedCard] = actualFromArr.splice(cardIndex, 1);
   logger.debug(
-    `[MOVE_BY_ID] Spliced card from '${from}'. fromArr length AFTER: ${actualFromArr.length}`,
+    `[MOVE_BY_ID] Spliced card from '${effectiveFromZone}'. fromArr length AFTER: ${actualFromArr.length}`,
   );
 
   // ✨ NEU: Token werden vollständig aufgelöst, wenn sie in Discard oder Banish verschoben werden.
   if (movedCard.isToken && (to === ZONES.DISCARD || to === ZONES.BANISH)) {
     cardLookup.delete(cardId);
-    logger.info(`[TOKEN_DISSOLVE] Token '${movedCard.Name}' (${cardId}) was moved to ${to} and has been removed from the game state.`);
-    return;
+    return { movedCards: [movedCard], logEntry: `${actingPlayer.name} dissolves token [${movedCard.Name}].` };
   }
 
   movedCard.zone = to;
   movedCard.lastMoved = Date.now();
   movedCard.controllerId = targetPlayer.sessionId;
+  
+  // ✨ FIX: Cards moved to Hand or Territory must be visible to the controller/owner.
+  if (to === ZONES.HAND || to === ZONES.TERRITORY) {
+    movedCard.isFaceUp = true;
+  }
   movedCard.counters.clear(); // ✨ NEU: Counter löschen bei Zonenwechsel
 
   if (coords) {
@@ -337,6 +377,20 @@ function _moveCardById(
     toArr.push(movedCard);
   }
 
+  let logEntry = "";
+  // Special logging for Lost Souls being redirected
+  if (cardForCheck && cardForCheck.Type === CARD_TYPES.LOST_SOUL && (to === ZONES.LAND_OF_BONDAGE || to === ZONES.TERRITORY)) {
+      logEntry = `${actingPlayer.name} moves [${movedCard.Name}] to ${getZoneDisplayName(to, false)}. (Lost Soul rule)`;
+  } else {
+      const isFromOpponent = movedCard.originalOwnerId !== actingPlayer.sessionId;
+      const isToOpponent = targetPlayer.sessionId !== actingPlayer.sessionId;
+      logEntry = `${actingPlayer.name} moves [${movedCard.Name}] from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${getZoneDisplayName(to, isToOpponent)}.`;
+  }
+
+
+
+  
+
   // ✨ FIX: Nutze util.inspect innerhalb eines Template-Literals, um die Ausgabe zu erzwingen
   const cardLog = util.inspect(
     {
@@ -351,6 +405,7 @@ function _moveCardById(
   );
 
   logger.debug(`[MOVE_BY_ID] SUCCESS: ${cardLog}`);
+  return { movedCards: [movedCard], logEntry: logEntry };
 }
 
 /**
@@ -382,16 +437,20 @@ function _drawCardsFromDeck(
       card.zone = to;
       card.lastMoved = Date.now();
       card.counters.clear(); // ✨ NEU: Counter löschen bei Zonenwechsel
+      if (to === ZONES.HAND || to === ZONES.TERRITORY) {
+        card.isFaceUp = true;
+      }
       // Controller remains the same as the player drawing
     }
     toArr.push(...validCards);
     logger.debug(
       `[DRAW_FROM_DECK] Moved ${validCards.length} valid card(s) to ${to}.`,
+      `[DRAW_FROM_DECK] ${player.name} moved ${validCards.length} card(s) to ${to}.`,
     );
   }
 
-  // ✨ NEU: Gib die gezogenen Karten zurück, damit der GameRoom darauf reagieren kann.
-  return validCards;
+  const logEntry = `${player.name} draws ${validCards.length} card(s) from ${getZoneDisplayName(ZONES.DECK)}.`;
+  return { movedCards: validCards, logEntry: logEntry };
 }
 
 /**
@@ -417,30 +476,28 @@ function moveCard(
   coords = {}, // ✨ FIX: Standardwert von null auf {} geändert, damit coords?.position funktioniert
 ) {
   logger.debug(
-    `[moveCard_DISPATCHER] Entered moveCard with player.sessionId=${player?.sessionId}, from=${from}, to=${to}, cardIdOrIndex=${cardIdOrIndex}, count=${count}, coords=`,
+    `[moveCard_DISPATCHER] Entered moveCard for player ${player?.sessionId}, from ${from} to ${to}, cardIdOrIndex ${cardIdOrIndex}, count ${count}, coords `,
     coords,
   );
   if (!player) {
     logger.error(
-      "[moveCard_DISPATCHER_ERROR] moveCard wurde ohne gültiges player-Objekt aufgerufen.",
+      "[moveCard_DISPATCHER_ERROR] moveCard called without valid player object.",
     );
-    return;
+    return { movedCards: [], logEntry: "" };
   }
 
-  // ✨ FINALE KORREKTUR: Die Dispatcher-Logik muss zwischen "Ziehen" und "Suchen" unterscheiden.
-  // Fall A: "Ziehen" vom Deck. Dies wird durch einen numerischen Index identifiziert.
+  // Distinguish between drawing from deck (by index/count) and moving a specific card (by ID)
   if (from === ZONES.DECK && typeof cardIdOrIndex === "number") {
     return _drawCardsFromDeck(player, state, cardLookup, to, count, coords);
   }
-  // Fall B: Bewegen einer spezifischen Karte per ID. Dies gilt für Züge von der Hand,
-  // aus dem Territorium, UND für das Ergebnis einer Suche (auch aus dem Deck).
+  // Moving a specific card by its ID
   else if (typeof cardIdOrIndex === "string") {
-    _moveCardById(player, state, cardLookup, from, to, cardIdOrIndex, coords);
-    return []; // Kein Kartenziehen, also leeres Array zurückgeben.
+    return _moveCardById(player, state, cardLookup, from, to, cardIdOrIndex, coords);
   } else {
     logger.error(
-      `[moveCard_DISPATCHER_ERROR] Ungültiger Aufruf von moveCard. 'from' Zone ist nicht DECK, aber 'cardIdOrIndex' ist keine string ID. from=${from}, cardIdOrIndex=${cardIdOrIndex}`,
+      `[moveCard_DISPATCHER_ERROR] Invalid moveCard call. 'from' zone is not DECK and 'cardIdOrIndex' is not a string ID. from=${from}, cardIdOrIndex=${cardIdOrIndex}`,
     );
+    return { movedCards: [], logEntry: "" };
   }
 }
 
@@ -479,4 +536,5 @@ module.exports = {
   getZoneCollection,
   shuffle,
   findCardById,
+  getZoneDisplayName
 };

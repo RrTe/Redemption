@@ -1,5 +1,8 @@
 const { BaseCommand } = require("./BaseCommand");
-const { getZoneCollection } = require("../services/cardService");
+const {
+  getZoneCollection,
+  getZoneDisplayName,
+} = require("../services/cardService");
 const SearchHelper = require("../utils/SearchHelper");
 const logger = require("../utils/logger");
 
@@ -42,8 +45,10 @@ class RequestLookAtCardsCommand extends BaseCommand {
       actionTakerId: this.client.sessionId,
     });
 
-    logger.info(
-      `[RequestLookAtCardsCommand] ${this.client.sessionId} looking at ${count} from ${zone}`,
+    const isOpponent = targetPlayer.sessionId !== this.client.sessionId;
+    const zoneName = getZoneDisplayName(zone, isOpponent);
+    this.room.broadcastGameLog(
+      `${this.client.userData.playerName} looks at the ${position} ${count} card(s) of ${zoneName}.`,
     );
 
     this.client.send("presentPileSearchResult", {
@@ -55,6 +60,5 @@ class RequestLookAtCardsCommand extends BaseCommand {
     });
   }
 }
-
 
 module.exports = { RequestLookAtCardsCommand };

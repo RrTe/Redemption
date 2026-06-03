@@ -44,8 +44,17 @@ class ResolveSearchPileCommand extends BaseCommand {
 
     // Perform moves via cardService
     for (const selection of validSelectedCards) {
+      // ✨ FIX: Check if card is still in the fromZone before moving.
+      const cardInstance = this.room.cardLookup.get(selection.id);
+      if (!cardInstance || cardInstance.zone !== fromZone) {
+        logger.warn(
+          `[ResolveSearchPileCommand] Skipping card ${selection.id}: Not in zone ${fromZone} (actually in ${cardInstance?.zone})`,
+        );
+        continue;
+      }
+
       moveCard(
-        originalOwner,
+        player, // ✨ FIX: The player performing the resolution is the acting player
         this.state,
         this.room.cardLookup,
         fromZone,
@@ -58,17 +67,28 @@ class ResolveSearchPileCommand extends BaseCommand {
 
     // ✨ NEU: Verarbeite verbleibende/nicht-ausgewählte Karten für Look oder Reveal (wenn fromZone das Deck ist)
     const activeRemaining = remainingPositions || [];
-    if (fromZone === ZONES.DECK && !wasInteractive && activeRemaining.length > 0) {
-      const positionMap = new Map(activeRemaining.map((cp) => [cp.id, cp.position]));
+    if (
+      fromZone === ZONES.DECK &&
+      !wasInteractive &&
+      activeRemaining.length > 0
+    ) {
+      const positionMap = new Map(
+        activeRemaining.map((cp) => [cp.id, cp.position]),
+      );
 
       // Wir holen alle Karten aus dem Kontext, die NICHT ausgewählt wurden
       const unselectedCards = context.cards.filter(
-        (c) => !validSelectedCards.some((s) => s.id === c.id)
+        (c) => !validSelectedCards.some((s) => s.id === c.id),
       );
 
       // Zuerst "bottom" Karten ans Ende des Decks verschieben
-      const bottomCards = unselectedCards.filter((c) => positionMap.get(c.id) === "bottom");
+      const bottomCards = unselectedCards.filter(
+        (c) => positionMap.get(c.id) === "bottom",
+      );
       for (const card of bottomCards) {
+        // ✨ FIX: Only move back if still perceived as being in deck-look context
+        if (card.zone !== fromZone) continue;
+
         moveCard(
           originalOwner,
           this.state,
@@ -82,8 +102,12 @@ class ResolveSearchPileCommand extends BaseCommand {
       }
 
       // Dann "top" Karten in umgekehrter Reihenfolge wieder an den Anfang schieben
-      const topCards = unselectedCards.filter((c) => positionMap.get(c.id) !== "bottom");
+      const topCards = unselectedCards.filter(
+        (c) => positionMap.get(c.id) !== "bottom",
+      );
       for (const card of [...topCards].reverse()) {
+        if (card.zone !== fromZone) continue;
+
         moveCard(
           originalOwner,
           this.state,
@@ -96,7 +120,6 @@ class ResolveSearchPileCommand extends BaseCommand {
         );
       }
     }
-
 
     // Optional: Shuffle deck after interactive search
     if (fromZone === ZONES.DECK && wasInteractive) {
