@@ -50,6 +50,7 @@ export class ChatManager {
     // Wir positionieren es bei x=150 (Mitte von 300px Breite), damit es im Container von 0 bis 300 reicht.
     this.chatBackground = this.scene.add.image(150, height / 2, "chat_bg"); // ✨ FIX: Eigenes Bild nutzen
     this.chatBackground.setDisplaySize(300, height - 40); // Strecken
+    this.chatBackground.setInteractive(); // ✨ FIX: "Schluckt" alle Klicks auf den Hintergrund, damit sie nicht durchfallen
     this.container.add(this.chatBackground);
 
     // 3. Inhalt (DOM)
@@ -94,6 +95,16 @@ export class ChatManager {
     `);
 
     // Input-Listener
+    const wrapper = this.chatDOM.getChildByID("chat-wrapper") as HTMLElement;
+    if (wrapper) {
+      // ✨ FIX: Verhindere, dass Klicks durch das DOM-Element an Phaser weitergereicht werden
+      wrapper.addEventListener("mousedown", (e) => e.stopPropagation());
+      wrapper.addEventListener("pointerdown", (e) => e.stopPropagation());
+      wrapper.addEventListener("touchstart", (e) => e.stopPropagation());
+      wrapper.addEventListener("click", (e) => e.stopPropagation());
+      wrapper.addEventListener("wheel", (e) => e.stopPropagation()); // Auch Scrollen abfangen
+    }
+
     const input = this.chatDOM.getChildByID("chat-input") as HTMLInputElement;
     if (input) {
       input.addEventListener("keydown", (e) => {
@@ -103,6 +114,11 @@ export class ChatManager {
         }
         e.stopPropagation(); // Verhindert, dass Phaser Tastendrücke abfängt
       });
+      // Sicherstellen, dass auch direkt auf dem Input keine Events durchfallen
+      input.addEventListener("mousedown", (e) => e.stopPropagation());
+      input.addEventListener("pointerdown", (e) => e.stopPropagation());
+      input.addEventListener("touchstart", (e) => e.stopPropagation());
+      input.addEventListener("click", (e) => e.stopPropagation());
     }
 
     this.container.add(this.chatDOM);

@@ -396,21 +396,22 @@ export function calculateLayout(
   // ✨ FIX: Linksbündig mit den Spieler-Infos und 5px nach unten verschoben.
   const concedeButtonWidth = 80; // Breite des Buttons aus ElementManager.ts
   const concedeButton = {
-      x: EDGE_MARGIN + concedeButtonWidth / 2,
-      y: nextPhaseButton.y // Gleiche Y-Position wie der Next-Phase-Button
+    x: EDGE_MARGIN + concedeButtonWidth / 2,
+    y: nextPhaseButton.y, // Gleiche Y-Position wie der Next-Phase-Button
   };
 
   // --- Right Side Buttons (Settings & Save) ---
   // ✨ FIX: Zentriert zwischen Phasen-Leiste (oben) und eigenem Land of Redemption (unten).
-  
+
   // Unterkante der Phasenleiste
   const phaseBarBottom = phaseBar.y + phaseBar.height / 2;
   // Oberkante des eigenen Land of Redemption (oberster Stapel rechts)
   const playerLoRTop = playerLandOfRedemptionPile.y - pileHeight / 2;
-  
+
   // Verfügbarer Raum und Mitte
   // ✨ EINSTELLUNG: Y-Position Rechts (Settings/Save). +60 schiebt sie weiter nach unten.
-  const rightButtonsCenterY = phaseBarBottom + (playerLoRTop - phaseBarBottom) / 2 + 30;
+  const rightButtonsCenterY =
+    phaseBarBottom + (playerLoRTop - phaseBarBottom) / 2 + 30;
 
   const settingsButton = {
     hiddenX: width + 12,
@@ -431,20 +432,21 @@ export function calculateLayout(
   // --- Left Side Buttons (Chat & Help) ---
   // ✨ NEU: Symmetrische Ausrichtung auf der linken Seite.
   // Zentriert zwischen dem untersten Gegner-Stapel (Land of Redemption) und der Player-Info.
-  
+
   // opponentLandOfRedemptionPile ist das unterste Element der Gegner-Piles (oben links).
   const opponentLoRBottom = opponentLandOfRedemptionPile.y + pileHeight / 2;
   const playerInfoTop = playerInfo.y; // Text-Origin ist oben links
-  
+
   // ✨ EINSTELLUNG: Y-Position Links (Chat/Hilfe). +60 schiebt sie weiter nach unten.
-  const leftButtonsCenterY = opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 + 30;
+  const leftButtonsCenterY =
+    opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 + 30;
 
   const chatButton = {
-      hiddenX: -12, // Fast ganz links versteckt (Mitte bei -12, Breite 48 -> 12px sichtbar)
-      visibleX: 24, // ✨ FIX: Weniger weit ausfahren (war 36)
-      y: leftButtonsCenterY - buttonSpacing / 2 // Oben in der Gruppe
+    hiddenX: -12, // Fast ganz links versteckt (Mitte bei -12, Breite 48 -> 12px sichtbar)
+    visibleX: 324, // ✨ FIX: Fährt mit dem Chat-Panel aus (300px Panel + 12px Offset)
+    y: leftButtonsCenterY - buttonSpacing / 2, // Oben in der Gruppe
   };
-  
+
   // Help Button übernimmt die Position unter dem Chat Button
   helpButton.hiddenX = -12;
   helpButton.visibleX = 24; // ✨ FIX: Weniger weit ausfahren (war 36)
