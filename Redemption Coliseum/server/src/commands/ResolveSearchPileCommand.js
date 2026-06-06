@@ -43,25 +43,46 @@ class ResolveSearchPileCommand extends BaseCommand {
     }
 
     // Perform moves via cardService
-    for (const selection of validSelectedCards) {
-      // ✨ FIX: Check if card is still in the fromZone before moving.
-      const cardInstance = this.room.cardLookup.get(selection.id);
-      if (!cardInstance || cardInstance.zone !== fromZone) {
-        logger.warn(
-          `[ResolveSearchPileCommand] Skipping card ${selection.id}: Not in zone ${fromZone} (actually in ${cardInstance?.zone})`,
-        );
-        continue;
-      }
+    const cardsMovedToHand = [];
 
-      moveCard(
-        player, // ✨ FIX: The player performing the resolution is the acting player
-        this.state,
-        this.room.cardLookup,
-        fromZone,
-        toZone,
-        selection.id,
-        1,
-        { ...coords, position: selection.position },
+    const traceId = Math.random().toString(36).substring(7);
+    logger.debug(`[TRACE][${traceId}][S1] ResolveSearchPile START. Selected: ${validSelectedCards.length}`);
+
+    validSelectedCards.forEach((selection, index) => {
+        logger.debug(`[TRACE][${traceId}][S2] Moving selected card ${selection.id} to ${toZone}`);
+        const result = moveCard(
+            player,
+            this.state,
+            this.room.cardLookup,
+            fromZone,
+            toZone,
+            selection.id,
+            1,
+            { ...coords, position: selection.position },
+        );
+
+        const cardInstance = this.room.cardLookup.get(selection.id);
+        const success = result.movedCards.length > 0;
+
+        // ✨ FIX: Remove from searchContext immediately to prevent double-referencing
+        const ctxIdx = context.cards.findIndex(c => c.id === selection.id);
+        if (ctxIdx !== -1) context.cards.splice(ctxIdx, 1);
+
+        logger.debug(`[TRACE][${traceId}][S3] Card ${selection.id} result: Success=${success}, Zone=${cardInstance?.zone}`);
+
+        if (toZone === ZONES.HAND && success) {
+            cardsMovedToHand.push(...result.movedCards);
+        }
+    });
+
+    // Log für Auswahl aus Dialog (Zuerst anzeigen)
+    if (validSelectedCards && validSelectedCards.length > 0) {
+      const cardNames = validSelectedCards.map((s) => {
+        const c = this.room.cardLookup.get(s.id);
+        return c ? c.Name : "Unknown";
+      });
+      this.room.broadcastGameLog(
+        `${this.client.userData.playerName} selected ${cardNames.join(", ")} from ${fromZone} and moved to ${toZone}.`,
       );
     }
 
@@ -119,6 +140,11 @@ class ResolveSearchPileCommand extends BaseCommand {
           { position: "top" },
         );
       }
+
+      // Log unselected cards placement (innerhalb des Scopes von topCards/bottomCards)
+      this.room.broadcastGameLog(
+        `${player.name} placed ${topCards.length} card(s) on top and ${bottomCards.length} card(s) at the bottom of the deck.`,
+      );
     }
 
     // Optional: Shuffle deck after interactive search
@@ -134,17 +160,6 @@ class ResolveSearchPileCommand extends BaseCommand {
         playerId: originalOwnerId,
       });
       this.room.broadcastGameLog(`${originalOwner.name}'s deck was shuffled.`);
-    }
-
-    // Log für Auswahl aus Dialog
-    if (validSelectedCards && validSelectedCards.length > 0) {
-      const cardNames = validSelectedCards.map((s) => {
-        const c = this.room.cardLookup.get(s.id);
-        return c ? c.Name : "Unknown";
-      });
-      this.room.broadcastGameLog(
-        `${this.client.userData.playerName} selected ${cardNames.join(", ")} from ${fromZone} and moved to ${toZone}.`,
-      );
     }
 
     // ✨ FIX: Stapel-Sperre aufheben! Entferne alle Einträge dieses Spielers aus activeActionPiles

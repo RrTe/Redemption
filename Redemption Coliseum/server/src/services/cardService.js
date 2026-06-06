@@ -208,27 +208,28 @@ function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
  * @param {number} count - Die Anzahl der zu ziehenden "gültigen" Karten.
  * @returns {Card[]} Ein Array der "gültigen" Karten, die in die Zielzone (z.B. Hand) gelegt werden sollen.
  */
-function _drawCardsWithLostSoulRule(player, state, count) {
+function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
   const deck = getZoneCollection(player, state, ZONES.DECK);
   const landOfBondage = getZoneCollection(player, state, ZONES.LAND_OF_BONDAGE);
   const validCards = [];
   let drawnCount = 0;
 
   while (drawnCount < count && deck.length > 0) {
-    const card = deck.shift(); // Nimm eine Karte vom Deck
+    const shiftedCard = deck.shift();
+    const card = shiftedCard.clone();
+    
+    // ✨ WICHTIG: cardLookup auf die geklonte Instanz aktualisieren
+    if (cardLookup) cardLookup.set(card.id, card);
 
     if (card.Type === CARD_TYPES.LOST_SOUL) {
-      // Fall A: Es ist eine Lost Soul -> umleiten
       logger.debug(
         `[LOST_SOUL_RULE] Lost Soul '${card.Name}' vom Deck gezogen. Wird nach ${ZONES.LAND_OF_BONDAGE} umgeleitet.`,
       );
       card.zone = ZONES.LAND_OF_BONDAGE;
       card.lastMoved = Date.now();
-      card.counters.clear(); // ✨ NEU: Counter löschen bei Zonenwechsel
+      card.counters.clear();
       landOfBondage.push(card);
-      // drawnCount wird NICHT erhöht, damit eine Ersatzkarte gezogen wird.
     } else {
-      // Fall B: Normale Karte -> sammeln
       validCards.push(card);
       drawnCount++;
     }
@@ -297,7 +298,9 @@ function _moveCardById(
 
   // ✨ FIX: Prevent moving the card if it's already in the target zone to avoid 
   // index corruption and double-move side effects.
-  if (effectiveFromZone === to && card.controllerId === targetPlayer?.sessionId) {
+  // EXCEPT when reordering within the same zone (e.g. Look/Reveal top/bottom placement).
+  const isReordering = effectiveFromZone === to && (coords?.position === "top" || coords?.position === "bottom");
+  if (effectiveFromZone === to && card.controllerId === targetPlayer?.sessionId && !isReordering) {
     logger.debug(`[MOVE_SKIP] Card '${card.id}' is already in target zone '${to}'. Skipping.`);
     // ✨ FIX: Even if skip, ensure visibility is correct for the zone.
     if (to === ZONES.HAND || to === ZONES.TERRITORY) {
@@ -337,12 +340,28 @@ function _moveCardById(
     return { movedCards: [], logEntry: "" };
   }
 
+  // ✨ ATOMIC SYNC FIX: Update properties BEFORE splicing/pushing
+  // This ensures the object carries the correct metadata when collection observers fire.
+  card.zone = to;
+  card.lastMoved = Date.now();
+  card.controllerId = targetPlayer.sessionId;
+  if (to === ZONES.HAND || to === ZONES.TERRITORY) {
+    card.isFaceUp = true;
+  }
+  card.counters.clear();
+  logger.debug(`[MOVE_ATOMIC] Updated properties for ${card.id}: zone=${card.zone}, isFaceUp=${card.isFaceUp}`);
+
   logger.debug(
-    `[MOVE_BY_ID] About to splice card from '${effectiveFromZone}'. fromArr length BEFORE: ${actualFromArr.length}`,
+    `[MOVE_BY_ID] SPLICING: Card '${cardId}' at index ${cardIndex} from '${effectiveFromZone}'. Array length BEFORE: ${actualFromArr.length}`,
   );
-  const [movedCard] = actualFromArr.splice(cardIndex, 1);
+  const [splicedCard] = actualFromArr.splice(cardIndex, 1);
+  // ✨ CLONE FIX: Colyseus kann Race Conditions erzeugen, wenn dieselbe Referenz in ein 
+  // anderes Array verschoben wird (onAdd feuert vor Property-Sync). Wir klonen die Karte.
+  const movedCard = splicedCard.clone();
+  cardLookup.set(cardId, movedCard); // WICHTIG: Lookup-Map auf die neue Instanz aktualisieren!
+  
   logger.debug(
-    `[MOVE_BY_ID] Spliced card from '${effectiveFromZone}'. fromArr length AFTER: ${actualFromArr.length}`,
+    `[MOVE_BY_ID] SPLICED & CLONED: Array '${effectiveFromZone}' length AFTER: ${actualFromArr.length}`,
   );
 
   // ✨ NEU: Token werden vollständig aufgelöst, wenn sie in Discard oder Banish verschoben werden.
@@ -350,16 +369,6 @@ function _moveCardById(
     cardLookup.delete(cardId);
     return { movedCards: [movedCard], logEntry: `${actingPlayer.name} dissolves token [${movedCard.Name}].` };
   }
-
-  movedCard.zone = to;
-  movedCard.lastMoved = Date.now();
-  movedCard.controllerId = targetPlayer.sessionId;
-  
-  // ✨ FIX: Cards moved to Hand or Territory must be visible to the controller/owner.
-  if (to === ZONES.HAND || to === ZONES.TERRITORY) {
-    movedCard.isFaceUp = true;
-  }
-  movedCard.counters.clear(); // ✨ NEU: Counter löschen bei Zonenwechsel
 
   if (coords) {
     movedCard.x = coords.x;
@@ -370,10 +379,13 @@ function _moveCardById(
   const position = coords?.position;
 
   if (to === ZONES.DECK && position === "bottom") {
+    logger.debug(`[MOVE_BY_ID] PUSHING to bottom of ${to}.`);
     toArr.push(movedCard);
   } else if (to === ZONES.DECK) {
+    logger.debug(`[MOVE_BY_ID] UNSHIFTING to top of ${to}.`);
     toArr.unshift(movedCard);
   } else {
+    logger.debug(`[MOVE_BY_ID] PUSHING to ${to}. New length: ${toArr.length + 1}`);
     toArr.push(movedCard);
   }
 
@@ -382,7 +394,7 @@ function _moveCardById(
   if (cardForCheck && cardForCheck.Type === CARD_TYPES.LOST_SOUL && (to === ZONES.LAND_OF_BONDAGE || to === ZONES.TERRITORY)) {
       logEntry = `${actingPlayer.name} moves [${movedCard.Name}] to ${getZoneDisplayName(to, false)}. (Lost Soul rule)`;
   } else {
-      const isFromOpponent = movedCard.originalOwnerId !== actingPlayer.sessionId;
+      const isFromOpponent = controllerId !== actingPlayer.sessionId;
       const isToOpponent = targetPlayer.sessionId !== actingPlayer.sessionId;
       logEntry = `${actingPlayer.name} moves [${movedCard.Name}] from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${getZoneDisplayName(to, isToOpponent)}.`;
   }
@@ -429,7 +441,7 @@ function _drawCardsFromDeck(
   logger.debug(
     `[DRAW_FROM_DECK] Player '${player.sessionId}' drawing ${count} cards to '${to}'.`,
   );
-  const validCards = _drawCardsWithLostSoulRule(player, state, count);
+  const validCards = _drawCardsWithLostSoulRule(player, state, count, cardLookup);
 
   if (validCards.length > 0) {
     const toArr = getZoneCollection(player, state, to);

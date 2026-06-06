@@ -31,6 +31,7 @@ class Card extends Schema {
     this.Testament = "";
     this.isTapped = false;
     this.isFaceDown = false;
+    this.isFaceUp = false;
     this.isFlipped = false;
     this.notes = "";
     this.isToken = false; // ✨ NEU: Initialisierung für Token-Karten
@@ -68,6 +69,7 @@ type("boolean")(Card.prototype, "IsGospel");
 type("string")(Card.prototype, "Testament");
 type("boolean")(Card.prototype, "isTapped");
 type("boolean")(Card.prototype, "isFaceDown");
+type("boolean")(Card.prototype, "isFaceUp");
 type("boolean")(Card.prototype, "isFlipped");
 type("boolean")(Card.prototype, "isToken"); // ✨ NEU: Schema-Definition für isToken
 type("string")(Card.prototype, "zone");

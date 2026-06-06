@@ -118,6 +118,33 @@ export class GameEventCoordinator {
             }),
           ),
         );
+
+        // ✨ NEU: Client-seitiges Debugging für Colyseus ArraySchema Änderungen
+        // Diese Logs zeigen, ob Colyseus die Kartenbewegungen im State-Modell registriert.
+        this.stateListeners.push(
+          this.$(player).hand.onAdd((card) => {
+            console.log(`[CLIENT-SYNC][IMMEDIATE] Hand ADDED: ${card.id}, Zone: ${card.zone}, FaceUp: ${card.isFaceUp}`);
+            // ✨ DEFERRED CHECK: Prüfe den State nach dem aktuellen Tick
+            queueMicrotask(() => {
+               console.log(`[CLIENT-SYNC][DEFERRED]  Hand STATE: ${card.id}, Zone: ${card.zone}, FaceUp: ${card.isFaceUp}`);
+            });
+          }),
+        );
+        this.stateListeners.push(
+          this.$(player).hand.onRemove((card) => {
+            console.log(`[CLIENT-SYNC][Colyseus] Player ${sessionId} Hand REMOVED: ${card.id} (${card.Name}), Zone: ${card.zone}, FaceUp: ${card.isFaceUp}`);
+          }),
+        );
+        this.stateListeners.push(
+          this.$(player).deck.onAdd((card) => {
+            console.log(`[CLIENT-SYNC][Colyseus] Player ${sessionId} Deck ADDED: ${card.id} (${card.Name}), Zone: ${card.zone}, FaceUp: ${card.isFaceUp}`);
+          }),
+        );
+        this.stateListeners.push(
+          this.$(player).deck.onRemove((card) => {
+            console.log(`[CLIENT-SYNC][Colyseus] Player ${sessionId} Deck REMOVED: ${card.id} (${card.Name}), Zone: ${card.zone}, FaceUp: ${card.isFaceUp}`);
+          }),
+        );
       }, true),
     );
 

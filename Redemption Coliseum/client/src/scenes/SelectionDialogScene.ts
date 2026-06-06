@@ -119,6 +119,7 @@ export class SelectionDialogScene extends Phaser.Scene {
     zone: Zone,
     target: "me" | "opponent",
     isOpponent: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ) {
     this.soundManager.playSound("UI_TOGGLE");
     let actionId =
@@ -127,6 +128,11 @@ export class SelectionDialogScene extends Phaser.Scene {
           a.toZone === zone &&
           (a.target === target || (!a.target && !isOpponent)),
       )?.actionId ?? "custom_selection";
+
+    console.log(
+      "[CLIENT DEBUG][SelectionDialogScene] handleZoneButtonClick - Sending to server:",
+      { selectedCards: Array.from(this.selectedCards), remainingPositions: this.paginationManager.getRemainingCardPositions(this.selectedCards, this.cardPositions), toZone: zone, target: target }
+    );
 
     this.dialogData.onComplete({
       actionId,
@@ -274,6 +280,11 @@ export class SelectionDialogScene extends Phaser.Scene {
       this.dialogData.possibleActions,
     );
   }
+
+  private logCardState(card: CardUI, action: string) {
+    console.log(`[CLIENT DEBUG][SelectionDialogScene] Card ${action}: ID=${card.cardData.id}, Name=${card.cardData.Name}, Zone=${card.cardData.zone}, isFaceUp=${card.cardData.isFaceUp}`);
+  }
+
 
   public closeDialog(silent = false) {
     const remaining = this.paginationManager.getRemainingCardPositions(

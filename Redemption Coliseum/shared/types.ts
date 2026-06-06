@@ -12,6 +12,7 @@ export interface CardState extends CardData {
   lastMoved: number;
   isTapped: boolean;
   isFaceDown: boolean;
+  isFaceUp: boolean; // ✨ FIX: Hinzugefügt, da es im Server-Schema existiert
   isFlipped: boolean;
   isToken: boolean; // ✨ NEU: Kennzeichnet temporäre Token-Karten
   notes: string;
