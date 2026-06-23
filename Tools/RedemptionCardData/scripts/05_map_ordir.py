@@ -33,6 +33,7 @@ with CONFIG_FILE.open("r", encoding="utf-8") as cf:
 ORDIR_RAW_FILE = BASE_DIR / config["ordir_extracted_raw"]
 EXTENDED_CARDS = BASE_DIR / config["cards_file"]
 OUT_FILE = BASE_DIR / config["cards_extended_with_ordir_fuzzy"]
+OUT_FILE_MIN = BASE_DIR / config["cards_extended_with_ordir_fuzzy_min"]
 UNMATCHED_LOG = BASE_DIR / config["unmatched_ordir_entries_log"]
 
 # Add project root to sys.path
@@ -46,6 +47,7 @@ from mappings.alias_engine import (
 )
 from mappings.ordir_name_errata import GLOBAL_EXCEPTIONS
 from mappings.special_ordir_overrides import SPECIAL_ORDIR_OVERRIDES
+from utils.card_helpers import get_card_name
 
 
 def load_data() -> tuple[list[dict], list[dict]]:
@@ -77,7 +79,7 @@ def build_card_lookup(cards_data: list[dict]) -> list[dict]:
     lookup = []
 
     for c in cards_data:
-        raw_name = c.get("Name", "")
+        raw_name = get_card_name(c)
 
         # Exclude tokens
         if "token" in raw_name.lower():
@@ -92,6 +94,8 @@ def build_card_lookup(cards_data: list[dict]) -> list[dict]:
         # Handle CardSides
         if "CardSides" in c and c["CardSides"]:
             for side_key, side_data in c["CardSides"].items():
+                if side_key == "shared":
+                    continue
                 if isinstance(side_data, dict) and "Name" in side_data:
                     names_to_test.append(side_data["Name"])
 
@@ -330,7 +334,13 @@ def map_ordir_to_cards():
     print(f"Writing updated card data to {OUT_FILE}...")
 
     with OUT_FILE.open("w", encoding="utf-8") as f:
-        json.dump({"cards": cards_data}, f, indent=4, ensure_ascii=False)
+        json.dump({"cards": cards_data}, f, indent=2, ensure_ascii=False)
+
+    with OUT_FILE_MIN.open("w", encoding="utf-8") as f:
+        json.dump({"cards": cards_data}, f, separators=(",", ":"), ensure_ascii=False)
+
+    print(f"  -> {OUT_FILE}")
+    print(f"  -> {OUT_FILE_MIN}")
 
     # Write the unmatched registry report
     print(f"Writing {len(unmatched)} unmatched registry entries to {UNMATCHED_LOG}...")

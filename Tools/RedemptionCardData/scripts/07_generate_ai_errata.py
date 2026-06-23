@@ -20,8 +20,9 @@ from pathlib import Path
 import requests
 from thefuzz import process, fuzz
 
-# Set up paths
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(Path(__file__).resolve().parent))
+from utils.card_helpers import get_card_name
 ENV_FILE = BASE_DIR / ".env"
 CONFIG_FILE = BASE_DIR / "config.json"
 with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
@@ -115,7 +116,7 @@ def find_top_candidates(target_name: str, target_set: str, cards_db: list[dict])
     """
     candidates = []
     # Build unique names to test against
-    db_names = list(set(c["Name"] for c in cards_db))
+    db_names = list(set(get_card_name(c) for c in cards_db))
     
     # Get top 20 fuzzy name matches
     matches = process.extractBests(target_name, db_names, scorer=fuzz.token_set_ratio, limit=20)
@@ -124,7 +125,7 @@ def find_top_candidates(target_name: str, target_set: str, cards_db: list[dict])
     # Filter full card records of these matched names
     seen_ids = set()
     for c in cards_db:
-        name = c["Name"]
+        name = get_card_name(c)
         if name in matched_names:
             c_set = c.get("Set", "")
             # Ensure unique instances based on Name + Set

@@ -10,7 +10,7 @@ class GoodBrigade(str, Enum):
     Silver = "Silver"
     Purple = "Purple"
     Clay = "Clay"
-    Multi = "Mult"
+    Multi = "Multi"
 
 class EvilBrigade(str, Enum):
     Brown = "Brown"
@@ -20,6 +20,6 @@ class EvilBrigade(str, Enum):
     Crimson = "Crimson"
     Gold = "Gold"
     Pale_Green = "Pale Green"
-    Multi = "Mult"
+    Multi = "Multi"
 
 ALL_BRIGADES = {b.value for b in GoodBrigade} | {b.value for b in EvilBrigade}

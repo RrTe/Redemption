@@ -18,8 +18,12 @@ data/verification_report.log -> A human-readable text file containing all suspic
 import json
 import re
 from pathlib import Path
+import sys
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR))
+sys.path.append(str(Path(__file__).resolve().parent))
+from utils.card_helpers import get_card_name, get_side_field, get_all_types
 # Load config from config.json
 CONFIG_FILE = BASE_DIR / "config.json"
 with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
@@ -45,7 +49,7 @@ def verify():
     # Check 1: Herod's Temple Mismatch 
     # Hardcoded check for a known edge case where Herod's Temple is mistaken for "Herod in the Title"
     for c in data:
-        name = c.get("Name", "")
+        name = get_card_name(c)
         ordir = c.get("ORDIR", [])
         if "Herod's Temple" in name and "Herod in the Title" in str(ordir):
             suspicious.append(f"Herod Mismatch: {name} found in category 'Herod in the Title'")
@@ -56,10 +60,10 @@ def verify():
     # list of cards provided by the ORDIR, which makes secondary metadata validation largely redundant,
     # except for catching severe false positives.
     for c in data:
-        alignment = c.get("Alignment", "")
+        alignment = get_side_field(c, "top", "Alignment", default="")
         ordir = c.get("ORDIR", [])
-        name = c.get("Name", "")
-        types = [t.lower() for t in c.get("CardTypes", [])]
+        name = get_card_name(c)
+        types = [t.lower() for t in get_all_types(c)]
         
         for cat in ordir:
             cat_lower = cat.lower()
@@ -92,7 +96,8 @@ def verify():
 
             # 3. Class checks
             if "cloud" in cat_lower:
-                card_class = c.get("Class", "")
+                card_class_list = get_side_field(c, "top", "Classes", default=[])
+                card_class = ", ".join(card_class_list) if isinstance(card_class_list, list) else str(card_class_list)
                 if "cloud" not in card_class.lower():
                     suspicious.append(f"Class Mismatch: '{name}' in Cloud category '{cat}' but Class is '{card_class}'")
                     
@@ -116,7 +121,8 @@ def verify():
 
             # 5. Star card check
             if cat_lower == "star card":
-                card_class = c.get("Class", "")
+                card_class_list = get_side_field(c, "top", "Classes", default=[])
+                card_class = ", ".join(card_class_list) if isinstance(card_class_list, list) else str(card_class_list)
                 if "star" not in card_class.lower():
                     suspicious.append(f"Class Mismatch: '{name}' in Star category but Class is '{card_class}'")
 
@@ -125,7 +131,7 @@ def verify():
     for c in data:
         ordir = c.get("ORDIR", [])
         if len(ordir) > 10:
-            suspicious.append(f"High-Category Anomaly: '{c.get('Name')}' is mapped to {len(ordir)} categories. Review recommended.")
+            suspicious.append(f"High-Category Anomaly: '{get_card_name(c)}' is mapped to {len(ordir)} categories. Review recommended.")
             
     # Check 4: The "Duplicate Card" Check
     # Cards in "Duplicate Card" should ideally share a generic base name. This is a heuristic check.
@@ -140,7 +146,7 @@ def verify():
     # implies a required substring that the JSON card lacks.
     for c in data:
         ordir = c.get("ORDIR", [])
-        name = c.get("Name", "")
+        name = get_card_name(c)
         name_lower = name.lower()
         
         for cat in ordir:

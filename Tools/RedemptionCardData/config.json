@@ -1,11 +1,13 @@
 {
     "ordir_file": "data/ORDIR_PDF_7.0.0.txt",
     "cards_file": "data/cards_extended.json",
+    "cards_file_min": "data/cards_extended.min.json",
     "carddata_url": "https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/master/RedemptionQuick/sets/carddata.txt",
     "carddata_txt": "data/carddata.txt",
     "carddata_json": "data/carddata.json",
     "ordir_extracted_raw": "data/ordir_extracted_raw.json",
     "cards_extended_with_ordir_fuzzy": "data/cards_extended_with_ordir_fuzzy.json",
+    "cards_extended_with_ordir_fuzzy_min": "data/cards_extended_with_ordir_fuzzy.min.json",
     "unmatched_ordir_entries_log": "data/unmatched_ordir_entries.log",
     "verification_report_log": "data/verification_report.log"
 }

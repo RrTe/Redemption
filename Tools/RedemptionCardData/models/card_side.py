@@ -23,5 +23,13 @@ class CardSide:
         self.SpecialAbility = SpecialAbility
         self.Classes = Classes or []
 
-    def to_dict(self):
-        return self.__dict__
+    def to_dict(self) -> dict:
+        """Serializes the CardSide, omitting None values and empty collections.
+
+        Returns:
+            dict: Compact representation with only populated fields.
+        """
+        return {
+            k: v for k, v in self.__dict__.items()
+            if v is not None and v != [] and v != {}
+        }
