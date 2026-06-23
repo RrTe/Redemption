@@ -17,9 +17,16 @@ export class LobbyScene extends Phaser.Scene {
   private domManager!: LobbyDomManager;
   private soundManager!: SoundManager; // ✨ NEU
   private inputHandler!: LobbyInputHandler;
+  private initialDeckData?: DeckData;
 
   constructor() {
     super("LobbyScene");
+  }
+
+  init(data?: { deck?: DeckData }) {
+    if (data && data.deck) {
+      this.initialDeckData = data.deck;
+    }
   }
 
   preload() {
@@ -100,17 +107,17 @@ export class LobbyScene extends Phaser.Scene {
       this.uiManager.updateRoomList(rooms, (id) => this.inputHandler.handleJoinGame(id));
     this.networkManager.onGameJoined = (room) => this.startGame(room);
 
-    // Musik-Logik verknüpfen (Delegation an NetworkManager)
-    this.networkManager.onPlayMusic = (data) => {
-      this.soundManager?.playMusicTrack(data.path, data.name, () => {
-        this.networkManager.requestNextMusic();
-      });
-    };
-    // Initialen Musik-Request senden
-    this.networkManager.onMusicRequest = () =>
-      this.networkManager.requestNextMusic();
+    // Musik über globalen SoundManager starten (zufällige Playlist vom Server)
+    this.soundManager?.startBackgroundMusic();
 
     this.inputHandler.registerHandlers();
+
+    if (this.initialDeckData) {
+      this.dataManager.selectedDeck = this.initialDeckData;
+      const totalCards = this.initialDeckData.main.length + this.initialDeckData.reserve.length;
+      const deckName = this.initialDeckData.name || "Edited Deck";
+      this.uiManager.updateDeckButtonText(deckName, totalCards);
+    }
 
     this.networkManager.connectToLobby();
     this.inputHandler.checkActiveSession();
@@ -133,6 +140,10 @@ export class LobbyScene extends Phaser.Scene {
   }
 
   startGame(room: TypedRoom) {
-    this.scene.start("GameLoadingScene", { room });
+    this.scene.start("GameLoadingScene", {
+      targetScene: "CardGame",
+      targetData: { room },
+      backgroundKey: "bg_temple"
+    });
   }
 }

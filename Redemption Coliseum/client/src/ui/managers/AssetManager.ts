@@ -11,46 +11,43 @@ const IMAGE_BASE_URL = "/assets/cards/";
  */
 export class AssetManager {
   private scene: Phaser.Scene;
-  private preloadedSessions = new Set<string>();
+  private static preloadedSessions = new Set<string>();
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
 
   /**
-   * Preloads all card images (Deck & Reserve) for a player in the background.
+   * Preloads all image assets for the cards in a given player's deck and hand.
    */
   public preloadAllPlayerCards(player: PlayerState | null) {
-    if (!player || this.preloadedSessions.has(player.sessionId)) return;
+    if (!player) return;
 
-    this.preloadedSessions.add(player.sessionId);
-    log(
-      "AssetManager",
-      `Background preloading all cards for ${player.name}...`,
-    );
-
-    // Preload Main Deck
-    player.deck?.forEach((card) => this.preloadCard(card));
-
-    // Preload Reserve (Fixes the "missing on first search" issue)
-    player.reserve?.forEach((card) => this.preloadCard(card));
-
-    this.scene.load.start();
-  }
-
-  /** ✨ NEU: Interne Kapselung der Preload-Logik */
-  private preloadCard(cardData: CardState) {
-    if (!cardData.ImageFile) return;
-    const key = `card-${cardData.ImageFile}`;
-    const url = `${IMAGE_BASE_URL}${cardData.ImageFile}.jpg`;
-
-    if (!this.scene.textures.exists(key)) {
-      this.scene.load.image({
-        key: key,
-        url: url,
-        config: { mipmaps: true },
-      } as any);
+    if (AssetManager.preloadedSessions.has(player.sessionId)) {
+      return;
     }
+
+    const cardsToLoad = new Set<string>();
+    const gatherCards = (cardList: any[]) => {
+      cardList.forEach((c) => cardsToLoad.add(c.cardId));
+    };
+
+    gatherCards(player.deck);
+    gatherCards(player.hand);
+    gatherCards(player.discard);
+    gatherCards(player.territory);
+    gatherCards(player.land_of_bondage);
+    gatherCards(player.reserve);
+    gatherCards(player.land_of_redemption);
+    gatherCards(player.banish);
+
+    cardsToLoad.forEach((cardId) => {
+      const textureKey = `card-${cardId}`;
+      const url = `/assets/cards/${cardId}.jpg`;
+      this.loadCardImage(textureKey, url, () => {});
+    });
+
+    AssetManager.preloadedSessions.add(player.sessionId);
   }
 
   /**
@@ -69,19 +66,67 @@ export class AssetManager {
     const loaderScene = scene || this.scene;
 
     if (loaderScene.textures.exists(imageKey)) {
+      AssetManager.forceGPUUpload(loaderScene, imageKey);
       onComplete(imageKey);
       return;
     }
 
-    // ✨ FIX: Nutze den Loader der anfragenden Szene, damit Events auch bei pausierter Hauptszene feuern
-    loaderScene.load.once(`filecomplete-image-${imageKey}`, () =>
-      onComplete(imageKey),
-    );
-    loaderScene.load.image({
-      key: imageKey,
-      url: imageUrl,
-      config: { mipmaps: true },
-    } as any);
-    loaderScene.load.start();
+    const win = window as any;
+    win.loadingTextures = win.loadingTextures || new Set<string>();
+    const loadingTextures = win.loadingTextures;
+
+    const cleanUpAndComplete = (success: boolean) => {
+      loadingTextures.delete(imageKey);
+      loaderScene.load.off(`filecomplete-image-${imageKey}`);
+      loaderScene.load.off(`loaderror`);
+      if (success) {
+        AssetManager.forceGPUUpload(loaderScene, imageKey);
+        onComplete(imageKey);
+      }
+    };
+
+    if (loadingTextures.has(imageKey)) {
+      // Texture is already in transit/loading. Register to get it when complete!
+      loaderScene.load.once(`filecomplete-image-${imageKey}`, () => {
+        onComplete(imageKey);
+      });
+    } else {
+      // Texture does not yet exist and is not currently loading => start loading it
+      loadingTextures.add(imageKey);
+
+      loaderScene.load.once(`filecomplete-image-${imageKey}`, () => {
+        cleanUpAndComplete(true);
+      });
+
+      loaderScene.load.once(`loaderror`, (file: any) => {
+        if (file && file.key === imageKey) {
+          cleanUpAndComplete(false);
+        }
+      });
+
+      loaderScene.load.image({
+        key: imageKey,
+        url: imageUrl,
+      } as any);
+
+      loaderScene.load.start();
+    }
+  }
+
+  /**
+   * Forces the WebGL renderer to upload the texture to the GPU immediately.
+   */
+  public static forceGPUUpload(scene: Phaser.Scene, textureKey: string) {
+    if (scene.renderer && scene.renderer.type === Phaser.WEBGL) {
+      const renderer = scene.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
+      const texture = scene.textures.get(textureKey);
+      if (texture && texture.source && texture.source.length > 0) {
+        const source = texture.source[0];
+        if (source && !source.glTexture) {
+          // @ts-ignore
+          renderer.createTexture2D(source);
+        }
+      }
+    }
   }
 }

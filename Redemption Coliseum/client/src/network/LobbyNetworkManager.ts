@@ -81,15 +81,7 @@ export class LobbyNetworkManager {
         this.onRoomsUpdated?.(filteredRooms);
       });
 
-      // Musik-Handler
-      this.lobbyRoom.onMessage(
-        "playMusic",
-        (message: { path: string; name: string }) => {
-          this.onPlayMusic?.(message);
-        },
-      );
 
-      this.onMusicRequest?.();
     } catch (e: any) {
       error("LobbyNetwork", "Failed to connect to lobby:", e);
       this.onStatusChange?.("Lobby Error: " + e.message);

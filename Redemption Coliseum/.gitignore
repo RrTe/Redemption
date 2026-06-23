@@ -36,5 +36,8 @@ Thumbs.db
 # Lokale Test-Ordner (nicht hochladen)
 TestStuff/
 
+# Lokale Beispiele-Ordner (nicht hochladen)
+examples/
+
 # Lokaler Standalone Deck Editor
 standalone_deck_ediitor/

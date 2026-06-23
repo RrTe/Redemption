@@ -135,4 +135,40 @@ export const AUDIO_CONFIG: Record<string, SoundEffectConfig> = {
   AMBIENCE_PLACE: {
     layers: [{ key: "ambience_place", vol: 1.0, loop: true }],
   },
+
+  // --- Deck Editor 1:1 Standalone Mappings ---
+  DECK_CARD_HOVER: {
+    layers: [{ key: "cardHover", vol: 0.2 }],
+  },
+  DECK_CARD_SCROLL: {
+    layers: [{ key: "cardScroll", vol: 0.18 }],
+  },
+  DECK_ERROR: {
+    layers: [{ key: "error", vol: 0.25 }],
+  },
+  DECK_ADD_CARD: {
+    layers: [{ key: "addCard", vol: 0.3 }],
+  },
+  DECK_REMOVE_CARD: {
+    layers: [{ key: "removeCard", vol: 0.3 }],
+  },
+  DECK_CARD_ENTRY_OVER: {
+    layers: [{ key: "cardEntryOver", vol: 0.3 }],
+  },
+  DECK_CHECK_HOVER: {
+    layers: [{ key: "checkButtonHover", vol: 0.3 }],
+  },
+  DECK_CHECK_SELECT: {
+    layers: [{ key: "checkButtonSelect", vol: 0.3 }],
+  },
+  DECK_CHECK_DESELECT: {
+    layers: [{ key: "checkButtonDeselect", vol: 0.3 }],
+  },
+  DECK_CTRL_CLICK: {
+    layers: [{ key: "ctrlBtn", vol: 0.3 }],
+  },
+  DECK_CLEAR: {
+    layers: [{ key: "clearDeck", vol: 0.3 }],
+  },
 };
+

@@ -49,8 +49,9 @@ export class DialogManager {
       "Received 'presentPileSearchResult', launching dialog:",
       message,
     );
-    console.log(
-      "[CLIENT DEBUG][DialogManager] presentPileSearchResult received:",
+    log(
+      "DialogManager",
+      "presentPileSearchResult received:",
       { cards: message.cards.map((c: any) => ({ id: c.id, name: c.Name, zone: c.zone, isFaceUp: c.isFaceUp })), actionType: message.actionType, fromZone: message.zone }
     );
 
@@ -104,8 +105,9 @@ export class DialogManager {
           coords = { ...baseCoords, targetPlayerId: this.room.sessionId };
         }
 
-        console.log(
-          "[CLIENT DEBUG][DialogManager] onComplete - Sending resolveSearch to server:",
+        log(
+          "DialogManager",
+          "onComplete - Sending resolveSearch to server:",
           { selectedCards: result.selectedCards.map((c: any) => c.id), remainingPositions: result.remainingPositions?.map((c: any) => c.id), toZone: result.toZone, coords: coords }
         );
         this.networkManager.sendResolveSearch(
@@ -116,8 +118,9 @@ export class DialogManager {
         );
       },
       onCancel: (remainingPositions?: SelectedCardInfo[]) => {
-        console.log(
-          "[CLIENT DEBUG][DialogManager] onCancel - Sending resolveSearch to server (empty selection):",
+        log(
+          "DialogManager",
+          "onCancel - Sending resolveSearch to server (empty selection):",
           { remainingPositions: remainingPositions?.map((c: any) => c.id) }
         );
         // Send the remaining positions so the server can put them back in the deck

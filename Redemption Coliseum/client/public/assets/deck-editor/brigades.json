@@ -1,0 +1,147 @@
+{
+    "brigades": [
+    {
+        "ID": "Blue",
+        "Attribute": "Brigade",
+        "Values": ["Blue"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "0",
+        "frameSymbolSelected": "0"
+    },
+    {
+        "ID": "Clay",
+        "Attribute": "Brigade",
+        "Values": ["Clay"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "1",
+        "frameSymbolSelected": "1"
+    },
+    {
+        "ID": "Gold Good",
+        "Attribute": "Brigade",
+        "Values": ["Gold"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "2",
+        "frameSymbolSelected": "2"
+    },
+    {
+        "ID": "Green",
+        "Attribute": "Brigade",
+        "Values": ["Green"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "3",
+        "frameSymbolSelected": "3"
+    },
+    {
+        "ID": "Purple",
+        "Attribute": "Brigade",
+        "Values": ["Purple"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "4",
+        "frameSymbolSelected": "4"
+    },
+    {
+        "ID": "Red",
+        "Attribute": "Brigade",
+        "Values": ["Red"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "5",
+        "frameSymbolSelected": "5"
+    },
+    {
+        "ID": "Silver",
+        "Attribute": "Brigade",
+        "Values": ["Silver"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "6",
+        "frameSymbolSelected": "6"
+    },
+    {
+        "ID": "Teal",
+        "Attribute": "Brigade",
+        "Values": ["Teal"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "7",
+        "frameSymbolSelected": "7"
+    },
+    {
+        "ID": "White",
+        "Attribute": "Brigade",
+        "Values": ["White"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "8",
+        "frameSymbolSelected": "8"
+    },
+    {
+        "ID": "Multi Good",
+        "Attribute": "Brigade",
+        "Values": ["Multi"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "9",
+        "frameSymbolSelected": "9"
+    },
+    {
+        "ID": "Black",
+        "Attribute": "Brigade",
+        "Values": ["Black"],
+        "Alignments": ["Evil"],
+        "frameSymbol": "10",
+        "frameSymbolSelected": "10"
+    },
+    {
+        "ID": "Brown",
+        "Attribute": "Brigade",
+        "Values": ["Brown"],
+        "Alignments": ["Evil"],
+        "frameSymbol": "11",
+        "frameSymbolSelected": "11"
+    },
+    {
+        "ID": "Crimson",
+        "Attribute": "Brigade",
+        "Values": ["Crimson"],
+        "Alignments": ["Evil"],
+        "frameSymbol": "12",
+        "frameSymbolSelected": "12"
+    },
+    {
+        "ID": "Gold Evil",
+        "Attribute": "Brigade",
+        "Values": ["Gold"],
+        "Alignments": ["Evil"],
+        "frameSymbol": "13",
+        "frameSymbolSelected": "13"
+    },
+    {
+        "ID": "Gray",
+        "Attribute": "Brigade",
+        "Values": ["Gray"],
+        "Alignments": ["Evil"],
+        "frameSymbol": "14",
+        "frameSymbolSelected": "14"
+    },
+    {
+        "ID": "Orange",
+        "Attribute": "Brigade",
+        "Values": ["Orange"],
+        "Alignments": ["Evil"],
+        "frameSymbol": "15",
+        "frameSymbolSelected": "15"
+    },
+    {
+        "ID": "Pale Green",
+        "Attribute": "Brigade",
+        "Values": ["Pale Green"],
+        "Alignments": ["Evil"],
+        "frameSymbol": "16",
+        "frameSymbolSelected": "16"
+    },
+    {
+        "ID": "Multi Evil",
+        "Attribute": "Brigade",
+        "Values": ["Multi"],
+        "Alignments": ["Evil"],
+        "frameSymbol": "17",
+        "frameSymbolSelected": "17"
+    }
+]}

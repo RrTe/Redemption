@@ -1,34 +1,48 @@
 import { BaseLoadingScene } from "./BaseLoadingScene";
 import { type TypedRoom } from "../ui/gameUI";
-import { type SoundManager } from "../managers/SoundManager"; // ✨ NEU
+import { type SoundManager } from "../managers/SoundManager";
 import { log } from "../utils/logger";
 
+
 export class GameLoadingScene extends BaseLoadingScene {
-  private room!: TypedRoom;
+  private targetScene!: string;
+  private targetData: any;
+  private backgroundKey!: string;
 
   constructor() {
     super("GameLoadingScene");
   }
 
-  init(data: { room: TypedRoom }) {
-    this.room = data.room;
+  init(data: any) {
+    // Backward compatibility check for old { room: room } format
+    if (data && data.room) {
+      this.targetScene = "CardGame";
+      this.targetData = { room: data.room };
+      this.backgroundKey = "bg_temple";
+    } else if (data) {
+      this.targetScene = data.targetScene || "CardGame";
+      this.targetData = data.targetData;
+      this.backgroundKey = data.backgroundKey || "bg_temple";
+    } else {
+      this.targetScene = "CardGame";
+      this.backgroundKey = "bg_temple";
+    }
   }
 
   protected createBackground(width: number, height: number) {
-    // Wir nutzen das Bild aus der Lobby, falls es schon im Cache ist
-    if (this.textures.exists("bg_temple")) {
+    if (this.backgroundKey && this.textures.exists(this.backgroundKey)) {
       this.add
-        .image(width / 2, height / 2, "bg_temple")
+        .image(width / 2, height / 2, this.backgroundKey)
         .setOrigin(0.5)
-        .setAlpha(0.3)
+        .setAlpha(0.5)
         .setDisplaySize(
           Math.max(
             width,
-            this.textures.get("bg_temple").getSourceImage().width,
+            this.textures.get(this.backgroundKey).getSourceImage().width,
           ),
           Math.max(
             height,
-            this.textures.get("bg_temple").getSourceImage().height,
+            this.textures.get(this.backgroundKey).getSourceImage().height,
           ),
         );
     } else {
@@ -37,8 +51,182 @@ export class GameLoadingScene extends BaseLoadingScene {
   }
 
   protected loadAssets(): void {
+    if (this.targetScene === "DeckEditorScene") {
+      this.loadDeckEditorAssets();
+    } else {
+      this.loadCardGameAssets();
+    }
+  }
+
+  private loadDeckEditorAssets() {
+    log("GameLoadingScene", "Preloading DeckEditor Scene assets.");
+
+    // Preload specific graphics and spritesheets for Deck Editor
+    this.load.image("background", "assets/backgrounds/deck_editor_bg.jpg");
+    this.load.image(
+      "delete",
+      "assets/deck-editor/symbols/cross_circle_small_compressed.png",
+    );
+    this.load.image(
+      "symbolBGsmall",
+      "assets/deck-editor/symbols/card_icon_small.png",
+    );
+
+    // Loaded from shared buttons
+    this.load.image("arrowUp", "assets/ui/buttons/arrow-up_small.png");
+    this.load.image("arrowDown", "assets/ui/buttons/arrow-down_small.png");
+    this.load.image("load", "assets/deck-editor/symbols/Load_small.png");
+    this.load.image("save", "assets/deck-editor/symbols/Save_small.png");
+    this.load.image(
+      "clear",
+      "assets/deck-editor/symbols/Delete_small_compressed.png",
+    );
+    this.load.image(
+      "logout",
+      "assets/deck-editor/symbols/Logout.png",
+    );
+    this.load.image(
+      "battle",
+      "assets/deck-editor/symbols/Battle.png",
+    );
+    this.load.image(
+      "share",
+      "assets/deck-editor/symbols/ShareURL_compressed.png",
+    );
+    this.load.image(
+      "saveLackey",
+      "assets/deck-editor/symbols/SaveLackey_compressed.png",
+    );
+    this.load.image(
+      "loadLackey",
+      "assets/deck-editor/symbols/LoadLackey_compressed.png",
+    );
+    this.load.image(
+      "deckMetrics",
+      "assets/deck-editor/symbols/chart_small.png",
+    );
+
+    this.load.image(
+      "checkBoxUnChecked",
+      "assets/deck-editor/symbols/checkBox_Unchecked_compressed.png",
+    );
+    this.load.image(
+      "checkBoxChecked",
+      "assets/deck-editor/symbols/checkBox_Checked_compressed.png",
+    );
+
+    // Spritesheets
+    this.load.spritesheet(
+      "symbols",
+      "assets/deck-editor/symbols/Symbols_compressed.png",
+      { frameWidth: 196, frameHeight: 155 },
+    );
+    this.load.spritesheet(
+      "symbolsSelected",
+      "assets/deck-editor/symbols/Symbols_Selected_compressed.png",
+      { frameWidth: 196, frameHeight: 155 },
+    );
+    this.load.spritesheet(
+      "symbolsSmall",
+      "assets/deck-editor/symbols/Symbols_small_compressed.png",
+      { frameWidth: 24, frameHeight: 19 },
+    );
+    this.load.spritesheet(
+      "brigades",
+      "assets/deck-editor/symbols/Brigades_compressed.png",
+      { frameWidth: 196, frameHeight: 155 },
+    );
+    this.load.spritesheet(
+      "brigadesSelected",
+      "assets/deck-editor/symbols/Brigades_Selected_compressed.png",
+      { frameWidth: 196, frameHeight: 155 },
+    );
+
+    // Load JSON config files
+    this.load.json("symbols", "assets/deck-editor/symbols.json");
+    this.load.json("brigades", "assets/deck-editor/brigades.json");
+    this.load.json("texts", "assets/deck-editor/texts.json");
+
+    // Fonts and audio
+    this.load.bitmapFont(
+      "fairyDust",
+      "assets/fonts/bitmap/FairyDustB.png",
+      "assets/fonts/bitmap/FairyDustB.xml",
+    );
+    this.load.bitmapFont(
+      "wazoo",
+      "assets/fonts/bitmap/Wazoo.png",
+      "assets/fonts/bitmap/Wazoo.xml",
+    );
+
+    // Preload exact 12 standalone editor sounds
+    this.load.audio(
+      "checkButtonHover",
+      "assets/deck-editor/sounds/swing-whoosh-110410_short.mp3",
+    );
+    this.load.audio(
+      "checkButtonSelect",
+      "assets/deck-editor/sounds/notification-sound-7062.mp3",
+    );
+    this.load.audio(
+      "checkButtonDeselect",
+      "assets/deck-editor/sounds/ToggleSwitchMetal PE1090917.mp3",
+    );
+    this.load.audio(
+      "cardHover",
+      "assets/deck-editor/sounds/TorchWhooshPanned PE1037805_short.mp3",
+    );
+    this.load.audio(
+      "cardScroll",
+      "assets/deck-editor/sounds/484967__spacejoe__quiet-page-turn-7.wav",
+    );
+    this.load.audio(
+      "error",
+      "assets/deck-editor/sounds/188013__isaac200000__error.wav",
+    );
+    this.load.audio("addCard", "assets/deck-editor/sounds/uisound1-79819.mp3");
+    this.load.audio(
+      "removeCard",
+      "assets/deck-editor/sounds/Menu Selection Click.wav",
+    );
+    this.load.audio(
+      "cardEntryOver",
+      "assets/deck-editor/sounds/470377__erokia__menu-ui-click-140.wav",
+    );
+    this.load.audio(
+      "ctrlBtn",
+      "assets/deck-editor/sounds/clickswitch-03-104090.mp3",
+    );
+    this.load.audio(
+      "clearDeck",
+      "assets/deck-editor/sounds/cleardeck_short.mp3",
+    );
+    this.load.audio(
+      "deckEditorBGM",
+      "assets/deck-editor/sounds/rise-of-the-enemy-full-2-09-14302.mp3",
+    );
+
+    // Card back
+    this.load.image("cardback", "assets/cards/cardback.jpg");
+
+    // Preload deck metrics HTML overlay template
+    this.load.html("deckMetrics", `templates/deckMetrics.html?v=${Date.now()}`);
+    this.load.html("cardMetrics", `templates/cardMetrics.html?v=${Date.now()}`);
+
+    // Preload first 60 card fronts for immediate display
+    const cardDatabase = this.registry.get("cardDatabase") as any;
+    const first60Cards = cardDatabase.cards.slice(0, 60);
+    first60Cards.forEach((c: any) => {
+      const key = `card-${c.ImageFile}`;
+      const url = `assets/cards/${c.ImageFile}.jpg`;
+      this.load.image(key, url);
+    });
+  }
+
+  private loadCardGameAssets() {
+    log("GameLoadingScene", "Preloading CardGame Scene assets.");
+
     // === UI & Buttons ===
-    // ✨ FIX: Use correct asset paths from CardGameScene
     this.load.image(
       "button_next_phase",
       "assets/ui/buttons/arrow-7722394_smaller.png",
@@ -47,33 +235,27 @@ export class GameLoadingScene extends BaseLoadingScene {
       "button_settings",
       "assets/ui/buttons/button-gold-7850928_1920.png",
     );
-    // ✨ NEU: Save Button Icon
     this.load.image("button_save", "assets/ui/buttons/Save_small.png");
-    // ✨ NEU: Eigenes Icon für den Chat (hier kannst du deine Datei ablegen)
     this.load.image(
       "button_chat",
       "assets/ui/buttons/Button_Chat_Copilot_20260216_130131_small.png",
     );
-    // ✨ NEU: Help Button
     this.load.image(
       "button_help",
       "assets/ui/buttons/Button_Help_Copilot_20260216_130131_small.png",
     );
-    // ✨ NEU: Concede Button
     this.load.image(
       "button_concede",
       "assets/ui/buttons/white_flag_small_compressed.png",
     );
     this.load.image("arrow_left", "assets/ui/buttons/arrow-left_small.png");
     this.load.image("arrow_right", "assets/ui/buttons/arrow-right_small.png");
-    // Parchment button is already loaded in LobbyScene, but we load it here again for safety
     this.load.image(
       "button_parchment",
       "assets/ui/buttons/ChatGPT_Parchment_Button_dark_cracked_transp1_small.png",
     );
-    // ✨ NEU: Scroll-Hintergrund für Settings
     this.load.image("scroll_bg", "assets/ui/paper-8527340_optimised.png");
-    this.load.image("chat_bg", "assets/ui/paper-548643_small_optimised.jpg"); // ✨ NEU: Chat-Hintergrund
+    this.load.image("chat_bg", "assets/ui/paper-548643_small_optimised.jpg");
     this.load.image(
       "icon_from_top_of_pile",
       "assets/ui/icons/icon_from_top_of_pile.png",
@@ -103,7 +285,6 @@ export class GameLoadingScene extends BaseLoadingScene {
     this.load.image("icon_setaside", "assets/ui/icons/icon_setaside.png");
 
     // === Stapel & Zonen ===
-    // ✨ FIX: Use correct asset paths from CardGameScene
     this.load.image("pile_discard", "assets/gfx/Empty_Discard_Pile.png");
     this.load.image("pile_banish", "assets/gfx/Empty_Banish_Pile.png");
     this.load.image("pile_lor", "assets/gfx/Empty_LoR_Pile.png");
@@ -113,11 +294,7 @@ export class GameLoadingScene extends BaseLoadingScene {
       "assets/gfx/Empty_Pile_Opponent.jpg",
     );
 
-    // ✨ NEU: Spezifische Platzhalter für Discard, Banish, LoR (aus CardGameScene übernommen)
-    // Hinweis: Einige Pfade waren doppelt/unterschiedlich, wir nutzen hier die korrekten aus CardGameScene
-    // pile_discard etc. wurden oben schon geladen, aber wir stellen sicher, dass alles da ist.
-
-    // ✨ NEU: Icons für Symbol-Zoom-Effekte
+    // === Icons für Symbol-Zoom-Effekte ===
     this.load.image("icon_cross", "assets/gfx/icon_cross.png");
     this.load.image("icon_bible", "assets/gfx/icon_bible.png");
     this.load.image("icon_skull", "assets/gfx/icon_skull.png");
@@ -125,7 +302,6 @@ export class GameLoadingScene extends BaseLoadingScene {
     this.load.image("icon_artifact", "assets/gfx/icon_artifact.png");
 
     // === Effekte & Partikel ===
-    // ✨ FIX: Use correct asset paths from CardGameScene
     this.load.image("drop_shadow", "assets/gfx/drop_shadow.png");
     this.load.image("spark", "assets/gfx/Sparkle.png");
     this.load.image("blue_corona", "assets/gfx/blue_corona.png");
@@ -134,7 +310,6 @@ export class GameLoadingScene extends BaseLoadingScene {
     this.load.image("blue_aura_small", "assets/gfx/blue_aura_small.png");
     this.load.image("blue_lightning", "assets/gfx/blue_ligthtning_small.png");
 
-    // ✨ NEU: Partikel (Rocks, Dust, Smoke)
     for (let i = 1; i <= 5; i++)
       this.load.image("rock" + i, "assets/gfx/rock" + i + "_small.png");
     for (let i = 1; i <= 5; i++)
@@ -161,8 +336,7 @@ export class GameLoadingScene extends BaseLoadingScene {
       config: { mipmaps: true },
     } as any);
 
-    // === Hintergründe (Heavy Assets!) ===
-    // Temple
+    // === Hintergründe ===
     this.load.image(
       "bg_temple",
       "assets/backgrounds/Copilot_Hintergrrund_Temple_ganz_neu.png",
@@ -171,7 +345,6 @@ export class GameLoadingScene extends BaseLoadingScene {
     this.load.image("bg_spark", "assets/particles/spark.png");
     this.load.image("bg_light_glow", "assets/particles/lightGlow.png");
 
-    // Garden
     this.load.image(
       "bg_garden",
       "assets/backgrounds/Copilot_20251019_000934_Garten2.png",
@@ -189,7 +362,6 @@ export class GameLoadingScene extends BaseLoadingScene {
       "assets/backgrounds/Copilot_20251019_180730_Garten2_Maske_neu3.png",
     );
 
-    // Place
     this.load.image(
       "bg_place",
       "assets/backgrounds/Copilot_Hintergrrund_Platz.png",
@@ -260,11 +432,6 @@ export class GameLoadingScene extends BaseLoadingScene {
       "assets/sounds/ambience/wind-western-64661.mp3",
     );
 
-    // === Fonts (wird in LobbyScene geladen) ===
-    // Die "fairydust" Schriftart wird bereits in der Lobby geladen und ist daher verfügbar.
-    // Wir müssen sie hier nicht erneut laden.
-
-    // ✨ NEU: Wazoo Schriftart für bessere Lesbarkeit im Spiel
     this.load.bitmapFont(
       "wazoo",
       "assets/fonts/bitmap/Wazoo.png",
@@ -275,18 +442,22 @@ export class GameLoadingScene extends BaseLoadingScene {
   protected onLoadComplete(): void {
     log(
       "GameLoadingScene",
-      "All assets loaded. Transitioning to CardGameScene.",
+      `All assets loaded. Transitioning to ${this.targetScene}.`,
     );
-    // ✨ NEU: Jetzt, wo alles geladen ist, blenden wir die Lobby-Musik aus.
     const soundManager = this.registry.get("soundManager") as SoundManager;
 
-    if (soundManager) {
-      // ✨ FIX: Übergebe 'this' (die aktuelle Szene), damit der Tween sicher ausgeführt werden kann.
-      soundManager.stopMusic(1000, this).then(() => {
-        this.scene.start("CardGame", { room: this.room });
-      });
+    if (this.targetScene === "DeckEditorScene") {
+      // Transition to DeckEditor (No music stopping needed to keep seamless Hub BGM!)
+      this.scene.start("DeckEditorScene");
     } else {
-      this.scene.start("CardGame", { room: this.room });
+      // Transition to CardGame (Stop Lobby music with fade out)
+      if (soundManager) {
+        soundManager.stopMusic(1000, this).then(() => {
+          this.scene.start("CardGame", this.targetData);
+        });
+      } else {
+        this.scene.start("CardGame", this.targetData);
+      }
     }
   }
 }

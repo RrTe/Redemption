@@ -14,7 +14,7 @@ import type { GameBackground } from "../ui/backgrounds/GameBackground";
 import { TempleBackground } from "../ui/backgrounds/TempleBackground";
 import { GardenBackground } from "../ui/backgrounds/GardenBackground";
 import { PlaceBackground } from "../ui/backgrounds/PlaceBackground";
-import cardData from "../../../shared/carddata.json"; // ✨ NEU: JSON direkt importieren
+
 import { ZONES } from "../../../shared/zones"; // ✨ NEU: Import für Zonen-Konstanten
 import { log, error } from "../utils/logger"; // ✨ NEU: Logger importieren
 
@@ -40,7 +40,8 @@ export default class CardGameScene extends Phaser.Scene {
     // Wir laden hier nur noch die JSON-Daten in den Cache (synchron).
     // ✨ FIX: Lade die importierten Daten direkt in den Cache.
     // Das funktioniert, weil wir die Datei oben importiert haben (Build-Time vs Run-Time).
-    this.cache.json.add("carddata", cardData);
+    const cardDatabase = this.registry.get("cardDatabase");
+    this.cache.json.add("carddata", cardDatabase);
   }
 
   async create() {

@@ -9,6 +9,7 @@ import { PreviewManager } from "../ui/managers/PreviewManager";
 import { SelectionDialogPaginationManager } from "../ui/managers/SelectionDialogPaginationManager";
 import { SelectionDialogUIManager } from "../ui/managers/SelectionDialogUIManager";
 import { SelectionDialogTransitionHandler } from "../ui/handlers/SelectionDialogTransitionHandler";
+import { log } from "../utils/logger";
 
 const CARDS_PER_PAGE = 7;
 
@@ -129,8 +130,9 @@ export class SelectionDialogScene extends Phaser.Scene {
           (a.target === target || (!a.target && !isOpponent)),
       )?.actionId ?? "custom_selection";
 
-    console.log(
-      "[CLIENT DEBUG][SelectionDialogScene] handleZoneButtonClick - Sending to server:",
+    log(
+      "SelectionDialogScene",
+      "handleZoneButtonClick - Sending to server:",
       { selectedCards: Array.from(this.selectedCards), remainingPositions: this.paginationManager.getRemainingCardPositions(this.selectedCards, this.cardPositions), toZone: zone, target: target }
     );
 
@@ -282,7 +284,10 @@ export class SelectionDialogScene extends Phaser.Scene {
   }
 
   private logCardState(card: CardUI, action: string) {
-    console.log(`[CLIENT DEBUG][SelectionDialogScene] Card ${action}: ID=${card.cardData.id}, Name=${card.cardData.Name}, Zone=${card.cardData.zone}, isFaceUp=${card.cardData.isFaceUp}`);
+    log(
+      "SelectionDialogScene",
+      `Card ${action}: ID=${card.cardData.id}, Name=${card.cardData.Name}, Zone=${card.cardData.zone}, isFaceUp=${card.cardData.isFaceUp}`,
+    );
   }
 
 

@@ -1,0 +1,595 @@
+<style>
+    #deckMetrics {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        border: 3px solid #e9cd45;
+        border-radius: 10px;
+        color: #adadad;
+        background-color: rgba(0, 0, 0, 0.9);
+        background-image: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), url('/assets/deck-editor/cardback.jpg');
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        padding: 10px;
+        overflow: hidden;
+
+        box-sizing: border-box;
+        margin: 0;
+        font-family: Georgia, 'Times New Roman', serif !important;
+        font-size: 15px;
+        scrollbar-width: none;
+        gap: 12px;
+    }
+
+    #deckMetrics .title-row {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        white-space: nowrap;
+        margin-bottom: 6px;
+    }
+
+    #deckMetrics .title-img {
+        height: 98px !important;
+        width: auto !important;
+        display: block;
+    }
+
+    #closeCardMetricsDiv {
+        width: 24px !important;
+        height: 24px !important;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1010;
+    }
+
+    #deckMetrics .content-grid {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: stretch;
+        flex-wrap: wrap;
+        row-gap: 15px;
+        column-gap: 10px;
+    }
+
+    #deckMetrics .metric-box {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        border: 1px solid #e9cd45;
+        border-radius: 5px;
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
+    #deckMetrics .metric-box.top-box {
+        padding: 8px 10px 8px 10px;
+    }
+
+    #deckMetrics .metric-box.bottom-box {
+        padding: 8px 10px 9px 10px;
+    }
+
+    #deckMetrics .metric-box-center {
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    #deckMetrics .metric-header {
+        width: max-content;
+        margin: 0 auto 0px auto;
+        padding: 3px 10px;
+        background: #3e3761;
+        border-radius: 3px;
+        font-size: 2.0em;
+        color: white;
+        text-align: center;
+        text-shadow: 2px 2px 0 #000000;
+        font-family: Georgia, 'Times New Roman', serif !important;
+        font-weight: normal !important;
+        z-index: 0;
+    }
+
+    #deckMetrics .metric-header img {
+        width: 48px !important;
+        height: 27px !important;
+        vertical-align: middle;
+        object-fit: contain;
+    }
+
+    #deckMetrics .chart-row {
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+        justify-content: center;
+        align-items: flex-end;
+        padding: 0;
+        margin-top: 0px;
+    }
+
+    #deckMetrics .bar-column {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-end;
+        padding: 2px;
+        width: 43px;
+        box-sizing: border-box;
+    }
+
+    #deckMetrics .bar-column img {
+        width: 43px !important;
+        height: 30px !important;
+        display: block;
+        margin: 4px auto;
+        object-fit: contain;
+    }
+
+    #deckMetrics .chart-bar {
+        width: 100% !important;
+        padding: 2px 0 0 0 !important;
+        border: 1px solid black;
+        border-radius: 6px 6px 0 0;
+        box-shadow: 4px 0 8px rgba(0, 0, 0, 0.5);
+        box-sizing: border-box;
+        background: linear-gradient(0.1turn, #3f87a6, #ebf8e1, #f69d3c);
+    }
+
+    #deckMetrics .metric-text {
+        text-align: center;
+        background: transparent;
+        color: #e6cc43;
+        text-shadow: 1px 1px 1px #373868;
+        font-size: 22px;
+        white-space: nowrap;
+    }
+
+    #deckMetrics .bar-top-text {
+        text-align: center;
+        background: transparent;
+        color: #e6cc43;
+        text-shadow: 1px 1px 1px #373868;
+        font-size: 22px;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    #deckMetrics .ratio-spacer {
+        height: 6px;
+        /* Ändere diese Zahl, bis der Abstand perfekt passt! */
+    }
+
+    #deckMetrics .ratio-row {
+        white-space: nowrap;
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 4px;
+        margin: 2px auto;
+        text-align: center;
+        background: transparent;
+        color: #e6cc43;
+        text-shadow: 1px 1px 1px #373868;
+        font-size: 22px;
+    }
+
+    #deckMetrics .ratio-row img {
+        height: 30px !important;
+        width: 30px !important;
+        object-fit: contain;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    #deckMetrics .ratio-row img.ratio-slash {
+        width: 18px !important;
+    }
+
+    #deckMetrics .ratio-row img.ratio-battle {
+        height: 30px !important;
+        width: 30px !important;
+    }
+
+    #deckMetrics .ratio-row img.ratio-support {
+        height: 30px !important;
+        width: 30px !important;
+    }
+
+    #deckMetrics .ratio-value {
+        padding-left: 5px;
+        display: inline-block;
+        vertical-align: middle;
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    #deckMetrics .dist-row {
+        display: flex;
+        flex-direction: row;
+        gap: 6px;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 4px 2%;
+    }
+
+    #deckMetrics .dist-column {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 2px;
+        padding: 1px;
+        width: 36px;
+        box-sizing: border-box;
+    }
+
+    #deckMetrics .dist-column img {
+        width: 34px !important;
+        height: 30px !important;
+        object-fit: contain;
+        display: block;
+    }
+
+    #deckMetrics .dist-column .dist-empty-header {
+        height: 30px;
+        width: 26px;
+        object-fit: contain;
+        display: block;
+    }
+
+    #deckMetrics .dist-column .dist-cell {
+        text-align: center;
+        background: transparent;
+        color: #e6cc43;
+        text-shadow: 1px 1px 1px #373868;
+        font-size: 22px;
+        height: 30px;
+        line-height: 30px;
+        display: block;
+        width: 100%;
+    }
+</style>
+
+<div id="deckMetrics">
+    <input id="closeCardMetricsDiv" type="image" src="/assets/deck-editor/symbols/cross_circle_small_compressed.png"
+        onmousedown="event.stopPropagation();" onmouseup="event.stopPropagation();"
+        onpointerdown="event.stopPropagation();" onpointerup="event.stopPropagation();">
+    <div class="title-row">
+        <img class="title-img" src="/assets/deck-editor/Deck Metrics.png" />
+    </div>
+    <div class="content-grid">
+        <!-- Card Distribution Box -->
+        <div class="metric-box top-box">
+            <div class="metric-header">Card Distribution</div>
+            <div class="chart-row">
+                <!-- Heroes Column -->
+                <div class="bar-column">
+                    <div id="bar_Heroes_txt" class="bar-top-text"></div>
+                    <div id="bar_Heroes" class="chart-bar"></div>
+                    <img src="/assets/deck-editor/symbols/Hero_small_compressed.png" />
+                    <div id="bar_Heroes_percentage" class="metric-text"></div>
+                </div>
+                <!-- GEs Column -->
+                <div class="bar-column">
+                    <div id="bar_GEs_txt" class="bar-top-text"></div>
+                    <div id="bar_GEs" class="chart-bar"></div>
+                    <img src="/assets/deck-editor/symbols/GE_small_compressed.png" />
+                    <div id="bar_GEs_percentage" class="metric-text"></div>
+                </div>
+                <!-- ECs Column -->
+                <div class="bar-column">
+                    <div id="bar_ECs_txt" class="bar-top-text"></div>
+                    <div id="bar_ECs" class="chart-bar"></div>
+                    <img src="/assets/deck-editor/symbols/EC_small_compressed.png" />
+                    <div id="bar_ECs_percentage" class="metric-text"></div>
+                </div>
+                <!-- EEs Column -->
+                <div class="bar-column">
+                    <div id="bar_EEs_txt" class="bar-top-text"></div>
+                    <div id="bar_EEs" class="chart-bar"></div>
+                    <img src="/assets/deck-editor/symbols/EE_small_compressed.png" />
+                    <div id="bar_EEs_percentage" class="metric-text"></div>
+                </div>
+                <!-- Doms Column -->
+                <div class="bar-column">
+                    <div id="bar_Doms_txt" class="bar-top-text"></div>
+                    <div id="bar_Doms" class="chart-bar"></div>
+                    <img src="/assets/deck-editor/symbols/Dominant_small_compressed.png" />
+                    <div id="bar_Doms_percentage" class="metric-text"></div>
+                </div>
+                <!-- Arts Column -->
+                <div class="bar-column">
+                    <div id="bar_Arts_txt" class="bar-top-text"></div>
+                    <div id="bar_Arts" class="chart-bar"></div>
+                    <img src="/assets/deck-editor/symbols/Artifact_small_compressed.png" />
+                    <div id="bar_Arts_percentage" class="metric-text"></div>
+                </div>
+                <!-- Forts Column -->
+                <div class="bar-column">
+                    <div id="bar_Forts_txt" class="bar-top-text"></div>
+                    <div id="bar_Forts" class="chart-bar"></div>
+                    <img src="/assets/deck-editor/symbols/Fortress_small_compressed.png" />
+                    <div id="bar_Forts_percentage" class="metric-text"></div>
+                </div>
+                <!-- Sites Column -->
+                <div class="bar-column">
+                    <div id="bar_Sites_txt" class="bar-top-text"></div>
+                    <div id="bar_Sites" class="chart-bar"></div>
+                    <img src="/assets/deck-editor/symbols/Site_small_compressed.png" />
+                    <div id="bar_Sites_percentage" class="metric-text"></div>
+                </div>
+                <!-- Souls Column -->
+                <div class="bar-column">
+                    <div id="bar_Souls_txt" class="bar-top-text"></div>
+                    <div id="bar_Souls" class="chart-bar"></div>
+                    <img src="/assets/deck-editor/symbols/LS_small_compressed.png" />
+                    <div id="bar_Souls_percentage" class="metric-text"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ratios Box -->
+        <div class="metric-box metric-box-center top-box">
+            <div class="metric-header">Ratios</div>
+            <div class="ratio-spacer"></div>
+            <div class="ratio-row">
+                <img src="/assets/deck-editor/symbols/Hero_small_compressed.png" />
+                <img class="ratio-slash" src="/assets/deck-editor/symbols/Slash_compressed.png" />
+                <img src="/assets/deck-editor/symbols/EC_small_compressed.png" />
+                <div id="characterRatio" class="ratio-value"></div>
+            </div>
+            <div class="ratio-row">
+                <img src="/assets/deck-editor/symbols/Hero_small_compressed.png" />
+                <img class="ratio-slash" src="/assets/deck-editor/symbols/Slash_compressed.png" />
+                <img src="/assets/deck-editor/symbols/GE_small_compressed.png" />
+                <div id="heroGERatio" class="ratio-value"></div>
+            </div>
+            <div class="ratio-row">
+                <img src="/assets/deck-editor/symbols/EC_small_compressed.png" />
+                <img class="ratio-slash" src="/assets/deck-editor/symbols/Slash_compressed.png" />
+                <img src="/assets/deck-editor/symbols/EE_small_compressed.png" />
+                <div id="ecEERatio" class="ratio-value"></div>
+            </div>
+            <div class="ratio-row">
+                <img class="ratio-battle" src="/assets/deck-editor/symbols/Battle_small_compressed.png" />
+                <img class="ratio-slash" src="/assets/deck-editor/symbols/Slash_compressed.png" />
+                <img class="ratio-support" src="/assets/deck-editor/symbols/Support_small_compressed.png" />
+                <div id="battleSupportRatio" class="ratio-value"></div>
+            </div>
+        </div>
+
+        <!-- Brigade Distribution Box -->
+        <div class="metric-box bottom-box">
+            <div class="metric-header">Brigade Distribution</div>
+            <!-- Good Brigade Row -->
+            <div class="dist-row">
+                <div class="dist-column">
+                    <div class="dist-empty-header"></div>
+                    <img src="/assets/deck-editor/symbols/Hero_small_compressed.png" />
+                    <img src="/assets/deck-editor/symbols/GE_small_compressed.png" />
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/blue_small_compressed.png" />
+                    <div id="blue_Hero_no" class="dist-cell">0</div>
+                    <div id="blue_GE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/clay_small_compressed.png" />
+                    <div id="clay_Hero_no" class="dist-cell">0</div>
+                    <div id="clay_GE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/gold_good_small_compressed.png" />
+                    <div id="gold_Hero_no" class="dist-cell">0</div>
+                    <div id="gold_GE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/green_small_compressed.png" />
+                    <div id="green_Hero_no" class="dist-cell">0</div>
+                    <div id="green_GE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/purple_small_compressed.png" />
+                    <div id="purple_Hero_no" class="dist-cell">0</div>
+                    <div id="purple_GE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/red_small_compressed.png" />
+                    <div id="red_Hero_no" class="dist-cell">0</div>
+                    <div id="red_GE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/silver_small_compressed.png" />
+                    <div id="silver_Hero_no" class="dist-cell">0</div>
+                    <div id="silver_GE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/teal_small_compressed.png" />
+                    <div id="teal_Hero_no" class="dist-cell">0</div>
+                    <div id="teal_GE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/white_small_compressed.png" />
+                    <div id="white_Hero_no" class="dist-cell">0</div>
+                    <div id="white_GE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/multi_good_small_compressed.png" />
+                    <div id="multi_Hero_no" class="dist-cell">0</div>
+                    <div id="multi_GE_no" class="dist-cell">0</div>
+                </div>
+            </div>
+            <!-- Evil Brigade Row -->
+            <div class="dist-row">
+                <div class="dist-column">
+                    <div class="dist-empty-header"></div>
+                    <img src="/assets/deck-editor/symbols/EC_small_compressed.png" />
+                    <img src="/assets/deck-editor/symbols/EE_small_compressed.png" />
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/black_small_compressed.png" />
+                    <div id="black_Evil Character_no" class="dist-cell">0</div>
+                    <div id="black_EE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/brown_small_compressed.png" />
+                    <div id="brown_Evil Character_no" class="dist-cell">0</div>
+                    <div id="brown_EE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/crimson_small_compressed.png" />
+                    <div id="crimson_Evil Character_no" class="dist-cell">0</div>
+                    <div id="crimson_EE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/gold_evil_small_compressed.png" />
+                    <div id="gold_Evil Character_no" class="dist-cell">0</div>
+                    <div id="gold_EE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/gray_small_compressed.png" />
+                    <div id="gray_Evil Character_no" class="dist-cell">0</div>
+                    <div id="gray_EE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/orange_small_compressed.png" />
+                    <div id="orange_Evil Character_no" class="dist-cell">0</div>
+                    <div id="orange_EE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/palegreen_small_compressed.png" />
+                    <div id="pale green_Evil Character_no" class="dist-cell">0</div>
+                    <div id="pale green_EE_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/multi_evil_small_compressed.png" />
+                    <div id="multi_Evil Character_no" class="dist-cell">0</div>
+                    <div id="multi_EE_no" class="dist-cell">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Territory Class Distribution Box -->
+        <div class="metric-box metric-box-center bottom-box">
+            <div class="metric-header">
+                <img src="/assets/deck-editor/symbols/TerritoryClass_small_compressed.png" /> Distribution
+            </div>
+            <!-- Good TC Row -->
+            <div class="dist-row">
+                <div class="dist-column">
+                    <div class="dist-empty-header"></div>
+                    <img src="/assets/deck-editor/symbols/Hero_small_compressed.png" />
+                    <img src="/assets/deck-editor/symbols/GE_small_compressed.png" />
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/blue_small_compressed.png" />
+                    <div id="blue_Hero_TC_no" class="dist-cell">0</div>
+                    <div id="blue_GE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/clay_small_compressed.png" />
+                    <div id="clay_Hero_TC_no" class="dist-cell">0</div>
+                    <div id="clay_GE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/gold_good_small_compressed.png" />
+                    <div id="gold_Hero_TC_no" class="dist-cell">0</div>
+                    <div id="gold_GE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/green_small_compressed.png" />
+                    <div id="green_Hero_TC_no" class="dist-cell">0</div>
+                    <div id="green_GE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/purple_small_compressed.png" />
+                    <div id="purple_Hero_TC_no" class="dist-cell">0</div>
+                    <div id="purple_GE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/red_small_compressed.png" />
+                    <div id="red_Hero_TC_no" class="dist-cell">0</div>
+                    <div id="red_GE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/silver_small_compressed.png" />
+                    <div id="silver_Hero_TC_no" class="dist-cell">0</div>
+                    <div id="silver_GE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/teal_small_compressed.png" />
+                    <div id="teal_Hero_TC_no" class="dist-cell">0</div>
+                    <div id="teal_GE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/white_small_compressed.png" />
+                    <div id="white_Hero_TC_no" class="dist-cell">0</div>
+                    <div id="white_GE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/multi_good_small_compressed.png" />
+                    <div id="multi_Hero_TC_no" class="dist-cell">0</div>
+                    <div id="multi_GE_TC_no" class="dist-cell">0</div>
+                </div>
+            </div>
+            <!-- Evil TC Row -->
+            <div class="dist-row">
+                <div class="dist-column">
+                    <div class="dist-empty-header"></div>
+                    <img src="/assets/deck-editor/symbols/EC_small_compressed.png" />
+                    <img src="/assets/deck-editor/symbols/EE_small_compressed.png" />
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/black_small_compressed.png" />
+                    <div id="black_Evil Character_TC_no" class="dist-cell">0</div>
+                    <div id="black_EE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/brown_small_compressed.png" />
+                    <div id="brown_Evil Character_TC_no" class="dist-cell">0</div>
+                    <div id="brown_EE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/crimson_small_compressed.png" />
+                    <div id="crimson_Evil Character_TC_no" class="dist-cell">0</div>
+                    <div id="crimson_EE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/gold_evil_small_compressed.png" />
+                    <div id="gold_Evil Character_TC_no" class="dist-cell">0</div>
+                    <div id="gold_EE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/gray_small_compressed.png" />
+                    <div id="gray_Evil Character_TC_no" class="dist-cell">0</div>
+                    <div id="gray_EE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/orange_small_compressed.png" />
+                    <div id="orange_Evil Character_TC_no" class="dist-cell">0</div>
+                    <div id="orange_EE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/palegreen_small_compressed.png" />
+                    <div id="pale green_Evil Character_TC_no" class="dist-cell">0</div>
+                    <div id="pale green_EE_TC_no" class="dist-cell">0</div>
+                </div>
+                <div class="dist-column">
+                    <img src="/assets/deck-editor/symbols/multi_evil_small_compressed.png" />
+                    <div id="multi_Evil Character_TC_no" class="dist-cell">0</div>
+                    <div id="multi_EE_TC_no" class="dist-cell">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

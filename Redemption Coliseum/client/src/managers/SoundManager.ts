@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { Client, type Room } from "colyseus.js";
 import { SettingsManager } from "./SettingsManager";
 import { AUDIO_CONFIG, type SoundLayer } from "../config/AudioConfig";
 import { log, DEBUG } from "../utils/logger";
@@ -21,6 +22,9 @@ export class SoundManager {
 
   private currentAmbienceKey: string | null = null;
   private currentMusic: Phaser.Sound.BaseSound | null = null; // ✨ NEU: Aktuelle Musik
+  private client: Client | null = null;
+  private lobbyRoom: Room | null = null;
+  private isConnecting: boolean = false;
 
   constructor(game: Phaser.Game, settingsManager: SettingsManager) {
     this.game = game;
@@ -404,5 +408,123 @@ export class SoundManager {
         this.currentMusic = null;
         resolve();
     });
+  }
+
+  private initializeClient() {
+    if (this.client) return;
+    const protocol = window.location.protocol.replace("http", "ws");
+    const port = window.location.port ? `:${window.location.port}` : "";
+    let serverPort = port;
+
+    if (
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      port === ":5173"
+    ) {
+      serverPort = ":2567";
+    }
+
+    let endpoint = `${protocol}//${window.location.hostname}${serverPort}`;
+    if (window.location.hostname.includes("vercel.app")) {
+      endpoint = "wss://redemptionctcg-server.onrender.com";
+    }
+
+    this.client = new Client(endpoint);
+  }
+
+  public async startBackgroundMusic(forceRestart: boolean = false) {
+    // If music is already playing:
+    if (this.currentMusic && this.currentMusic.isPlaying) {
+      // If it is custom music (does not start with "music_"), or forceRestart is true, fade it out first!
+      if (forceRestart || !this.currentMusic.key.startsWith("music_")) {
+        log("SoundManager", `Stopping custom/loop music "${this.currentMusic.key}" with fade out.`);
+        await this.stopMusic(1000); // 1000ms fade out
+      } else {
+        log("SoundManager", "Server music is already playing. Skipping request.");
+        return;
+      }
+    }
+
+    this.initializeClient();
+
+    if (this.lobbyRoom) {
+      this.requestNextMusic();
+      return;
+    }
+
+    if (this.isConnecting) return;
+    this.isConnecting = true;
+
+    try {
+      this.lobbyRoom = await this.client!.joinOrCreate("lobby");
+      log("SoundManager", "Connected to Lobby for music.");
+
+      this.lobbyRoom.onMessage("playMusic", (message: { path: string; name: string }) => {
+        this.playMusicTrack(message.path, message.name, () => {
+          this.requestNextMusic();
+        });
+      });
+
+      this.requestNextMusic();
+    } catch (e) {
+      log("SoundManager", `Failed to connect to lobby for music: ${e}`);
+    } finally {
+      this.isConnecting = false;
+    }
+  }
+
+  /**
+   * Plays a specific local music track in a loop.
+   * Smoothly fades out any currently playing music track over 1000ms before starting.
+   * Does NOT connect to Colyseus or trigger playlist logic.
+   * @param key The audio key registered in Phaser (e.g., "deckEditorBGM").
+   */
+  public playLoopingMusic(key: string) {
+    if (this.currentMusic) {
+      if (this.currentMusic.key === key && this.currentMusic.isPlaying) {
+        // Already playing this exact loop
+        return;
+      }
+      
+      const scene = this.getActiveScene();
+      if (scene) {
+        log("SoundManager", `Fading out current music "${this.currentMusic.key}" to transition to local loop "${key}".`);
+        this.stopMusic(1000, scene).then(() => {
+          this.startLocalLoop(key);
+        });
+      } else {
+        this.stopMusic(0).then(() => {
+          this.startLocalLoop(key);
+        });
+      }
+    } else {
+      this.startLocalLoop(key);
+    }
+  }
+
+  private startLocalLoop(key: string) {
+    const masterVol = this.settingsManager.get("masterVolume");
+    const musicVol = this.settingsManager.get("musicVolume");
+    const baseVol = key === "deckEditorBGM" ? 0.35 : 1.0;
+    const finalVol = masterVol * musicVol * baseVol;
+
+    const scene = this.getActiveScene();
+    if (!scene) return;
+
+    if (scene.cache.audio.exists(key)) {
+      this.currentMusic = this.game.sound.add(key, { volume: finalVol, loop: true });
+      (this.currentMusic as any)._baseConfigVol = baseVol;
+      this.currentMusic.play();
+      log("SoundManager", `Playing looping local BGM: ${key} (base volume: ${baseVol})`);
+    } else {
+      log("SoundManager", `WARN: Audio key "${key}" not found in cache for looping music.`);
+    }
+  }
+
+  private requestNextMusic() {
+    if (this.lobbyRoom) {
+      log("SoundManager", "Requesting next music track from server.");
+      this.lobbyRoom.send("requestMusic");
+    }
   }
 }

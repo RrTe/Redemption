@@ -1,11 +1,20 @@
 import Phaser from "phaser";
+import "./style.css";
 import CardGameScene from "./scenes/CardGameScene";
+
 import { UITestScene } from "./scenes/UITestScene";
 import { SelectionDialogScene } from "./scenes/SelectionDialogScene";
 import { LobbyScene } from "./scenes/LobbyScene"; // ✨ NEU
 import { GameLoadingScene } from "./scenes/GameLoadingScene"; // ✨ NEU: Importieren
 import { SettingsManager } from "./managers/SettingsManager"; // ✨ NEU
 import { SoundManager } from "./managers/SoundManager"; // ✨ NEU
+import { HubScene } from "./scenes/HubScene"; // ✨ NEU
+import { DeckEditorScene } from "./scenes/deck-editor/DeckEditorScene"; // ✨ NEU
+import { NotificationManager } from "./ui/notifications/NotificationManager";
+import { cardData } from "./utils/CardService";
+// DeckMetricsDialogScene has been replaced by an HTML DOM overlay - no longer a separate scene
+
+
 
 // 🔍 Modus aus URL lesen
 const params = new URLSearchParams(window.location.search);
@@ -28,6 +37,9 @@ window.addEventListener("DOMContentLoaded", () => {
     dom: {
       createContainer: true,
     },
+    loader: {
+      maxParallelDownloads: 24,
+    },
   };
 
   const game = new Phaser.Game(config);
@@ -36,10 +48,15 @@ window.addEventListener("DOMContentLoaded", () => {
   // Diese sind dann in jeder Szene über `this.registry.get(...)` verfügbar.
   const settingsManager = new SettingsManager();
   game.registry.set('settingsManager', settingsManager);
+  game.registry.set('cardDatabase', cardData);
 
   // SoundManager benötigt die 'game' Instanz, um sound-Operationen szenenübergreifend zu steuern.
   const soundManager = new SoundManager(game, settingsManager);
   game.registry.set('soundManager', soundManager);
+
+  const notificationManager = new NotificationManager();
+  game.registry.set('notificationManager', notificationManager);
+
 
   // ✨ NEU: Füge alle Szenen zum Scene Manager hinzu. Sie werden dadurch registriert, aber nicht gestartet.
   game.scene.add("CardGame", CardGameScene);
@@ -47,9 +64,12 @@ window.addEventListener("DOMContentLoaded", () => {
   game.scene.add("SelectionDialogScene", SelectionDialogScene);
   game.scene.add("LobbyScene", LobbyScene); // ✨ NEU
   game.scene.add("GameLoadingScene", GameLoadingScene); // ✨ NEU: Registrieren
+  game.scene.add("HubScene", HubScene); // ✨ NEU
+  game.scene.add("DeckEditorScene", DeckEditorScene); // ✨ NEU
+  // DeckMetricsDialogScene removed - replaced by HTML overlay in DeckEditorScene
 
   // ✨ NEU: Starte jetzt explizit die eine Szene, die wir basierend auf dem Modus benötigen.
-  game.scene.start(mode === "ui" ? "UITestScene" : "LobbyScene"); // ✨ FIX: Start mit Lobby
+  game.scene.start(mode === "ui" ? "UITestScene" : "HubScene"); // ✨ FIX: Start mit HubScene statt LobbyScene
 
   // ✨ KORREKTUR: Verhindert das Standard-Browser-Kontextmenü auf dem Canvas.
   // Das ist notwendig, damit wir den Rechtsklick für eigene Aktionen im Spiel nutzen können.

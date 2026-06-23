@@ -1,8 +1,8 @@
 // server/tests/cardService.test.js
-const { moveCard } = require("../services/cardService");
-const { Card } = require("../state/Card");
-const { PlayerState } = require("../state/PlayerState");
-const { RoomState } = require("../state/RoomState");
+const { moveCard } = require("../src/services/cardService");
+const { Card } = require("../src/state/Card");
+const { PlayerState } = require("../src/state/PlayerState");
+const { RoomState } = require("../src/state/RoomState");
 const { ZONES } = require("../../shared/zones");
 
 describe("cardService (moveCard)", () => {

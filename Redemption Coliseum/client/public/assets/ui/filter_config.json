@@ -1,0 +1,989 @@
+{
+  "filters": [
+    {
+      "id": "GoodDom",
+      "category": "symbol",
+      "label": "Good Dominant",
+      "iconPath": "assets/ui/filter-icons/symbols/gooddom.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/gooddom_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "Dominant"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "EvilDom",
+      "category": "symbol",
+      "label": "Evil Dominant",
+      "iconPath": "assets/ui/filter-icons/symbols/evildom.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/evildom_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "Dominant"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "GoodFort",
+      "category": "symbol",
+      "label": "Good Fortress",
+      "iconPath": "assets/ui/filter-icons/symbols/goodfort.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/goodfort_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "Fortress",
+            "City"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "EvilFort",
+      "category": "symbol",
+      "label": "Evil Fortress",
+      "iconPath": "assets/ui/filter-icons/symbols/evilfort.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/evilfort_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "Fortress",
+            "City"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Site",
+      "category": "symbol",
+      "label": "Site",
+      "iconPath": "assets/ui/filter-icons/symbols/site.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/site_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "Site",
+            "City"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Evil",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Art",
+      "category": "symbol",
+      "label": "Artifact",
+      "iconPath": "assets/ui/filter-icons/symbols/artifact.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/artifact_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "Artifact"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Cov",
+      "category": "symbol",
+      "label": "Covenant",
+      "iconPath": "assets/ui/filter-icons/symbols/covenant.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/covenant_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "Covenant"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Curse",
+      "category": "symbol",
+      "label": "Curse",
+      "iconPath": "assets/ui/filter-icons/symbols/curse.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/curse_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "Curse"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "EC",
+      "category": "symbol",
+      "label": "Evil Character",
+      "iconPath": "assets/ui/filter-icons/symbols/ec.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/ec_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "Evil Character",
+            "DAC"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil",
+            "Good"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Hero",
+      "category": "symbol",
+      "label": "Hero",
+      "iconPath": "assets/ui/filter-icons/symbols/hero.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/hero_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "Hero",
+            "DAC"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "GE",
+      "category": "symbol",
+      "label": "Good Enhancement",
+      "iconPath": "assets/ui/filter-icons/symbols/ge.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/ge_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "GE",
+            "DAE"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "EE",
+      "category": "symbol",
+      "label": "Evil Enhancement",
+      "iconPath": "assets/ui/filter-icons/symbols/ee.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/ee_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "EE",
+            "DAE"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Warrior",
+      "category": "symbol",
+      "label": "Warrior Class",
+      "iconPath": "assets/ui/filter-icons/symbols/warrior.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/warrior_small.png",
+      "rules": [
+        {
+          "field": "Class",
+          "operator": "includes_any",
+          "values": [
+            "Warrior"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Weapon",
+      "category": "symbol",
+      "label": "Weapon Class",
+      "iconPath": "assets/ui/filter-icons/symbols/weapon.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/weapon_small.png",
+      "rules": [
+        {
+          "field": "Class",
+          "operator": "includes_any",
+          "values": [
+            "Weapon"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Cloud",
+      "category": "symbol",
+      "label": "Cloud Class",
+      "iconPath": "assets/ui/filter-icons/symbols/cloud.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/cloud_small.png",
+      "rules": [
+        {
+          "field": "Class",
+          "operator": "includes_any",
+          "values": [
+            "Cloud"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Star",
+      "category": "symbol",
+      "label": "Star Class",
+      "iconPath": "assets/ui/filter-icons/symbols/star.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/star_small.png",
+      "rules": [
+        {
+          "field": "Class",
+          "operator": "includes_any",
+          "values": [
+            "Star"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Evil",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "TC",
+      "category": "symbol",
+      "label": "Territory Class",
+      "iconPath": "assets/ui/filter-icons/symbols/territory.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/territory_small.png",
+      "rules": [
+        {
+          "field": "Class",
+          "operator": "includes_any",
+          "values": [
+            "Territory"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "LS",
+      "category": "symbol",
+      "label": "Lost Soul",
+      "iconPath": "assets/ui/filter-icons/symbols/lostsoul.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/lostsoul_small.png",
+      "rules": [
+        {
+          "field": "Type",
+          "operator": "includes_any",
+          "values": [
+            "Lost Soul"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "NoScroll",
+      "category": "symbol",
+      "label": "No Scroll",
+      "iconPath": "assets/ui/filter-icons/symbols/noscroll.png",
+      "iconSmallPath": "assets/ui/filter-icons/symbols/noscroll_small.png",
+      "rules": [
+        {
+          "field": "Legality",
+          "operator": "includes_any",
+          "values": [
+            "Rotation"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Evil",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Blue",
+      "category": "brigade",
+      "label": "Blue Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/blue.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/blue_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Blue"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Clay",
+      "category": "brigade",
+      "label": "Clay Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/clay.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/clay_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Clay"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Gold Good",
+      "category": "brigade",
+      "label": "Gold Brigade (Good)",
+      "iconPath": "assets/ui/filter-icons/brigades/gold_good.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/gold_good_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Gold"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Green",
+      "category": "brigade",
+      "label": "Green Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/green.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/green_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Green"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Purple",
+      "category": "brigade",
+      "label": "Purple Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/purple.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/purple_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Purple"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Red",
+      "category": "brigade",
+      "label": "Red Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/red.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/red_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Red"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Silver",
+      "category": "brigade",
+      "label": "Silver Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/silver.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/silver_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Silver"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Teal",
+      "category": "brigade",
+      "label": "Teal Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/teal.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/teal_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Teal"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "White",
+      "category": "brigade",
+      "label": "White Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/white.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/white_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "White"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Multi Good",
+      "category": "brigade",
+      "label": "Multi-Brigade (Good)",
+      "iconPath": "assets/ui/filter-icons/brigades/multi_good.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/multi_good_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Multi"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Good",
+            "Neutral"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Black",
+      "category": "brigade",
+      "label": "Black Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/black.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/black_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Black"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Brown",
+      "category": "brigade",
+      "label": "Brown Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/brown.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/brown_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Brown"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Crimson",
+      "category": "brigade",
+      "label": "Crimson Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/crimson.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/crimson_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Crimson"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Gold Evil",
+      "category": "brigade",
+      "label": "Gold Brigade (Evil)",
+      "iconPath": "assets/ui/filter-icons/brigades/gold_evil.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/gold_evil_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Gold"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Gray",
+      "category": "brigade",
+      "label": "Gray Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/gray.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/gray_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Gray"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Orange",
+      "category": "brigade",
+      "label": "Orange Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/orange.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/orange_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Orange"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Pale Green",
+      "category": "brigade",
+      "label": "Pale Green Brigade",
+      "iconPath": "assets/ui/filter-icons/brigades/palegreen.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/palegreen_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Pale Green"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "Multi Evil",
+      "category": "brigade",
+      "label": "Multi-Brigade (Evil)",
+      "iconPath": "assets/ui/filter-icons/brigades/multi_evil.png",
+      "iconSmallPath": "assets/ui/filter-icons/brigades/multi_evil_small.png",
+      "rules": [
+        {
+          "field": "Brigade",
+          "operator": "includes_any",
+          "values": [
+            "Multi"
+          ]
+        },
+        {
+          "field": "Alignment",
+          "operator": "includes_any",
+          "values": [
+            "Evil"
+          ]
+        }
+      ],
+      "relation": "AND"
+    },
+    {
+      "id": "AndFilter",
+      "category": "brigade",
+      "label": "AND Filter",
+      "iconPath": "assets/ui/filter-icons/symbols/and.png",
+      "rules": [],
+      "relation": "AND",
+      "activeByDefault": true
+    },
+    {
+      "id": "Name",
+      "category": "text",
+      "label": "Name",
+      "rules": [
+        {
+          "field": "Name",
+          "operator": "contains_text"
+        }
+      ],
+      "activeByDefault": true
+    },
+    {
+      "id": "Identifier",
+      "category": "text",
+      "label": "Identifier",
+      "rules": [
+        {
+          "field": "Identifier",
+          "operator": "contains_text"
+        }
+      ]
+    },
+    {
+      "id": "SpecialAbility",
+      "category": "text",
+      "label": "Ability",
+      "rules": [
+        {
+          "field": "SpecialAbility",
+          "operator": "contains_text"
+        }
+      ]
+    },
+    {
+      "id": "Reference",
+      "category": "text",
+      "label": "Reference",
+      "rules": [
+        {
+          "field": "Reference",
+          "operator": "contains_text"
+        }
+      ]
+    },
+    {
+      "id": "Set",
+      "category": "text",
+      "label": "Set",
+      "rules": [
+        {
+          "field": "Set",
+          "operator": "contains_text"
+        }
+      ]
+    }
+  ]
+}

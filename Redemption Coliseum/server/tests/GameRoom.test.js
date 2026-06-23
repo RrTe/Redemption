@@ -1,8 +1,11 @@
 // server/tests/GameRoom.test.js
-const { GameRoom, handleRequestSearchPile, handleResolveSearchPile, handleRequestLookAtCards, handleRequestRevealCards } = require("../rooms/GameRoom");
-const { RoomState } = require("../state/RoomState");
-const { PlayerState } = require("../state/PlayerState");
-const { Card } = require("../state/Card");
+const { RequestSearchPileCommand } = require("../src/commands/RequestSearchPileCommand");
+const { ResolveSearchPileCommand } = require("../src/commands/ResolveSearchPileCommand");
+const { RequestLookAtCardsCommand } = require("../src/commands/RequestLookAtCardsCommand");
+const { RequestRevealCardsCommand } = require("../src/commands/RequestRevealCardsCommand");
+const { RoomState } = require("../src/state/RoomState");
+const { PlayerState } = require("../src/state/PlayerState");
+const { Card } = require("../src/state/Card");
 const { ZONES } = require("../../shared/zones");
 
 describe("GameRoom Actions", () => {
@@ -16,12 +19,14 @@ describe("GameRoom Actions", () => {
     room = { 
       state: new RoomState(), 
       send: jest.fn(),
-      cardLookup: new Map() // Mock cardLookup direkt auf dem Raum
+      broadcast: jest.fn(),
+      cardLookup: new Map(), // Mock cardLookup direkt auf dem Raum
+      broadcastGameLog: jest.fn()
     };
     
     // Mock Clients
-    player1 = { sessionId: "p1", send: jest.fn() };
-    player2 = { sessionId: "p2", send: jest.fn() };
+    player1 = { sessionId: "p1", send: jest.fn(), userData: { playerName: "Test1" } };
+    player2 = { sessionId: "p2", send: jest.fn(), userData: { playerName: "Test2" } };
 
     // Create Player States
     player1State = new PlayerState();
@@ -68,8 +73,8 @@ describe("GameRoom Actions", () => {
 
   describe("requestSearchPile", () => {
     test("sollte einem Spieler erlauben, sein eigenes Deck zu durchsuchen", () => {
-      // ✨ REFACTORING: Rufe die extrahierte, testbare Funktion direkt auf.
-      handleRequestSearchPile(room, player1, { zone: ZONES.DECK });
+      // ✨ REFACTORING: Rufe das Command auf.
+      new RequestSearchPileCommand(room, player1).execute({ zone: ZONES.DECK });
 
       const p1State = room.state.players.get("p1");
 
@@ -83,14 +88,16 @@ describe("GameRoom Actions", () => {
 
       // 3. Überprüfen: Eine private Nachricht wurde an den richtigen Spieler gesendet
       expect(player1.send).toHaveBeenCalledTimes(1);
-      expect(player1.send).toHaveBeenCalledWith("presentPileSearchResult", {
-        cards: [
+      expect(player1.send).toHaveBeenCalledWith("presentPileSearchResult", expect.objectContaining({
+        cards: expect.arrayContaining([
           expect.objectContaining({ Name: "Angel" }),
           expect.objectContaining({ Name: "Sword" }),
           expect.objectContaining({ Name: "Shield" }),
           expect.objectContaining({ Name: "Helmet" }),
-        ],
-      });
+        ]),
+        zone: ZONES.DECK,
+        actionType: "search"
+      }));
 
       // 4. Überprüfen: Der andere Spieler hat keine Nachricht erhalten
       expect(player2.send).not.toHaveBeenCalled();
@@ -98,13 +105,13 @@ describe("GameRoom Actions", () => {
 
     test("sollte eine ausgewählte Karte vom Deck auf die Hand verschieben und den Rest mischen", () => {
       // Phase 1: Suche starten (Setup für den eigentlichen Test)
-      handleRequestSearchPile(room, player1, { zone: ZONES.DECK });
+      new RequestSearchPileCommand(room, player1).execute({ zone: ZONES.DECK });
       expect(player1State.status).toBe("searching");
       expect(player1State.deck.length).toBe(4); // Deck ist noch unverändert
 
       // Phase 2: Suche auflösen
-      handleResolveSearchPile(room, player1, {
-        selectedCardIds: ["c1"], // Spieler wählt "Angel"
+      new ResolveSearchPileCommand(room, player1).execute({
+        selectedCards: [{ id: "c1" }], // Spieler wählt "Angel"
         toZone: ZONES.HAND,
       });
 
@@ -132,7 +139,7 @@ describe("GameRoom Actions", () => {
   describe("requestLookAtCards", () => {
     test("sollte die obersten 2 Karten des Decks zum Anschauen bereitstellen", () => {
       // Aktion: Schaue die obersten 2 Karten an
-      handleRequestLookAtCards(room, player1, { zone: ZONES.DECK, count: 2, position: 'top' });
+      new RequestLookAtCardsCommand(room, player1).execute({ zone: ZONES.DECK, count: 2, position: 'top' });
 
       // 1. Überprüfen: Der Status des Spielers wurde auf "searching" gesetzt
       expect(player1State.status).toBe("searching");
@@ -158,7 +165,7 @@ describe("GameRoom Actions", () => {
   describe("requestRevealCards", () => {
     test("sollte die oberste Karte des Decks für alle sichtbar aufdecken", () => {
       // Aktion: Decke die oberste Karte auf
-      handleRequestRevealCards(room, player1, { zone: ZONES.DECK, count: 1 });
+      new RequestRevealCardsCommand(room, player1).execute({ zone: ZONES.DECK, count: 1 });
 
       // 1. Überprüfen: Das `revealedCards`-Array im State wurde befüllt.
       expect(room.state.revealedCards.length).toBe(1);

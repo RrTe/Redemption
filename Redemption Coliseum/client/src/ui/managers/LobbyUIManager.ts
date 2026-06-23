@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { type RoomAvailable } from "colyseus.js";
 import { type SoundManager } from "../../managers/SoundManager";
+import { log } from "../../utils/logger";
 
 export class LobbyUIManager {
   private scene: Phaser.Scene;
@@ -350,7 +351,7 @@ export class LobbyUIManager {
       bg.setTint(container.getData("defaultTint")),
     );
     container.on("pointerdown", () => {
-      console.log(`[LobbyUI] Button clicked: "${label}"`);
+      log("LobbyUI", `Button clicked: "${label}"`);
 
       this.soundManager.playSound("UI_TOGGLE");
       cb();

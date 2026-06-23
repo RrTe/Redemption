@@ -1,0 +1,155 @@
+{
+    "symbols": [
+    {
+        "ID": "GoodDom",
+        "Attribute": "Type",
+        "Values": ["Dominant"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "0",
+        "frameSymbolSelected": "0"
+    },
+    {
+        "ID": "EvilDom",
+        "Attribute": "Type",
+        "Values": ["Dominant"],
+        "Alignments": ["Evil", "Neutral"],
+        "frameSymbol": "1",
+        "frameSymbolSelected": "1"
+    },
+    {
+        "ID": "GoodFort",
+        "Attribute": "Type",
+        "Values": ["Fortress", "City"],
+        "Alignments": ["Good"],
+        "frameSymbol": "2",
+        "frameSymbolSelected": "2"
+    },
+    {
+        "ID": "EvilFort",
+        "Attribute": "Type",
+        "Values": ["Fortress", "City"],
+        "Alignments": ["Evil"],
+        "frameSymbol": "3",
+        "frameSymbolSelected": "3"
+    },
+    {
+        "ID": "Site",
+        "Attribute": "Type",
+        "Values": ["Site", "City"],
+        "Alignments": ["Good", "Evil", "Neutral"],
+        "frameSymbol": "4",
+        "frameSymbolSelected": "4"
+    },
+    {
+        "ID": "Art",
+        "Attribute": "Type",
+        "Values": ["Artifact"],
+        "Alignments": ["Neutral"],
+        "frameSymbol": "5",
+        "frameSymbolSelected": "5"
+    },
+    {
+        "ID": "Cov",
+        "Attribute": "Type",
+        "Values": ["Covenant"],
+        "Alignments": ["Good"],
+        "frameSymbol": "6",
+        "frameSymbolSelected": "6"
+    },
+    {
+        "ID": "Curse",
+        "Attribute": "Type",
+        "Values": ["Curse"],
+        "Alignments": ["Evil"],
+        "frameSymbol": "7",
+        "frameSymbolSelected": "7"
+    },
+    {
+        "ID": "EC",
+        "Attribute": "Type",
+        "Values": ["Evil Character", "DAC"],
+        "Alignments": ["Evil", "Good"],
+        "frameSymbol": "8",
+        "frameSymbolSelected": "8"
+    },
+    {
+        "ID": "Hero",
+        "Attribute": "Type",
+        "Values": ["Hero", "DAC"],
+        "Alignments": ["Good", "Evil"],
+        "frameSymbol": "9",
+        "frameSymbolSelected": "9"
+    },
+    {
+        "ID": "GE",
+        "Attribute": "Type",
+        "Values": ["GE", "DAE"],
+        "Alignments": ["Good", "Neutral"],
+        "frameSymbol": "10",
+        "frameSymbolSelected": "10"
+    },
+    {
+        "ID": "EE",
+        "Attribute": "Type",
+        "Values": ["EE", "DAE"],
+        "Alignments": ["Evil", "Neutral"],
+        "frameSymbol": "11",
+        "frameSymbolSelected": "11"
+    },
+    {
+        "ID": "Warrior",
+        "Attribute": "Class",
+        "Values": ["Warrior"],
+        "Alignments": ["Good", "Evil"],
+        "frameSymbol": "12",
+        "frameSymbolSelected": "12"
+    },
+    {
+        "ID": "Weapon",
+        "Attribute": "Class",
+        "Values": ["Weapon"],
+        "Alignments": ["Good", "Evil"],
+        "frameSymbol": "13",
+        "frameSymbolSelected": "13"
+    },
+    {
+        "ID": "Cloud",
+        "Attribute": "Class",
+        "Values": ["Cloud"],
+        "Alignments": ["Good"],
+        "frameSymbol": "14",
+        "frameSymbolSelected": "14"
+    },
+    {
+        "ID": "Star",
+        "Attribute": "Class",
+        "Values": ["Star"],
+        "Alignments": ["Good", "Evil", "Neutral"],
+        "frameSymbol": "15",
+        "frameSymbolSelected": "15"
+    },
+    {
+        "ID": "TC",
+        "Attribute": "Class",
+        "Values": ["Territory"],
+        "Alignments": ["Good", "Evil"],
+        "frameSymbol": "16",
+        "frameSymbolSelected": "16"
+    },
+    {
+        "ID": "LS",
+        "Attribute": "Type",
+        "Values": ["Lost Soul"],
+        "Alignments": ["Neutral"],
+        "frameSymbol": "17",
+        "frameSymbolSelected": "17"
+    },
+    {
+        "ID": "Rotation",
+        "Attribute": "Legality",
+        "Values": ["Rotation"],
+        "Alignments": ["Good", "Evil", "Neutral"],
+        "frameSymbol": "18",
+        "frameSymbolSelected": "18"
+    }
+]}
