@@ -20,7 +20,11 @@ class CardFactory {
     // Map properties from DB, but protect the unique instance ID
     Object.entries(cardData).forEach(([key, value]) => {
       if (key !== "id") {
-        card[key] = value;
+        if (Array.isArray(value) && (key === "Type" || key === "Brigade" || key === "Class" || key === "Alignment")) {
+          card[key] = value.join("/");
+        } else {
+          card[key] = value;
+        }
       }
     });
 

@@ -1,6 +1,6 @@
 import { type EditorCardData } from "./DeckListModel";
-import { getCardHash } from "./DeckCardView";
 import { FilterManager } from "../components/filters/FilterManager";
+import { generateCardId } from "../../../../shared/utils";
 
 export class CardListModel {
   public cards: EditorCardData[] = [];
@@ -45,7 +45,7 @@ export class CardListModel {
     cardsArray.forEach((element) => {
       const card = { ...element } as EditorCardData;
       if (!card.id) {
-        card.id = getCardHash(card.ImageFile + card.Set + card.Name);
+        card.id = generateCardId(card.ImageFile, card.Set, card.Name);
       }
 
       // Reformat string lists into clean arrays (splitting by '/', ',', and 'and')

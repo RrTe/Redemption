@@ -6,7 +6,7 @@ import {
   type EditorCardData,
 } from "../../ui/deck-editor/DeckListModel";
 import { DeckListView } from "../../ui/deck-editor/DeckListView";
-import { DeckCardView, getCardHash } from "../../ui/deck-editor/DeckCardView";
+import { DeckCardView } from "../../ui/deck-editor/DeckCardView";
 import { DeckButtonManager } from "../../ui/deck-editor/DeckButtonManager";
 import { DeckDragDropHandler } from "../../ui/deck-editor/DeckDragDropHandler";
 import { DeckScrollHandler } from "../../ui/deck-editor/DeckScrollHandler";

@@ -4,14 +4,6 @@ import { editorEvents } from "./EditorEventCenter";
 import { AssetManager } from "../managers/AssetManager";
 import { log, error } from "../../utils/logger";
 
-// Deterministic string hash function for card ID generation
-export function getCardHash(str: string): string {
-  const code = str
-    .normalize("NFC")
-    .split("")
-    .reduce((prev, curr) => (Math.imul(31, prev) + curr.charCodeAt(0)) | 0, 0);
-  return String(code);
-}
 
 export class DeckCardView extends Phaser.GameObjects.Sprite {
   public cardId: string;
