@@ -10,6 +10,7 @@ import { SelectionDialogPaginationManager } from "../ui/managers/SelectionDialog
 import { SelectionDialogUIManager } from "../ui/managers/SelectionDialogUIManager";
 import { SelectionDialogTransitionHandler } from "../ui/handlers/SelectionDialogTransitionHandler";
 import { log } from "../utils/logger";
+import { SelectionDialogFilterView } from "../ui/components/filters/SelectionDialogFilterView";
 
 const CARDS_PER_PAGE = 7;
 
@@ -58,6 +59,7 @@ export class SelectionDialogScene extends Phaser.Scene {
   private transitionHandler!: SelectionDialogTransitionHandler;
   private uiManager!: SelectionDialogUIManager;
   private paginationManager!: SelectionDialogPaginationManager;
+  private filterView!: SelectionDialogFilterView;
 
   constructor() {
     super("SelectionDialogScene");
@@ -77,6 +79,7 @@ export class SelectionDialogScene extends Phaser.Scene {
 
     this.selectedCards.clear();
     this.cardPositions.clear();
+    this.filterView = new SelectionDialogFilterView(this, () => this.onFilterChanged());
   }
 
   create() {
@@ -88,6 +91,19 @@ export class SelectionDialogScene extends Phaser.Scene {
     this.uiManager.selectedCardsContainer = this.add.container(
       this.scale.width / 2,
       this.scale.height * 0.25,
+    );
+
+    const cardWidth = this.scale.width / 8;
+    const cardHeight = cardWidth * 1.4;
+
+    this.filterView.createFiltersUI(
+      this.scale.width / 2,
+      this.scale.height / 2 + cardHeight / 2 + 28,
+      this.scale.width
+    );
+    this.filterView.updateSelectedText(
+      this.paginationManager.getFilteredCards().length,
+      this.paginationManager.getAllCards().length
     );
 
     this.uiManager.createPaginationControls(this.paginationManager, (d) =>
@@ -298,8 +314,22 @@ export class SelectionDialogScene extends Phaser.Scene {
     );
     this.selectedCards.clear();
     this.cardPositions.clear();
+    if (this.filterView) {
+      this.filterView.destroy();
+    }
     this.scene.resume("CardGame");
     this.scene.stop();
     if (!silent) this.dialogData.onCancel(remaining);
+  }
+
+  private onFilterChanged() {
+    const filtered = this.paginationManager.getAllCards().filter(c => this.filterView.filterManager.evaluateCard(c));
+    this.paginationManager.setFilteredCards(filtered);
+    this.filterView.updateSelectedText(
+      filtered.length,
+      this.paginationManager.getAllCards().length
+    );
+    this.uiManager.updatePaginationControls(this.paginationManager);
+    this.renderPage(false, 0);
   }
 }

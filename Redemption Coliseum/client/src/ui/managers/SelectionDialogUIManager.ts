@@ -223,6 +223,9 @@ export class SelectionDialogUIManager {
       // ✨ FIX: Disable standard drag-and-drop for cards inside the Selection Dialog
       // This
       this.setupCardInteractivity(card, isInteractive, previewManager, (this.scene as any).room.sessionId, transitionHandler, () => onCardClicked(card));
+      if (selectedCards.has(data.id)) {
+        card.setTint(0x00ff00);
+      }
       this.cardUIs.push(card);
 
       const showToggles = isMyAction && fromZone === "deck" && (actionType === "look" || actionType === "reveal");

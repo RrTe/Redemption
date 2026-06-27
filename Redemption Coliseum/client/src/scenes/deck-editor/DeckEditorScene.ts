@@ -192,11 +192,11 @@ export class DeckEditorScene extends Phaser.Scene {
 
     this.load.image(
       "checkBoxUnChecked",
-      "assets/deck-editor/symbols/checkBox_Unchecked_compressed.png",
+      "assets/ui/checkboxes/checkBox_Unchecked_compressed.png",
     );
     this.load.image(
       "checkBoxChecked",
-      "assets/deck-editor/symbols/checkBox_Checked_compressed.png",
+      "assets/ui/checkboxes/checkBox_Checked_compressed.png",
     );
 
     // Load new unified filter config JSON
@@ -230,15 +230,15 @@ export class DeckEditorScene extends Phaser.Scene {
     // Preload exact 12 standalone editor sounds
     this.load.audio(
       "checkButtonHover",
-      "assets/deck-editor/sounds/swing-whoosh-110410_short.mp3",
+      "assets/sounds/effects/swing-whoosh-110410_short.mp3",
     );
     this.load.audio(
       "checkButtonSelect",
-      "assets/deck-editor/sounds/notification-sound-7062.mp3",
+      "assets/sounds/effects/notification-sound-7062.mp3",
     );
     this.load.audio(
       "checkButtonDeselect",
-      "assets/deck-editor/sounds/ToggleSwitchMetal PE1090917.mp3",
+      "assets/sounds/effects/ToggleSwitchMetal PE1090917.mp3",
     );
     this.load.audio(
       "cardHover",

@@ -226,6 +226,38 @@ export class GameLoadingScene extends BaseLoadingScene {
   private loadCardGameAssets() {
     log("GameLoadingScene", "Preloading CardGame Scene assets.");
 
+    // === Selection Dialog Filters & Checkboxes ===
+    this.load.json("filterConfig", "assets/ui/filter_config.json");
+    this.load.image("filterSelected_small", "assets/ui/filter-icons/selected_small.png");
+    this.load.image("filterSelected_med", "assets/ui/filter-icons/selected_med.png");
+    this.load.image("checkBoxUnChecked", "assets/ui/checkboxes/checkBox_Unchecked_compressed.png");
+    this.load.image("checkBoxChecked", "assets/ui/checkboxes/checkBox_Checked_compressed.png");
+
+    this.load.audio(
+      "checkButtonHover",
+      "assets/sounds/effects/swing-whoosh-110410_short.mp3",
+    );
+    this.load.audio(
+      "checkButtonSelect",
+      "assets/sounds/effects/notification-sound-7062.mp3",
+    );
+    this.load.audio(
+      "checkButtonDeselect",
+      "assets/sounds/effects/ToggleSwitchMetal PE1090917.mp3",
+    );
+
+    this.load.once("filecomplete-json-filterConfig", (key: string, type: string, data: any) => {
+      if (data && data.filters) {
+        data.filters.forEach((filter: any) => {
+          if (filter.iconSmallPath) {
+            this.load.image(`${filter.id}_small`, filter.iconSmallPath);
+            const medPath = filter.iconSmallPath.replace("_small.png", "_med.png");
+            this.load.image(`${filter.id}_med`, medPath);
+          }
+        });
+      }
+    });
+
     // === UI & Buttons ===
     this.load.image(
       "button_next_phase",
