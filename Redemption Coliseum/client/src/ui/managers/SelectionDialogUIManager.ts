@@ -60,11 +60,12 @@ export class SelectionDialogUIManager {
       .setTint(0x888888);
 
     this.pageText = this.scene.add
-      .text(this.scene.scale.width / 2, this.scene.scale.height - 130, "", {
+      .text(this.scene.scale.width / 2, this.scene.scale.height - 115, "", {
         fontSize: "18px",
         color: "#cccccc",
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(40);
 
     this.prevButton.on("pointerdown", () => {
       this.soundManager.playSound("PAGE_FLIP");
@@ -212,14 +213,14 @@ export class SelectionDialogUIManager {
     const cardWidth = this.scene.scale.width / 8;
     const cardHeight = cardWidth * 1.4;
     const startX = this.scene.scale.width / 2 - (cards.length * (cardWidth + 20)) / 2 + cardWidth / 2;
-    
+
     const xCoords: number[] = [];
     const targets: (Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[])[] = [];
 
     cards.forEach((data, i) => {
       const tx = startX + i * (cardWidth + 20);
       const card = new CardUI(this.scene, tx, this.scene.scale.height / 2, data, cardWidth, cardHeight);
-      
+
       // ✨ FIX: Disable standard drag-and-drop for cards inside the Selection Dialog
       // This
       this.setupCardInteractivity(card, isInteractive, previewManager, (this.scene as any).room.sessionId, transitionHandler, () => onCardClicked(card));
@@ -230,7 +231,7 @@ export class SelectionDialogUIManager {
 
       const showToggles = isMyAction && fromZone === "deck" && (actionType === "look" || actionType === "reveal");
       const toggle = this.createPositionToggle(tx, this.scene.scale.height / 2 + cardHeight / 2 + 35, data.id, initialPosition, cardPositions);
-      
+
       toggle.setVisible(showToggles);
       card.setData("positionToggle", toggle);
       this.toggleContainers.push(toggle);

@@ -96,9 +96,16 @@ export class SelectionDialogScene extends Phaser.Scene {
     const cardWidth = this.scale.width / 8;
     const cardHeight = cardWidth * 1.4;
 
+    const showToggles =
+      this.dialogData.isMyAction &&
+      this.dialogData.fromZone === "deck" &&
+      (this.dialogData.actionType === "look" ||
+        this.dialogData.actionType === "reveal");
+    const filterYOffset = showToggles ? 72 : 28;
+
     this.filterView.createFiltersUI(
       this.scale.width / 2,
-      this.scale.height / 2 + cardHeight / 2 + 28,
+      this.scale.height / 2 + cardHeight / 2 + filterYOffset,
       this.scale.width
     );
     this.filterView.updateSelectedText(
