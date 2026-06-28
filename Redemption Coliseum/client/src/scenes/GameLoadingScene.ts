@@ -2,6 +2,7 @@ import { BaseLoadingScene } from "./BaseLoadingScene";
 import { type TypedRoom } from "../ui/gameUI";
 import { type SoundManager } from "../managers/SoundManager";
 import { log } from "../utils/logger";
+import filterConfigData from "../../public/assets/ui/filter_config.json";
 
 
 export class GameLoadingScene extends BaseLoadingScene {
@@ -246,17 +247,15 @@ export class GameLoadingScene extends BaseLoadingScene {
       "assets/sounds/effects/ToggleSwitchMetal PE1090917.mp3",
     );
 
-    this.load.once("filecomplete-json-filterConfig", (key: string, type: string, data: any) => {
-      if (data && data.filters) {
-        data.filters.forEach((filter: any) => {
-          if (filter.iconSmallPath) {
-            this.load.image(`${filter.id}_small`, filter.iconSmallPath);
-            const medPath = filter.iconSmallPath.replace("_small.png", "_med.png");
-            this.load.image(`${filter.id}_med`, medPath);
-          }
-        });
-      }
-    });
+    if (filterConfigData && filterConfigData.filters) {
+      filterConfigData.filters.forEach((filter: any) => {
+        if (filter.iconSmallPath) {
+          this.load.image(`${filter.id}_small`, filter.iconSmallPath);
+          const medPath = filter.iconSmallPath.replace("_small.png", "_med.png");
+          this.load.image(`${filter.id}_med`, medPath);
+        }
+      });
+    }
 
     // === UI & Buttons ===
     this.load.image(

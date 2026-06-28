@@ -1,7 +1,5 @@
 import Phaser from "phaser";
 import { type PlayerState } from "../../../../shared/types";
-import { CardUI } from "../CardUI";
-import type { CardState } from "../../../../shared/types";
 import { log } from "../../utils/logger";
 
 const IMAGE_BASE_URL = "/assets/cards/";
@@ -12,6 +10,7 @@ const IMAGE_BASE_URL = "/assets/cards/";
 export class AssetManager {
   private scene: Phaser.Scene;
   private static preloadedSessions = new Set<string>();
+  private static pendingCallbacks = new Map<string, Array<(key: string) => void>>();
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -29,7 +28,12 @@ export class AssetManager {
 
     const cardsToLoad = new Set<string>();
     const gatherCards = (cardList: any[]) => {
-      cardList.forEach((c) => cardsToLoad.add(c.cardId));
+      if (Array.isArray(cardList)) {
+        cardList.forEach((c) => {
+          if (c && c.cardId) cardsToLoad.add(c.cardId);
+          else if (c && c.ImageFile) cardsToLoad.add(c.ImageFile);
+        });
+      }
     };
 
     gatherCards(player.deck);
@@ -43,7 +47,7 @@ export class AssetManager {
 
     cardsToLoad.forEach((cardId) => {
       const textureKey = `card-${cardId}`;
-      const url = `/assets/cards/${cardId}.jpg`;
+      const url = `${IMAGE_BASE_URL}${cardId}.jpg`;
       this.loadCardImage(textureKey, url, () => {});
     });
 
@@ -52,10 +56,11 @@ export class AssetManager {
 
   /**
    * Loads a single card image (front or back) and calls a callback when complete.
+   * Uses native HTML Image loading to prevent Phaser Scene Loader conflicts.
    * @param imageKey The unique key for the image in Phaser's texture cache.
    * @param imageUrl The URL to the image file.
    * @param onComplete Callback function to execute once the image is loaded.
-   * @param scene Optional: The scene whose loader should be used (important for paused scenes).
+   * @param scene Optional: The scene whose texture manager should be used.
    */
   public loadCardImage(
     imageKey: string,
@@ -65,59 +70,50 @@ export class AssetManager {
   ) {
     const loaderScene = scene || this.scene;
 
-    if (loaderScene.textures.exists(imageKey)) {
+    if (loaderScene.textures && loaderScene.textures.exists(imageKey)) {
       AssetManager.forceGPUUpload(loaderScene, imageKey);
       onComplete(imageKey);
       return;
     }
 
-    const win = window as any;
-    win.loadingTextures = win.loadingTextures || new Set<string>();
-    const loadingTextures = win.loadingTextures;
+    if (AssetManager.pendingCallbacks.has(imageKey)) {
+      AssetManager.pendingCallbacks.get(imageKey)!.push(onComplete);
+      return;
+    }
 
-    const cleanUpAndComplete = (success: boolean) => {
-      loadingTextures.delete(imageKey);
-      loaderScene.load.off(`filecomplete-image-${imageKey}`);
-      loaderScene.load.off(`loaderror`);
-      if (success) {
+    AssetManager.pendingCallbacks.set(imageKey, [onComplete]);
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => {
+      const callbacks = AssetManager.pendingCallbacks.get(imageKey) || [];
+      AssetManager.pendingCallbacks.delete(imageKey);
+
+      if (loaderScene.textures && !loaderScene.textures.exists(imageKey)) {
+        loaderScene.textures.addImage(imageKey, img);
         AssetManager.forceGPUUpload(loaderScene, imageKey);
-        onComplete(imageKey);
       }
+
+      callbacks.forEach((cb) => cb(imageKey));
     };
 
-    if (loadingTextures.has(imageKey)) {
-      // Texture is already in transit/loading. Register to get it when complete!
-      loaderScene.load.once(`filecomplete-image-${imageKey}`, () => {
-        onComplete(imageKey);
-      });
-    } else {
-      // Texture does not yet exist and is not currently loading => start loading it
-      loadingTextures.add(imageKey);
+    img.onerror = () => {
+      log("AssetManager", `Failed to load card image: ${imageUrl}`);
+      const callbacks = AssetManager.pendingCallbacks.get(imageKey) || [];
+      AssetManager.pendingCallbacks.delete(imageKey);
+      // Execute callbacks anyway so UI elements can unblock or show fallbacks
+      callbacks.forEach((cb) => cb(imageKey));
+    };
 
-      loaderScene.load.once(`filecomplete-image-${imageKey}`, () => {
-        cleanUpAndComplete(true);
-      });
-
-      loaderScene.load.once(`loaderror`, (file: any) => {
-        if (file && file.key === imageKey) {
-          cleanUpAndComplete(false);
-        }
-      });
-
-      loaderScene.load.image({
-        key: imageKey,
-        url: imageUrl,
-      } as any);
-
-      loaderScene.load.start();
-    }
+    img.src = imageUrl;
   }
 
   /**
    * Forces the WebGL renderer to upload the texture to the GPU immediately.
    */
   public static forceGPUUpload(scene: Phaser.Scene, textureKey: string) {
-    if (scene.renderer && scene.renderer.type === Phaser.WEBGL) {
+    if (scene && scene.renderer && scene.renderer.type === Phaser.WEBGL) {
       const renderer = scene.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
       const texture = scene.textures.get(textureKey);
       if (texture && texture.source && texture.source.length > 0) {
