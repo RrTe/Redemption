@@ -4,5 +4,5 @@ import { normalizeCard, type CardSide, type NormalizedCard } from "../../../shar
 export { type CardSide, type NormalizedCard, normalizeCard };
 
 export const cardData = {
-  cards: cardDataRaw.cards.map((c: any) => normalizeCard(c))
+  cards: (cardDataRaw as any).cards.map((c: any) => normalizeCard(c))
 };
