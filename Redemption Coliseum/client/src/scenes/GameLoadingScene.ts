@@ -2,7 +2,7 @@ import { BaseLoadingScene } from "./BaseLoadingScene";
 import { type TypedRoom } from "../ui/gameUI";
 import { type SoundManager } from "../managers/SoundManager";
 import { log } from "../utils/logger";
-import filterConfigData from "../../public/assets/ui/filter_config.json";
+import { filterConfigData } from "../ui/config/filter_config";
 
 
 export class GameLoadingScene extends BaseLoadingScene {
@@ -228,9 +228,11 @@ export class GameLoadingScene extends BaseLoadingScene {
     log("GameLoadingScene", "Preloading CardGame Scene assets.");
 
     // === Selection Dialog Filters & Checkboxes ===
-    this.load.json("filterConfig", "assets/ui/filter_config.json");
+    this.cache.json.add("filterConfig", filterConfigData);
     this.load.image("filterSelected_small", "assets/ui/filter-icons/selected_small.png");
     this.load.image("filterSelected_med", "assets/ui/filter-icons/selected_med.png");
+    this.load.image("silver_cross_circle_med", "assets/ui/filter-icons/silver_cross_circle_med.png");
+    this.load.image("silver_cross_circle_small", "assets/ui/filter-icons/silver_cross_circle_small.png");
     this.load.image("checkBoxUnChecked", "assets/ui/checkboxes/checkBox_Unchecked_compressed.png");
     this.load.image("checkBoxChecked", "assets/ui/checkboxes/checkBox_Checked_compressed.png");
 

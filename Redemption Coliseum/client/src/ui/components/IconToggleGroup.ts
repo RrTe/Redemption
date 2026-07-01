@@ -30,7 +30,9 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
   private groupConfig: Required<IconToggleGroupConfig>;
   private sprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
   private overlays: Map<string, Phaser.GameObjects.Image> = new Map();
+  private disabledOverlays: Map<string, Phaser.GameObjects.Image> = new Map();
   private selectedIds: Set<string> = new Set();
+  private disabledIds: Set<string> = new Set();
   private hoverFrame: Phaser.GameObjects.Graphics;
 
   constructor(
@@ -57,12 +59,8 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
       selectedOverlayTexture: config.selectedOverlayTexture ?? "filterSelected",
     };
 
-    // Initialize initial selections
-    this.groupConfig.initialSelectedIds.forEach((id) =>
-      this.selectedIds.add(id),
-    );
+    this.groupConfig.initialSelectedIds.forEach((id) => this.selectedIds.add(id));
 
-    // Create a graphics object for hover frames
     this.hoverFrame = scene.add.graphics();
     this.hoverFrame.setDepth(100);
     this.hoverFrame.setVisible(false);
@@ -80,38 +78,36 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
       const posX = col * this.groupConfig.spacingX;
       const posY = row * this.groupConfig.spacingY;
 
-      const isSelected = this.selectedIds.has(item.id);
-      
-      // If we use altTexture, swap texture, otherwise keep base texture and toggle overlay
       const hasAlt = !!item.altTexture;
-      const textureKey = (isSelected && hasAlt) ? item.altTexture! : item.texture;
-      const frameKey = (isSelected && hasAlt) ? item.altFrame : item.frame;
-
-      const sprite = this.scene.add.sprite(posX, posY, textureKey, frameKey);
+      const sprite = this.scene.add.sprite(posX, posY, item.texture, item.frame);
       sprite.setScale(this.groupConfig.scale);
-      sprite.setInteractive({ useHandCursor: true });
 
       this.add(sprite);
       this.sprites.set(item.id, sprite);
 
-      // Create selection overlay if no altTexture is specified
       if (!hasAlt) {
         const overlay = this.scene.add.image(posX, posY, this.groupConfig.selectedOverlayTexture);
         overlay.setScale(this.groupConfig.scale);
-        overlay.setVisible(isSelected);
         this.add(overlay);
         this.overlays.set(item.id, overlay);
       }
 
-      // Hover events
+      const halfW = sprite.displayWidth > 0 ? (sprite.displayWidth / 2) : (16 * this.groupConfig.scale);
+      const halfH = sprite.displayHeight > 0 ? (sprite.displayHeight / 2) : (16 * this.groupConfig.scale);
+
+      const disabledOverlay = this.scene.add.image(0, 0, "silver_cross_circle_small");
+      disabledOverlay.setScale(this.groupConfig.scale);
+      disabledOverlay.setVisible(false);
+      const badgeHalf = 7 * this.groupConfig.scale;
+      disabledOverlay.setPosition(posX + halfW - badgeHalf, posY + halfH - badgeHalf);
+      this.add(disabledOverlay);
+      this.disabledOverlays.set(item.id, disabledOverlay);
+
       sprite.on("pointerover", () => {
+        if (this.disabledIds.has(item.id)) return;
         sprite.setScale(this.groupConfig.scale * 1.15);
-        
         const overlay = this.overlays.get(item.id);
-        if (overlay) {
-          overlay.setScale(this.groupConfig.scale * 1.15);
-        }
-        
+        if (overlay) overlay.setScale(this.groupConfig.scale * 1.15);
         this.showHoverEffect(sprite);
         if (this.groupConfig.sfxHover) {
           this.scene.game.events.emit("playSound", this.groupConfig.sfxHover);
@@ -119,78 +115,98 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
       });
 
       sprite.on("pointerout", () => {
+        if (this.disabledIds.has(item.id)) return;
         sprite.setScale(this.groupConfig.scale);
-        
         const overlay = this.overlays.get(item.id);
-        if (overlay) {
-          overlay.setScale(this.groupConfig.scale);
-        }
-        
+        if (overlay) overlay.setScale(this.groupConfig.scale);
         this.hoverFrame.setVisible(false);
       });
 
       sprite.on("pointerup", () => {
+        if (this.disabledIds.has(item.id)) return;
         this.toggleItem(item);
       });
+
+      this.updateItemVisual(item.id);
     });
   }
 
+  private updateItemVisual(id: string) {
+    const sprite = this.sprites.get(id);
+    if (!sprite) return;
+    const item = this.items.find((i) => i.id === id);
+    if (!item) return;
+
+    const isSelected = this.selectedIds.has(id);
+    const isDisabled = this.disabledIds.has(id);
+    const hasAlt = !!item.altTexture;
+    const disabledOverlay = this.disabledOverlays.get(id);
+
+    sprite.clearTint();
+    if (sprite.postFX) {
+      sprite.postFX.clear();
+    }
+
+    if (isDisabled) {
+      if (disabledOverlay) disabledOverlay.setVisible(true);
+      sprite.disableInteractive();
+      sprite.setAlpha(0.50);
+      if (hasAlt) {
+        sprite.setTexture(item.texture, item.frame);
+      } else {
+        const overlay = this.overlays.get(id);
+        if (overlay) overlay.setVisible(false);
+      }
+    } else {
+      if (disabledOverlay) disabledOverlay.setVisible(false);
+      sprite.setInteractive({ useHandCursor: true });
+      if (isSelected) {
+        sprite.setAlpha(1.0);
+        if (hasAlt) {
+          sprite.setTexture(item.altTexture!, item.altFrame);
+        } else {
+          const overlay = this.overlays.get(id);
+          if (overlay) {
+            overlay.setVisible(true);
+            overlay.setAlpha(1.0);
+          }
+        }
+      } else {
+        sprite.setAlpha(0.50);
+        if (hasAlt) {
+          sprite.setTexture(item.texture, item.frame);
+        } else {
+          const overlay = this.overlays.get(id);
+          if (overlay) overlay.setVisible(false);
+        }
+      }
+    }
+  }
+
   private toggleItem(item: ToggleItemConfig) {
+    if (this.disabledIds.has(item.id)) return;
     const isCurrentlySelected = this.selectedIds.has(item.id);
     let newState = !isCurrentlySelected;
 
     if (!this.groupConfig.multiSelect) {
-      // Single-select mode: clear other selections
+      const prevIds = Array.from(this.selectedIds);
       this.selectedIds.clear();
-      this.sprites.forEach((sprite, id) => {
-        const matchingItem = this.items.find((i) => i.id === id);
-        if (matchingItem) {
-          if (matchingItem.altTexture) {
-            sprite.setTexture(matchingItem.texture, matchingItem.frame);
-          } else {
-            const overlay = this.overlays.get(id);
-            if (overlay) overlay.setVisible(false);
-          }
-        }
-      });
+      prevIds.forEach((id) => this.updateItemVisual(id));
     }
 
-    const hasAlt = !!item.altTexture;
     if (newState) {
       this.selectedIds.add(item.id);
-      
-      if (hasAlt) {
-        const sprite = this.sprites.get(item.id);
-        if (sprite) {
-          sprite.setTexture(item.altTexture!, item.altFrame);
-        }
-      } else {
-        const overlay = this.overlays.get(item.id);
-        if (overlay) overlay.setVisible(true);
-      }
-
       if (this.groupConfig.sfxChecked) {
         this.scene.game.events.emit("playSound", this.groupConfig.sfxChecked);
       }
     } else {
       this.selectedIds.delete(item.id);
-      
-      if (hasAlt) {
-        const sprite = this.sprites.get(item.id);
-        if (sprite) {
-          sprite.setTexture(item.texture, item.frame);
-        }
-      } else {
-        const overlay = this.overlays.get(item.id);
-        if (overlay) overlay.setVisible(false);
-      }
-
       if (this.groupConfig.sfxUnchecked) {
         this.scene.game.events.emit("playSound", this.groupConfig.sfxUnchecked);
       }
     }
+    this.updateItemVisual(item.id);
 
-    // Emit event on the scene
     this.scene.events.emit("ui:toggle-changed", {
       groupId: this.groupConfig.id,
       selectedIds: Array.from(this.selectedIds),
@@ -204,17 +220,20 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
     const padding = 3;
     const radius = 5;
 
-    // Convert global bounds to container local coordinates
     const localX = target.x - bounds.width / 2 - padding;
     const localY = target.y - bounds.height / 2 - padding;
     const width = bounds.width + padding * 2;
     const height = bounds.height + padding * 2;
 
     this.hoverFrame.clear();
-    // 0xe9cd45 is the golden hover border color
     this.hoverFrame.lineStyle(2, 0xe9cd45, 0.95);
     this.hoverFrame.strokeRoundedRect(localX, localY, width, height, radius);
     this.hoverFrame.setVisible(true);
+  }
+
+  public setDisabledIds(disabledIds: string[]) {
+    this.disabledIds = new Set(disabledIds);
+    this.items.forEach((item) => this.updateItemVisual(item.id));
   }
 
   public getSelectedIds(): string[] {
@@ -223,17 +242,7 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
 
   public clearSelection() {
     this.selectedIds.clear();
-    this.sprites.forEach((sprite, id) => {
-      const item = this.items.find((i) => i.id === id);
-      if (item) {
-        if (item.altTexture) {
-          sprite.setTexture(item.texture, item.frame);
-        } else {
-          const overlay = this.overlays.get(id);
-          if (overlay) overlay.setVisible(false);
-        }
-      }
-    });
+    this.items.forEach((item) => this.updateItemVisual(item.id));
   }
 
   public selectId(id: string) {

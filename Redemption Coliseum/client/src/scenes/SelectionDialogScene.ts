@@ -106,7 +106,8 @@ export class SelectionDialogScene extends Phaser.Scene {
     this.filterView.createFiltersUI(
       this.scale.width / 2,
       this.scale.height / 2 + cardHeight / 2 + filterYOffset,
-      this.scale.width
+      this.scale.width,
+      this.dialogData.cards
     );
     this.filterView.updateSelectedText(
       this.paginationManager.getFilteredCards().length,

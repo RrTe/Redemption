@@ -23,6 +23,7 @@ import { CardMetricsOverlay } from "../../ui/deck-editor/CardMetricsOverlay";
 import { FilterManager } from "../../ui/components/filters/FilterManager";
 import { log } from "../../utils/logger";
 import { DeckValidator } from "../../../../shared/DeckValidator.js";
+import { filterConfigData } from "../../ui/config/filter_config";
 // DeckMetricsDialogScene removed - now using HTML DOM overlay approach like the standalone editor
 import { NotificationManager } from "../../ui/notifications/NotificationManager";
 
@@ -199,21 +200,19 @@ export class DeckEditorScene extends Phaser.Scene {
       "assets/ui/checkboxes/checkBox_Checked_compressed.png",
     );
 
-    // Load new unified filter config JSON
-    this.load.json("filterConfig", "assets/ui/filter_config.json");
+    // Load new unified filter config
+    this.cache.json.add("filterConfig", filterConfigData);
     this.load.image("filterSelected", "assets/ui/filter-icons/selected.png");
-    this.load.once("filecomplete-json-filterConfig", (key: string, type: string, data: any) => {
-      if (data && data.filters) {
-        data.filters.forEach((filter: any) => {
-          if (filter.iconPath) {
-            this.load.image(filter.id, filter.iconPath);
-          }
-          if (filter.iconSmallPath) {
-            this.load.image(`${filter.id}_small`, filter.iconSmallPath);
-          }
-        });
-      }
-    });
+    if (filterConfigData && filterConfigData.filters) {
+      filterConfigData.filters.forEach((filter: any) => {
+        if (filter.iconPath) {
+          this.load.image(filter.id, filter.iconPath);
+        }
+        if (filter.iconSmallPath) {
+          this.load.image(`${filter.id}_small`, filter.iconSmallPath);
+        }
+      });
+    }
 
     // Fonts and audio
     this.load.bitmapFont(

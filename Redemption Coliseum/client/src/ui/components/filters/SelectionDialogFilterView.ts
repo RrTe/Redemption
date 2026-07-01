@@ -25,7 +25,7 @@ export class SelectionDialogFilterView {
     this.filterManager = new FilterManager(configData);
   }
 
-  public createFiltersUI(x: number, y: number, width: number) {
+  public createFiltersUI(x: number, y: number, width: number, cards?: CardState[]) {
     const scale = this.scene.scale.width / 1920;
 
     // Spacing and scaling for medium symbols and brigades
@@ -239,6 +239,30 @@ export class SelectionDialogFilterView {
 
     // Listen for toggle changes on the scene
     this.scene.events.on("ui:toggle-changed", this.handleToggleChanged, this);
+
+    if (cards) {
+      this.updateDisabledFilters(cards);
+    }
+  }
+
+  public updateDisabledFilters(cards: CardState[]) {
+    if (!this.filterManager || !cards || cards.length === 0) return;
+
+    const symbolFilters = this.filterManager.getFiltersByCategory("symbol");
+    const disabledSymbols = symbolFilters
+      .filter((f) => !cards.some((c) => this.filterManager.evaluateFilter(c, f)))
+      .map((f) => f.id);
+    if (this.symbolGroup) {
+      this.symbolGroup.setDisabledIds(disabledSymbols);
+    }
+
+    const brigadeFilters = this.filterManager.getFiltersByCategory("brigade");
+    const disabledBrigades = brigadeFilters
+      .filter((f) => !cards.some((c) => this.filterManager.evaluateFilter(c, f)))
+      .map((f) => f.id);
+    if (this.brigadeGroup) {
+      this.brigadeGroup.setDisabledIds(disabledBrigades);
+    }
   }
 
   private handleToggleChanged(data: any) {

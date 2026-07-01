@@ -1,4 +1,24 @@
-{
+export interface FilterRule {
+  field: string;
+  operator: string;
+  values: any[];
+}
+
+export interface FilterItem {
+  id: string;
+  category: string;
+  label: string;
+  iconPath: string;
+  iconSmallPath?: string;
+  rules: FilterRule[];
+  relation?: string;
+}
+
+export interface FilterConfig {
+  filters: FilterItem[];
+}
+
+export const filterConfigData: FilterConfig = {
   "filters": [
     {
       "id": "GoodDom",
@@ -986,4 +1006,4 @@
       ]
     }
   ]
-}
+};
