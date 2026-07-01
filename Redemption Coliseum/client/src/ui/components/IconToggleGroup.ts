@@ -172,7 +172,7 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
           }
         }
       } else {
-        sprite.setAlpha(0.50);
+        sprite.setAlpha(0.70);
         if (hasAlt) {
           sprite.setTexture(item.texture, item.frame);
         } else {

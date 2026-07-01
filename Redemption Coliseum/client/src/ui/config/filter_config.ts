@@ -1,17 +1,18 @@
 export interface FilterRule {
   field: string;
   operator: string;
-  values: any[];
+  values?: any[];
 }
 
 export interface FilterItem {
   id: string;
   category: string;
   label: string;
-  iconPath: string;
+  iconPath?: string;
   iconSmallPath?: string;
   rules: FilterRule[];
   relation?: string;
+  activeByDefault?: boolean;
 }
 
 export interface FilterConfig {

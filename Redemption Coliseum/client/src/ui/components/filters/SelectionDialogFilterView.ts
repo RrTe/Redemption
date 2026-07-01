@@ -11,6 +11,7 @@ export class SelectionDialogFilterView {
   private symbolGroup!: IconToggleGroup;
   private brigadeGroup!: IconToggleGroup;
   private toggleGroup!: IconToggleGroup; // Checkboxes
+  private bgGfx!: Phaser.GameObjects.Graphics;
 
   public cardsSelectedText!: Phaser.GameObjects.BitmapText;
   public textFilterElem!: Phaser.GameObjects.DOMElement;
@@ -27,6 +28,21 @@ export class SelectionDialogFilterView {
 
   public createFiltersUI(x: number, y: number, width: number, cards?: CardState[]) {
     const scale = this.scene.scale.width / 1920;
+    y += 2 * scale;
+
+    // Draw background bar behind all filters (similar style to DeckEditor)
+    const bgWidth = 880 * scale;
+    const bgHeight = 128 * scale;
+    const bgX = x - bgWidth / 2;
+    const bgY = y - 22 * scale;
+    const borderRadius = 12 * scale;
+
+    this.bgGfx = this.scene.add.graphics();
+    this.bgGfx.fillStyle(0x1a1a2e, 0.9);
+    this.bgGfx.fillRoundedRect(bgX, bgY, bgWidth, bgHeight, borderRadius);
+    this.bgGfx.lineStyle(2, 0x444466, 0.8);
+    this.bgGfx.strokeRoundedRect(bgX, bgY, bgWidth, bgHeight, borderRadius);
+    this.bgGfx.setDepth(8);
 
     // Spacing and scaling for medium symbols and brigades
     const spacingX = 46 * scale;
@@ -312,6 +328,7 @@ export class SelectionDialogFilterView {
 
   public destroy() {
     this.scene.events.off("ui:toggle-changed", this.handleToggleChanged, this);
+    if (this.bgGfx) this.bgGfx.destroy();
     if (this.symbolGroup) this.symbolGroup.destroy();
     if (this.brigadeGroup) this.brigadeGroup.destroy();
     if (this.toggleGroup) this.toggleGroup.destroy();
