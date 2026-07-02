@@ -12,7 +12,7 @@ import { SelectionDialogTransitionHandler } from "../ui/handlers/SelectionDialog
 import { log } from "../utils/logger";
 import { SelectionDialogFilterView } from "../ui/components/filters/SelectionDialogFilterView";
 
-const CARDS_PER_PAGE = 7;
+const CARDS_PER_PAGE = 18;
 
 export interface SelectionAction {
   label: string;
@@ -93,7 +93,7 @@ export class SelectionDialogScene extends Phaser.Scene {
       this.scale.height * 0.25,
     );
 
-    const cardWidth = this.scale.width / 8;
+    const cardWidth = this.scale.width / 16;
     const cardHeight = cardWidth * 1.4;
 
     const showToggles =
@@ -101,11 +101,15 @@ export class SelectionDialogScene extends Phaser.Scene {
       this.dialogData.fromZone === "deck" &&
       (this.dialogData.actionType === "look" ||
         this.dialogData.actionType === "reveal");
-    const filterYOffset = showToggles ? 72 : 28;
+
+    const ySpacing = 50;
+    const filterYOffset = (this.dialogData.isMyAction ? (showToggles ? 72 : 28) : 80) + (cardHeight / 2 + ySpacing / 2);
+
+    const centerY = this.scale.height / 2 - 30; // Match the shifted up center from UI manager
 
     this.filterView.createFiltersUI(
       this.scale.width / 2,
-      this.scale.height / 2 + cardHeight / 2 + filterYOffset,
+      centerY + cardHeight / 2 + filterYOffset,
       this.scale.width,
       this.dialogData.cards
     );
@@ -114,8 +118,10 @@ export class SelectionDialogScene extends Phaser.Scene {
       this.paginationManager.getAllCards().length
     );
 
-    this.uiManager.createPaginationControls(this.paginationManager, (d) =>
-      this.changePage(d),
+    this.uiManager.createPaginationControls(
+      this.paginationManager, 
+      (d) => this.changePage(d),
+      this.dialogData.isMyAction
     );
     this.renderPage(true, 1);
     this.uiManager.updatePaginationControls(this.paginationManager);
@@ -245,8 +251,8 @@ export class SelectionDialogScene extends Phaser.Scene {
         if (Array.isArray(t))
           t.forEach(
             (obj) =>
-              ((obj as unknown as Phaser.GameObjects.Components.Transform).x +=
-                offset),
+            ((obj as unknown as Phaser.GameObjects.Components.Transform).x +=
+              offset),
           );
         else
           (t as unknown as Phaser.GameObjects.Components.Transform).x += offset;

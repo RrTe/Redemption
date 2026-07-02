@@ -45,9 +45,11 @@ export class SelectionDialogUIManager {
   public createPaginationControls(
     paginationManager: SelectionDialogPaginationManager,
     changePageCallback: (delta: number) => void,
+    isMyAction: boolean = true
   ) {
-    const cardHeight = (this.scene.scale.width / 8) * 1.4;
-    const buttonY = this.scene.scale.height / 2 + cardHeight / 2 + 150;
+    const cardHeight = (this.scene.scale.width / 16) * 1.4;
+    const yOffset = isMyAction ? 115 : 60;
+    const buttonY = this.scene.scale.height - yOffset;
     const buttonXOffset = this.scene.scale.width * 0.4;
 
     this.prevButton = this.scene.add
@@ -60,7 +62,7 @@ export class SelectionDialogUIManager {
       .setTint(0x888888);
 
     this.pageText = this.scene.add
-      .text(this.scene.scale.width / 2, this.scene.scale.height - 115, "", {
+      .text(this.scene.scale.width / 2, this.scene.scale.height - yOffset, "", {
         fontSize: "18px",
         color: "#cccccc",
       })
@@ -210,16 +212,33 @@ export class SelectionDialogUIManager {
     onCardClicked: (card: CardUI) => void,
     selectedCards: Set<string>
   ): { xCoords: number[]; targets: (Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[])[] } {
-    const cardWidth = this.scene.scale.width / 8;
+    const cardWidth = this.scene.scale.width / 16;
     const cardHeight = cardWidth * 1.4;
-    const startX = this.scene.scale.width / 2 - (cards.length * (cardWidth + 20)) / 2 + cardWidth / 2;
+
+    // Config for rows
+    const cardsPerRow = 9;
+    const ySpacing = 50; // Space between rows
 
     const xCoords: number[] = [];
     const targets: (Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[])[] = [];
 
+    const isSingleRow = cards.length <= cardsPerRow;
+    const centerY = this.scene.scale.height / 2 - 30; // Shifted up by 30px
+
     cards.forEach((data, i) => {
-      const tx = startX + i * (cardWidth + 20);
-      const card = new CardUI(this.scene, tx, this.scene.scale.height / 2, data, cardWidth, cardHeight);
+      const rowIndex = Math.floor(i / cardsPerRow);
+      const colIndex = i % cardsPerRow;
+
+      const cardsInThisRow = Math.min(cardsPerRow, cards.length - rowIndex * cardsPerRow);
+      const startX = this.scene.scale.width / 2 - (cardsInThisRow * (cardWidth + 20)) / 2 + cardWidth / 2;
+
+      const tx = startX + colIndex * (cardWidth + 20);
+      const ty = isSingleRow
+        ? centerY
+        : centerY + (rowIndex === 0 ? -1 : 1) * (cardHeight / 2 + ySpacing / 2);
+
+      const card = new CardUI(this.scene, tx, ty, data, cardWidth, cardHeight);
+      card.setData("baseY", ty);
 
       // ✨ FIX: Disable standard drag-and-drop for cards inside the Selection Dialog
       // This
@@ -230,7 +249,7 @@ export class SelectionDialogUIManager {
       this.cardUIs.push(card);
 
       const showToggles = isMyAction && fromZone === "deck" && (actionType === "look" || actionType === "reveal");
-      const toggle = this.createPositionToggle(tx, this.scene.scale.height / 2 + cardHeight / 2 + 35, data.id, initialPosition, cardPositions);
+      const toggle = this.createPositionToggle(tx, ty + cardHeight / 2 + 20, data.id, initialPosition, cardPositions);
 
       toggle.setVisible(showToggles);
       card.setData("positionToggle", toggle);
@@ -274,7 +293,7 @@ export class SelectionDialogUIManager {
       return btn;
     };
 
-    container.add([createBtn("top", -25), createBtn("bottom", 25)]);
+    container.add([createBtn("top", -30), createBtn("bottom", 30)]);
     container
       .setData("topBtn", container.list[0])
       .setData("botBtn", container.list[1]);
@@ -346,7 +365,7 @@ export class SelectionDialogUIManager {
       this.scene.tweens.add({
         targets: card,
         scale: 1.15,
-        y: card.y - 30,
+        y: card.getData("baseY") - 30,
         duration: 150,
       });
       previewManager.show(card, sessionId);
@@ -358,7 +377,7 @@ export class SelectionDialogUIManager {
       this.scene.tweens.add({
         targets: card,
         scale: 1.0,
-        y: this.scene.scale.height / 2,
+        y: card.getData("baseY"),
         duration: 150,
       });
       previewManager.hide();
