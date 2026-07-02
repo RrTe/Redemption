@@ -142,6 +142,60 @@ export class PreviewManager {
   }
 
   /**
+   * ✨ NEU: Zeigt die Vorschau basierend auf Rohdaten an (z.B. aus dem Chat).
+   */
+  public showFromData(cardData: any, sourceRightX: number, sourceY: number) {
+    if (this.showTimer) {
+      clearTimeout(this.showTimer);
+    }
+
+    this.showTimer = window.setTimeout(() => {
+      if (!this.previewImage) {
+        this.createPreviewImage();
+      }
+
+      if (!this.previewImage) return;
+
+      let textureKey = "card-back";
+      if (cardData.ImageFile) {
+        const key = "card-" + cardData.ImageFile;
+        if (this.scene.textures.exists(key)) {
+          textureKey = key;
+        }
+      }
+
+      this.previewImage.setTexture(textureKey);
+
+      const targetHeight = this.scene.scale.height * 0.6;
+      this.previewImage.displayHeight = targetHeight;
+      this.previewImage.scaleX = this.previewImage.scaleY;
+
+      const padding = 20;
+      const previewWidth = this.previewImage.displayWidth;
+      
+      this.previewImage.x = sourceRightX + padding + previewWidth / 2;
+      this.previewImage.y = sourceY;
+
+      const screenHeight = this.scene.scale.height;
+      const halfHeight = this.previewImage.displayHeight / 2;
+
+      if (this.previewImage.y - halfHeight < padding) this.previewImage.y = halfHeight + padding;
+      if (this.previewImage.y + halfHeight > screenHeight - padding)
+        this.previewImage.y = screenHeight - halfHeight - padding;
+
+      this.previewImage.setVisible(true);
+      this.previewImage.setAlpha(0);
+
+      this.scene.tweens.add({
+        targets: this.previewImage,
+        alpha: 1,
+        duration: 100,
+        ease: "Sine.easeOut",
+      });
+    }, this.SHOW_DELAY);
+  }
+
+  /**
    * Versteckt die Vorschau.
    */
   public hide() {

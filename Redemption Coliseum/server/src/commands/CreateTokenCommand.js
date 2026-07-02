@@ -24,7 +24,7 @@ class CreateTokenCommand extends BaseCommand {
 
     player[card.zone].push(card);
     this.room.cardLookup.set(card.id, card);
-    this.room.broadcastGameLog(`${this.client.userData.playerName} created token ${card.Name}.`);
+    this.room.broadcastGameLog(`${this.client.userData.playerName} created token {{${cardDef.id}|${card.Name}}}.`);
   }
 }
 

@@ -142,6 +142,7 @@ export class GameUI {
       this.scene,
       this.room,
       this.networkManager,
+      this.previewManager
     );
     this.tokenManager = new TokenManager(
       this.scene,

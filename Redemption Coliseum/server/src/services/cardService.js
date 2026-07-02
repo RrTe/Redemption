@@ -7,6 +7,7 @@ const {
 } = require("../../../shared/card-constants");
 const { ArraySchema } = require("@colyseus/schema");
 const { PlayerState } = require("../state/PlayerState");
+const { generateCardId } = require("../../../shared/utils");
 const util = require("util");
 
 /**
@@ -366,8 +367,9 @@ function _moveCardById(
 
   // ✨ NEU: Token werden vollständig aufgelöst, wenn sie in Discard oder Banish verschoben werden.
   if (movedCard.isToken && (to === ZONES.DISCARD || to === ZONES.BANISH)) {
+    const templateId = generateCardId(movedCard.ImageFile, movedCard.Set, movedCard.Name);
     cardLookup.delete(cardId);
-    return { movedCards: [movedCard], logEntry: `${actingPlayer.name} dissolves token [${movedCard.Name}].` };
+    return { movedCards: [movedCard], logEntry: `${actingPlayer.name} dissolves token {{${templateId}|${movedCard.Name}}}.` };
   }
 
   if (coords) {
@@ -390,13 +392,15 @@ function _moveCardById(
   }
 
   let logEntry = "";
+  const templateId = generateCardId(movedCard.ImageFile, movedCard.Set, movedCard.Name);
+  
   // Special logging for Lost Souls being redirected
   if (cardForCheck && cardForCheck.Type === CARD_TYPES.LOST_SOUL && (to === ZONES.LAND_OF_BONDAGE || to === ZONES.TERRITORY)) {
-      logEntry = `${actingPlayer.name} moves [${movedCard.Name}] to ${getZoneDisplayName(to, false)}. (Lost Soul rule)`;
+      logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} to ${getZoneDisplayName(to, false)}. (Lost Soul rule)`;
   } else {
       const isFromOpponent = controllerId !== actingPlayer.sessionId;
       const isToOpponent = targetPlayer.sessionId !== actingPlayer.sessionId;
-      logEntry = `${actingPlayer.name} moves [${movedCard.Name}] from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${getZoneDisplayName(to, isToOpponent)}.`;
+      logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${getZoneDisplayName(to, isToOpponent)}.`;
   }
 
 

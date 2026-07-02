@@ -108,6 +108,11 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
         sprite.setScale(this.groupConfig.scale * 1.15);
         const overlay = this.overlays.get(item.id);
         if (overlay) overlay.setScale(this.groupConfig.scale * 1.15);
+        
+        if (!this.selectedIds.has(item.id)) {
+          sprite.setAlpha(1.0);
+        }
+
         this.showHoverEffect(sprite);
         if (this.groupConfig.sfxHover) {
           this.scene.game.events.emit("playSound", this.groupConfig.sfxHover);
@@ -120,6 +125,10 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
         const overlay = this.overlays.get(item.id);
         if (overlay) overlay.setScale(this.groupConfig.scale);
         this.hoverFrame.setVisible(false);
+
+        if (!this.selectedIds.has(item.id)) {
+          sprite.setAlpha(0.70);
+        }
       });
 
       sprite.on("pointerup", () => {

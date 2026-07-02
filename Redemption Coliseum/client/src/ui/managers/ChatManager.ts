@@ -3,12 +3,14 @@ import { type TypedRoom } from "../gameUI";
 import { type GameNetworkManager } from "../../network/GameNetworkManager"; // ✨ NEU
 import { SoundManager } from "../../managers/SoundManager";
 import { type GameLayout } from "../layout"; // ✨ NEU
+import { type PreviewManager } from "./PreviewManager"; // ✨ NEU
 
 export class ChatManager {
   private scene: Phaser.Scene;
   private room: TypedRoom;
   private networkManager: GameNetworkManager; // ✨ NEU
   private soundManager: SoundManager;
+  private previewManager: PreviewManager; // ✨ NEU
 
   private container!: Phaser.GameObjects.Container; // ✨ FIX: Definite Assignment (!)
   private chatDOM!: Phaser.GameObjects.DOMElement; // ✨ FIX: Definite Assignment (!)
@@ -30,10 +32,12 @@ export class ChatManager {
     scene: Phaser.Scene,
     room: TypedRoom,
     networkManager: GameNetworkManager,
+    previewManager: PreviewManager, // ✨ NEU
   ) {
     this.scene = scene;
     this.room = room;
     this.networkManager = networkManager; // ✨ NEU
+    this.previewManager = previewManager; // ✨ NEU
     this.soundManager = scene.registry.get("soundManager");
 
     this.createUI();
@@ -103,6 +107,26 @@ export class ChatManager {
       wrapper.addEventListener("touchstart", (e) => e.stopPropagation());
       wrapper.addEventListener("click", (e) => e.stopPropagation());
       wrapper.addEventListener("wheel", (e) => e.stopPropagation()); // Auch Scrollen abfangen
+
+      // ✨ NEU: Hover-Effekte für Karten-Links per Event-Delegation
+      wrapper.addEventListener("mouseover", (e) => {
+        const target = e.target as HTMLElement;
+        if (target && target.classList.contains("chat-card-link")) {
+          const cardId = target.getAttribute("data-cardid");
+          const cardName = target.getAttribute("data-cardname");
+          if (cardId) {
+            this.showPreviewForCardId(cardId, e.clientY);
+          } else if (cardName) {
+            this.showPreviewForCardName(cardName, e.clientY);
+          }
+        }
+      });
+      wrapper.addEventListener("mouseout", (e) => {
+        const target = e.target as HTMLElement;
+        if (target && target.classList.contains("chat-card-link")) {
+          this.previewManager.hide();
+        }
+      });
     }
 
     const input = this.chatDOM.getChildByID("chat-input") as HTMLInputElement;
@@ -217,7 +241,7 @@ export class ChatManager {
         this.addEntry(`
             <div style="margin-bottom: 4px;">
                 <span style="color: #000000; font-weight: bold; text-decoration: underline;">${msg.sender}:</span> 
-                <span style="color: #26140c;">${this.escapeHtml(msg.text)}</span>
+                <span style="color: #26140c;">${this.formatMessage(msg.text)}</span>
             </div>
         `);
         if (!this.isOpen) this.showToast(`${msg.sender}: ${msg.text}`);
@@ -231,14 +255,14 @@ export class ChatManager {
         if (msg.type === "gameLog" || !msg.sender) {
           this.addEntry(`
                     <div style="margin-bottom: 4px; color: #5c3a21; font-style: italic; font-size: 0.9em;">
-                        ➤ ${this.escapeHtml(msg.text)}
+                        ➤ ${this.formatMessage(msg.text)}
                     </div>
                 `);
         } else {
           this.addEntry(`
                     <div style="margin-bottom: 4px;">
                         <span style="color: #000000; font-weight: bold; text-decoration: underline;">${msg.sender}:</span> 
-                        <span style="color: #26140c;">${this.escapeHtml(msg.text)}</span>
+                        <span style="color: #26140c;">${this.formatMessage(msg.text)}</span>
                     </div>
                 `);
         }
@@ -251,7 +275,7 @@ export class ChatManager {
     this.room.onMessage("gameLog", (msg: { text: string }) => {
       this.addEntry(`
             <div style="margin-bottom: 4px; color: #5c3a21; font-style: italic; font-size: 0.9em;">
-                ➤ ${this.escapeHtml(msg.text)}
+                ➤ ${this.formatMessage(msg.text)}
             </div>
         `);
       // ✨ FIX: Keine Toast-Nachricht für System-Logs, da diese oft redundant zur visuellen Aktion sind.
@@ -346,6 +370,69 @@ export class ChatManager {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
+  }
+
+  /** ✨ NEU: Formatiert Nachrichtentexte und wandelt {{ID|Kartenname}} oder [Kartenname] in Links um */
+  private formatMessage(text: string): string {
+    let formatted = this.escapeHtml(text);
+    const placeholders: string[] = [];
+    
+    // Neues Format vom Server: {{ID|Name}}
+    // Da escapeHtml angewendet wurde, bleiben die geschweiften Klammern erhalten.
+    formatted = formatted.replace(
+      /\{\{([^|]+)\|(.+?)\}\}/g,
+      (match, cardId, cardName) => {
+        const trimmedName = cardName.trim();
+        // Falls der Server-String ein Leerzeichen am Ende hatte, stellen wir es *außerhalb* des Links wieder her.
+        const trailingSpace = cardName.length > trimmedName.length ? " " : "";
+        const html = `<span class="chat-card-link" data-cardid="${cardId}" style="font-weight: bold; text-decoration: underline; cursor: pointer; padding-right: 2px;">${trimmedName}</span>${trailingSpace}`;
+        placeholders.push(html);
+        return `__CARD_LINK_${placeholders.length - 1}__`;
+      }
+    );
+
+    // Fallback/Abwärtskompatibilität für alte Logs: [Name]
+    // Oder von Spielern manuell eingetippte [Kartenname]
+    formatted = formatted.replace(
+      /\[([^\]]+)\]/g,
+      (match, cardName) => {
+        const trimmedName = cardName.trim();
+        const trailingSpace = cardName.length > trimmedName.length ? " " : "";
+        return `<span class="chat-card-link" data-cardname="${trimmedName}" style="font-weight: bold; text-decoration: underline; cursor: pointer; padding-right: 2px;">${trimmedName}</span>${trailingSpace}`;
+      }
+    );
+
+    // Placeholders zurücksetzen
+    placeholders.forEach((html, index) => {
+      formatted = formatted.replace(`__CARD_LINK_${index}__`, html);
+    });
+
+    return formatted;
+  }
+
+  /** ✨ NEU: Zeigt die Kartenvorschau für eine Karten-ID an */
+  private showPreviewForCardId(cardId: string, eventY: number) {
+    const cardDatabase = this.scene.registry.get("cardDatabase");
+    if (!cardDatabase || !cardDatabase.cards) return;
+    
+    // Finde Karte anhand der ID
+    const cardData = cardDatabase.cards.find((c: any) => c.id === cardId);
+    if (cardData && this.previewManager) {
+       this.previewManager.showFromData(cardData, 300, eventY);
+    }
+  }
+
+  /** ✨ NEU: Zeigt die Kartenvorschau für einen Kartennamen an */
+  private showPreviewForCardName(cardName: string, eventY: number) {
+    const cardDatabase = this.scene.registry.get("cardDatabase");
+    if (!cardDatabase || !cardDatabase.cards) return;
+    
+    // Finde Karte anhand des Namens
+    const cardData = cardDatabase.cards.find((c: any) => c.Name === cardName);
+    if (cardData && this.previewManager) {
+       // Chatfenster liegt zwischen x=0 und x=300 (wenn offen). Die rechte Kante ist bei x=300.
+       this.previewManager.showFromData(cardData, 300, eventY);
+    }
   }
 
   /** ✨ NEU: Räumt alle UI-Elemente sauber auf. */
