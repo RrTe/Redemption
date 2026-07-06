@@ -322,10 +322,9 @@ export function calculateLayout(
     pileHeight,
   );
 
-  // ✨ FIX: Player & Opponent Info nach oben verschoben, da Buttons darauf zugreifen
   const playerInfo = {
     x: EDGE_MARGIN, // Gleicher Abstand wie opponentPilesX
-    y: height - handZoneHeight + 20, // Etwas unterhalb der Oberkante der Handzone
+    y: height - handZoneHeight - 20, // ✨ FIX: Nach oben verschoben statt nach unten (war +20)
   };
 
   const opponentInfo = {
@@ -334,9 +333,9 @@ export function calculateLayout(
   };
 
   // ✨ NEU: Berechne die Positionen für die UI-Texte am rechten Rand
-  // ✨ NEU: Phasen-Icons rechts neben der Gegner-Hand
+  // ✨ NEU: Phasen-Icons rechts neben der Gegner-Hand, ABER vor den Player Piles!
   const opponentHandRight = opponentHand.x + opponentHand.width;
-  const spaceRight = width - opponentHandRight;
+  const spaceRight = playerPilesX - opponentHandRight;
   // ✨ FIX: Dynamische Größe (ca. 32px bei 1080p), mindestens 24px.
   const iconSize = Math.max(24, Math.floor(height * 0.03));
 

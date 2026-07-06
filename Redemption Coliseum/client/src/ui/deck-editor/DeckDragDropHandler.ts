@@ -36,6 +36,8 @@ export class DeckDragDropHandler {
   }
 
   private setupDragAndDrop() {
+    this.scene.input.dragDistanceThreshold = 10;
+
     this.scene.input.on("drag", (
       pointer: Phaser.Input.Pointer,
       gameObject: any,
@@ -45,6 +47,28 @@ export class DeckDragDropHandler {
       if (gameObject.zoomed) {
         editorEvents.emit("card-zoomed-out", gameObject);
       }
+      gameObject.emit("force-out");
+
+      // On touch devices, block drag until long press is detected (350ms hold)
+      if (pointer.wasTouch && gameObject.getData("isLongPressReady") !== true) {
+        return; // Not a long press — scroll and tap handlers manage this gesture
+      }
+
+      // After long press: detect vertical scroll vs horizontal drag intent
+      if (gameObject.getData("isTouchScrolling") === undefined) {
+        if (pointer.wasTouch) {
+          const dx = Math.abs(pointer.x - pointer.downX);
+          const dy = Math.abs(pointer.y - pointer.downY);
+          gameObject.setData("isTouchScrolling", dy > dx);
+        } else {
+          gameObject.setData("isTouchScrolling", false);
+        }
+      }
+
+      if (gameObject.getData("isTouchScrolling") === true) {
+        return; // Vertical motion after long press — treat as scroll
+      }
+
       this.dragging = true;
       (this.scene as any).isDragging = true;
       this.scene.children.bringToTop(gameObject);
@@ -199,9 +223,13 @@ export class DeckDragDropHandler {
           gameObject.setDepth(990); // searchAreaDepth - 10
           if (this.mask) gameObject.setMask(this.mask);
           gameObject.setScale(gameObject.scaleFactor);
+          // Restore card to its original slot position so the grid stays intact
           gameObject.x = gameObject.input.dragStartX;
           gameObject.y = gameObject.input.dragStartY;
           gameObject.showCard(true);
+          if ("labelBg" in gameObject) {
+            this.scene.events.emit("ui:deck-list-layout-refresh");
+          }
         },
       });
 
@@ -214,6 +242,14 @@ export class DeckDragDropHandler {
       gameObject: any,
       dropped: boolean
     ) => {
+      // Always clear touch-gesture state flags on pointer release
+      gameObject.setData("isLongPressReady", false);
+      if (gameObject.getData("isTouchScrolling") === true) {
+        gameObject.setData("isTouchScrolling", undefined);
+        return; // Was a touch scroll gesture — no drag cleanup needed
+      }
+      gameObject.setData("isTouchScrolling", undefined);
+
       if (gameObject.cardCopy !== null) {
         gameObject.cardCopy.setAlpha(1.0);
         if (dropped) {
@@ -225,6 +261,7 @@ export class DeckDragDropHandler {
         if (gameObject.zoomed) {
           gameObject.zoomOut(37.5);
         }
+        // Snap card back to where it was dragged from (works for all card types)
         this.scene.tweens.add({
           targets: gameObject,
           x: gameObject.input.dragStartX,
@@ -235,6 +272,10 @@ export class DeckDragDropHandler {
             if (this.mask) gameObject.setMask(this.mask);
             if (gameObject.cardCopy !== null) {
               gameObject.cardCopy.setVisible(false);
+            }
+            // Search area cards: re-run layout so the grid stays pixel-perfect
+            if ("labelBg" in gameObject) {
+              this.scene.events.emit("ui:deck-list-layout-refresh");
             }
           },
         });

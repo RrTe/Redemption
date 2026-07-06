@@ -274,10 +274,25 @@ export class VerticalCardScrollList extends Phaser.GameObjects.Container {
     );
   }
 
+  private activePointerId: number | null = null;
+
   /**
    * Registers a mouse-wheel callback specifically inside the bounds of the list area.
    */
   private setupWheelHandling() {
+    this.scene.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      if (pointer.wasTouch && Phaser.Geom.Rectangle.Contains(this.viewArea, pointer.x, pointer.y)) {
+        if (this.activePointerId === null) {
+          this.activePointerId = pointer.id;
+        }
+      }
+    });
+
+    this.scene.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
+      if (this.activePointerId === pointer.id) {
+        this.activePointerId = null;
+      }
+    });
     this.scene.input.on("wheel", (
       pointer: Phaser.Input.Pointer,
       gameObjects: Phaser.GameObjects.GameObject[],
@@ -287,6 +302,18 @@ export class VerticalCardScrollList extends Phaser.GameObjects.Container {
       // Confirm the wheel occurred inside our scroll list bounds
       if (Phaser.Geom.Rectangle.Contains(this.viewArea, pointer.x, pointer.y)) {
         this.scroll(deltaY);
+      }
+    });
+
+    // ✨ Mobile: Swipe/Drag support for scrolling
+    this.scene.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+      if (pointer.isDown && pointer.wasTouch && this.activePointerId === pointer.id) {
+        if (Phaser.Geom.Rectangle.Contains(this.viewArea, pointer.x, pointer.y)) {
+          const deltaY = pointer.prevPosition.y - pointer.y;
+          if (Math.abs(deltaY) > 2) {
+            this.scroll(deltaY);
+          }
+        }
       }
     });
   }
@@ -303,7 +330,7 @@ export class VerticalCardScrollList extends Phaser.GameObjects.Container {
    * Adjusts the current scroll offset instantly.
    */
   public scroll(deltaY: number) {
-    if (deltaY !== 0) {
+    if (Math.abs(deltaY) > 2) {
       this.resetZoomedItem();
     }
     this.updateScrollBounds();

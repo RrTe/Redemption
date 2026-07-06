@@ -138,6 +138,13 @@ export class SettingsDialogScene extends Phaser.Scene {
 
     const scrollHeight = scrollBg.displayHeight; // Für die Positionierung der Elemente nutzen
     const scrollWidth = scrollBg.displayWidth;
+    
+    // ✨ NEU: Auf Mobile-Screens (Landscape) herunterskalieren, wenn es zu groß ist
+    const availableHeight = height * 0.9;
+    if (scrollHeight > availableHeight) {
+      const scaleFactor = availableHeight / scrollHeight;
+      this.container.setScale(scaleFactor);
+    }
 
     // --- Inhalt ---
 
@@ -184,7 +191,7 @@ export class SettingsDialogScene extends Phaser.Scene {
     // --- Slide-In Animation ---
     // Zielposition: Rechtsbündig unter dem Button (ungefähr)
     // Wir zentrieren es vertikal, aber schieben es nach rechts.
-    const targetX = width - scrollWidth / 2 - 50;
+    const targetX = width - (scrollWidth * this.container.scale) / 2 - 50 * this.container.scale;
 
     this.tweens.add({
       targets: this.container,

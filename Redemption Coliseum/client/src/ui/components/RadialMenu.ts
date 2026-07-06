@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { ActionIcon } from "./ActionIcon";
 import type { ActionIconConfig } from "../types";
+import { ViewportManager } from "../managers/ViewportManager";
 
 export class RadialMenu {
   private icons: ActionIcon[] = [];
@@ -42,8 +43,10 @@ export class RadialMenu {
 
     this.blocker.on("pointerdown", () => this.close());
     const angleStep = (2 * Math.PI) / configs.length;
-    const targetSize =
-      Math.min(this.scene.scale.width, this.scene.scale.height) / 12;
+    
+    // ✨ Layout Strategy: Icons scale relative to viewport min-dimension
+    const isCompact = ViewportManager.isTouchPrimary() || ViewportManager.isCompactMode();
+    const targetSize = ViewportManager.vmin(isCompact ? 12.5 : 8.3);
 
     configs.forEach((config, index) => {
       const angle = index * angleStep - Math.PI / 2;

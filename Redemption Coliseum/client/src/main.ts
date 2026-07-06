@@ -11,6 +11,7 @@ import { SoundManager } from "./managers/SoundManager"; // ✨ NEU
 import { HubScene } from "./scenes/HubScene"; // ✨ NEU
 import { DeckEditorScene } from "./scenes/deck-editor/DeckEditorScene"; // ✨ NEU
 import { NotificationManager } from "./ui/notifications/NotificationManager";
+import { ViewportManager } from "./ui/managers/ViewportManager"; // ✨ NEU: Responsives Layouting
 import { cardData } from "./utils/CardService";
 // DeckMetricsDialogScene has been replaced by an HTML DOM overlay - no longer a separate scene
 
@@ -43,6 +44,9 @@ window.addEventListener("DOMContentLoaded", () => {
   };
 
   const game = new Phaser.Game(config);
+
+  // ✨ NEU: ViewportManager initialisieren für responsive UI
+  ViewportManager.init(game);
 
   // ✨ NEU: Globale Manager erstellen und in der Registry speichern.
   // Diese sind dann in jeder Szene über `this.registry.get(...)` verfügbar.

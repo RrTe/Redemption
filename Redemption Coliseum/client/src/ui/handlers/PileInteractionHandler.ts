@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { type Zone, PILE_ZONES, ZONES } from "../../../../shared/zones.js";
 import { type TypedRoom } from "../gameUI.js";
+import { ViewportManager } from "../managers/ViewportManager.js";
 import { type OverlayManager } from "../managers/OverlayManager.js";
 import { type MenuFactory } from "../factories/MenuFactory.js";
 import { RadialMenu } from "../components/RadialMenu.js";
@@ -105,9 +106,9 @@ export class PileInteractionHandler {
 
     // 3. Create Menu
     const menuConfigs = this.menuFactory.getActionsForPile(zone, targetId);
-    const radius = 80;
-    const iconSize =
-      Math.min(this.scene.scale.width, this.scene.scale.height) / 12;
+    const isCompact = ViewportManager.isTouchPrimary() || ViewportManager.isCompactMode();
+    const radius = ViewportManager.vmin(isCompact ? 16 : 8);
+    const iconSize = ViewportManager.vmin(isCompact ? 12.5 : 8.3);
     const menuRadius = radius + iconSize / 2;
 
     const cx = Phaser.Math.Clamp(

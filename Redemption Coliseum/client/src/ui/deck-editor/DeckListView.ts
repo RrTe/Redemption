@@ -5,6 +5,7 @@ import { AssetManager } from "../managers/AssetManager";
 import { type FilterDefinition } from "../components/filters/FilterTypes";
 import { NotificationManager } from "../notifications/NotificationManager";
 import { renderBrigadeCircles } from "./BrigadeRenderer";
+import { ViewportManager } from "../managers/ViewportManager";
 
 
 // Layout and UI configuration constants matching standalone specs
@@ -62,6 +63,7 @@ export class DeckListView {
   private reserveScrolledDown: number = 0;
   private deckVisibleLines: number = 0;
   private reserveVisibleLines: number = 0;
+  private currentlyHoveredBox: Phaser.GameObjects.Rectangle | null = null; // ✨ NEU: Mobile State Tracking
 
   // Stats Text Elements
   private cardsInDeckText: Phaser.GameObjects.BitmapText;
@@ -188,6 +190,40 @@ export class DeckListView {
         }
       }
     );
+
+    // ✨ Mobile: Swipe/Drag support for scrolling
+    this.scene.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
+      if (pointer.isDown && pointer.wasTouch) {
+        const x = pointer.x;
+        const y = pointer.y;
+
+        const inDeckArea =
+          x >= this.deckArea.x - this.deckArea.width / 2 &&
+          x <= this.deckArea.x + this.deckArea.width / 2 &&
+          y >= this.deckArea.y - this.deckArea.height / 2 &&
+          y <= this.deckArea.y + this.deckArea.height / 2;
+
+        const inReserveArea =
+          x >= this.reserveArea.x - this.reserveArea.width / 2 &&
+          x <= this.reserveArea.x + this.reserveArea.width / 2 &&
+          y >= this.reserveArea.y - this.reserveArea.height / 2 &&
+          y <= this.reserveArea.y + this.reserveArea.height / 2;
+
+        const deltaY = pointer.prevPosition.y - pointer.y;
+        if (Math.abs(deltaY) > 0) {
+          // Schließe Hover beim Scrollen!
+          if (this.currentlyHoveredBox) {
+            this.currentlyHoveredBox.emit("force-out");
+          }
+
+          if (inDeckArea) {
+            this.scroll(pointer, 0, Math.sign(deltaY), 0, EDITOR_LAYOUT.deckAreaName);
+          } else if (inReserveArea) {
+            this.scroll(pointer, 0, Math.sign(deltaY), 0, EDITOR_LAYOUT.reserveAreaName);
+          }
+        }
+      }
+    });
   }
 
   private createMask(area: Phaser.Geom.Rectangle, radius: number): Phaser.Display.Masks.GeometryMask {
@@ -219,7 +255,16 @@ export class DeckListView {
         )
       : [];
 
-    const zoomScale = this.controller?.cardList?.cardZoomScale ?? 0.85;
+    const baseZoomScale = this.controller?.cardList?.cardZoomScale ?? 0.85;
+    const defaultZoomedHeight = EDITOR_LAYOUT.cardHeight * baseZoomScale;
+    
+    // Dynamisch berechnen: Wie viel Platz haben wir in der Höhe? (Minus 40px Rand)
+    const maxAvailableHeight = this.scene.scale.height - 40;
+    
+    // Faktor berechnen, aber maximal 1.0 (damit es auf riesigen Monitoren nicht künstlich aufgebläht wird)
+    const dynamicScaleFactor = Math.min(1.0, maxAvailableHeight / defaultZoomedHeight);
+    
+    const zoomScale = baseZoomScale * dynamicScaleFactor;
     const zoomedWidth = EDITOR_LAYOUT.cardWidth * zoomScale;
     const zoomedHeight = EDITOR_LAYOUT.cardHeight * zoomScale;
 
@@ -328,8 +373,16 @@ export class DeckListView {
     container.setDepth(this.depth);
     box.setInteractive({ useHandCursor: true });
 
-    box.on("pointerover", () => {
-      if ((this.scene as any).isDragging || this.scene.input.activePointer.isDown) return;
+    const triggerHoverIn = () => {
+      const pointer = this.scene.input.activePointer;
+      const isTouchInteraction = ViewportManager.isTouchPrimary() || pointer.wasTouch;
+      if ((this.scene as any).isDragging || (pointer.isDown && !isTouchInteraction)) return;
+
+      // Schließe vorheriges, falls auf Mobile
+      if (this.currentlyHoveredBox && this.currentlyHoveredBox !== box) {
+        this.currentlyHoveredBox.emit("force-out");
+      }
+      this.currentlyHoveredBox = box;
 
       this.scene.game.events.emit("playSound", "DECK_CARD_ENTRY_OVER");
       
@@ -345,7 +398,6 @@ export class DeckListView {
         }
       };
 
-      // Update texture just in case it loaded while we weren't looking
       if (img.texture.key !== textureKey && this.scene.textures.exists(textureKey)) {
         img.setTexture(textureKey);
       }
@@ -356,7 +408,6 @@ export class DeckListView {
         if (img.scene) img.scene.children.bringToTop(img);
         emitHover();
       } else if (img.texture.key !== textureKey || !this.scene.textures.exists(textureKey)) {
-        // High-priority bypass for Vite Dev Server queue clogging
         const url = `/assets/cards/${card.ImageFile}.jpg`;
         fetch(url, { priority: 'high' } as any)
           .then(response => response.blob())
@@ -384,15 +435,38 @@ export class DeckListView {
             htmlImage.src = objectUrl;
           });
       }
-    });
+    };
 
-    box.on("pointerout", () => {
+    const triggerHoverOut = () => {
+      if (this.currentlyHoveredBox === box) {
+        this.currentlyHoveredBox = null;
+      }
       this.scene.events.emit("ui:deck-card-unhovered", card);
       img.setData('isHovered', false);
       img.setVisible(false);
       box.setFillStyle(0x000000, 0.5);
       container.setScale(1.0).setDepth(this.depth);
+    };
+
+    box.on("pointerover", (pointer: Phaser.Input.Pointer) => {
+      // Auf Mobile wollen wir Hover ignorieren, hier zählt der Tap!
+      if (!ViewportManager.isTouchPrimary() && !pointer.wasTouch) triggerHoverIn();
     });
+
+    box.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      // ✨ Mobile: Tap öffnet die Vorschau!
+      if (ViewportManager.isTouchPrimary() || pointer.wasTouch) {
+        triggerHoverIn();
+      }
+    });
+
+    box.on("pointerout", (pointer: Phaser.Input.Pointer) => {
+      // ✨ Mobile: Verhindert, dass das Loslassen des Fingers die Vorschau direkt wieder schließt.
+      if (!ViewportManager.isTouchPrimary() && !pointer.wasTouch) triggerHoverOut();
+    });
+
+    // Erlaube manuelles Schließen von außen
+    box.on("force-out", triggerHoverOut);
 
     del.setInteractive({ useHandCursor: true });
     del.on("pointerover", () => del.setScale(EDITOR_LAYOUT.deleteSymbolScale));

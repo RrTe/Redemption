@@ -11,6 +11,7 @@ import { log } from "../../utils/logger.js";
 import { DragDropHandler } from "./DragDropHandler.js";
 import { type CardInteractionHandler } from "./CardInteractionHandler.js";
 import { type PileInteractionHandler } from "./PileInteractionHandler.js";
+import { ViewportManager } from "../managers/ViewportManager.js";
 
 /**
  * Manages click, double-click, hover, and menu interactions.
@@ -24,6 +25,7 @@ export class InteractionHandler {
   private elementManager: ElementManager;
 
   private activeMenu: RadialMenu | null = null;
+  private longPressTimer: Phaser.Time.TimerEvent | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -46,6 +48,8 @@ export class InteractionHandler {
     this.scene.input.on("gameobjectout", this.onPointerOut, this);
     this.scene.input.on("gameobjectdown", this.onGameObjectDown, this);
     this.scene.input.on("gameobjectup", this.onGameObjectUp, this);
+    // ✨ Mobile: Background tap detection to clear hovers
+    this.scene.input.on("pointerdown", this.onGlobalPointerDown, this);
   }
 
   public destroy() {
@@ -53,9 +57,22 @@ export class InteractionHandler {
     this.scene.input.off("gameobjectout", this.onPointerOut, this);
     this.scene.input.off("gameobjectdown", this.onGameObjectDown, this);
     this.scene.input.off("gameobjectup", this.onGameObjectUp, this);
+    this.scene.input.off("pointerdown", this.onGlobalPointerDown, this);
     if (this.activeMenu) {
       this.activeMenu.close();
       this.activeMenu = null;
+    }
+  }
+
+  private onGlobalPointerDown(
+    pointer: Phaser.Input.Pointer,
+    gameObjects: Phaser.GameObjects.GameObject[],
+  ) {
+    if (ViewportManager.isTouchPrimary() || pointer.wasTouch) {
+      const clickedCard = gameObjects.find(go => go instanceof CardUI);
+      if (!clickedCard) {
+        this.cardInteractionHandler.clearHover();
+      }
     }
   }
 
@@ -65,6 +82,7 @@ export class InteractionHandler {
   ) {
     if (this.dragDropHandler.isDragging) return;
     if (!(gameObject instanceof CardUI)) return;
+    if (ViewportManager.isTouchPrimary() || pointer.wasTouch) return; // ✨ Mobile: Disable hover, use Single Tap instead
     this.cardInteractionHandler.handleHoverIn(gameObject);
   }
 
@@ -73,6 +91,7 @@ export class InteractionHandler {
     gameObject: Phaser.GameObjects.GameObject,
   ) {
     if (!(gameObject instanceof CardUI)) return;
+    if (ViewportManager.isTouchPrimary() || pointer.wasTouch) return; // ✨ Mobile: Ignore hover out
     this.cardInteractionHandler.handleHoverOut(gameObject);
   }
 
@@ -81,31 +100,46 @@ export class InteractionHandler {
     gameObject: Phaser.GameObjects.GameObject,
   ) {
     if (pointer.rightButtonDown()) {
-      // ✨ Delegation an PileInteractionHandler
-      const pileData = this.pileInteractionHandler.getPileDetails(gameObject);
-      if (pileData) {
-        this.activeMenu = this.pileInteractionHandler.openPileMenu(
-          pointer,
-          pileData.zone,
-          pileData.targetId,
-          () => {
-            this.activeMenu = null;
-          },
-        );
-      }
-      // ✨ Delegation an CardInteractionHandler
-      else if (
-        gameObject instanceof CardUI &&
-        this.cardInteractionHandler.isInteractable(gameObject)
-      ) {
-        this.activeMenu = this.cardInteractionHandler.openCardMenu(
-          pointer,
-          gameObject,
-          () => {
-            this.activeMenu = null;
-          },
-        );
-      }
+      this.openContextMenu(pointer, gameObject);
+    } else if (pointer.wasTouch) {
+      // ✨ Mobile: Long press detection for context menu
+      const startPos = pointer.position.clone();
+      this.longPressTimer = this.scene.time.delayedCall(500, () => {
+        if (pointer.isDown && pointer.position.distance(startPos) < 15) {
+          this.openContextMenu(pointer, gameObject);
+        }
+      });
+    }
+  }
+
+  private openContextMenu(
+    pointer: Phaser.Input.Pointer,
+    gameObject: Phaser.GameObjects.GameObject,
+  ) {
+    // ✨ Delegation an PileInteractionHandler
+    const pileData = this.pileInteractionHandler.getPileDetails(gameObject);
+    if (pileData) {
+      this.activeMenu = this.pileInteractionHandler.openPileMenu(
+        pointer,
+        pileData.zone,
+        pileData.targetId,
+        () => {
+          this.activeMenu = null;
+        },
+      );
+    }
+    // ✨ Delegation an CardInteractionHandler
+    else if (
+      gameObject instanceof CardUI &&
+      this.cardInteractionHandler.isInteractable(gameObject)
+    ) {
+      this.activeMenu = this.cardInteractionHandler.openCardMenu(
+        pointer,
+        gameObject,
+        () => {
+          this.activeMenu = null;
+        },
+      );
     }
   }
 
@@ -113,6 +147,10 @@ export class InteractionHandler {
     pointer: Phaser.Input.Pointer,
     gameObject: Phaser.GameObjects.GameObject,
   ) {
+    if (this.longPressTimer) {
+      this.longPressTimer.remove();
+      this.longPressTimer = null;
+    }
     if (!(gameObject instanceof CardUI)) return;
     this.cardInteractionHandler.handlePointerUp(pointer, gameObject);
   }

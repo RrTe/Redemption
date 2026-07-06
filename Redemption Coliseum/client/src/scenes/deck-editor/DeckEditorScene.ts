@@ -303,6 +303,47 @@ export class DeckEditorScene extends Phaser.Scene {
     );
     this.adjustBackgroundSize();
 
+    // Mobile Debug Text
+    const debugText = this.add.text(10, 10, "Debug Log...", {
+      fontSize: "16px",
+      color: "#00ff00",
+      backgroundColor: "#000000aa"
+    }).setDepth(999999);
+
+    this.events.on("update", () => {
+      const logs = (window as any).mobileDebug || [];
+      if (logs.length > 0) {
+        debugText.setText(logs.slice(-15).join("\n"));
+      }
+    });
+
+    // ✨ Mobile: Schließe das Overlay, wenn man in den leeren Raum klickt
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+      // Wenn nichts Interaktives (wie Buttons oder Listen-Elemente) getroffen wurde
+      if (pointer.wasTouch && gameObjects.length === 0) {
+        if (this.cardMetricsOverlay) {
+          this.cardMetricsOverlay.hide();
+        }
+        // Gib der DeckListView bescheid, dass der State zurückgesetzt werden soll
+        if (this.deckListView) {
+           this.deckListView.deckElements.forEach(e => e.box.emit("force-out"));
+           this.deckListView.reserveElements.forEach(e => e.box.emit("force-out"));
+        }
+        // Gib allen DeckCardViews (Search Area) bescheid
+        this.allCardViews.forEach(v => v.emit("force-out"));
+      }
+    });
+
+    this.events.on("ui:force-deck-cards-out", () => {
+      this.allCardViews.forEach(v => v.emit("force-out"));
+    });
+    
+    this.events.on("ui:deck-list-layout-refresh", () => {
+      if (this.scrollList) {
+        this.scrollList.updateLayout();
+      }
+    });
+
     this.scale.on("resize", this.resize, this);
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off("resize", this.resize, this);
@@ -1125,6 +1166,11 @@ export class DeckEditorScene extends Phaser.Scene {
       }
       this.cardListModel.filterCards();
       this.applyFilterChangesToViews();
+    });
+
+    editorEvents.on("deck-changed", () => {
+      this.cardListModel.filterCards();
+      this.applyFilterChangesToViews(false); // don't reset scroll if not necessary, or keep it true if you want
     });
   }
 

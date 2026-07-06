@@ -30,6 +30,11 @@ export class PreviewManager {
     this.previewImage.setScrollFactor(0); // Bleibt fix, falls sich die Kamera bewegt
     // Mache das Bild interaktiv, damit es Klicks "abfängt" und nicht durchlässt.
     this.previewImage.setInteractive();
+
+    // ✨ Mobile: Schließe das Preview, wenn man direkt darauf tippt
+    this.previewImage.on("pointerdown", () => {
+      this.hide();
+    });
   }
 
   /**

@@ -7,6 +7,7 @@ import { type AnimationManager } from "../managers/AnimationManager.js";
 import { type GameNetworkManager } from "../../network/GameNetworkManager.js";
 import { type MenuFactory } from "../factories/MenuFactory.js";
 import { RadialMenu } from "../components/RadialMenu.js";
+import { ViewportManager } from "../managers/ViewportManager.js";
 import { log } from "../../utils/logger.js";
 
 /**
@@ -21,6 +22,7 @@ export class CardInteractionHandler {
   private previewManager: PreviewManager;
   private lastClickTime: number = 0;
   private lastClickedCardId: string | null = null;
+  private currentHoveredCard: CardUI | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -72,9 +74,10 @@ export class CardInteractionHandler {
     onClose: () => void,
   ): RadialMenu {
     const menuConfigs = this.menuFactory.getActionsForCard(card);
-    const radius = 80;
-    const iconSize =
-      Math.min(this.scene.scale.width, this.scene.scale.height) / 12;
+    const isCompact = ViewportManager.isTouchPrimary() || ViewportManager.isCompactMode();
+    // In compact mode, we want a tighter radius but larger icons.
+    const radius = ViewportManager.vmin(isCompact ? 16 : 8);
+    const iconSize = ViewportManager.vmin(isCompact ? 12.5 : 8.3);
     const menuRadius = radius + iconSize / 2;
 
     const cx = Phaser.Math.Clamp(
@@ -129,8 +132,13 @@ export class CardInteractionHandler {
       return;
     }
 
-    // Left Click Release: Double Click Detection for Face-Down toggle
-    if (pointer.leftButtonReleased()) {
+    // Left Click Release (or Touch Release): Double Click Detection
+    if (pointer.leftButtonReleased() || pointer.wasTouch) {
+      // ✨ Mobile: If it was a long press, don't treat it as a tap
+      if (pointer.wasTouch && pointer.getDuration() > 500) {
+        return;
+      }
+
       const now = Date.now();
       if (
         this.lastClickedCardId === card.cardData.id &&
@@ -138,8 +146,15 @@ export class CardInteractionHandler {
       ) {
         this.handleFaceDownToggle(card);
         this.lastClickedCardId = null;
+        if (ViewportManager.isTouchPrimary() || pointer.wasTouch) {
+          this.clearHover();
+        }
       } else {
         this.lastClickedCardId = card.cardData.id;
+        // ✨ Mobile: Single Tap opens the preview overlay (Hover equivalent)
+        if (pointer.wasTouch) {
+          this.handleHoverIn(card);
+        }
       }
       this.lastClickTime = now;
     }
@@ -162,6 +177,11 @@ export class CardInteractionHandler {
    * Handles visual hover effects for cards.
    */
   public handleHoverIn(card: CardUI) {
+    if (this.currentHoveredCard && this.currentHoveredCard !== card) {
+      this.handleHoverOut(this.currentHoveredCard);
+    }
+    this.currentHoveredCard = card;
+
     this.previewManager.show(card, this.room.sessionId);
 
     const isMyHandCard =
@@ -199,5 +219,17 @@ export class CardInteractionHandler {
     }
 
     if (!card.isBeingDragged) card.stopGlow();
+    if (this.currentHoveredCard === card) {
+      this.currentHoveredCard = null;
+    }
+  }
+
+  /**
+   * Clears the currently hovered card (useful for mobile background taps).
+   */
+  public clearHover() {
+    if (this.currentHoveredCard) {
+      this.handleHoverOut(this.currentHoveredCard);
+    }
   }
 }

@@ -59,8 +59,8 @@ export class ChatManager {
 
     // 3. Inhalt (DOM)
     // Wir nutzen ein DOM-Element für den eigentlichen Chat-Inhalt (Scrollbar!)
-    // Auch hier: x=150, damit es zentriert im 300px Container liegt.
-    this.chatDOM = this.scene.add.dom(150, height / 2).createFromHTML(`
+    // Origin 0.5, 1 anchor to bottom
+    this.chatDOM = this.scene.add.dom(150, height - 20).setOrigin(0.5, 1).createFromHTML(`
       <div id="chat-wrapper" style="
         width: 300px; 
         height: ${height - 40}px; 
@@ -224,7 +224,7 @@ export class ChatManager {
     // DOM-Element-Größe via Style updaten
     if (this.chatDOM && this.chatDOM.node) {
       // ✨ FIX: Sicherheitscheck gegen Absturz bei toten Elementen
-      this.chatDOM.setY(newHeight / 2);
+      this.chatDOM.setY(newHeight - 20);
       const wrapper = this.chatDOM.node.querySelector(
         "#chat-wrapper",
       ) as HTMLElement;
