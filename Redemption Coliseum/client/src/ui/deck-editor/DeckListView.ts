@@ -448,6 +448,16 @@ export class DeckListView {
       container.setScale(1.0).setDepth(this.depth);
     };
 
+    img.setInteractive({ useHandCursor: false });
+    img.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      if (ViewportManager.isTouchPrimary() || pointer.wasTouch) {
+        if (img.getData('isHovered')) {
+          triggerHoverOut();
+          pointer.event.stopPropagation();
+        }
+      }
+    });
+
     box.on("pointerover", (pointer: Phaser.Input.Pointer) => {
       // Auf Mobile wollen wir Hover ignorieren, hier zählt der Tap!
       if (!ViewportManager.isTouchPrimary() && !pointer.wasTouch) triggerHoverIn();
@@ -456,7 +466,12 @@ export class DeckListView {
     box.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       // ✨ Mobile: Tap öffnet die Vorschau!
       if (ViewportManager.isTouchPrimary() || pointer.wasTouch) {
-        triggerHoverIn();
+        if (img.getData('isHovered')) {
+          triggerHoverOut();
+        } else {
+          triggerHoverIn();
+        }
+        pointer.event.stopPropagation();
       }
     });
 

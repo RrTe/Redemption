@@ -77,13 +77,9 @@ export class DeckCardView extends Phaser.GameObjects.Sprite {
     this.setInteractive(
       new Phaser.Geom.Rectangle(0, 0, width, height),
       (hitArea, localX, localY) => {
-         const res = this.hitAreaCheck(hitArea, localX, localY);
-         if (!res && (window as any).mobileDebugHit) {
-            (window as any).mobileDebug.push("HitArea FAIL");
-            (window as any).mobileDebugHit = false; // log only once per tap attempt
-         }
-         return res;
-      }
+        const res = this.hitAreaCheck(hitArea, localX, localY);
+        return res;
+      },
     );
 
     // Configure drag handlers
@@ -101,10 +97,6 @@ export class DeckCardView extends Phaser.GameObjects.Sprite {
     this.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       const isTouch = ViewportManager.isTouchPrimary() || pointer.wasTouch;
       if (isTouch) {
-        // NotificationManager.show(this.scene, "DEBUG: PointerDown on " + this.cardId, 1);
-        (window as any).mobileDebug = (window as any).mobileDebug || [];
-        (window as any).mobileDebug.push("Down: " + this.cardId);
-
         tappingPointerId = pointer.id;
         this.setData("isLongPressReady", false);
         pointerDownPos.set(pointer.x, pointer.y);
@@ -136,19 +128,12 @@ export class DeckCardView extends Phaser.GameObjects.Sprite {
       const dy = Math.abs(pointer.y - pointerDownPos.y);
       const isGenuineTap = !wasLongPress && dx < 30 && dy < 30;
 
-      (window as any).mobileDebug.push(`Up! LP:${wasLongPress} dx:${dx.toFixed(1)} dy:${dy.toFixed(1)}`);
-
       if (isGenuineTap) {
-        (window as any).mobileDebug.push("Is Genuine Tap!");
         if (!this.isZoomed) {
-          (window as any).mobileDebug.push("Calling hover(true)");
           this.hover(true, pointer);
         } else {
-          (window as any).mobileDebug.push("Calling out(990)");
           this.out(990);
         }
-      } else {
-        (window as any).mobileDebug.push("NOT a tap");
       }
     };
 
@@ -474,7 +459,6 @@ export class DeckCardView extends Phaser.GameObjects.Sprite {
     this.lastZoomTime = this.scene.time.now;
     const targetW = this.width * this.zoomScaleFactor;
     const targetH = this.height * this.zoomScaleFactor;
-    (window as any).mobileDebug?.push(`zoomIn: w=${targetW.toFixed(0)} h=${targetH.toFixed(0)}`);
     
     this.scene.tweens.add({
       targets: this,
@@ -500,24 +484,12 @@ export class DeckCardView extends Phaser.GameObjects.Sprite {
     const isTouchInteraction =
       ViewportManager.isTouchPrimary() || pointer.wasTouch;
 
-    if (forceZoom) {
-       (window as any).mobileDebug?.push(`hover() isTouch:${isTouchInteraction}`);
-    }
-
-    // Ignore hover triggers on touch devices unless explicitly forced via tap
     if (isTouchInteraction && !forceZoom) return;
-
-    if (forceZoom) {
-       (window as any).mobileDebug?.push(`Dragging? ${(this.scene as any).isDragging}`);
-    }
 
     if ((this.scene as any).isDragging || (pointer.isDown && !isTouchInteraction))
       return;
 
     if (!this.isZoomed) {
-      if (forceZoom) {
-         (window as any).mobileDebug?.push(`Zooming now!`);
-      }
       // Force all other cards to unzoom on mobile
       if (isTouchInteraction) {
          this.scene.events.emit("ui:force-deck-cards-out");
@@ -605,14 +577,9 @@ export class DeckCardView extends Phaser.GameObjects.Sprite {
   public out(depth: number) {
     const now = this.scene ? this.scene.time.now : 0;
     if (ViewportManager.isTouchPrimary() && now > 0 && now - this.lastZoomTime < 150) {
-       (window as any).mobileDebug?.push(`Blocked out() <150ms!`);
        return;
     }
 
-    try { throw new Error('Trace'); } catch(e:any) {
-      const trace = e.stack.split('\\n').slice(1, 4).join(' | ');
-      (window as any).mobileDebug?.push(`out() via: ${trace}`);
-    }
     editorEvents.emit("card-zoomed-out", this);
     this.scene.events.emit("ui:deck-card-unhovered", this.cardProps);
 

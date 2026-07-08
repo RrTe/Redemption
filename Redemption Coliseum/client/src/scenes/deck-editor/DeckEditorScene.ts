@@ -303,19 +303,6 @@ export class DeckEditorScene extends Phaser.Scene {
     );
     this.adjustBackgroundSize();
 
-    // Mobile Debug Text
-    const debugText = this.add.text(10, 10, "Debug Log...", {
-      fontSize: "16px",
-      color: "#00ff00",
-      backgroundColor: "#000000aa"
-    }).setDepth(999999);
-
-    this.events.on("update", () => {
-      const logs = (window as any).mobileDebug || [];
-      if (logs.length > 0) {
-        debugText.setText(logs.slice(-15).join("\n"));
-      }
-    });
 
     // ✨ Mobile: Schließe das Overlay, wenn man in den leeren Raum klickt
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
