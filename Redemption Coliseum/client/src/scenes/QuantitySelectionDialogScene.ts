@@ -123,7 +123,33 @@ export class QuantitySelectionDialogScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
-    btn.on("pointerdown", callback);
+
+    let timer: Phaser.Time.TimerEvent | undefined;
+
+    const stopTimer = () => {
+      if (timer) {
+        timer.remove();
+        timer = undefined;
+      }
+    };
+
+    btn.on("pointerdown", () => {
+      callback();
+      timer = this.time.addEvent({
+        delay: 400,
+        callback: () => {
+          timer = this.time.addEvent({
+            delay: 100,
+            callback: callback,
+            loop: true,
+          });
+        },
+      });
+    });
+
+    btn.on("pointerup", stopTimer);
+    btn.on("pointerout", stopTimer);
+
     return btn;
   }
 
