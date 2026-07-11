@@ -21,6 +21,27 @@ import { cardData } from "./utils/CardService";
 const params = new URLSearchParams(window.location.search);
 const mode = params.get("mode");
 
+// ✨ PWA Auto-Update: Erzwingt einen automatischen Reload, sobald ein Update da ist.
+if ("serviceWorker" in navigator) {
+  let refreshing = false;
+  // Wird gefeuert, wenn der neue ServiceWorker aktiv wird (skipWaiting & clientsClaim)
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
+
+  // Prüft jedes Mal sofort auf Updates, wenn die App in den Vordergrund geholt wird
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.update();
+      });
+    }
+  });
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
