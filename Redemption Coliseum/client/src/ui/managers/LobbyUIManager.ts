@@ -235,6 +235,8 @@ export class LobbyUIManager {
   }
 
   public resize(width: number, height: number) {
+    const uiScale = Math.min(1, height / 800);
+
     if (this.titleText) {
       this.background?.setPosition(width / 2, height / 2); // ✨ FIX: Hintergrund neu positionieren
       this.titleText.setPosition(width / 2, height * 0.1);
@@ -245,45 +247,60 @@ export class LobbyUIManager {
       this.subtitleText.setFontSize(Math.max(20, Math.min(40, height * 0.05)));
     }
 
-    const baseInputY = height * 0.28;
-    let currentY = baseInputY + 80;
+    const baseInputY = height * 0.25;
+    let currentY = baseInputY + 70 * uiScale;
 
-    this.nameLabel.setPosition(width / 2, baseInputY - 40);
+    this.nameLabel.setPosition(width / 2, baseInputY - 40 * uiScale);
+    this.nameLabel.setScale(uiScale);
 
     if (this.reconnectBtn && this.reconnectBtn.visible) {
       this.reconnectBtn.setPosition(width / 2, currentY);
-      currentY += 70;
+      this.reconnectBtn.setScale(uiScale);
+      currentY += 70 * uiScale;
     }
-    if (this.createBtn) this.createBtn.setPosition(width / 2, currentY);
-    currentY += 70;
-    if (this.deckSelectBtn) this.deckSelectBtn.setPosition(width / 2, currentY);
-    currentY += 80;
-    if (this.loadGameBtn) this.loadGameBtn.setPosition(width / 2, currentY);
-    currentY += 80;
+    if (this.createBtn) {
+      this.createBtn.setPosition(width / 2, currentY);
+      this.createBtn.setScale(uiScale);
+    }
+    currentY += 70 * uiScale;
+    if (this.deckSelectBtn) {
+      this.deckSelectBtn.setPosition(width / 2, currentY);
+      this.deckSelectBtn.setScale(uiScale);
+    }
+    currentY += 70 * uiScale;
+    if (this.loadGameBtn) {
+      this.loadGameBtn.setPosition(width / 2, currentY);
+      this.loadGameBtn.setScale(uiScale);
+    }
+    currentY += 80 * uiScale;
 
     // Liste positionieren
-    const listY = Math.max(height * 0.55, currentY);
+    const listY = Math.max(height * 0.50, currentY);
     this.listContainer.setPosition(width / 2, listY);
+    this.listContainer.setScale(uiScale);
 
     // Maske und Scroll aktualisieren
-    const availableHeight = height - listY - 80;
+    const availableHeight = height - listY - 50;
+    const scaledItemHeight = this.itemHeight * uiScale;
     this.visibleItems = Math.max(
       1,
-      Math.floor(availableHeight / this.itemHeight),
+      Math.floor(availableHeight / scaledItemHeight),
     );
     const maskHeight = this.visibleItems * this.itemHeight;
 
     this.listMaskGraphics.clear();
     this.listMaskGraphics.fillStyle(0xffffff);
-    this.listMaskGraphics.fillRect(width / 2 - 250, listY, 500, maskHeight);
+    this.listMaskGraphics.fillRect(width / 2 - 250 * uiScale, listY, 500 * uiScale, maskHeight * uiScale);
 
-    this.upArrow.setPosition(width / 2 + 280, listY + 30);
-    this.downArrow.setPosition(width / 2 + 280, listY + maskHeight - 30);
+    this.upArrow.setPosition(width / 2 + 280 * uiScale, listY + 30 * uiScale);
+    this.upArrow.setScale(uiScale);
+    this.downArrow.setPosition(width / 2 + 280 * uiScale, listY + maskHeight * uiScale - 30 * uiScale);
+    this.downArrow.setScale(uiScale);
 
     this.statusText?.setPosition(width / 2, height - 40);
     this.debugText?.setPosition(width - 10, height - 10);
-    this.settingsButton?.setPosition(width + 12, height * 0.18);
-    this.helpButton?.setPosition(-12, height * 0.7);
+    this.settingsButton?.setPosition(width - 40, height * 0.1);
+    this.helpButton?.setPosition(40, height * 0.1);
     this.legalBtn?.setPosition(10, height - 10);
     this.privacyBtn?.setPosition(160, height - 10);
   }

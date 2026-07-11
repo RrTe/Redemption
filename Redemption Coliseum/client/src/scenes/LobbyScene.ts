@@ -136,7 +136,12 @@ export class LobbyScene extends Phaser.Scene {
 
   resize(gameSize: { width: number; height: number }) {
     this.uiManager?.resize(gameSize.width, gameSize.height);
-    this.domManager?.setInputPosition(gameSize.width / 2, gameSize.height * 0.28);
+    const uiScale = Math.min(1, gameSize.height / 800);
+    const baseInputY = gameSize.height * 0.25;
+    this.domManager?.setInputPosition(gameSize.width / 2, baseInputY);
+    if (this.domManager?.playerNameInput) {
+        this.domManager.playerNameInput.setScale(uiScale);
+    }
   }
 
   startGame(room: TypedRoom) {
