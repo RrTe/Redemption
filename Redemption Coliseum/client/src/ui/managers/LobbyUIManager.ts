@@ -208,7 +208,7 @@ export class LobbyUIManager {
       this.listContainer.add(txt);
     } else {
       rooms.forEach((room, index) => {
-        const y = index * this.itemHeight + this.itemHeight / 2;
+        const y = index * this.itemHeight;
         const name =
           room.metadata?.name || `Game ${room.roomId.substring(0, 4)}`; // Kürzere ID als Fallback
         const label = `${name} (${room.clients}/${room.maxClients})`; // Spielername im Label anzeigen
@@ -268,12 +268,14 @@ export class LobbyUIManager {
     let currentY = baseInputY + firstButtonOffset;
 
     if (isTwoColumn) {
-        // Label und Input sind auf exakt der gleichen Höhe nebeneinander
-        this.nameLabel.setPosition(leftX, baseInputY);
+        // Label ist in der linken Spalte rechtsbündig (Kante vom Button = leftX + 150)
+        this.nameLabel.setPosition(leftX + 150 * uiScale, baseInputY);
+        this.nameLabel.setOrigin(1, 0.5);
     } else {
         // Label ist ÜBER dem Input (für schmale Hochformat-Handys)
         const nameLabelOffset = height * 0.06;
         this.nameLabel.setPosition(width / 2, baseInputY - nameLabelOffset);
+        this.nameLabel.setOrigin(0.5, 0.5);
     }
     this.nameLabel.setScale(uiScale);
 
@@ -321,14 +323,14 @@ export class LobbyUIManager {
       this.listMaskGraphics.fillStyle(0xffffff, 1);
       this.listMaskGraphics.fillRect(
         rightX - 250 * uiScale,
-        listY,
+        listY - (this.itemHeight / 2) * uiScale,
         500 * uiScale,
         maskHeight,
       );
 
-      this.upArrow.setPosition(rightX + 280 * uiScale, listY + 30 * uiScale);
+      this.upArrow.setPosition(rightX + 280 * uiScale, listY - 10 * uiScale);
       this.upArrow.setScale(uiScale);
-      this.downArrow.setPosition(rightX + 280 * uiScale, listY + maskHeight - 30 * uiScale);
+      this.downArrow.setPosition(rightX + 280 * uiScale, listY + maskHeight - 40 * uiScale);
       this.downArrow.setScale(uiScale);
     }
 
