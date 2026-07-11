@@ -283,24 +283,30 @@ export class LobbyUIManager {
     const leftX = isTwoColumn ? (width / 2) - spread : width / 2;
     const rightX = isTwoColumn ? (width / 2) + spread : width / 2;
 
-    // Y-Position für das Eingabefeld (weiter unten, damit es nicht in "Lobby" klebt)
-    const baseInputY = height * 0.35;
+    // Y-Position für "Your Name" und Input
+    let nameY = height * 0.35;
+    let inputX = width / 2;
     
-    // HIER stellst du den Abstand zwischen dem Eingabefeld und dem ERSTEN Button ein (z.B. 10% der Bildschirmhöhe):
-    const firstButtonOffset = height * 0.11; 
-    let currentY = baseInputY + firstButtonOffset;
+    // Y-Position für den Start der Buttons (links und rechts)
+    let buttonStartY = nameY + height * 0.11;
 
     if (isTwoColumn) {
-        // Label ist in der linken Spalte rechtsbündig (Kante vom Button = leftX + 150)
-        this.nameLabel.setPosition(leftX + 150 * uiScale, baseInputY);
-        this.nameLabel.setOrigin(1, 0.5);
+        nameY = height * 0.28; // Höher rücken (mittig zwischen Subtitle und Buttons)
+        buttonStartY = height * 0.45; // Buttons etwas nach unten setzen
+        
+        // Label ist mittig, direkt links neben dem Input-Feld platziert
+        // Mitte - 10px Abstand
+        this.nameLabel.setPosition(width / 2 - 10 * uiScale, nameY);
+        this.nameLabel.setOrigin(1, 0.5); // Rechtsbündig
     } else {
-        // Label ist ÜBER dem Input (für schmale Hochformat-Handys)
+        // Label ist ÜBER dem Input (für schmale Hochformat-Handys und Desktop)
         const nameLabelOffset = height * 0.06;
-        this.nameLabel.setPosition(width / 2, baseInputY - nameLabelOffset);
+        this.nameLabel.setPosition(width / 2, nameY - nameLabelOffset);
         this.nameLabel.setOrigin(0.5, 0.5);
     }
     this.nameLabel.setScale(uiScale);
+
+    let currentY = buttonStartY;
 
     // Haupt-Buttons (in der linken Spalte)
     if (this.reconnectBtn && this.reconnectBtn.visible) {
@@ -325,8 +331,8 @@ export class LobbyUIManager {
     currentY += 80 * uiScale;
 
     // Liste positionieren (in der rechten Spalte)
-    // Bei 2-Spalten startet die Liste exakt auf der Höhe des ersten Buttons (currentY war vorher baseInputY + firstButtonOffset)
-    let listY = isTwoColumn ? baseInputY + firstButtonOffset : currentY; 
+    // Bei 2-Spalten startet die Liste exakt auf der Höhe des ersten Buttons
+    let listY = isTwoColumn ? buttonStartY : currentY; 
     let listHeight = height - listY - 50; 
 
     this.listContainer.setPosition(rightX, listY);
