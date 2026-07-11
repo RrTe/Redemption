@@ -225,10 +225,16 @@ export class LobbyUIManager {
           room.metadata?.name || `Game ${room.roomId.substring(0, 4)}`; // Kürzere ID als Fallback
         const label = `${name} (${room.clients}/${room.maxClients})`; // Spielername im Label anzeigen
 
-        // Das HTML Eingabefeld ist 320px breit und zentriert (linke Kante = -160).
-        // Wir wollen, dass diese Spiel-Buttons linksbündig exakt mit dem Eingabefeld abschließen.
-        // Also muss die linke Kante des Buttons ebenfalls -160 sein.
-        const xOffset = -160 + dynamicWidth / 2;
+        const width = this.scene.scale.gameSize.width;
+        const height = this.scene.scale.gameSize.height;
+        const isTwoColumn = width > height && height <= 600;
+
+        // Im 2-Spalten-Layout richten wir den Button linksbündig mit dem Input-Feld aus.
+        // Im normalen Layout (Desktop, Tablet) wird der Button einfach zentriert.
+        let xOffset = 0;
+        if (isTwoColumn) {
+          xOffset = -160 + dynamicWidth / 2;
+        }
 
         const btn = this.createStyledButton(
           xOffset,
