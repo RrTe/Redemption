@@ -143,9 +143,8 @@ export class LobbyScene extends Phaser.Scene {
     if (gameSize.width > gameSize.height && gameSize.height <= 600) {
         const spread = Math.min(gameSize.width * 0.2, 300);
         const rightX = (gameSize.width / 2) + spread;
-        // Game-Buttons sind 450 breit (halbe = 225). Input ist 320 breit (halbe = 160).
-        // Linke Kante soll gleich sein: inputX - 160 = rightX - 225  =>  inputX = rightX - 65.
-        inputX = rightX - 65 * uiScale;
+        // Inputfeld exakt auf der Spaltenmitte zentrieren
+        inputX = rightX;
     }
     
     const baseInputY = gameSize.height * 0.35;

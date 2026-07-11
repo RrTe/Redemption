@@ -207,18 +207,35 @@ export class LobbyUIManager {
         .setOrigin(0.5);
       this.listContainer.add(txt);
     } else {
+      // Dynamische Breite berechnen basierend auf dem längsten Spielnamen
+      let maxTextWidth = 0;
+      rooms.forEach((room) => {
+        const name = room.metadata?.name || `Game ${room.roomId.substring(0, 4)}`;
+        const label = `${name} (${room.clients}/${room.maxClients})`;
+        const tempText = this.scene.add.bitmapText(0, 0, "fairydust", label, 28);
+        maxTextWidth = Math.max(maxTextWidth, tempText.width);
+        tempText.destroy();
+      });
+      // Minimal 200, Maximal 450. Wir addieren 60 Pixel Padding für die Ränder
+      const dynamicWidth = Math.min(450, Math.max(200, maxTextWidth + 60));
+
       rooms.forEach((room, index) => {
         const y = index * this.itemHeight;
         const name =
           room.metadata?.name || `Game ${room.roomId.substring(0, 4)}`; // Kürzere ID als Fallback
         const label = `${name} (${room.clients}/${room.maxClients})`; // Spielername im Label anzeigen
 
+        // Das HTML Eingabefeld ist 320px breit und zentriert (linke Kante = -160).
+        // Wir wollen, dass diese Spiel-Buttons linksbündig exakt mit dem Eingabefeld abschließen.
+        // Also muss die linke Kante des Buttons ebenfalls -160 sein.
+        const xOffset = -160 + dynamicWidth / 2;
+
         const btn = this.createStyledButton(
-          0,
+          xOffset,
           y,
           label,
           () => joinCallback(room.roomId, btn),
-          450,
+          dynamicWidth,
           50,
         );
         this.listContainer.add(btn);
