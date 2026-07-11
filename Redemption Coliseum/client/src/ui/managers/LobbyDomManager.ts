@@ -12,9 +12,9 @@ export class LobbyDomManager {
   public createPlayerNameInput(x: number, y: number, initialName: string) {
     this.playerNameInput = this.scene.add.dom(x, y).createFromHTML(`
         <input type="text" name="playerName" value="${initialName}" placeholder="Enter Name" 
-               style="font-size: 24px; padding: 10px; width: 320px; text-align: center; 
-                      border-radius: 8px; border: 2px solid #daa520; background-color: rgba(0, 0, 0, 0.5); 
-                      color: #daa520; font-family: monospace; outline: none;">
+               style="font-size: 24px; font-weight: bold; padding: 10px; width: 320px; text-align: center; 
+                      border-radius: 8px; border: 2px solid #ffe44d; background-color: rgba(0, 0, 0, 0.5); 
+                      color: #ffe44d; font-family: monospace; outline: none; text-shadow: 2px 2px 4px black;">
     `);
   }
 

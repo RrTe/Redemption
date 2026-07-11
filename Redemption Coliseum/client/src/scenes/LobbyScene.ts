@@ -137,7 +137,8 @@ export class LobbyScene extends Phaser.Scene {
   resize(gameSize: { width: number; height: number }) {
     this.uiManager?.resize(gameSize.width, gameSize.height);
     const uiScale = Math.min(1, gameSize.height / 800);
-    const baseInputY = gameSize.height * 0.25;
+    // Y-Koordinate dynamisch berechnet, exakt identisch mit der LobbyUIManager-Basis!
+    const baseInputY = gameSize.height * 0.35;
     this.domManager?.setInputPosition(gameSize.width / 2, baseInputY);
     if (this.domManager?.playerNameInput) {
         this.domManager.playerNameInput.setScale(uiScale);

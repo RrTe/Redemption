@@ -82,11 +82,13 @@ export class LobbyUIManager {
       })
       .setOrigin(1, 1);
 
-    // Name Label
+    // Name Label (Schriftgröße hier einstellbar)
+    const nameLabelFontSize = 32; // Vorher 24
     this.nameLabel = this.scene.add
-      .bitmapText(width / 2, height * 0.28 - 40, "fairydust", "Your Name:", 24)
+      .bitmapText(width / 2, height * 0.28 - 40, "fairydust", "Your Name:", nameLabelFontSize)
       .setOrigin(0.5)
-      .setTint(0xdaa520);
+      .setTint(0xffe44d)
+      .setDropShadow(3, 3, 0x000000, 1);
 
     // Liste Container & Maske
     this.listContainer = this.scene.add.container(0, 0);
@@ -231,11 +233,16 @@ export class LobbyUIManager {
     ) as Phaser.GameObjects.BitmapText;
     const shortName =
       filename.length > 15 ? filename.substring(0, 12) + "..." : filename;
-    textObj.setText(`Deck: ${shortName} (${count})`);
+    const newText = `Deck: ${shortName} (${count})`;
+    textObj.setText(newText);
+
+    // Update eventuell vorhandenen Schatten
+    const shadowText = this.deckSelectBtn.getByName("text_shadow") as Phaser.GameObjects.BitmapText;
+    if (shadowText) shadowText.setText(newText);
   }
 
   public resize(width: number, height: number) {
-    const uiScale = Math.min(1, height / 800);
+    const uiScale = Math.max(0.75, Math.min(1, height / 800));
 
     if (this.titleText) {
       this.background?.setPosition(width / 2, height / 2); // ✨ FIX: Hintergrund neu positionieren
@@ -247,10 +254,16 @@ export class LobbyUIManager {
       this.subtitleText.setFontSize(Math.max(20, Math.min(40, height * 0.05)));
     }
 
-    const baseInputY = height * 0.25;
-    let currentY = baseInputY + 70 * uiScale;
+    // Y-Position für das Eingabefeld (weiter unten, damit es nicht in "Lobby" klebt)
+    const baseInputY = height * 0.35; // <-- HIER schiebst du alles (Input + Buttons) weiter hoch (z.B. 0.32) oder runter (0.4)
+    
+    // HIER stellst du den Abstand zwischen dem Eingabefeld und dem ERSTEN Button ein (z.B. 10% der Bildschirmhöhe):
+    const firstButtonOffset = height * 0.11; 
+    let currentY = baseInputY + firstButtonOffset;
 
-    this.nameLabel.setPosition(width / 2, baseInputY - 40 * uiScale);
+    // HIER kannst du den Abstand zwischen "Your Name:" und der Box völlig dynamisch einstellen (z.B. 8% der Bildschirmhöhe):
+    const nameLabelOffset = height * 0.06;
+    this.nameLabel.setPosition(width / 2, baseInputY - nameLabelOffset);
     this.nameLabel.setScale(uiScale);
 
     if (this.reconnectBtn && this.reconnectBtn.visible) {
@@ -299,8 +312,8 @@ export class LobbyUIManager {
 
     this.statusText?.setPosition(width / 2, height - 40);
     this.debugText?.setPosition(width - 10, height - 10);
-    this.settingsButton?.setPosition(width - 40, height * 0.1);
-    this.helpButton?.setPosition(40, height * 0.1);
+    this.settingsButton?.setPosition(width + 12, height * 0.1);
+    this.helpButton?.setPosition(-12, height * 0.1);
     this.legalBtn?.setPosition(10, height - 10);
     this.privacyBtn?.setPosition(160, height - 10);
   }
@@ -353,13 +366,36 @@ export class LobbyUIManager {
       .image(0, 0, "button_parchment")
       .setDisplaySize(w, h)
       .setName("bg");
-    const text = this.scene.add
-      .bitmapText(0, -5, "fairydust", label, 24)
+    // ---------------------------------------------------------
+    // HIER KANNST DU DIE SCHRIFT DER BUTTONS EINSTELLEN:
+    const fontSize = 28;       // Etwas größer als vorher (26) für bessere Lesbarkeit
+    const textColor = 0xffe44d; // Textfarbe (Gold)
+    
+    // Y-Verschiebung für perfekte Mitte: 
+    // "fairydust" hat im Font-File asymmetrische Ränder. -5 bis -6 Pixel ziehen den Text optisch exakt in die Mitte!
+    const textOffsetY = -5;    
+
+    // SCHATTEN-EINSTELLUNGEN:
+    const shadowX = 2;         // Verschiebung des Schattens nach rechts
+    const shadowY = 3;         // Etwas weiter nach unten
+    const shadowColor = 0x000000; // Farbe des Schattens (Schwarz)
+    const shadowAlpha = 1.0;   // Volle Deckkraft für maximalen Kontrast!
+    // ---------------------------------------------------------
+
+    // Einfacher, dezenter Schlagschatten
+    const shadow = this.scene.add.bitmapText(shadowX, textOffsetY + shadowY, "fairydust", label, fontSize)
       .setOrigin(0.5)
-      .setTint(0xf4f6e1)
+      .setTint(shadowColor)
+      .setAlpha(shadowAlpha)
+      .setName("text_shadow");
+
+    const text = this.scene.add
+      .bitmapText(0, textOffsetY, "fairydust", label, fontSize)
+      .setOrigin(0.5)
+      .setTint(textColor)
       .setName("text");
 
-    container.add([bg, text]);
+    container.add([bg, shadow, text]);
     container.setSize(w, h).setInteractive({ useHandCursor: true });
     container.setData("defaultTint", 0xffffff);
 
