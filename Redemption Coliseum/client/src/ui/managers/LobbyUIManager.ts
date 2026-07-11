@@ -254,11 +254,11 @@ export class LobbyUIManager {
       this.subtitleText.setFontSize(Math.max(20, Math.min(40, height * 0.05)));
     }
 
-    // Auf extrem flachen Bildschirmen (Handy quer) positionieren wir die Haupt-Buttons 
-    // links und die Spielliste rechts, damit beides genug Platz hat!
-    const isLandscapeMobile = width > height && height <= 600;
-    const uiX = isLandscapeMobile ? width * 0.35 : width / 2;
-    const listX = isLandscapeMobile ? width * 0.75 : width / 2;
+    // Dynamisches 2-Spalten Layout NUR für flache Handys im Querformat
+    const isTwoColumn = width > height && height <= 600;
+    const spread = Math.min(width * 0.2, 300); // Maximal 300px aus der Mitte rücken, damit Ultra-Wide nicht zerbricht
+    const leftX = isTwoColumn ? (width / 2) - spread : width / 2;
+    const rightX = isTwoColumn ? (width / 2) + spread : width / 2;
 
     // Y-Position für das Eingabefeld (weiter unten, damit es nicht in "Lobby" klebt)
     const baseInputY = height * 0.35;
@@ -267,43 +267,44 @@ export class LobbyUIManager {
     const firstButtonOffset = height * 0.11; 
     let currentY = baseInputY + firstButtonOffset;
 
-    // HIER kannst du den Abstand zwischen "Your Name:" und der Box völlig dynamisch einstellen (z.B. 8% der Bildschirmhöhe):
-    const nameLabelOffset = height * 0.06;
-    this.nameLabel.setPosition(uiX, baseInputY - nameLabelOffset);
+    if (isTwoColumn) {
+        // Label und Input sind auf exakt der gleichen Höhe nebeneinander
+        this.nameLabel.setPosition(leftX, baseInputY);
+    } else {
+        // Label ist ÜBER dem Input (für schmale Hochformat-Handys)
+        const nameLabelOffset = height * 0.06;
+        this.nameLabel.setPosition(width / 2, baseInputY - nameLabelOffset);
+    }
     this.nameLabel.setScale(uiScale);
 
+    // Haupt-Buttons (in der linken Spalte)
     if (this.reconnectBtn && this.reconnectBtn.visible) {
-      this.reconnectBtn.setPosition(uiX, currentY);
+      this.reconnectBtn.setPosition(leftX, currentY);
       this.reconnectBtn.setScale(uiScale);
       currentY += 70 * uiScale;
     }
     if (this.createBtn) {
-      this.createBtn.setPosition(uiX, currentY);
+      this.createBtn.setPosition(leftX, currentY);
       this.createBtn.setScale(uiScale);
     }
     currentY += 70 * uiScale;
     if (this.deckSelectBtn) {
-      this.deckSelectBtn.setPosition(uiX, currentY);
+      this.deckSelectBtn.setPosition(leftX, currentY);
       this.deckSelectBtn.setScale(uiScale);
     }
     currentY += 70 * uiScale;
     if (this.loadGameBtn) {
-      this.loadGameBtn.setPosition(uiX, currentY);
+      this.loadGameBtn.setPosition(leftX, currentY);
       this.loadGameBtn.setScale(uiScale);
     }
     currentY += 80 * uiScale;
 
-    // Liste positionieren
-    let listY = Math.max(height * 0.50, currentY);
+    // Liste positionieren (in der rechten Spalte)
+    // Bei 2-Spalten startet die Liste exakt auf der Höhe des ersten Buttons (currentY war vorher baseInputY + firstButtonOffset)
+    let listY = isTwoColumn ? baseInputY + firstButtonOffset : currentY; 
     let listHeight = height - listY - 50; 
 
-    // Im Handy-Querformat platzieren wir die Liste rechts daneben und geben ihr viel mehr Höhe!
-    if (isLandscapeMobile) {
-        listY = baseInputY - nameLabelOffset; // Startet auf Höhe des Namens
-        listHeight = height - listY - 20;     // Geht fast bis ganz nach unten
-    }
-
-    this.listContainer.setPosition(listX, listY);
+    this.listContainer.setPosition(rightX, listY);
     this.listContainer.setScale(uiScale);
 
     // Maske und Scroll aktualisieren
@@ -319,15 +320,15 @@ export class LobbyUIManager {
       this.listMaskGraphics.clear();
       this.listMaskGraphics.fillStyle(0xffffff, 1);
       this.listMaskGraphics.fillRect(
-        listX - 250 * uiScale,
+        rightX - 250 * uiScale,
         listY,
         500 * uiScale,
         maskHeight,
       );
 
-      this.upArrow.setPosition(listX + 280 * uiScale, listY + 30 * uiScale);
+      this.upArrow.setPosition(rightX + 280 * uiScale, listY + 30 * uiScale);
       this.upArrow.setScale(uiScale);
-      this.downArrow.setPosition(listX + 280 * uiScale, listY + maskHeight - 30 * uiScale);
+      this.downArrow.setPosition(rightX + 280 * uiScale, listY + maskHeight - 30 * uiScale);
       this.downArrow.setScale(uiScale);
     }
 

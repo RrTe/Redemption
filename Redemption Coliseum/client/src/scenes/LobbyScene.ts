@@ -137,9 +137,16 @@ export class LobbyScene extends Phaser.Scene {
   resize(gameSize: { width: number; height: number }) {
     this.uiManager?.resize(gameSize.width, gameSize.height);
     const uiScale = Math.min(1, gameSize.height / 800);
-    // Y-Koordinate dynamisch berechnet, exakt identisch mit der LobbyUIManager-Basis!
+    
+    // 2-Spalten Layout NUR für flache Bildschirme (Handy im Querformat)
+    let inputX = gameSize.width / 2;
+    if (gameSize.width > gameSize.height && gameSize.height <= 600) {
+        const spread = Math.min(gameSize.width * 0.2, 300);
+        inputX = (gameSize.width / 2) + spread;
+    }
+    
     const baseInputY = gameSize.height * 0.35;
-    this.domManager?.setInputPosition(gameSize.width / 2, baseInputY);
+    this.domManager?.setInputPosition(inputX, baseInputY);
     if (this.domManager?.playerNameInput) {
         this.domManager.playerNameInput.setScale(uiScale);
     }
