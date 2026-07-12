@@ -285,19 +285,22 @@ export class LobbyUIManager {
 
     // Y-Position für "Your Name" und Input
     let nameY = height * 0.35;
-    let inputX = width / 2;
     
     // Y-Position für den Start der Buttons (links und rechts)
-    let buttonStartY = nameY + height * 0.11;
+    let buttonStartY = height * 0.35 + height * 0.11;
 
     if (isTwoColumn) {
-        nameY = height * 0.28; // Höher rücken (mittig zwischen Subtitle und Buttons)
-        buttonStartY = height * 0.45; // Buttons etwas nach unten setzen
+        nameY = height * 0.28; // Höher, zwischen Lobby und Buttons
+        
+        // Inputfeld etwas nach oben schieben (damit es mit dem BitmapText-Label auf einer visuellen Linie liegt)
+        nameY -= 5 * uiScale;
         
         // Label ist mittig, direkt links neben dem Input-Feld platziert
-        // Mitte - 10px Abstand
-        this.nameLabel.setPosition(width / 2 - 10 * uiScale, nameY);
+        // Mitte - 5px Abstand
+        this.nameLabel.setPosition(width / 2 - 5 * uiScale, nameY);
         this.nameLabel.setOrigin(1, 0.5); // Rechtsbündig
+        
+        buttonStartY = height * 0.45; // Buttons etwas nach unten setzen
     } else {
         // Label ist ÜBER dem Input (für schmale Hochformat-Handys und Desktop)
         const nameLabelOffset = height * 0.06;
@@ -376,7 +379,7 @@ export class LobbyUIManager {
     let index = 0;
     this.listContainer.each((child: any) => {
       if (child instanceof Phaser.GameObjects.Container) {
-        child.y = index * this.itemHeight + this.itemHeight / 2 + this.scrollY;
+        child.y = index * this.itemHeight + this.scrollY;
         index++;
       }
     });

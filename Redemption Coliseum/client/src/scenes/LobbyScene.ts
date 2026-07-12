@@ -140,15 +140,20 @@ export class LobbyScene extends Phaser.Scene {
     
     // 2-Spalten Layout NUR für flache Bildschirme (Handy im Querformat)
     let inputX = gameSize.width / 2;
+    let nameY = gameSize.height * 0.35;
+
     if (gameSize.width > gameSize.height && gameSize.height <= 600) {
-        const spread = Math.min(gameSize.width * 0.2, 300);
-        const rightX = (gameSize.width / 2) + spread;
-        // Inputfeld exakt auf der Spaltenmitte zentrieren
-        inputX = rightX;
+        // In 2-column mode, we moved nameY up
+        nameY = gameSize.height * 0.28;
+        // Inputfeld etwas nach oben schieben (damit es mit dem BitmapText-Label auf einer visuellen Linie liegt)
+        nameY -= 5 * uiScale;
+        
+        // Input linksbündig mit GERINGEM Abstand zur Mitte platzieren (fast in der Mitte)
+        // Mitte + 5px Abstand + halbe Input-Breite (160px) -> 165
+        inputX = (gameSize.width / 2) + 165 * uiScale;
     }
     
-    const baseInputY = gameSize.height * 0.35;
-    this.domManager?.setInputPosition(inputX, baseInputY);
+    this.domManager?.setInputPosition(inputX, nameY);
     if (this.domManager?.playerNameInput) {
         this.domManager.playerNameInput.setScale(uiScale);
     }
