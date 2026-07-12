@@ -148,9 +148,9 @@ export class LobbyScene extends Phaser.Scene {
         // Inputfeld etwas nach oben schieben (damit es mit dem BitmapText-Label auf einer visuellen Linie liegt)
         nameY -= 5 * uiScale;
         
-        // Input linksbündig mit GERINGEM Abstand zur Mitte platzieren (fast in der Mitte)
-        // Mitte + 5px Abstand + halbe Input-Breite (160px) -> 165
-        inputX = (gameSize.width / 2) + 165 * uiScale;
+        // Input linksbündig mit etwas Abstand zur Mitte platzieren
+        // Mitte + 15px Abstand + halbe Input-Breite (160px) -> 175
+        inputX = (gameSize.width / 2) + 175 * uiScale;
     }
     
     this.domManager?.setInputPosition(inputX, nameY);

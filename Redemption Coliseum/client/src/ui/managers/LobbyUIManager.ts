@@ -296,8 +296,8 @@ export class LobbyUIManager {
         nameY -= 5 * uiScale;
         
         // Label ist mittig, direkt links neben dem Input-Feld platziert
-        // Mitte - 5px Abstand
-        this.nameLabel.setPosition(width / 2 - 5 * uiScale, nameY);
+        // Mitte - 15px Abstand
+        this.nameLabel.setPosition(width / 2 - 15 * uiScale, nameY);
         this.nameLabel.setOrigin(1, 0.5); // Rechtsbündig
         
         buttonStartY = height * 0.45; // Buttons etwas nach unten setzen
