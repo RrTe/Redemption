@@ -9,7 +9,7 @@ const COLOR_KNOB = 0xf5e6c4; // Pergament (für Knöpfe)
 
 // ✨ NEU: Zentrale Layout-Konstanten für einfache Anpassungen
 const LAYOUT = {
-  START_Y: -120,
+  START_Y: -160,
   GAP_Y: 85,
   ICON_X: -75,
   CONTROL_X: -45,
@@ -133,7 +133,8 @@ export class SettingsDialogScene extends Phaser.Scene {
 
     // --- Schriftrollen-Optik (Bild) ---
     const scrollBg = this.add.image(0, 0, "scroll_bg");
-    // Da das Bild nun die korrekte Größe hat (350x511), keine Skalierung nötig.
+    // ✨ NEU: Schriftrolle vertikal etwas strecken, damit alle 5 Optionen und der Schließen-Button Platz haben
+    scrollBg.setDisplaySize(scrollBg.width, scrollBg.height + 90);
     this.container.add(scrollBg);
 
     const scrollHeight = scrollBg.displayHeight; // Für die Positionierung der Elemente nutzen
@@ -172,9 +173,13 @@ export class SettingsDialogScene extends Phaser.Scene {
     this.createToggle(0, currentY, "🌄", "backgroundEffectsEnabled"); // Nebel/Atmosphäre
     currentY += gapY;
 
+    // 6. Hand Cards Fanned Toggle (Neu)
+    this.createToggle(0, currentY, "icon_handcards", "handCardsFanned", true);
+    currentY += gapY;
+
     // 5. Close Button (Unten)
     const closeBtn = this.add
-      .text(0, scrollHeight / 2 - 60, "✖", {
+      .text(0, scrollHeight / 2 - 35, "✖", {
         fontSize: "40px",
         color: "#8b0000",
         fontStyle: "bold",
@@ -324,6 +329,7 @@ export class SettingsDialogScene extends Phaser.Scene {
     y: number,
     iconChar: string,
     settingKey: string,
+    isImage: boolean = false
   ) {
     // ✨ NEU: Gleiche Ausrichtung und Maße wie Slider
     const iconX = LAYOUT.ICON_X;
@@ -332,13 +338,21 @@ export class SettingsDialogScene extends Phaser.Scene {
     const height = LAYOUT.TOGGLE_HEIGHT;
 
     // Icon
-    const icon = this.add
-      .text(iconX, y, iconChar, {
-        fontSize: STYLE.ICON_FONT_SIZE,
-        color: STYLE.ICON_COLOR,
-      })
-      .setOrigin(0.5)
-      .setShadow(2, 2, STYLE.ICON_SHADOW_COLOR, 2); // ✨ NEU: Schatten
+    let icon;
+    if (isImage) {
+      icon = this.add.image(iconX, y, iconChar).setOrigin(0.5);
+      // ✨ FIX: Icon deutlich größer skalieren (zuvor 30, jetzt 55)
+      const scale = 55 / Math.max(icon.width, icon.height);
+      icon.setScale(scale);
+    } else {
+      icon = this.add
+        .text(iconX, y, iconChar, {
+          fontSize: STYLE.ICON_FONT_SIZE,
+          color: STYLE.ICON_COLOR,
+        })
+        .setOrigin(0.5)
+        .setShadow(2, 2, STYLE.ICON_SHADOW_COLOR, 2); // ✨ NEU: Schatten
+    }
     this.container.add(icon);
 
     // ✨ NEU: Toggle Hintergrund (Graphics für Rounded Corners)
@@ -437,6 +451,7 @@ export class SettingsDialogScene extends Phaser.Scene {
     if (
       key === "animationsEnabled" ||
       key === "backgroundEffectsEnabled" ||
+      key === "handCardsFanned" ||
       key === "musicVolume" ||
       key === "sfxVolume"
     ) {

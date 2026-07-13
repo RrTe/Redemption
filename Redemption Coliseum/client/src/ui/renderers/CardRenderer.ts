@@ -48,6 +48,7 @@ export class CardRenderer {
       this.elementManager,
       this.animationManager,
       this.processCard.bind(this), // Wir übergeben die Methode gebunden an diese Instanz
+      this.scene.registry.get("settingsManager") // ✨ NEU
     );
 
     // ✨ NEU: Field-Renderer initialisieren

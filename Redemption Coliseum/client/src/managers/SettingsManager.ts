@@ -10,6 +10,7 @@ export interface GameSettings {
   showTimer: boolean;
   animationsEnabled: boolean; // ✨ NEU: Option für Animationen
   backgroundEffectsEnabled: boolean; // ✨ NEU: Option für Hintergrundeffekte
+  handCardsFanned: boolean; // ✨ NEU: Option für aufgefächerte Handkarten
 }
 
 /**
@@ -22,6 +23,7 @@ const DEFAULTS: GameSettings = {
   showTimer: true,
   animationsEnabled: true, // ✨ NEU: Standardmäßig an
   backgroundEffectsEnabled: true, // ✨ NEU: Standardmäßig an
+  handCardsFanned: true, // ✨ NEU: Standardmäßig aufgefächert
 };
 
 const STORAGE_KEY = "redemption-coliseum-settings";

@@ -31,17 +31,20 @@ export class HandRenderer {
   private elementManager: ElementManager;
   private animationManager: AnimationManager;
   private processCard: CardProcessor;
+  private settingsManager: any; // ✨ NEU
 
   constructor(
     layout: GameLayout,
     elementManager: ElementManager,
     animationManager: AnimationManager,
     processCard: CardProcessor,
+    settingsManager: any // ✨ NEU
   ) {
     this.layout = layout;
     this.elementManager = elementManager;
     this.animationManager = animationManager;
     this.processCard = processCard;
+    this.settingsManager = settingsManager; // ✨ NEU
   }
 
   /** ✨ FIX: Aktualisiert das Layout, wenn sich die Fenstergröße ändert. */
@@ -133,6 +136,23 @@ export class HandRenderer {
     isOpponent: boolean = false,
   ): { x: number; y: number; angle: number } {
     const cardHeight = this.layout.handCardHeight;
+    const cardWidth = this.layout.handCardWidth; // ✨ NEU
+    const rect = isOpponent ? this.layout.opponentHand : this.layout.playerHand;
+    const isFanned = this.settingsManager ? this.settingsManager.get("handCardsFanned") : true; // ✨ NEU
+
+    if (!isFanned) {
+      // ✨ NEU: Unfanned (gerade Linie) Layout
+      // Wir berechnen die Breite des Bereichs und verteilen die Karten
+      const overlap = cardWidth * 0.4; // Wie viel sich die Karten überlappen dürfen
+      const totalWidthNeeded = cardWidth + (handSize - 1) * overlap;
+      const startX = rect.centerX - totalWidthNeeded / 2 + cardWidth / 2;
+      
+      const x = startX + index * overlap;
+      const y = rect.centerY;
+      return { x, y, angle: 0 };
+    }
+
+    // --- Fan Layout ---
     const anglePerCard = Math.min(
       HAND_FAN_CONFIG.MAX_TOTAL_ANGLE / Math.max(1, handSize - 1),
       HAND_FAN_CONFIG.MAX_ANGLE_PER_CARD,
@@ -144,7 +164,6 @@ export class HandRenderer {
     const pivotOffset = isOpponent
       ? HAND_FAN_CONFIG.OPPONENT_PIVOT_OFFSET
       : HAND_FAN_CONFIG.PLAYER_PIVOT_OFFSET;
-    const rect = isOpponent ? this.layout.opponentHand : this.layout.playerHand;
 
     // Bei Gegner: Pivot ist oberhalb der Handzone (y + offset)
     // Bei Spieler: Pivot ist unterhalb der Handzone (bottom + offset)

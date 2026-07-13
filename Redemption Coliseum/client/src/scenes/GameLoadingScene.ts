@@ -299,6 +299,7 @@ export class GameLoadingScene extends BaseLoadingScene {
     );
     this.load.image("icon_topdeck", "assets/ui/icons/icon_topdeck.png");
     this.load.image("icon_underdeck", "assets/ui/icons/icon_underdeck.png");
+    this.load.image("icon_handcards", "assets/ui/icons/cardfan_small.png");
 
     // === Phasen Icons ===
     this.load.image("icon_preparation", "assets/ui/icons/icon_preparation.png");

@@ -140,6 +140,11 @@ export default class CardGameScene extends Phaser.Scene {
       this.game.events.on("settings-changed", () => {
         const enabled = this.ui.settingsManager.areBackgroundEffectsEnabled();
         this.currentBackground?.onSettingsChanged(enabled);
+        
+        // ✨ NEU: UI neu rendern, z. B. um das Handkarten-Layout (Fan vs Gerade) sofort anzuwenden
+        if (this.room && this.room.state) {
+          this.ui.render(this.room.state, this.room.sessionId);
+        }
       });
     } catch (err) {
       error("CardGame", "Connection failed:", err); // ✨ FIX: Logger nutzen
