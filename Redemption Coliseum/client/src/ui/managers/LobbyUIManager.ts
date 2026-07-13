@@ -189,7 +189,8 @@ export class LobbyUIManager {
         fontStyle: "bold",
       })
       .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+      .setInteractive({ useHandCursor: true })
+      .setName("dismissBtn");
     dismissBtn.on("pointerdown", callbacks.onClearSession);
     this.reconnectBtn.add(dismissBtn);
   }
@@ -315,6 +316,16 @@ export class LobbyUIManager {
     if (this.reconnectBtn && this.reconnectBtn.visible) {
       this.reconnectBtn.setPosition(leftX, currentY);
       this.reconnectBtn.setScale(uiScale);
+
+      const dismissBtn = this.reconnectBtn.getByName("dismissBtn") as Phaser.GameObjects.Text;
+      if (dismissBtn) {
+        if (isTwoColumn || width <= 800) {
+          dismissBtn.setPosition(165, 0);
+        } else {
+          dismissBtn.setPosition(200, 0);
+        }
+      }
+
       currentY += 70 * uiScale;
     }
     if (this.createBtn) {
