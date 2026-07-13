@@ -125,13 +125,13 @@ export class HUDManager {
     if (state.players.has(mySessionId)) {
       const me = state.players.get(mySessionId);
       this.elementManager.staticElements.playerInfoText.setText(
-        `Player: ${me?.name || "Unknown"}\nDeck: ${me?.deckName || "Unknown"}`,
+        `Player: ${me?.name || "Unknown"}`,
       );
     }
 
     if (opponent) {
       this.elementManager.staticElements.opponentInfoText.setText(
-        `Player: ${opponent.name}\nDeck: ${opponent.deckName}`,
+        `Player: ${opponent.name}`,
       );
     } else {
       this.elementManager.staticElements.opponentInfoText.setText(
