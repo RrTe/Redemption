@@ -111,7 +111,7 @@ export class HandRenderer {
         handSize,
         true,
       );
-      const finalAngle = angle + 180;
+      const finalAngle = angle;
 
       const cardUI = this.processCard(
         cardData,
