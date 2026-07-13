@@ -12,8 +12,7 @@ import { SelectionDialogTransitionHandler } from "../ui/handlers/SelectionDialog
 import { log } from "../utils/logger";
 import { SelectionDialogFilterView } from "../ui/components/filters/SelectionDialogFilterView";
 
-const CARDS_PER_PAGE = 18;
-
+// CARDS_PER_PAGE is now calculated dynamically based on screen height
 export interface SelectionAction {
   label: string;
   actionId: string;
@@ -68,9 +67,10 @@ export class SelectionDialogScene extends Phaser.Scene {
   init(data: SelectionDialogData) {
     this.dialogData = data;
     this.room = data.room;
+    const cardsPerPage = this.scale.height < 600 ? 9 : 18;
     this.paginationManager = new SelectionDialogPaginationManager(
       data.cards,
-      CARDS_PER_PAGE,
+      cardsPerPage,
     );
     this.soundManager = this.registry.get("soundManager");
     this.uiManager = new SelectionDialogUIManager(this, this.soundManager);
@@ -93,7 +93,8 @@ export class SelectionDialogScene extends Phaser.Scene {
       this.scale.height * 0.25,
     );
 
-    const cardWidth = this.scale.width / 16;
+    const isShort = this.scale.height < 600;
+    const cardWidth = this.scale.width / (isShort ? 14.5 : 16);
     const cardHeight = cardWidth * 1.4;
 
     const showToggles =
@@ -103,13 +104,23 @@ export class SelectionDialogScene extends Phaser.Scene {
         this.dialogData.actionType === "reveal");
 
     const ySpacing = 50;
-    const filterYOffset = (this.dialogData.isMyAction ? (showToggles ? 72 : 28) : 80) + (cardHeight / 2 + ySpacing / 2);
+    const cardsPerPage = this.scale.height < 600 ? 9 : 18;
+    const hasSecondRow = Math.min(this.dialogData.cards.length, cardsPerPage) > 9;
+    const filterYOffset = (this.dialogData.isMyAction ? (showToggles ? 72 : 28) : 80) + (hasSecondRow ? (cardHeight / 2 + ySpacing / 2) : 0);
 
     const centerY = this.scale.height / 2 - 30; // Match the shifted up center from UI manager
 
+    let filterY = centerY + cardHeight / 2 + filterYOffset;
+    if (this.scale.height < 600) {
+      // Mobile layout: dynamically calculate perfect center between toggles and bottom buttons
+      const toggleBottomY = centerY + cardHeight / 2 + 30; // approx bottom of toggle icons
+      const bottomButtonsTopY = this.scale.height * 0.85 - 25; // yPos (85%) - half button height
+      filterY = (toggleBottomY + bottomButtonsTopY) / 2 - 15; // -20 to center the filter background visual
+    }
+
     this.filterView.createFiltersUI(
       this.scale.width / 2,
-      centerY + cardHeight / 2 + filterYOffset,
+      filterY,
       this.scale.width,
       this.dialogData.cards
     );
@@ -119,7 +130,7 @@ export class SelectionDialogScene extends Phaser.Scene {
     );
 
     this.uiManager.createPaginationControls(
-      this.paginationManager, 
+      this.paginationManager,
       (d) => this.changePage(d),
       this.dialogData.isMyAction
     );

@@ -27,12 +27,13 @@ export class SelectionDialogFilterView {
   }
 
   public createFiltersUI(x: number, y: number, width: number, cards?: CardState[]) {
-    const scale = this.scene.scale.width / 1920;
+    const rawScale = this.scene.scale.width / 1920;
+    const scale = this.scene.scale.height < 600 ? rawScale * 1.4 : rawScale; 
     y += 2 * scale;
 
     // Draw background bar behind all filters (similar style to DeckEditor)
     const bgWidth = 880 * scale;
-    const bgHeight = 128 * scale;
+    const bgHeight = 115 * scale;
     const bgX = x - bgWidth / 2;
     const bgY = y - 22 * scale;
     const borderRadius = 12 * scale;
@@ -117,7 +118,7 @@ export class SelectionDialogFilterView {
     this.brigadeGroup.setDepth(15);
 
     // 3. Text Search & Checkboxes Row
-    const row3Y = y + 78 * scale;
+    const row3Y = y + 70 * scale;
 
     // Cards Selected label (prominent font size 32px)
     this.cardsSelectedText = this.scene.add
@@ -128,9 +129,10 @@ export class SelectionDialogFilterView {
     // Text Input DOM element
     const inputWidth = 220 * scale;
     const inputX = x - 170 * scale;
+    const inputHeight = Math.round(30 * scale);
 
     const style: any = {
-      height: "32px",
+      height: `${inputHeight}px`,
       position: "absolute",
       "caret-color": "#e9cd45",
       color: "transparent",
@@ -156,9 +158,9 @@ export class SelectionDialogFilterView {
     // Border graphics for search field
     this.textFilterInput = this.scene.add.graphics().setDepth(20);
     this.textFilterInput.fillStyle(0x778899, 0.3);
-    this.textFilterInput.fillRoundedRect(inputX, row3Y - 16, inputWidth, 32, 6);
+    this.textFilterInput.fillRoundedRect(inputX, row3Y - inputHeight / 2, inputWidth, inputHeight, 6 * scale);
     this.textFilterInput.lineStyle(1, 0xe4ae4a, 0.4);
-    this.textFilterInput.strokeRoundedRect(inputX, row3Y - 16, inputWidth, 32, 6);
+    this.textFilterInput.strokeRoundedRect(inputX, row3Y - inputHeight / 2, inputWidth, inputHeight, 6 * scale);
 
     // Search overlay text
     this.textFilterInputTxt = this.scene.add
@@ -170,7 +172,7 @@ export class SelectionDialogFilterView {
     const textMaskGfx = this.scene.make.graphics({});
     textMaskGfx.fillStyle(0xffffff);
     textMaskGfx.beginPath();
-    textMaskGfx.fillRoundedRect(inputX + 4, row3Y - 14, inputWidth - 8, 28, 4);
+    textMaskGfx.fillRoundedRect(inputX + 4, row3Y - inputHeight / 2 + 2, inputWidth - 8, inputHeight - 4, 4);
     const textMask = textMaskGfx.createGeometryMask();
     this.textFilterInputTxt.setMask(textMask);
 
@@ -289,16 +291,18 @@ export class SelectionDialogFilterView {
   }
 
   public resetTextFilterInput(active: boolean) {
-    const scale = this.scene.scale.width / 1920;
+    const rawScale = this.scene.scale.width / 1920;
+    const scale = this.scene.scale.height < 600 ? rawScale * 1.4 : rawScale; 
     const inputX = this.textFilterElem.x;
     const row3Y = this.textFilterElem.y;
     const inputWidth = 220 * scale;
+    const inputHeight = Math.round(30 * scale);
 
     this.textFilterInput.clear();
     this.textFilterInput.fillStyle(active ? 0x000000 : 0x778899, 0.3);
-    this.textFilterInput.fillRoundedRect(inputX, row3Y - 16, inputWidth, 32, 6);
+    this.textFilterInput.fillRoundedRect(inputX, row3Y - inputHeight / 2, inputWidth, inputHeight, 6 * scale);
     this.textFilterInput.lineStyle(1, 0xe4ae4a, 0.4);
-    this.textFilterInput.strokeRoundedRect(inputX, row3Y - 16, inputWidth, 32, 6);
+    this.textFilterInput.strokeRoundedRect(inputX, row3Y - inputHeight / 2, inputWidth, inputHeight, 6 * scale);
   }
 
   public updateInputTextAndScroll(value: string) {

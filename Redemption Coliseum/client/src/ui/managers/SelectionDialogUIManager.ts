@@ -50,7 +50,7 @@ export class SelectionDialogUIManager {
     const cardHeight = (this.scene.scale.width / 16) * 1.4;
     const yOffset = isMyAction ? 115 : 60;
     const buttonY = this.scene.scale.height - yOffset;
-    const buttonXOffset = this.scene.scale.width * 0.4;
+    const buttonXOffset = this.scene.scale.width * 0.47; // Push slightly further to the edge
 
     this.prevButton = this.scene.add
       .image(this.scene.scale.width / 2 - buttonXOffset, buttonY, "arrow_left")
@@ -116,38 +116,51 @@ export class SelectionDialogUIManager {
       { label: "Banish", zone: "banish" as Zone },
     ];
 
+    // Base scaling on cardWidth to keep proportions identical to desktop
+    const isShort = this.scene.scale.height < 600;
+    const cardWidth = this.scene.scale.width / (isShort ? 15.5 : 16);
+    const bWidth = Math.min(140, cardWidth * 1.6); // Increased for readability on mobile
+    const bHeight = Math.min(50, 50 * (bWidth / 140));
+    const textSize = Math.max(16, Math.min(26, 26 * (bWidth / 140))); // Minimum 16px, increased base by 2
+    const titleSize = Math.max(20, Math.min(40, 40 * (bWidth / 140))); // Minimum 20px
+
     ["me", "opponent"].forEach((targetPlayer) => {
       const isOpponent = targetPlayer === "opponent";
-      const yPos = isOpponent ? 90 : this.scene.scale.height - 80;
+      const h = this.scene.scale.height;
+
+      // Proportional placement for dynamic layout mit entkoppelten Abständen (visueller Ausgleich)
+      const textY = isOpponent ? (isShort ? h * 0.04 : 40) : (isShort ? h * 0.95 : h - 30);
+      const yPos = isOpponent ? (isShort ? h * 0.15 : 90) : (isShort ? h * 0.89 : h - 80);
+
       this.scene.add
         .bitmapText(
           this.scene.scale.width / 2,
-          isOpponent ? 40 : this.scene.scale.height - 30,
+          textY,
           "fairydust",
           isOpponent ? "Opponent" : "You",
-          40,
+          titleSize,
         )
         .setOrigin(0.5)
-        .setTint(0xffd700);
+        .setTint(0xffd700)
+        .setDepth(100);
 
-      const bWidth = 140;
       let startX =
         (this.scene.scale.width - zones.length * (bWidth + 10)) / 2 +
         bWidth / 2;
 
       zones.forEach((z) => {
-        const btn = this.scene.add.container(startX, yPos);
+        const btn = this.scene.add.container(startX, yPos).setDepth(100);
         const bg = this.scene.add
           .image(0, 0, "button_parchment")
-          .setDisplaySize(bWidth, 50);
+          .setDisplaySize(bWidth, bHeight);
         const txt = this.scene.add
-          .bitmapText(0, -6, "fairydust", z.label, 24)
+          .bitmapText(0, -3, "fairydust", z.label, textSize)
           .setOrigin(0.5)
-          .setTint(0xf4f6e1)
-          .setDropShadow(2, 2, 0x000000, 0.7);
+          .setTint(0xfff580) // Brighter gold for better contrast
+          .setDropShadow(3, 3, 0x000000, 1.0); // Deeper shadow for readability
         btn
           .add([bg, txt])
-          .setSize(bWidth, 50)
+          .setSize(bWidth, bHeight)
           .setInteractive({ useHandCursor: true })
           .setData("zone", z.zone)
           .setData("target", targetPlayer);
@@ -187,7 +200,7 @@ export class SelectionDialogUIManager {
             (a.target === btn.getData("target") ||
               (!a.target && btn.getData("target") === "me")),
         );
-      btn.setAlpha(valid && allowed ? 1 : 0.5);
+      btn.setAlpha(valid && allowed ? 1 : 0.75); // Increased alpha for better readability
       btn.input!.enabled = valid && allowed;
     });
   }
@@ -212,7 +225,8 @@ export class SelectionDialogUIManager {
     onCardClicked: (card: CardUI) => void,
     selectedCards: Set<string>
   ): { xCoords: number[]; targets: (Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[])[] } {
-    const cardWidth = this.scene.scale.width / 16;
+    const isShort = this.scene.scale.height < 600;
+    const cardWidth = this.scene.scale.width / (isShort ? 15.5 : 16);
     const cardHeight = cardWidth * 1.4;
 
     // Config for rows
@@ -230,7 +244,10 @@ export class SelectionDialogUIManager {
       const colIndex = i % cardsPerRow;
 
       const cardsInThisRow = Math.min(cardsPerRow, cards.length - rowIndex * cardsPerRow);
-      const startX = this.scene.scale.width / 2 - (cardsInThisRow * (cardWidth + 20)) / 2 + cardWidth / 2;
+
+      // Die Karten (CardUI) haben ihren Origin in der Mitte (0.5, 0.5)!
+      // Die korrekte Zentrierung für den Mittelpunkt der gesamten Reihe lautet daher:
+      const startX = this.scene.scale.width / 2 - ((cardsInThisRow - 1) * (cardWidth + 20)) / 2;
 
       const tx = startX + colIndex * (cardWidth + 20);
       const ty = isSingleRow
@@ -249,7 +266,12 @@ export class SelectionDialogUIManager {
       this.cardUIs.push(card);
 
       const showToggles = isMyAction && fromZone === "deck" && (actionType === "look" || actionType === "reveal");
-      const toggle = this.createPositionToggle(tx, ty + cardHeight / 2 + 20, data.id, initialPosition, cardPositions);
+
+      const toggleWidth = Math.min(45, cardWidth * 0.45);
+      const toggleHeight = toggleWidth * (30 / 45);
+      const toggleY = ty + cardHeight / 2 + toggleHeight / 2 + 5;
+
+      const toggle = this.createPositionToggle(tx, toggleY, data.id, initialPosition, cardPositions, cardWidth);
 
       toggle.setVisible(showToggles);
       card.setData("positionToggle", toggle);
@@ -269,21 +291,27 @@ export class SelectionDialogUIManager {
     cardId: string,
     initialPosition: "top" | "bottom",
     cardPositions: Map<string, "top" | "bottom">,
+    cardWidth: number = 100
   ): Phaser.GameObjects.Container {
     const container = this.scene.add.container(x, y);
     if (!cardPositions.has(cardId)) cardPositions.set(cardId, initialPosition);
 
+    const toggleWidth = Math.min(45, cardWidth * 0.45);
+    const toggleHeight = toggleWidth * (30 / 45);
+    const iconSize = toggleHeight * 0.6;
+    const btnOffset = toggleWidth / 2 + (toggleWidth < 45 ? 2 : 7.5);
+
     const createBtn = (type: "top" | "bottom", offset: number) => {
       const btn = this.scene.add.container(offset, 0);
       const bg = this.scene.add
-        .rectangle(0, 0, 45, 30, 0x333333)
+        .rectangle(0, 0, toggleWidth, toggleHeight, 0x333333)
         .setStrokeStyle(2, 0x666666);
       const icon = this.scene.add
         .image(0, 0, type === "top" ? "icon_topdeck" : "icon_underdeck")
-        .setDisplaySize(20, 20);
+        .setDisplaySize(iconSize, iconSize);
       btn
         .add([bg, icon])
-        .setSize(45, 30)
+        .setSize(toggleWidth, toggleHeight)
         .setInteractive({ useHandCursor: true })
         .setData("bg", bg);
       btn.on("pointerdown", () => {
@@ -293,7 +321,7 @@ export class SelectionDialogUIManager {
       return btn;
     };
 
-    container.add([createBtn("top", -30), createBtn("bottom", 30)]);
+    container.add([createBtn("top", -btnOffset), createBtn("bottom", btnOffset)]);
     container
       .setData("topBtn", container.list[0])
       .setData("botBtn", container.list[1]);
