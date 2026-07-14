@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 
+import { ViewportManager } from "../ui/managers/ViewportManager";
+
 export interface QuantitySelectionDialogData {
   title: string;
   maxCount: number;
@@ -34,40 +36,54 @@ export class QuantitySelectionDialogScene extends Phaser.Scene {
     const cx = this.scale.width / 2;
     const cy = this.scale.height / 2;
 
-    // Overlay (dunkler Hintergrund)
+    // Overlay (dunkler Hintergrund) - bleibt unskaliert über den ganzen Bildschirm
     this.add
       .rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.6)
       .setOrigin(0)
       .setInteractive();
 
+    // ✨ NEU: Container für alle Dialog-Elemente, um einfaches Skalieren zu ermöglichen
+    const dialogContainer = this.add.container(cx, cy);
+
+    // Responsive Skalierung anwenden
+    const isSmallScreen = ViewportManager.isLowHeightProfile() || ViewportManager.isCompactMode();
+    const scale = isSmallScreen ? 0.7 : 1.0;
+    dialogContainer.setScale(scale);
+
     // Panel
-    this.add
-      .rectangle(cx, cy, width, height, 0x222222)
-      .setStrokeStyle(2, 0x888888);
+    dialogContainer.add(
+      this.add
+        .rectangle(0, 0, width, height, 0x222222)
+        .setStrokeStyle(2, 0x888888)
+    );
 
     // Titel
-    this.add
-      .text(cx, cy - height / 2 + 30, this.dialogData.title, {
-        fontSize: "24px",
-        color: "#ffffff",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
+    dialogContainer.add(
+      this.add
+        .text(0, -height / 2 + 30, this.dialogData.title, {
+          fontSize: "24px",
+          color: "#ffffff",
+          fontStyle: "bold",
+        })
+        .setOrigin(0.5)
+    );
 
     // --- Anzahl Auswahl ---
-    const qtyY = cy - 40;
-    this.add
-      .text(cx, qtyY - 40, `Quantity (Max: ${this.dialogData.maxCount}):`, {
-        fontSize: "18px",
-        color: "#aaaaaa",
-      })
-      .setOrigin(0.5);
+    const qtyY = -40;
+    dialogContainer.add(
+      this.add
+        .text(0, qtyY - 40, `Quantity (Max: ${this.dialogData.maxCount}):`, {
+          fontSize: "18px",
+          color: "#aaaaaa",
+        })
+        .setOrigin(0.5)
+    );
 
-    this.createButton(cx - 80, qtyY, "-", () => this.updateCount(-1));
-    this.createButton(cx + 80, qtyY, "+", () => this.updateCount(1));
+    dialogContainer.add(this.createButton(-80, qtyY, "-", () => this.updateCount(-1)));
+    dialogContainer.add(this.createButton(80, qtyY, "+", () => this.updateCount(1)));
 
     this.countText = this.add
-      .text(cx, qtyY, this.count.toString(), {
+      .text(0, qtyY, this.count.toString(), {
         fontSize: "48px", // ✨ FIX: Größer, passend zu PileUI
         color: "#ffffff",
         fontStyle: "bold", // ✨ FIX: Fett
@@ -75,37 +91,43 @@ export class QuantitySelectionDialogScene extends Phaser.Scene {
         strokeThickness: 4,
       })
       .setOrigin(0.5);
+    dialogContainer.add(this.countText);
 
     // --- Position Auswahl ---
-    const posY = cy + 60;
+    const posY = 60;
     // ✨ NEU: Nur anzeigen, wenn gewünscht (Standard: true)
     if (this.dialogData.enablePositionSelection !== false) {
-      this.add
-        .text(cx, posY - 40, "Position:", {
-          fontSize: "18px",
-          color: "#aaaaaa",
-        })
-        .setOrigin(0.5);
+      dialogContainer.add(
+        this.add
+          .text(0, posY - 40, "Position:", {
+            fontSize: "18px",
+            color: "#aaaaaa",
+          })
+          .setOrigin(0.5)
+      );
 
-      this.topButton = this.createPositionButton(cx - 60, posY, "top");
-      this.bottomButton = this.createPositionButton(cx + 60, posY, "bottom");
+      this.topButton = this.createPositionButton(-60, posY, "top");
+      this.bottomButton = this.createPositionButton(60, posY, "bottom");
+      dialogContainer.add([this.topButton, this.bottomButton]);
       this.updatePositionButtons();
     }
 
     // --- Aktions-Buttons ---
-    const btnY = cy + height / 2 - 40;
+    const btnY = height / 2 - 40;
 
     // ✨ NEU: Styled Button "OK" (rechts)
-    this.createStyledButton(cx + 80, btnY, "OK", () => {
+    const okBtn = this.createStyledButton(80, btnY, "OK", () => {
       this.dialogData.onConfirm(this.count, this.position);
       this.close();
     });
 
     // ✨ NEU: Styled Button "Cancel" (links)
-    this.createStyledButton(cx - 80, btnY, "Cancel", () => {
+    const cancelBtn = this.createStyledButton(-80, btnY, "Cancel", () => {
       this.dialogData.onCancel();
       this.close();
     });
+
+    dialogContainer.add([okBtn, cancelBtn]);
   }
 
   private createButton(
