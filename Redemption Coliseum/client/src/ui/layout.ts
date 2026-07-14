@@ -65,9 +65,16 @@ export function calculateLayout(
 ): GameLayout {
   const HAND_CARD_SCALE = 1.3;
 
+  const isLowHeight = ViewportManager.isLowHeightProfile();
+
   const CARD_ASPECT_RATIO = 1.4;
-  const pileHeight = height * 0.12;
-  const pileWidth = pileHeight / CARD_ASPECT_RATIO;
+  // Auf dem Handy wollen wir 0.15, auf dem Desktop muss es zwingend bei 0.12 bleiben!
+  const pileHeight = isLowHeight ? height * 0.15 : height * 0.12;
+  // Bei niedrigen Höhen (Mobile) nutzen wir eine etwas kleinere Ratio (z.B. 1.25 oder 1.3), 
+  // damit die Piles im Verhältnis breiter wirken.
+  const pileAspectRatio = isLowHeight ? 1.25 : CARD_ASPECT_RATIO;
+  const pileWidth = pileHeight / pileAspectRatio;
+
   const cardHeight = height * 0.12;
   const cardWidth = cardHeight / CARD_ASPECT_RATIO;
   const PADDING = height * 0.05;
@@ -76,7 +83,6 @@ export function calculateLayout(
   const smallCardWidth = cardWidth * 0.8;
   const smallCardHeight = cardHeight * 0.8;
 
-  const isLowHeight = ViewportManager.isLowHeightProfile();
   const handCardWidth = cardWidth * (isLowHeight ? 2.2 : HAND_CARD_SCALE);
   const handCardHeight = cardHeight * (isLowHeight ? 2.2 : HAND_CARD_SCALE);
   const PILE_SPACING = isLowHeight ? pileHeight * 1.4 : pileHeight * 1.25;
@@ -154,7 +160,7 @@ export function calculateLayout(
   );
 
   const playerOuterColX = width - pileWidth - EDGE_MARGIN;
-  const playerInnerColX = isLowHeight ? playerOuterColX - pileWidth - (pileWidth * 0.4) : playerOuterColX;
+  const playerInnerColX = isLowHeight ? playerOuterColX - pileWidth - (pileWidth * 0.45) : playerOuterColX;
   const playerPilesStartY = height - EDGE_MARGIN - pileHeight;
 
   let playerBanishPile, playerDiscardPile, playerDeckPile, playerReservePile, playerLandOfRedemptionPile;
@@ -231,7 +237,7 @@ export function calculateLayout(
   );
 
   const opponentOuterColX = EDGE_MARGIN;
-  const opponentInnerColX = isLowHeight ? opponentOuterColX + pileWidth + (pileWidth * 0.4) : opponentOuterColX;
+  const opponentInnerColX = isLowHeight ? opponentOuterColX + pileWidth + (pileWidth * 0.45) : opponentOuterColX;
   const opponentPilesStartY = EDGE_MARGIN;
 
   let opponentBanishPile, opponentDiscardPile, opponentDeckPile, opponentReservePile, opponentLandOfRedemptionPile;
