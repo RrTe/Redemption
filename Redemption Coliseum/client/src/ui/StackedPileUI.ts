@@ -5,7 +5,7 @@ import { ZONES, type Zone } from "../../../shared/zones";
 
 const INITIAL_POOL_SIZE = 15; // Startgröße des Pools für die Grafiken
 const CARDS_PER_IMAGE = 5; // ✨ DEIN WUNSCH: Zeige eine neue Grafik für je 5 Karten
-const STACK_OFFSET_Y = 2; // Pixel-Versatz pro Grafik
+// const STACK_OFFSET_Y = 2; // Nun dynamisch als Getter
 
 const SHADOW_CONFIG = {
   OFFSET: 5,
@@ -29,6 +29,10 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
   private glowTween: Phaser.Tweens.Tween | null = null; // ✨ NEU: Animationstween
 
   public zoneName: Zone;
+
+  private get stackOffsetY(): number {
+    return this.scene.scale.height < 600 ? 1 : 2;
+  }
 
   constructor(
     scene: Phaser.Scene,
@@ -225,7 +229,7 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
       // Wir berechnen die Y-Position der obersten Karte und weisen sie dem Text zu.
       const topImageIndex = Math.max(0, numVisibleImages - 1);
       this.countText.y =
-        (this.isOpponent ? 1 : -1) * topImageIndex * STACK_OFFSET_Y;
+        (this.isOpponent ? 1 : -1) * topImageIndex * this.stackOffsetY;
 
       // Stelle sicher, dass der Pool groß genug ist
       while (this.stackImages.length < numVisibleImages) {
@@ -242,7 +246,7 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
       this.stackImages.forEach((img, i) => {
         if (i < numVisibleImages) {
           img.setVisible(true);
-          img.y = (this.isOpponent ? 1 : -1) * i * STACK_OFFSET_Y;
+          img.y = (this.isOpponent ? 1 : -1) * i * this.stackOffsetY;
         } else {
           img.setVisible(false);
         }
