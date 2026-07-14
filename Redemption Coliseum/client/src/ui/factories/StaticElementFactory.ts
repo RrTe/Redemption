@@ -171,17 +171,20 @@ export class StaticElementFactory {
     container
       .setInteractive(hitArea, Phaser.Geom.Rectangle.Contains)
       .on("pointerdown", () => {
+        const base = container.getData("baseScale") || 1.0;
         this.scene.events.emit("nextPhaseButtonClicked");
-        this.scene.tweens.add({ targets: container, scale: 1.05, duration: 50, yoyo: true });
+        this.scene.tweens.add({ targets: container, scale: base * 1.05, duration: 50, yoyo: true });
         if (glowFx) this.scene.tweens.add({ targets: glowFx, outerStrength: 6, duration: 50, yoyo: true });
       })
       .on("pointerover", () => {
-        this.scene.tweens.add({ targets: container, scale: 1.15, duration: 100, ease: "Back.easeOut" });
+        const base = container.getData("baseScale") || 1.0;
+        this.scene.tweens.add({ targets: container, scale: base * 1.15, duration: 100, ease: "Back.easeOut" });
         if (glowFx) this.scene.tweens.add({ targets: glowFx, outerStrength: 4, duration: 100 });
         else btnImage.setTint(0xffffaa);
       })
       .on("pointerout", () => {
-        this.scene.tweens.add({ targets: container, scale: 1.0, duration: 100 });
+        const base = container.getData("baseScale") || 1.0;
+        this.scene.tweens.add({ targets: container, scale: base, duration: 100 });
         if (glowFx) this.scene.tweens.add({ targets: glowFx, outerStrength: 0, duration: 100 });
         else btnImage.clearTint();
       });
@@ -212,11 +215,13 @@ export class StaticElementFactory {
     if (container.input) container.input.cursor = "pointer";
 
     container.on("pointerover", () => {
-      this.scene.tweens.add({ targets: container, scale: 1.15, duration: 100, ease: "Back.easeOut" });
+      const base = container.getData("baseScale") || 1.0;
+      this.scene.tweens.add({ targets: container, scale: base * 1.15, duration: 100, ease: "Back.easeOut" });
       concedeImg.setTint(0xffaaaa);
     });
     container.on("pointerout", () => {
-      this.scene.tweens.add({ targets: container, scale: 1.0, duration: 100 });
+      const base = container.getData("baseScale") || 1.0;
+      this.scene.tweens.add({ targets: container, scale: base, duration: 100 });
       concedeImg.clearTint();
     });
 
