@@ -259,8 +259,9 @@ export function calculateLayout(
 
   const playerInfo = {
     x: EDGE_MARGIN,
-    // Gilt nun für Mobile UND Desktop: Zentriert sauber über dem Button!
-    y: height - EDGE_MARGIN - 46 * buttonScale - EDGE_MARGIN - 20,
+    y: isLowHeight
+      ? height - EDGE_MARGIN - 46 * buttonScale - EDGE_MARGIN - 20
+      : height - EDGE_MARGIN - 46 * buttonScale - EDGE_MARGIN - 15,
   };
 
   const iconSize = Math.max(20, Math.floor(height * 0.025 * buttonScale));
@@ -336,9 +337,10 @@ export function calculateLayout(
 
   const opponentLoRBottom = opponentLandOfRedemptionPile.y + pileHeight / 2;
   const playerInfoTop = playerInfo.y;
+
   const leftButtonsCenterY = isLowHeight
     ? opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 + PADDING
-    : opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 + (PADDING * 1.4);
+    : opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 + (PADDING * 0.7);
 
   const chatButton = {
     hiddenX: -12,
