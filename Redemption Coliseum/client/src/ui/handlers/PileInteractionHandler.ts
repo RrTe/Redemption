@@ -106,9 +106,14 @@ export class PileInteractionHandler {
 
     // 3. Create Menu
     const menuConfigs = this.menuFactory.getActionsForPile(zone, targetId);
+    
     const isCompact = ViewportManager.isTouchPrimary() || ViewportManager.isCompactMode();
-    const radius = ViewportManager.vmin(isCompact ? 16 : 8);
-    const iconSize = ViewportManager.vmin(isCompact ? 12.5 : 8.3);
+    const isLowHeight = ViewportManager.isLowHeightProfile();
+
+    // Bei "low height" (Mobile) machen wir Piles-Radial-Menüs größer. 
+    // Desktop bleibt strikt auf den alten Werten, auch Karten bleiben unberührt.
+    const radius = ViewportManager.vmin(isLowHeight ? 24 : (isCompact ? 16 : 8));
+    const iconSize = ViewportManager.vmin(isLowHeight ? 18 : (isCompact ? 12.5 : 8.3));
     const menuRadius = radius + iconSize / 2;
 
     const cx = Phaser.Math.Clamp(
@@ -124,8 +129,16 @@ export class PileInteractionHandler {
 
     log("Input", `Opening pile menu for ${zone} (Owner: ${targetId})`);
 
-    return new RadialMenu(this.scene, cx, cy, radius, menuConfigs, () => {
-      onClose();
-    });
+    return new RadialMenu(
+      this.scene, 
+      cx, 
+      cy, 
+      radius, 
+      menuConfigs, 
+      () => {
+        onClose();
+      },
+      iconSize // Übergebe angepasste Button-Größe
+    );
   }
 }

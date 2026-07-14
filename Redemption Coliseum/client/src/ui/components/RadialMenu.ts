@@ -20,6 +20,7 @@ export class RadialMenu {
     radius: number,
     configs: ActionIconConfig[],
     onClose?: () => void,
+    customTargetSize?: number,
   ) {
     this.scene = scene;
     this.centerX = centerX;
@@ -46,7 +47,9 @@ export class RadialMenu {
     
     // ✨ Layout Strategy: Icons scale relative to viewport min-dimension
     const isCompact = ViewportManager.isTouchPrimary() || ViewportManager.isCompactMode();
-    const targetSize = ViewportManager.vmin(isCompact ? 12.5 : 8.3);
+    const targetSize = customTargetSize !== undefined 
+      ? customTargetSize 
+      : ViewportManager.vmin(isCompact ? 12.5 : 8.3);
 
     configs.forEach((config, index) => {
       const angle = index * angleStep - Math.PI / 2;
