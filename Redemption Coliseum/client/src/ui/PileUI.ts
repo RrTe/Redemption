@@ -17,6 +17,18 @@ export class PileUI extends Phaser.GameObjects.Container {
   private countText: Phaser.GameObjects.Text;
   private shadow: Phaser.GameObjects.NineSlice; // ✨ NEU
   private placeholderImage: Phaser.GameObjects.Image | null = null; // ✨ NEU
+  private badgeBg: Phaser.GameObjects.Graphics; // ✨ NEU: Badge Hintergrund
+  private badgeContainer: Phaser.GameObjects.Container; // ✨ NEU: Container auf Szenen-Ebene für den Z-Index
+  private cardCount: number = 0;
+
+  // ✨ HIER KANNST DU DIE SCHRIFTGRÖSSE FÜR DEN HANDY-ZÄHLER ANPASSEN
+  private getCountFontSize(width: number, height: number): number {
+    const baseFontSize = Math.max(12, Math.round(width * 0.15));
+    let countFontSize = baseFontSize * 2;
+    // Wenn die Höhe sehr klein ist (Handy), wende diese spezielle Formel an:
+    if (height < 100) countFontSize = Math.max(14, Math.round(height * 0.1));
+    return countFontSize;
+  }
 
   constructor(
     scene: Phaser.Scene,
@@ -86,15 +98,36 @@ export class PileUI extends Phaser.GameObjects.Container {
     this.nameText.setVisible(DEBUG); // ✨ FIX: Namen nur im Debug-Modus anzeigen (stören sonst die Optik)
     this.add(this.nameText);
 
+    // ✨ FIX: Badge-Container auf Szene-Ebene erstellen, damit er über den Karten liegt
+    this.badgeContainer = scene.add.container(x, y);
+    this.badgeContainer.setDepth(100); // Weit über den Karten (Z-Index)
+
+    // Karten-Zähler Badge
+    this.badgeBg = scene.add.graphics();
+    this.badgeContainer.add(this.badgeBg);
+
     // Karten-Zähler
+    const initialFontSize = this.getCountFontSize(width, height);
     this.countText = scene.add
-      .text(0, 10, "0", {
-        fontSize: "48px",
+      .text(0, 0, "0", {
+        fontSize: `${initialFontSize}px`,
         color: "#ffffff",
         align: "center",
+        fontStyle: "bold",
+        stroke: "#000000",
+        strokeThickness: 6, // Wird in updateSize dynamisch angepasst
       })
       .setOrigin(0.5);
-    this.add(this.countText);
+    this.badgeContainer.add(this.countText);
+
+    // Initial verstecken, da wir mit 0 starten
+    this.countText.setVisible(false);
+    this.badgeBg.setVisible(false);
+
+    // Cleanup bei Zerstörung des Piles
+    this.on('destroy', () => {
+      this.badgeContainer.destroy();
+    });
 
     // ✨ FINALE KORREKTUR: Mache JEDEN Stapel von Anfang an interaktiv.
     // 1. Definiere eine klickbare Fläche (Hit Area), die der Größe des Stapels entspricht.
@@ -132,7 +165,40 @@ export class PileUI extends Phaser.GameObjects.Container {
   }
 
   public updateCount(newCount: number) {
+    this.cardCount = newCount;
     this.countText.setText(String(newCount));
+
+    if (this.cardCount === 0) {
+      this.countText.setVisible(false);
+      this.badgeBg.setVisible(false);
+    } else {
+      this.countText.setVisible(true);
+      this.badgeBg.setVisible(true);
+      this.drawBadge();
+    }
+  }
+
+  private drawBadge() {
+    this.badgeBg.clear();
+    // Ein dezenter Kreis, der sich an der Textgröße orientiert
+    // ✨ FIX: Auf dem Handy (height < 100) kein zusätzliches Padding, damit es eleganter/enger anliegt
+    const padding = this.height < 100 ? 0 : 4;
+    const radius = Math.max(this.countText.width, this.countText.height) / 2 + padding;
+
+    this.badgeBg.fillStyle(0x000000, 0.6);
+    this.badgeBg.fillCircle(this.countText.x, this.countText.y, radius);
+
+    this.badgeBg.lineStyle(2, 0xffffff, 0.6);
+    this.badgeBg.strokeCircle(this.countText.x, this.countText.y, radius);
+  }
+
+  // ✨ NEU: Überschreibe setPosition, damit der externe Badge-Container mitwandert
+  public setPosition(x?: number, y?: number, z?: number, w?: number): this {
+    super.setPosition(x, y, z, w);
+    if (this.badgeContainer) {
+      this.badgeContainer.setPosition(x, y);
+    }
+    return this;
   }
 
   // ✨ NEU: Methode zur Aktualisierung der Größe
@@ -149,8 +215,25 @@ export class PileUI extends Phaser.GameObjects.Container {
     this.nameText.setY(-height / 2 + 20);
     // Optional: Skaliere die Schriftgröße mit, um die Lesbarkeit zu erhalten
     const fontSize = Math.max(12, Math.min(16, width / 8));
-    this.nameText.setFontSize(fontSize); // ✨ KORREKTUR: Fehlendes Semikolon war hier, entfernt.
-    this.countText.setFontSize(fontSize * 2); // ✨ KORREKTUR: Fehlendes Semikolon war hier, entfernt.
+    this.nameText.setFontSize(fontSize);
+
+    // Zähler-Schriftgröße über die neue Hilfsmethode abrufen
+    let countFontSize = this.getCountFontSize(width, height);
+
+    // Dynamische Anpassungen für das Handy (height < 100)
+    const isMobile = height < 100;
+    const strokeT = isMobile ? 4 : 6;
+
+    this.countText.setFontSize(countFontSize);
+    this.countText.setStroke("#000000", strokeT);
+
+    // ✨ FIX: Auf dem Handy machen wir die Schrift extra fett (Arial Black + 900 Weight)
+    this.countText.setFontStyle(isMobile ? "900" : "bold");
+    this.countText.setFontFamily(isMobile ? '"Arial Black", Impact, sans-serif' : 'sans-serif');
+
+    if (this.cardCount > 0) {
+      this.drawBadge();
+    }
 
     // ✨ ENTSCHEIDENDE KORREKTUR: Aktualisiere die Größe der interaktiven "Hit Area".
     // Ohne dies behält der Klickbereich seine ursprüngliche Größe und überlappt andere Elemente.

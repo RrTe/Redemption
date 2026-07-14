@@ -118,14 +118,10 @@ export class CardInteractionHandler {
     });
   }
 
-  /**
-   * Handles click and double-click logic for cards.
-   */
   public handlePointerUp(pointer: Phaser.Input.Pointer, card: CardUI) {
-    if (!this.isInteractable(card)) return;
-
     // Right Click Release: Flip Hand Card
     if (pointer.rightButtonReleased()) {
+      if (!this.isInteractable(card)) return; // ✨ Nur für interaktive Karten
       if (card.currentZone === ZONES.HAND) {
         this.handleFlip(card);
       }
@@ -144,7 +140,9 @@ export class CardInteractionHandler {
         this.lastClickedCardId === card.cardData.id &&
         now - this.lastClickTime < 300
       ) {
-        this.handleFaceDownToggle(card);
+        if (this.isInteractable(card)) { // ✨ Nur für interaktive Karten
+          this.handleFaceDownToggle(card);
+        }
         this.lastClickedCardId = null;
         if (ViewportManager.isTouchPrimary() || pointer.wasTouch) {
           this.clearHover();
@@ -153,7 +151,7 @@ export class CardInteractionHandler {
         this.lastClickedCardId = card.cardData.id;
         // ✨ Mobile: Single Tap opens the preview overlay (Hover equivalent)
         if (pointer.wasTouch) {
-          this.handleHoverIn(card);
+          this.handleHoverIn(card); // ✨ Erlaubt Preview für JEDE Karte (auch Discard/Banish)
         }
       }
       this.lastClickTime = now;

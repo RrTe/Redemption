@@ -27,8 +27,17 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
   private shadow: Phaser.GameObjects.NineSlice; // ✨ NEU
   private bottomGlowGraphics: Phaser.GameObjects.Graphics; // ✨ NEU: Für den Leucht-Effekt
   private glowTween: Phaser.Tweens.Tween | null = null; // ✨ NEU: Animationstween
+  private badgeBg: Phaser.GameObjects.Graphics; // ✨ NEU: Badge Hintergrund
 
   public zoneName: Zone;
+
+  // ✨ HIER KANNST DU DIE SCHRIFTGRÖSSE FÜR DEN HANDY-ZÄHLER ANPASSEN
+  private getCountFontSize(height: number): number {
+    let size = Math.round(height * 0.3);
+    // Wenn die Höhe sehr klein ist (Handy), wende diese spezielle Formel an:
+    if (height < 100) size = Math.max(16, Math.round(height * 0.2));
+    return size;
+  }
 
   private get stackOffsetY(): number {
     return this.scene.scale.height < 600 ? 1 : 2;
@@ -104,13 +113,19 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
     }
 
     // 3. Text für die Kartenanzahl
+    this.badgeBg = scene.add.graphics();
+    this.add(this.badgeBg);
+
+    const countFontSize = this.getCountFontSize(height);
+    const strokeT = height < 100 ? 4 : 6;
+
     this.countText = scene.add
       .text(0, 0, "0", {
-        fontSize: `${Math.round(height * 0.3)}px`,
+        fontSize: `${countFontSize}px`,
         color: "#ffffff",
         fontStyle: "bold",
         stroke: "#000000",
-        strokeThickness: 4,
+        strokeThickness: strokeT,
       })
       .setOrigin(0.5);
     this.add(this.countText);
@@ -219,9 +234,11 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
       this.emptyPileImage.setVisible(true);
       this.stackImages.forEach((img) => img.setVisible(false));
       this.countText.setVisible(false);
+      this.badgeBg.setVisible(false);
     } else {
       this.emptyPileImage.setVisible(false);
       this.countText.setVisible(true);
+      this.badgeBg.setVisible(true);
 
       const numVisibleImages = Math.ceil(this.cardCount / CARDS_PER_IMAGE);
 
@@ -230,6 +247,8 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
       const topImageIndex = Math.max(0, numVisibleImages - 1);
       this.countText.y =
         (this.isOpponent ? 1 : -1) * topImageIndex * this.stackOffsetY;
+
+      this.drawBadge();
 
       // Stelle sicher, dass der Pool groß genug ist
       while (this.stackImages.length < numVisibleImages) {
@@ -254,6 +273,20 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
     }
   }
 
+  private drawBadge() {
+    this.badgeBg.clear();
+    // Ein dezenter Kreis, der sich an der Textgröße orientiert
+    // ✨ FIX: Auf dem Handy (height < 100) kein zusätzliches Padding, damit es eleganter/enger anliegt
+    const padding = this.height < 100 ? 0 : 4;
+    const radius = Math.max(this.countText.width, this.countText.height) / 2 + padding;
+
+    this.badgeBg.fillStyle(0x000000, 0.6);
+    this.badgeBg.fillCircle(this.countText.x, this.countText.y, radius);
+
+    this.badgeBg.lineStyle(2, 0xffffff, 0.6);
+    this.badgeBg.strokeCircle(this.countText.x, this.countText.y, radius);
+  }
+
   public updateSize(width: number, height: number) {
     if (!this.scene || !this.active) return; // ✨ FIX: Sicherheitscheck gegen Abstürze bei zerstörten Objekten
 
@@ -265,7 +298,24 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
         height + SHADOW_CONFIG.PADDING,
       ); // ✨ FIX: Konsistente Größe
     this.stackImages.forEach((img) => img.setDisplaySize(width, height));
-    this.countText.setFontSize(Math.round(height * 0.3));
+
+    // Zähler-Schriftgröße über die neue Hilfsmethode abrufen
+    const countFontSize = this.getCountFontSize(height);
+
+    // Dynamische Anpassungen für das Handy (height < 100)
+    const isMobile = height < 100;
+    const strokeT = isMobile ? 4 : 6; // Von 3 auf 4 erhöht für mehr "Fett"-Effekt auf dem Handy
+
+    this.countText.setFontSize(countFontSize);
+    this.countText.setStroke("#000000", strokeT);
+
+    // ✨ FIX: Auf dem Handy machen wir die Schrift extra fett (Arial Black + 900 Weight)
+    this.countText.setFontStyle(isMobile ? "900" : "bold");
+    this.countText.setFontFamily(isMobile ? '"Arial Black", Impact, sans-serif' : 'sans-serif');
+
+    if (this.cardCount > 0) {
+      this.drawBadge();
+    }
 
     (this.input?.hitArea as Phaser.Geom.Rectangle)?.setSize(width, height);
   }
