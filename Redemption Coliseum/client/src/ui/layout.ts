@@ -165,10 +165,14 @@ export function calculateLayout(
 
   let playerBanishPile, playerDiscardPile, playerDeckPile, playerReservePile, playerLandOfRedemptionPile;
   if (isLowHeight) {
-    playerReservePile = new Phaser.Geom.Rectangle(playerInnerColX, playerPilesStartY, pileWidth, pileHeight);
-    playerDeckPile = new Phaser.Geom.Rectangle(playerInnerColX, playerReservePile.y - PILE_SPACING, pileWidth, pileHeight);
-    playerDiscardPile = new Phaser.Geom.Rectangle(playerInnerColX, playerDeckPile.y - PILE_SPACING, pileWidth, pileHeight);
+    // Linke Reihe (näher zur Mitte = innerCol), von oben nach unten gewünscht: Reserve, Deck, Discard
+    // -> Von unten nach oben berechnet: Discard -> Deck -> Reserve
+    playerDiscardPile = new Phaser.Geom.Rectangle(playerInnerColX, playerPilesStartY, pileWidth, pileHeight);
+    playerDeckPile = new Phaser.Geom.Rectangle(playerInnerColX, playerDiscardPile.y - PILE_SPACING, pileWidth, pileHeight);
+    playerReservePile = new Phaser.Geom.Rectangle(playerInnerColX, playerDeckPile.y - PILE_SPACING, pileWidth, pileHeight);
 
+    // Rechte Reihe (näher am rechten Rand = outerCol), von oben nach unten gewünscht: LoR, Banish
+    // -> Von unten nach oben berechnet: Banish -> LoR
     playerBanishPile = new Phaser.Geom.Rectangle(playerOuterColX, playerPilesStartY, pileWidth, pileHeight);
     playerLandOfRedemptionPile = new Phaser.Geom.Rectangle(playerOuterColX, playerBanishPile.y - PILE_SPACING, pileWidth, pileHeight);
   } else {
@@ -245,12 +249,16 @@ export function calculateLayout(
 
   let opponentBanishPile, opponentDiscardPile, opponentDeckPile, opponentReservePile, opponentLandOfRedemptionPile;
   if (isLowHeight) {
-    opponentReservePile = new Phaser.Geom.Rectangle(opponentInnerColX, opponentPilesStartY, pileWidth, pileHeight);
-    opponentDeckPile = new Phaser.Geom.Rectangle(opponentInnerColX, opponentReservePile.y + PILE_SPACING, pileWidth, pileHeight);
-    opponentDiscardPile = new Phaser.Geom.Rectangle(opponentInnerColX, opponentDeckPile.y + PILE_SPACING, pileWidth, pileHeight);
-
+    // Linke Reihe (näher am linken Rand = outerCol), von oben nach unten gewünscht: Banish, LoR
+    // -> Von oben nach unten berechnet: Banish -> LoR
     opponentBanishPile = new Phaser.Geom.Rectangle(opponentOuterColX, opponentPilesStartY, pileWidth, pileHeight);
     opponentLandOfRedemptionPile = new Phaser.Geom.Rectangle(opponentOuterColX, opponentBanishPile.y + PILE_SPACING, pileWidth, pileHeight);
+
+    // Rechte Reihe (näher zur Mitte = innerCol), von oben nach unten gewünscht: Discard, Deck, Reserve
+    // -> Von oben nach unten berechnet: Discard -> Deck -> Reserve
+    opponentDiscardPile = new Phaser.Geom.Rectangle(opponentInnerColX, opponentPilesStartY, pileWidth, pileHeight);
+    opponentDeckPile = new Phaser.Geom.Rectangle(opponentInnerColX, opponentDiscardPile.y + PILE_SPACING, pileWidth, pileHeight);
+    opponentReservePile = new Phaser.Geom.Rectangle(opponentInnerColX, opponentDeckPile.y + PILE_SPACING, pileWidth, pileHeight);
   } else {
     opponentBanishPile = new Phaser.Geom.Rectangle(opponentOuterColX, opponentPilesStartY, pileWidth, pileHeight);
     opponentDiscardPile = new Phaser.Geom.Rectangle(opponentOuterColX, opponentBanishPile.y + PILE_SPACING, pileWidth, pileHeight);

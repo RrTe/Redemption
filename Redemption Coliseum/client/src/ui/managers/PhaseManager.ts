@@ -85,7 +85,8 @@ export class PhaseManager {
 
     // ✨ FIX: Visuellen Status (Hover/Glow) bei jedem Update zurücksetzen.
     // Verhindert, dass der Button "gehighlighted" bleibt, wenn er neu erscheint.
-    nextPhaseButton.setScale(1.0);
+    const baseScale = nextPhaseButton.getData("baseScale") || 1.0;
+    nextPhaseButton.setScale(baseScale);
     // Wir greifen hier noch auf 'arrow' zu, um Tints zu löschen, was okay ist für State-Resets.
     if (arrow) {
       arrow.clearTint();
