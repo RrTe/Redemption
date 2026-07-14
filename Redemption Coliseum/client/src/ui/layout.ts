@@ -75,11 +75,11 @@ export function calculateLayout(
 
   const smallCardWidth = cardWidth * 0.8;
   const smallCardHeight = cardHeight * 0.8;
-  
+
   const isLowHeight = ViewportManager.isLowHeightProfile();
   const handCardWidth = cardWidth * (isLowHeight ? 2.2 : HAND_CARD_SCALE);
   const handCardHeight = cardHeight * (isLowHeight ? 2.2 : HAND_CARD_SCALE);
-  const PILE_SPACING = isLowHeight ? pileHeight * 1.4 : pileHeight * 1.25; 
+  const PILE_SPACING = isLowHeight ? pileHeight * 1.4 : pileHeight * 1.25;
 
   const PILE_AREA_WIDTH = (isLowHeight ? pileWidth * 2.5 : pileWidth) + PADDING + EDGE_MARGIN;
   const boardWidth = width - 2 * PILE_AREA_WIDTH;
@@ -97,14 +97,14 @@ export function calculateLayout(
     handZoneWidth,
     handZoneHeight,
   );
-  
+
   const isBattlePhase = currentPhase === "battle";
   const totalPlayerBoardHeight = playerHand.y - height / 2;
   const battleAreaTotalHeight = isBattlePhase ? totalPlayerBoardHeight * 0.4 : 0;
 
   const playerTerritoryHeight = totalPlayerBoardHeight * (isBattlePhase ? 0.4 : 0.6);
   const playerLandOfBondageHeight = totalPlayerBoardHeight * (isBattlePhase ? 0.2 : 0.3);
-  
+
   const playerLandOfBondageY = playerHand.y - playerLandOfBondageHeight;
   const playerTerritoryY = playerLandOfBondageY - playerTerritoryHeight;
 
@@ -256,10 +256,11 @@ export function calculateLayout(
   };
 
   const buttonScale = Phaser.Math.Clamp(height / 800, 0.5, 1.0);
-  
+
   const playerInfo = {
     x: EDGE_MARGIN,
-    y: isLowHeight ? height - EDGE_MARGIN - 23 * buttonScale - 30 : height - handZoneHeight - 20,
+    // Gilt nun für Mobile UND Desktop: Zentriert sauber über dem Button!
+    y: height - EDGE_MARGIN - 46 * buttonScale - EDGE_MARGIN - 20,
   };
 
   const iconSize = Math.max(20, Math.floor(height * 0.025 * buttonScale));
@@ -277,8 +278,8 @@ export function calculateLayout(
   const opponentHandRight = opponentHand.x + opponentHand.width;
   const spaceRight = playerOuterColX - opponentHandRight;
 
-  const iconsCenterX = isLowHeight 
-    ? width - 24 - rightSpacing - (phaseBarWidth / 2) 
+  const iconsCenterX = isLowHeight
+    ? width - rightSpacing - EDGE_MARGIN - (phaseBarWidth / 2)
     : opponentHandRight + spaceRight / 2;
   const iconsCenterY = opponentHand.centerY + 30;
   const iconsStartX = iconsCenterX - totalIconsWidth / 2 + iconSize / 2;
@@ -318,7 +319,7 @@ export function calculateLayout(
   const playerLoRTop = playerLandOfRedemptionPile.y - pileHeight / 2;
   const opponentInfoBottom = opponentInfo.y + 20;
 
-  const rightButtonsCenterY = isLowHeight 
+  const rightButtonsCenterY = isLowHeight
     ? opponentInfoBottom + (playerLoRTop - opponentInfoBottom) / 2
     : phaseBarBottom + (playerLoRTop - phaseBarBottom) / 2 + 30;
 
@@ -332,12 +333,12 @@ export function calculateLayout(
     visibleX: width - 24,
     y: rightButtonsCenterY + buttonSpacing / 2,
   };
-  
+
   const opponentLoRBottom = opponentLandOfRedemptionPile.y + pileHeight / 2;
   const playerInfoTop = playerInfo.y;
-  const leftButtonsCenterY = isLowHeight 
-    ? opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 
-    : opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 + 30;
+  const leftButtonsCenterY = isLowHeight
+    ? opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 + PADDING
+    : opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 + (PADDING * 1.4);
 
   const chatButton = {
     hiddenX: -12,
