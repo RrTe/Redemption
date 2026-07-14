@@ -400,7 +400,17 @@ function _moveCardById(
   } else {
       const isFromOpponent = controllerId !== actingPlayer.sessionId;
       const isToOpponent = targetPlayer.sessionId !== actingPlayer.sessionId;
-      logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${getZoneDisplayName(to, isToOpponent)}.`;
+      
+      let toDisplay = getZoneDisplayName(to, isToOpponent);
+      if (to === ZONES.DECK) {
+          toDisplay = position === "bottom" ? `the bottom of ${toDisplay}` : `the top of ${toDisplay}`;
+      }
+
+      if (effectiveFromZone === ZONES.HAND && to === ZONES.DECK) {
+          logEntry = `${actingPlayer.name} moves a card from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${toDisplay}.`;
+      } else {
+          logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${toDisplay}.`;
+      }
   }
 
 
