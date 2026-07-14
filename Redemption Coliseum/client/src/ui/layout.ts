@@ -85,7 +85,7 @@ export function calculateLayout(
 
   const handCardWidth = cardWidth * (isLowHeight ? 2.2 : HAND_CARD_SCALE);
   const handCardHeight = cardHeight * (isLowHeight ? 2.2 : HAND_CARD_SCALE);
-  const PILE_SPACING = isLowHeight ? pileHeight * 1.4 : pileHeight * 1.25;
+  const PILE_SPACING = isLowHeight ? pileHeight * 1.3 : pileHeight * 1.25;
 
   const PILE_AREA_WIDTH = (isLowHeight ? pileWidth * 2.5 : pileWidth) + PADDING + EDGE_MARGIN;
   const boardWidth = width - 2 * PILE_AREA_WIDTH;
@@ -160,7 +160,7 @@ export function calculateLayout(
   );
 
   const playerOuterColX = width - pileWidth - EDGE_MARGIN;
-  const playerInnerColX = isLowHeight ? playerOuterColX - pileWidth - (pileWidth * 0.45) : playerOuterColX;
+  const playerInnerColX = isLowHeight ? playerOuterColX - pileWidth - (pileWidth * 0.4) : playerOuterColX;
   const playerPilesStartY = height - EDGE_MARGIN - pileHeight;
 
   let playerBanishPile, playerDiscardPile, playerDeckPile, playerReservePile, playerLandOfRedemptionPile;
@@ -172,11 +172,14 @@ export function calculateLayout(
     playerBanishPile = new Phaser.Geom.Rectangle(playerOuterColX, playerPilesStartY, pileWidth, pileHeight);
     playerLandOfRedemptionPile = new Phaser.Geom.Rectangle(playerOuterColX, playerBanishPile.y - PILE_SPACING, pileWidth, pileHeight);
   } else {
-    playerReservePile = new Phaser.Geom.Rectangle(playerOuterColX, playerPilesStartY, pileWidth, pileHeight);
-    playerDeckPile = new Phaser.Geom.Rectangle(playerOuterColX, playerReservePile.y - PILE_SPACING, pileWidth, pileHeight);
-    playerDiscardPile = new Phaser.Geom.Rectangle(playerOuterColX, playerDeckPile.y - PILE_SPACING, pileWidth, pileHeight);
-    playerBanishPile = new Phaser.Geom.Rectangle(playerOuterColX, playerDiscardPile.y - PILE_SPACING, pileWidth, pileHeight);
-    playerLandOfRedemptionPile = new Phaser.Geom.Rectangle(playerOuterColX, playerBanishPile.y - PILE_SPACING, pileWidth, pileHeight);
+    // Desktop-Anordnung (von unten nach oben berechnet, da playerPilesStartY unten ist)
+    // Gewünscht von oben nach unten: LoR, Reserve, Deck, Discard, Banish
+    // Also von unten nach oben: Banish -> Discard -> Deck -> Reserve -> LoR
+    playerBanishPile = new Phaser.Geom.Rectangle(playerOuterColX, playerPilesStartY, pileWidth, pileHeight);
+    playerDiscardPile = new Phaser.Geom.Rectangle(playerOuterColX, playerBanishPile.y - PILE_SPACING, pileWidth, pileHeight);
+    playerDeckPile = new Phaser.Geom.Rectangle(playerOuterColX, playerDiscardPile.y - PILE_SPACING, pileWidth, pileHeight);
+    playerReservePile = new Phaser.Geom.Rectangle(playerOuterColX, playerDeckPile.y - PILE_SPACING, pileWidth, pileHeight);
+    playerLandOfRedemptionPile = new Phaser.Geom.Rectangle(playerOuterColX, playerReservePile.y - PILE_SPACING, pileWidth, pileHeight);
   }
 
   const opponentHand = new Phaser.Geom.Rectangle(
@@ -237,7 +240,7 @@ export function calculateLayout(
   );
 
   const opponentOuterColX = EDGE_MARGIN;
-  const opponentInnerColX = isLowHeight ? opponentOuterColX + pileWidth + (pileWidth * 0.45) : opponentOuterColX;
+  const opponentInnerColX = isLowHeight ? opponentOuterColX + pileWidth + (pileWidth * 0.4) : opponentOuterColX;
   const opponentPilesStartY = EDGE_MARGIN;
 
   let opponentBanishPile, opponentDiscardPile, opponentDeckPile, opponentReservePile, opponentLandOfRedemptionPile;
