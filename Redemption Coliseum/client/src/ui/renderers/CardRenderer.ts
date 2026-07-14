@@ -212,6 +212,9 @@ export class CardRenderer {
 
     let cardUI = this.cardUIs.get(cardData.id);
 
+    const oldZone = cardUI ? cardUI.currentZone : cardData.zone;
+    const newZone = cardData.zone;
+
     if (!cardUI) {
       // ✨ DEIN PLAN: Logge die Erstellung eines neuen Objekts
       log(
@@ -254,8 +257,7 @@ export class CardRenderer {
 
       // ✨ NEU: Erkenne, ob eine Karte von der Hand ausgespielt wurde (Hand -> Feld).
       // Dies löst die "Play"-Animation aus.
-      const oldZone = cardUI.currentZone; // ✨ KORREKTUR: Nutze unseren zuverlässigen Zonen-Speicher
-      const newZone = cardData.zone;
+      // (oldZone und newZone wurden oben definiert)
 
       // ✨ FIX: Wenn eine Karte die Hand verlässt (egal wohin, z.B. auch Discard/Banish),
       // müssen wir zwingend alle Hover-Effekte stoppen und die Skalierung zurücksetzen.
@@ -339,9 +341,22 @@ export class CardRenderer {
     // 2. KEINE Animation läuft (frische Prüfung!)
     // 3. Sie NICHT gerade vom User gezogen wird (oder auf Server-Drop-Bestätigung wartet)
     if (!isAtTarget && !isAnimating && !cardUI.isBeingDragged) {
-      cardUI.x = targetX;
-      cardUI.y = targetY;
-      cardUI.setAngle(normalizedTargetAngle);
+      // ✨ NEU: Smooth transition for cards shifting within the same play area (like Lost Souls adjusting to hand size)
+      if (oldZone === newZone && 
+          (oldZone === ZONES.LAND_OF_BONDAGE || oldZone === ZONES.TERRITORY || oldZone === ZONES.BATTLEFIELD)) {
+        this.scene.tweens.add({
+          targets: cardUI,
+          x: targetX,
+          y: targetY,
+          angle: normalizedTargetAngle,
+          duration: 300,
+          ease: 'Power2'
+        });
+      } else {
+        cardUI.x = targetX;
+        cardUI.y = targetY;
+        cardUI.setAngle(normalizedTargetAngle);
+      }
     }
 
     // Wenn eine Animation für diese Karte läuft oder vorgemerkt ist, muss das Original unsichtbar sein.

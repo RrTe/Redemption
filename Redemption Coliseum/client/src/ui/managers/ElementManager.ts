@@ -170,12 +170,12 @@ export class ElementManager {
     this.staticElements.nextPhaseButton.setPosition(
       this.layout.nextPhaseButton.x,
       this.layout.nextPhaseButton.y,
-    );
+    ).setScale(this.layout.buttonScale ?? 1.0);
     // ✨ NEU: Concede Button positionieren
     this.staticElements.concedeButton.setPosition(
       this.layout.concedeButton.x,
       this.layout.concedeButton.y,
-    );
+    ).setScale(this.layout.buttonScale ?? 1.0);
 
     this.staticElements.boardText.setPosition(20, 70);
 

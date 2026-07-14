@@ -6,6 +6,7 @@ import { SelectionDialogPaginationManager } from "./SelectionDialogPaginationMan
 import { CardUI } from "../CardUI";
 import type { CardState } from "../../../../shared/types";
 import type { SelectionAction } from "../../scenes/SelectionDialogScene";
+import { ViewportManager } from "./ViewportManager";
 
 /**
  * Manages the creation and interaction of static UI elements within the SelectionDialogScene.
@@ -117,7 +118,7 @@ export class SelectionDialogUIManager {
     ];
 
     // Base scaling on cardWidth to keep proportions identical to desktop
-    const isShort = this.scene.scale.height < 600;
+    const isShort = ViewportManager.isLowHeightProfile();
     const cardWidth = this.scene.scale.width / (isShort ? 15.5 : 16);
     const bWidth = Math.min(140, cardWidth * 1.6); // Increased for readability on mobile
     const bHeight = Math.min(50, 50 * (bWidth / 140));
@@ -225,7 +226,7 @@ export class SelectionDialogUIManager {
     onCardClicked: (card: CardUI) => void,
     selectedCards: Set<string>
   ): { xCoords: number[]; targets: (Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[])[] } {
-    const isShort = this.scene.scale.height < 600;
+    const isShort = ViewportManager.isLowHeightProfile();
     const cardWidth = this.scene.scale.width / (isShort ? 15.5 : 16);
     const cardHeight = cardWidth * 1.4;
 

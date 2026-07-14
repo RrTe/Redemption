@@ -109,4 +109,11 @@ export class ViewportManager {
     // Fallback if matchMedia is unavailable
     return "ontouchstart" in window || navigator.maxTouchPoints > 0;
   }
+
+  /**
+   * True if the available height is considered low (e.g., mobile landscape).
+   */
+  public static isLowHeightProfile(): boolean {
+    return this.currentHeight < 600;
+  }
 }

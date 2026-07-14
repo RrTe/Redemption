@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { PHASES } from "../../../shared/phases.js";
+import { ViewportManager } from "./managers/ViewportManager";
 
 export interface GameLayout {
   GAME_WIDTH: number;
@@ -9,10 +10,10 @@ export interface GameLayout {
   playerLandOfBondage: Phaser.Geom.Rectangle;
   cardWidth: number;
   cardHeight: number;
-  handCardWidth: number; // ✨ NEU: Eigene Größe für Handkarten
-  handCardHeight: number; // ✨ NEU
-  smallCardWidth: number; // ✨ NEU: Kleinere Kartengröße für die Battle-Phase
-  smallCardHeight: number; // ✨ NEU
+  handCardWidth: number;
+  handCardHeight: number;
+  smallCardWidth: number;
+  smallCardHeight: number;
   pileWidth: number;
   pileHeight: number;
   opponentHand: Phaser.Geom.Rectangle;
@@ -22,7 +23,6 @@ export interface GameLayout {
   playerDiscardPile: Phaser.Geom.Rectangle;
   opponentDeckPile: Phaser.Geom.Rectangle;
   opponentDiscardPile: Phaser.Geom.Rectangle;
-  // ✨ NEU: Detaillierte Zonen innerhalb des Territoriums
   playerHeroArea: Phaser.Geom.Rectangle;
   playerFortressArea: Phaser.Geom.Rectangle;
   playerECArea: Phaser.Geom.Rectangle;
@@ -31,8 +31,6 @@ export interface GameLayout {
   opponentFortressArea: Phaser.Geom.Rectangle;
   opponentECArea: Phaser.Geom.Rectangle;
   opponentArtifactArea: Phaser.Geom.Rectangle;
-  // ✨ NEU (PHASE 2): Layouts für die neuen Zonen
-  // ✨ DEIN PLAN (BATTLE): Layout für die geteilte Kampfzone
   playerBattlefieldArea: Phaser.Geom.Rectangle;
   opponentBattlefieldArea: Phaser.Geom.Rectangle;
   playerReservePile: Phaser.Geom.Rectangle;
@@ -41,8 +39,6 @@ export interface GameLayout {
   opponentLandOfRedemptionPile: Phaser.Geom.Rectangle;
   playerBanishPile: Phaser.Geom.Rectangle;
   opponentBanishPile: Phaser.Geom.Rectangle;
-  // ✨ NEU: Koordinaten für die verschobenen UI-Texte
-  // ✨ NEU: Koordinaten für die Phasen-Icons
   phaseIcons: { [key: string]: { x: number; y: number; size: number } };
   phaseBar: {
     x: number;
@@ -52,14 +48,14 @@ export interface GameLayout {
     radius: number;
   };
   nextPhaseButton: { x: number; y: number };
-  concedeButton: { x: number; y: number }; // ✨ NEU
+  concedeButton: { x: number; y: number };
   settingsButton: { visibleX: number; hiddenX: number; y: number };
-  saveButton: { visibleX: number; hiddenX: number; y: number }; // ✨ NEU
-  helpButton: { visibleX: number; hiddenX: number; y: number }; // ✨ NEU
-  chatButton: { visibleX: number; hiddenX: number; y: number }; // ✨ NEU
-  // ✨ NEU: Positionen für Spieler-Infos
+  saveButton: { visibleX: number; hiddenX: number; y: number };
+  helpButton: { visibleX: number; hiddenX: number; y: number };
+  chatButton: { visibleX: number; hiddenX: number; y: number };
   playerInfo: { x: number; y: number };
   opponentInfo: { x: number; y: number };
+  buttonScale: number;
 }
 
 export function calculateLayout(
@@ -67,54 +63,33 @@ export function calculateLayout(
   height: number,
   currentPhase: string,
 ): GameLayout {
-  // === Responsive Skalierung basierend auf dem Seitenverhältnis ===
-  // ✨ DEIN WUNSCH: Zentrale Steuerung für die Größe der Handkarten.
-  const HAND_CARD_SCALE = 1.3; // 1.2 = 120%
+  const HAND_CARD_SCALE = 1.3;
 
   const CARD_ASPECT_RATIO = 1.4;
-  const REFERENCE_ASPECT_RATIO = 16 / 9; // Referenz-Seitenverhältnis (z.B. 1920x1080)
-  const currentAspectRatio = width / height;
-  let cardWidth: number;
-  let cardHeight: number;
-  let pileWidth: number;
-  let pileHeight: number;
-  let PADDING: number;
-  let EDGE_MARGIN: number; // ✨ NEU: Abstand zum Bildschirmrand
+  const pileHeight = height * 0.12;
+  const pileWidth = pileHeight / CARD_ASPECT_RATIO;
+  const cardHeight = height * 0.12;
+  const cardWidth = cardHeight / CARD_ASPECT_RATIO;
+  const PADDING = height * 0.05;
+  const EDGE_MARGIN = height * 0.02;
 
-  // ✨ DEIN VORSCHLAG & FINALE KORREKTUR:
-  // Wir entfernen die Logik, die zwischen Hoch- und Querformat umschaltet,
-  // und verwenden IMMER eine stabile, höhenbasierte Berechnung.
-  // Das verhindert das unerwünschte "Wachsen" und die inkonsistenten Größen.
-  pileHeight = height * 0.12;
-  pileWidth = pileHeight / CARD_ASPECT_RATIO;
-  cardHeight = height * 0.12;
-  cardWidth = cardHeight / CARD_ASPECT_RATIO;
-  PADDING = height * 0.05;
-  EDGE_MARGIN = height * 0.02; // ✨ NEU: 2% Randabstand
-
-  // ✨ DEIN PLAN: Definiere eine kleinere Kartengröße für die komprimierten Zonen.
-  // Wir leiten sie von der Standardgröße ab.
   const smallCardWidth = cardWidth * 0.8;
   const smallCardHeight = cardHeight * 0.8;
-  // ✨ NEU: Berechne die Größe der Handkarten basierend auf dem Skalierungsfaktor.
-  const handCardWidth = cardWidth * HAND_CARD_SCALE;
-  const handCardHeight = cardHeight * HAND_CARD_SCALE;
-  const PILE_SPACING = pileHeight * 1.25; // ✨ FIX: Zurück auf 1.25 (Originalabstand), wie gewünscht.
+  
+  const isLowHeight = ViewportManager.isLowHeightProfile();
+  const handCardWidth = cardWidth * (isLowHeight ? 2.2 : HAND_CARD_SCALE);
+  const handCardHeight = cardHeight * (isLowHeight ? 2.2 : HAND_CARD_SCALE);
+  const PILE_SPACING = isLowHeight ? pileHeight * 1.4 : pileHeight * 1.25; 
 
-  // ✨ NEUE BERECHNUNG: Definiere die Breite des zentralen Spielfelds und der seitlichen Stapelbereiche
-  const PILE_AREA_WIDTH = pileWidth + PADDING + EDGE_MARGIN; // ✨ FIX: Margin einbeziehen
+  const PILE_AREA_WIDTH = (isLowHeight ? pileWidth * 2.5 : pileWidth) + PADDING + EDGE_MARGIN;
   const boardWidth = width - 2 * PILE_AREA_WIDTH;
   const boardX = PILE_AREA_WIDTH;
 
-  // === Spieler-Bereich (unten) ===
-  // ✨ DEIN PLAN: Mache die Handzonen schmaler und zentriere sie.
-  // Wir definieren die Breite als Prozentsatz der zentralen Spielfeldbreite.
-  const handZoneWidth = boardWidth * 0.8; // 80% der Breite des zentralen Boards
-  const handZoneX = boardX + (boardWidth - handZoneWidth) / 2; // Zentriert im Board-Bereich
+  const handZoneWidth = boardWidth * 0.8;
+  const handZoneX = boardX + (boardWidth - handZoneWidth) / 2;
 
-  // ✨ DEIN PLAN: Handzonen-Höhe und Kartenposition dynamisch berechnen.
-  const handCardEdgePadding = cardHeight * 0.1; // Halbiert den Abstand der Karten zum Rand.
-  const handZoneHeight = cardHeight + 2 * handCardEdgePadding; // Zone ist so hoch wie die Karte + Padding oben/unten.
+  const handCardEdgePadding = cardHeight * 0.1;
+  const handZoneHeight = cardHeight + 2 * handCardEdgePadding;
 
   const playerHand = new Phaser.Geom.Rectangle(
     handZoneX,
@@ -122,22 +97,16 @@ export function calculateLayout(
     handZoneWidth,
     handZoneHeight,
   );
-  // Aufteilung des Spieler-Spielfelds
-  // ✨ DEIN PLAN: "Atmendes Layout"
+  
   const isBattlePhase = currentPhase === "battle";
-  // ✨ KORREKTUR: Berechne die verfügbare Höhe vom oberen Rand der Handzone bis zur Mitte.
   const totalPlayerBoardHeight = playerHand.y - height / 2;
-  const battleAreaTotalHeight = isBattlePhase
-    ? totalPlayerBoardHeight * 0.4
-    : 0;
+  const battleAreaTotalHeight = isBattlePhase ? totalPlayerBoardHeight * 0.4 : 0;
 
-  const playerTerritoryHeight =
-    totalPlayerBoardHeight * (isBattlePhase ? 0.4 : 0.6);
-  const playerLandOfBondageHeight =
-    totalPlayerBoardHeight * (isBattlePhase ? 0.2 : 0.3);
-  // ✨ DEIN PLAN: Verankere die Zonen korrekt an der Handzone.
-  const playerLandOfBondageY = playerHand.y - playerLandOfBondageHeight; // LoB schließt an der Hand an.
-  const playerTerritoryY = playerLandOfBondageY - playerTerritoryHeight; // Territory schließt an LoB an.
+  const playerTerritoryHeight = totalPlayerBoardHeight * (isBattlePhase ? 0.4 : 0.6);
+  const playerLandOfBondageHeight = totalPlayerBoardHeight * (isBattlePhase ? 0.2 : 0.3);
+  
+  const playerLandOfBondageY = playerHand.y - playerLandOfBondageHeight;
+  const playerTerritoryY = playerLandOfBondageY - playerTerritoryHeight;
 
   const playerTerritory = new Phaser.Geom.Rectangle(
     boardX,
@@ -152,14 +121,11 @@ export function calculateLayout(
     playerLandOfBondageHeight,
   );
 
-  // ✨ NEU: Unterteilung des Spieler-Territoriums
   const territoryRowHeight = playerTerritory.height / 2;
   const territoryGap = playerTerritory.width * 0.05;
   const heroECWidth = playerTerritory.width * 0.8;
-  const fortressArtifactWidth =
-    playerTerritory.width - heroECWidth - territoryGap;
+  const fortressArtifactWidth = playerTerritory.width - heroECWidth - territoryGap;
 
-  // Zeile 1: Helden und Festungen
   const playerHeroArea = new Phaser.Geom.Rectangle(
     playerTerritory.x,
     playerTerritory.y,
@@ -173,7 +139,6 @@ export function calculateLayout(
     territoryRowHeight,
   );
 
-  // Zeile 2: ECs und Artefakte
   const row2Y = playerTerritory.y + territoryRowHeight;
   const playerECArea = new Phaser.Geom.Rectangle(
     playerTerritory.x,
@@ -188,41 +153,26 @@ export function calculateLayout(
     territoryRowHeight,
   );
 
-  // ✨ NEUE BERECHNUNG: Spieler-Stapel rechts, relativ zum Spieler-Territorium
-  // ✨ KORREKTUR: Positioniere die Stapelgruppe korrekt am unteren rechten Bildschirmrand.
-  const playerPilesX = playerTerritory.right + PADDING;
-  const playerBanishPile = new Phaser.Geom.Rectangle(
-    width - pileWidth - EDGE_MARGIN, // ✨ FIX: Rechtsbündig mit Margin
-    height - EDGE_MARGIN - pileHeight, // ✨ FIX: Untenbündig mit Margin
-    pileWidth,
-    pileHeight,
-  );
-  const playerDiscardPile = new Phaser.Geom.Rectangle(
-    playerPilesX,
-    playerBanishPile.y - PILE_SPACING, // Darüber
-    pileWidth,
-    pileHeight,
-  );
-  const playerDeckPile = new Phaser.Geom.Rectangle(
-    playerPilesX,
-    playerDiscardPile.y - PILE_SPACING, // Darüber
-    pileWidth,
-    pileHeight,
-  );
-  const playerReservePile = new Phaser.Geom.Rectangle(
-    playerPilesX,
-    playerDeckPile.y - PILE_SPACING, // Darüber
-    pileWidth,
-    pileHeight,
-  );
-  const playerLandOfRedemptionPile = new Phaser.Geom.Rectangle(
-    playerPilesX,
-    playerReservePile.y - PILE_SPACING, // Ganz oben in der Gruppe
-    pileWidth,
-    pileHeight,
-  );
+  const playerOuterColX = width - pileWidth - EDGE_MARGIN;
+  const playerInnerColX = isLowHeight ? playerOuterColX - pileWidth - (pileWidth * 0.4) : playerOuterColX;
+  const playerPilesStartY = height - EDGE_MARGIN - pileHeight;
 
-  // === Gegner-Bereich (oben) ===
+  let playerBanishPile, playerDiscardPile, playerDeckPile, playerReservePile, playerLandOfRedemptionPile;
+  if (isLowHeight) {
+    playerReservePile = new Phaser.Geom.Rectangle(playerInnerColX, playerPilesStartY, pileWidth, pileHeight);
+    playerDeckPile = new Phaser.Geom.Rectangle(playerInnerColX, playerReservePile.y - PILE_SPACING, pileWidth, pileHeight);
+    playerDiscardPile = new Phaser.Geom.Rectangle(playerInnerColX, playerDeckPile.y - PILE_SPACING, pileWidth, pileHeight);
+
+    playerBanishPile = new Phaser.Geom.Rectangle(playerOuterColX, playerPilesStartY, pileWidth, pileHeight);
+    playerLandOfRedemptionPile = new Phaser.Geom.Rectangle(playerOuterColX, playerBanishPile.y - PILE_SPACING, pileWidth, pileHeight);
+  } else {
+    playerReservePile = new Phaser.Geom.Rectangle(playerOuterColX, playerPilesStartY, pileWidth, pileHeight);
+    playerDeckPile = new Phaser.Geom.Rectangle(playerOuterColX, playerReservePile.y - PILE_SPACING, pileWidth, pileHeight);
+    playerDiscardPile = new Phaser.Geom.Rectangle(playerOuterColX, playerDeckPile.y - PILE_SPACING, pileWidth, pileHeight);
+    playerBanishPile = new Phaser.Geom.Rectangle(playerOuterColX, playerDiscardPile.y - PILE_SPACING, pileWidth, pileHeight);
+    playerLandOfRedemptionPile = new Phaser.Geom.Rectangle(playerOuterColX, playerBanishPile.y - PILE_SPACING, pileWidth, pileHeight);
+  }
+
   const opponentHand = new Phaser.Geom.Rectangle(
     handZoneX,
     0,
@@ -231,15 +181,11 @@ export function calculateLayout(
   );
 
   const totalOpponentBoardHeight = height / 2 - opponentHand.height;
-  const opponentTerritoryHeight =
-    totalOpponentBoardHeight * (isBattlePhase ? 0.4 : 0.6);
-  const opponentLandOfBondageHeight =
-    totalOpponentBoardHeight * (isBattlePhase ? 0.2 : 0.3);
+  const opponentTerritoryHeight = totalOpponentBoardHeight * (isBattlePhase ? 0.4 : 0.6);
+  const opponentLandOfBondageHeight = totalOpponentBoardHeight * (isBattlePhase ? 0.2 : 0.3);
 
-  // ✨ DEIN PLAN: Verankere die Zonen am oberen Rand.
   const opponentLandOfBondageY = opponentHand.bottom;
-  const opponentTerritoryY =
-    opponentLandOfBondageY + opponentLandOfBondageHeight;
+  const opponentTerritoryY = opponentLandOfBondageY + opponentLandOfBondageHeight;
 
   const opponentLandOfBondage = new Phaser.Geom.Rectangle(
     boardX,
@@ -254,11 +200,8 @@ export function calculateLayout(
     opponentTerritoryHeight,
   );
 
-  // ✨ NEU: Unterteilung des Gegner-Territoriums (gespiegelt)
   const opponentRowHeight = opponentTerritory.height / 2;
 
-  // ✨ KORREKTUR: Die Reihen waren vertauscht.
-  // Die Helden/Festungen-Reihe des Gegners sollte näher an der Mitte sein (höherer Y-Wert).
   const opponentHeroRowY = opponentTerritory.y + opponentRowHeight;
   const opponentHeroArea = new Phaser.Geom.Rectangle(
     opponentTerritory.x,
@@ -273,7 +216,6 @@ export function calculateLayout(
     opponentRowHeight,
   );
 
-  // Die EC/Artefakte-Reihe des Gegners sollte weiter oben sein (niedrigerer Y-Wert).
   const opponentECRowY = opponentTerritory.y;
   const opponentECArea = new Phaser.Geom.Rectangle(
     opponentTerritory.x,
@@ -288,74 +230,56 @@ export function calculateLayout(
     opponentRowHeight,
   );
 
-  // ✨ NEUE BERECHNUNG: Gegner-Stapel links, relativ zum Gegner-Territorium
-  // ✨ KORREKTUR: Positioniere die Stapelgruppe korrekt am oberen linken Bildschirmrand.
-  const opponentPilesX = EDGE_MARGIN; // ✨ FIX: Linksbündig mit Margin
-  const opponentBanishPile = new Phaser.Geom.Rectangle(
-    opponentPilesX,
-    EDGE_MARGIN, // ✨ FIX: Obenbündig mit Margin
-    pileWidth,
-    pileHeight,
-  );
-  const opponentDiscardPile = new Phaser.Geom.Rectangle(
-    opponentPilesX,
-    opponentBanishPile.y + PILE_SPACING,
-    pileWidth,
-    pileHeight,
-  );
-  const opponentDeckPile = new Phaser.Geom.Rectangle(
-    opponentPilesX,
-    opponentDiscardPile.y + PILE_SPACING,
-    pileWidth,
-    pileHeight,
-  );
-  const opponentReservePile = new Phaser.Geom.Rectangle(
-    opponentPilesX,
-    opponentDeckPile.y + PILE_SPACING,
-    pileWidth,
-    pileHeight,
-  );
-  const opponentLandOfRedemptionPile = new Phaser.Geom.Rectangle(
-    opponentPilesX,
-    opponentReservePile.y + PILE_SPACING,
-    pileWidth,
-    pileHeight,
-  );
+  const opponentOuterColX = EDGE_MARGIN;
+  const opponentInnerColX = isLowHeight ? opponentOuterColX + pileWidth + (pileWidth * 0.4) : opponentOuterColX;
+  const opponentPilesStartY = EDGE_MARGIN;
 
-  const playerInfo = {
-    x: EDGE_MARGIN, // Gleicher Abstand wie opponentPilesX
-    y: height - handZoneHeight - 20, // ✨ FIX: Nach oben verschoben statt nach unten (war +20)
-  };
+  let opponentBanishPile, opponentDiscardPile, opponentDeckPile, opponentReservePile, opponentLandOfRedemptionPile;
+  if (isLowHeight) {
+    opponentReservePile = new Phaser.Geom.Rectangle(opponentInnerColX, opponentPilesStartY, pileWidth, pileHeight);
+    opponentDeckPile = new Phaser.Geom.Rectangle(opponentInnerColX, opponentReservePile.y + PILE_SPACING, pileWidth, pileHeight);
+    opponentDiscardPile = new Phaser.Geom.Rectangle(opponentInnerColX, opponentDeckPile.y + PILE_SPACING, pileWidth, pileHeight);
+
+    opponentBanishPile = new Phaser.Geom.Rectangle(opponentOuterColX, opponentPilesStartY, pileWidth, pileHeight);
+    opponentLandOfRedemptionPile = new Phaser.Geom.Rectangle(opponentOuterColX, opponentBanishPile.y + PILE_SPACING, pileWidth, pileHeight);
+  } else {
+    opponentBanishPile = new Phaser.Geom.Rectangle(opponentOuterColX, opponentPilesStartY, pileWidth, pileHeight);
+    opponentDiscardPile = new Phaser.Geom.Rectangle(opponentOuterColX, opponentBanishPile.y + PILE_SPACING, pileWidth, pileHeight);
+    opponentDeckPile = new Phaser.Geom.Rectangle(opponentOuterColX, opponentDiscardPile.y + PILE_SPACING, pileWidth, pileHeight);
+    opponentReservePile = new Phaser.Geom.Rectangle(opponentOuterColX, opponentDeckPile.y + PILE_SPACING, pileWidth, pileHeight);
+    opponentLandOfRedemptionPile = new Phaser.Geom.Rectangle(opponentOuterColX, opponentReservePile.y + PILE_SPACING, pileWidth, pileHeight);
+  }
 
   const opponentInfo = {
-    x: width - EDGE_MARGIN, // Rechtsbündig
-    y: 5, // ✨ FIX: Weiter nach oben (war 20), um Überlappung mit Phasen-Icons zu vermeiden
+    x: width - EDGE_MARGIN,
+    y: 5,
   };
 
-  // ✨ NEU: Berechne die Positionen für die UI-Texte am rechten Rand
-  // ✨ NEU: Phasen-Icons rechts neben der Gegner-Hand, ABER vor den Player Piles!
-  const opponentHandRight = opponentHand.x + opponentHand.width;
-  const spaceRight = playerPilesX - opponentHandRight;
-  // ✨ FIX: Dynamische Größe (ca. 32px bei 1080p), mindestens 24px.
-  const iconSize = Math.max(24, Math.floor(height * 0.03));
+  const buttonScale = Phaser.Math.Clamp(height / 800, 0.5, 1.0);
+  
+  const playerInfo = {
+    x: EDGE_MARGIN,
+    y: isLowHeight ? height - EDGE_MARGIN - 23 * buttonScale - 30 : height - handZoneHeight - 20,
+  };
 
-  // --- Phasen-Icons & Bar ---
-  // ✨ FIX: Sicherstellen, dass wir ein Array von Strings haben.
-  // Falls der Import schiefgeht (z.B. leeres Objekt), nutzen wir Fallbacks, damit das Layout nicht bricht.
+  const iconSize = Math.max(20, Math.floor(height * 0.025 * buttonScale));
+
   const rawPhases = Object.values(PHASES);
-  const phases = (
-    rawPhases.length > 0
-      ? rawPhases
-      : ["draw", "upkeep", "prep", "battle", "discard"]
-  ) as string[];
+  const phases = (rawPhases.length > 0 ? rawPhases : ["draw", "upkeep", "prep", "battle", "discard"]) as string[];
 
   const numIcons = phases.length;
   const iconGap = iconSize * 0.25;
   const totalIconsWidth = numIcons * iconSize + (numIcons - 1) * iconGap;
+  const barPaddingX = iconSize * 0.6;
+  const phaseBarWidth = totalIconsWidth + barPaddingX * 2;
 
-  // ✨ FIX: Zurück zur alten, korrekten Logik! Zentriert im Raum zwischen Gegnerhand und rechtem Rand.
-  const iconsCenterX = opponentHandRight + spaceRight / 2;
-  // ✨ FIX: Etwas nach unten verschoben (+30), damit sie nicht mit dem Gegner-Namen (oben rechts) kollidieren.
+  const rightSpacing = isLowHeight ? pileWidth * 0.4 : 0;
+  const opponentHandRight = opponentHand.x + opponentHand.width;
+  const spaceRight = playerOuterColX - opponentHandRight;
+
+  const iconsCenterX = isLowHeight 
+    ? width - 24 - rightSpacing - (phaseBarWidth / 2) 
+    : opponentHandRight + spaceRight / 2;
   const iconsCenterY = opponentHand.centerY + 30;
   const iconsStartX = iconsCenterX - totalIconsWidth / 2 + iconSize / 2;
 
@@ -368,104 +292,74 @@ export function calculateLayout(
     };
   });
 
-  // Hintergrund-Bar für Phasen
-  const barPaddingX = iconSize * 0.6;
   const barPaddingY = iconSize * 0.25;
   const phaseBar = {
     width: totalIconsWidth + barPaddingX * 2,
     height: iconSize + barPaddingY * 2,
-    x: iconsCenterX, // Zentrum
-    y: iconsCenterY, // Zentrum
+    x: iconsCenterX,
+    y: iconsCenterY,
     radius: 15,
   };
 
-  // --- Button Spacing & Dimensions ---
   const buttonSpacing = 55;
-
-  // --- Next Phase Button ---
-  // Relativ zwischen Banish Pile und Handzone (oder links vom Banish Pile)
-  // Wir platzieren ihn links neben dem Banish Pile mit einem festen Abstand.
-  // ✨ FIX: 5px nach unten verschoben, wie gewünscht.
+  const nextPhaseButtonWidth = 80 * buttonScale;
   const nextPhaseButton = {
-    x: playerBanishPile.x - 50, // 50px Abstand nach links
-    y: height - PADDING + 5,
+    x: isLowHeight ? playerInnerColX - (pileWidth * 0.3) - (nextPhaseButtonWidth / 2) : playerBanishPile.x - 50,
+    y: height - EDGE_MARGIN - 23 * buttonScale,
   };
 
-  // ✨ NEU: Concede Button
-  // ✨ FIX: Linksbündig mit den Spieler-Infos und 5px nach unten verschoben.
-  const concedeButtonWidth = 80; // Breite des Buttons aus ElementManager.ts
+  const concedeButtonWidth = 80 * buttonScale;
   const concedeButton = {
     x: EDGE_MARGIN + concedeButtonWidth / 2,
-    y: nextPhaseButton.y, // Gleiche Y-Position wie der Next-Phase-Button
+    y: nextPhaseButton.y,
   };
 
-  // --- Right Side Buttons (Settings & Save) ---
-  // ✨ FIX: Zentriert zwischen Phasen-Leiste (oben) und eigenem Land of Redemption (unten).
-
-  // Unterkante der Phasenleiste
   const phaseBarBottom = phaseBar.y + phaseBar.height / 2;
-  // Oberkante des eigenen Land of Redemption (oberster Stapel rechts)
   const playerLoRTop = playerLandOfRedemptionPile.y - pileHeight / 2;
+  const opponentInfoBottom = opponentInfo.y + 20;
 
-  // Verfügbarer Raum und Mitte
-  // ✨ EINSTELLUNG: Y-Position Rechts (Settings/Save). +60 schiebt sie weiter nach unten.
-  const rightButtonsCenterY =
-    phaseBarBottom + (playerLoRTop - phaseBarBottom) / 2 + 30;
+  const rightButtonsCenterY = isLowHeight 
+    ? opponentInfoBottom + (playerLoRTop - opponentInfoBottom) / 2
+    : phaseBarBottom + (playerLoRTop - phaseBarBottom) / 2 + 30;
 
   const settingsButton = {
     hiddenX: width + 12,
     visibleX: width - 24,
-    y: rightButtonsCenterY - buttonSpacing / 2, // Oben in der Gruppe
+    y: rightButtonsCenterY - buttonSpacing / 2,
   };
   const saveButton = {
     hiddenX: width + 12,
     visibleX: width - 24,
-    y: rightButtonsCenterY + buttonSpacing / 2, // Unten in der Gruppe
+    y: rightButtonsCenterY + buttonSpacing / 2,
   };
-  const helpButton = {
-    hiddenX: width + 12,
-    visibleX: width - 24,
-    y: 0, // Wird unten überschrieben für linke Seite
-  };
-
-  // --- Left Side Buttons (Chat & Help) ---
-  // ✨ NEU: Symmetrische Ausrichtung auf der linken Seite.
-  // Zentriert zwischen dem untersten Gegner-Stapel (Land of Redemption) und der Player-Info.
-
-  // opponentLandOfRedemptionPile ist das unterste Element der Gegner-Piles (oben links).
+  
   const opponentLoRBottom = opponentLandOfRedemptionPile.y + pileHeight / 2;
-  const playerInfoTop = playerInfo.y; // Text-Origin ist oben links
-
-  // ✨ EINSTELLUNG: Y-Position Links (Chat/Hilfe). +60 schiebt sie weiter nach unten.
-  const leftButtonsCenterY =
-    opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 + 30;
+  const playerInfoTop = playerInfo.y;
+  const leftButtonsCenterY = isLowHeight 
+    ? opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 
+    : opponentLoRBottom + (playerInfoTop - opponentLoRBottom) / 2 + 30;
 
   const chatButton = {
-    hiddenX: -12, // Fast ganz links versteckt (Mitte bei -12, Breite 48 -> 12px sichtbar)
-    visibleX: 324, // ✨ FIX: Fährt mit dem Chat-Panel aus (300px Panel + 12px Offset)
-    y: leftButtonsCenterY - buttonSpacing / 2, // Oben in der Gruppe
+    hiddenX: -12,
+    visibleX: 324,
+    y: leftButtonsCenterY - buttonSpacing / 2,
+  };
+  const helpButton = {
+    hiddenX: -12,
+    visibleX: 24,
+    y: leftButtonsCenterY + buttonSpacing / 2,
   };
 
-  // Help Button übernimmt die Position unter dem Chat Button
-  helpButton.hiddenX = -12;
-  helpButton.visibleX = 24; // ✨ FIX: Weniger weit ausfahren (war 36)
-  helpButton.y = leftButtonsCenterY + buttonSpacing / 2;
-
-  // ✨ DEIN PLAN (BATTLE): Die Battle-Arena füllt den Raum, der durch das "Atmen" entsteht.
-  // ✨ FINALE KORREKTUR: Die Kampfzone füllt exakt den Raum ZWISCHEN den Territorien.
-  // Die Gesamthöhe der Kampfzone wird durch die `battleAreaTotalHeight` gesteuert (ist 0 außerhalb der Battle-Phase).
-  // Die Oberkante der Zone ist die Unterkante des Gegner-Territoriums.
   const battleAreaY = opponentTerritory.bottom;
-
   const playerBattlefieldArea = new Phaser.Geom.Rectangle(
     boardX,
-    playerTerritory.y - battleAreaTotalHeight / 2, // KORREKTUR: Startet an der Oberkante des Spieler-Territoriums und wächst nach oben.
+    playerTerritory.y - battleAreaTotalHeight / 2,
     boardWidth,
     battleAreaTotalHeight / 2,
   );
   const opponentBattlefieldArea = new Phaser.Geom.Rectangle(
     boardX,
-    battleAreaY, // Startet an der Oberkante der Kampfzone und wächst nach unten.
+    battleAreaY,
     boardWidth,
     battleAreaTotalHeight / 2,
   );
@@ -510,12 +404,13 @@ export function calculateLayout(
     phaseIcons,
     phaseBar,
     nextPhaseButton,
-    concedeButton, // ✨ NEU
+    concedeButton,
     settingsButton,
-    saveButton, // ✨ NEU
-    helpButton, // ✨ NEU
-    chatButton, // ✨ NEU
+    saveButton,
+    helpButton,
+    chatButton,
     playerInfo,
     opponentInfo,
+    buttonScale,
   };
 }

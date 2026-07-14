@@ -10,6 +10,7 @@ import {
   MANAGED_TERRITORY_TYPES,
 } from "../../../../shared/card-constants";
 import { log, DEBUG } from "../../utils/logger";
+import { ViewportManager } from "../managers/ViewportManager";
 
 type CardProcessor = (
   cardData: CardState,
@@ -77,12 +78,28 @@ export class FieldRenderer {
     renderedCardIds: Set<string>,
   ) {
     const rootLoB = player.land_of_bondage.filter((c) => !c.attachedTo);
+    
+    // ✨ FIX: Calculate actual hand width to avoid overlapping in low height mode
+    let avoidCenterWidth = 0;
+    if (ViewportManager.isLowHeightProfile() && player.hand.length > 0) {
+      const handSize = player.hand.length;
+      const maxTotalAngle = 100;
+      const maxAnglePerCard = 12;
+      const radius = this.layout.handCardHeight * 1.2;
+      const anglePerCard = Math.min(maxTotalAngle / Math.max(1, handSize - 1), maxAnglePerCard);
+      const totalAngle = (handSize - 1) * anglePerCard;
+      const rad = Phaser.Math.DegToRad(totalAngle / 2);
+      // Half width of the fanned hand
+      avoidCenterWidth = (radius * Math.sin(rad) + (this.layout.handCardWidth / 2) + 20) * 2; 
+    }
+
     this._renderUnmanagedRow(
       rootLoB,
       this.layout.playerLandOfBondage,
       false,
       attachmentMap,
       renderedCardIds,
+      avoidCenterWidth
     );
 
     if (opponent) {
@@ -218,6 +235,7 @@ export class FieldRenderer {
     isOpponent: boolean,
     attachmentMap: Map<string, CardState[]>,
     renderedCardIds: Set<string>,
+    avoidCenterWidth: number = 0
   ) {
     if (cards.length === 0) return;
 
@@ -233,11 +251,19 @@ export class FieldRenderer {
       : idealSpacing;
 
     const actualTotalWidth = cards.length * cardWidth + Math.max(0, cards.length - 1) * actualSpacing;
-    const startX = area.centerX - actualTotalWidth / 2 + cardWidth / 2;
+    const totalGap = avoidCenterWidth > 0 ? avoidCenterWidth : 0;
+    const startX = area.centerX - (actualTotalWidth + totalGap) / 2 + cardWidth / 2;
     const targetY = area.centerY;
 
     cards.forEach((cardData, index) => {
       let targetX = startX + index * (cardWidth + actualSpacing);
+      
+      // ✨ FIX: Wenn ein "avoidCenterWidth" definiert ist, fügen wir eine echte Lücke in der Mitte ein
+      // so dass sich die Karten sauber auf die linke und rechte Seite aufteilen.
+      if (avoidCenterWidth > 0 && index >= Math.ceil(cards.length / 2)) {
+        targetX += avoidCenterWidth;
+      }
+
       let angle = isOpponent ? 180 : 0;
 
       const cardBelongsToMe = cardData.controllerId === this.room.sessionId;
