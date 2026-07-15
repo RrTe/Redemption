@@ -43,7 +43,8 @@ export class SymbolZoomEffect {
   }
 
   public play(card: CardUI) {
-    const config = this.getConfig(card.cardData.Type);
+    const cardType = card.cardData.inGameType || card.cardData.Type;
+    const config = this.getConfig(cardType);
     if (!config) return;
 
     // Position der Karte (Mittelpunkt)

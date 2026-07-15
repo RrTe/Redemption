@@ -258,6 +258,8 @@ function _moveCardById(
   to,
   cardId,
   coords = null,
+  inGameType = "",
+  inGameAlignment = ""
 ) {
   logger.debug(
     `[MOVE_BY_ID] Attempting to move card '${cardId}' from '${from}' to '${to}' by player '${actingPlayer.sessionId}'.`,
@@ -350,6 +352,17 @@ function _moveCardById(
     card.isFaceUp = true;
   }
   card.counters.clear();
+  
+  // ✨ NEU: inGame-Eigenschaften anwenden oder zurücksetzen
+  const isLeavingField = [ZONES.DECK, ZONES.DISCARD, ZONES.HAND, ZONES.BANISH, ZONES.RESERVE].includes(to);
+  if (isLeavingField) {
+    card.inGameType = "";
+    card.inGameAlignment = "";
+  } else {
+    if (inGameType) card.inGameType = inGameType;
+    if (inGameAlignment) card.inGameAlignment = inGameAlignment;
+  }
+
   logger.debug(`[MOVE_ATOMIC] Updated properties for ${card.id}: zone=${card.zone}, isFaceUp=${card.isFaceUp}`);
 
   logger.debug(
@@ -500,6 +513,8 @@ function moveCard(
   cardIdOrIndex,
   count = 1,
   coords = {}, // ✨ FIX: Standardwert von null auf {} geändert, damit coords?.position funktioniert
+  inGameType = "",
+  inGameAlignment = ""
 ) {
   logger.debug(
     `[moveCard_DISPATCHER] Entered moveCard for player ${player?.sessionId}, from ${from} to ${to}, cardIdOrIndex ${cardIdOrIndex}, count ${count}, coords `,
@@ -518,7 +533,7 @@ function moveCard(
   }
   // Moving a specific card by its ID
   else if (typeof cardIdOrIndex === "string") {
-    return _moveCardById(player, state, cardLookup, from, to, cardIdOrIndex, coords);
+    return _moveCardById(player, state, cardLookup, from, to, cardIdOrIndex, coords, inGameType, inGameAlignment);
   } else {
     logger.error(
       `[moveCard_DISPATCHER_ERROR] Invalid moveCard call. 'from' zone is not DECK and 'cardIdOrIndex' is not a string ID. from=${from}, cardIdOrIndex=${cardIdOrIndex}`,

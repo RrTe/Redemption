@@ -39,7 +39,8 @@ export class CardPlayEffect {
    * Jeder Effekt ist für seinen eigenen Sound verantwortlich.
    */
   private getPrimaryEffect(card: CardUI): IPlayEffect {
-    const { Type, Alignment } = card.cardData;
+    const Type = card.cardData.inGameType || card.cardData.Type;
+    const Alignment = card.cardData.inGameAlignment || card.cardData.Alignment;
 
     if (Type === CARD_TYPES.DOMINANT && Alignment === ALIGNMENTS.GOOD) {
       return this.goodDominantEffect;
@@ -57,7 +58,7 @@ export class CardPlayEffect {
    * Sammelt zusätzliche Effekte, die nach der primären Animation abgespielt werden sollen.
    */
   private getSecondaryEffects(card: CardUI): { play: Function }[] {
-    const { Type } = card.cardData;
+    const Type = card.cardData.inGameType || card.cardData.Type;
     const effects: { play: Function }[] = [];
 
     if (Type === CARD_TYPES.FORTRESS || Type === CARD_TYPES.SITE) {

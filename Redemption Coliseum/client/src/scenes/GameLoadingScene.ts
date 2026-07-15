@@ -109,11 +109,11 @@ export class GameLoadingScene extends BaseLoadingScene {
 
     this.load.image(
       "checkBoxUnChecked",
-      "assets/deck-editor/symbols/checkBox_Unchecked_compressed.png",
+      "assets/ui/checkboxes/checkBox_Unchecked_compressed.png",
     );
     this.load.image(
       "checkBoxChecked",
-      "assets/deck-editor/symbols/checkBox_Checked_compressed.png",
+      "assets/ui/checkboxes/checkBox_Checked_compressed.png",
     );
 
     // Spritesheets
@@ -255,6 +255,8 @@ export class GameLoadingScene extends BaseLoadingScene {
           this.load.image(`${filter.id}_small`, filter.iconSmallPath);
           const medPath = filter.iconSmallPath.replace("_small.png", "_med.png");
           this.load.image(`${filter.id}_med`, medPath);
+          const largePath = filter.iconSmallPath.replace("_small.png", ".png");
+          this.load.image(`${filter.id}`, largePath);
         }
       });
     }

@@ -18,6 +18,8 @@ export interface CardState extends CardData {
   notes: string;
   counters: MapSchema<number>;
   attachedTo: string | null; // ✨ NEU: ID der Karte, an die diese Karte angehängt ist
+  inGameType: string;
+  inGameAlignment: string;
   toJSON(): any; // ✨ KORREKTUR: Füge die toJSON-Methode hinzu, die von Colyseus-Objekten bereitgestellt wird.
 }
 

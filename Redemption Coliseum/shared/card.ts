@@ -19,4 +19,10 @@ export interface CardData {
   IsEnhancement: boolean;
   IsGospel: boolean;
   Testament: string;
+  CardSides?: {
+    shared?: any;
+    top?: any;
+    bottom?: any;
+  };
+  sides?: any[];
 }

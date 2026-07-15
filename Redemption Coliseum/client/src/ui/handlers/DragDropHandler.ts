@@ -10,6 +10,8 @@ import { type MoveCardMessage } from "../../../../shared/messages.js";
 import { ZONES, PILE_ZONES, type Zone } from "../../../../shared/zones.js";
 import { log } from "../../utils/logger.js";
 import { ElementManager } from "../managers/ElementManager";
+import { TypeSelectionOverlay, type TypeSelectionOption } from "../components/TypeSelectionOverlay";
+import { cardData as staticCardData } from "../../utils/CardService";
 
 const ATTACH_HOVER_DELAY = 700;
 
@@ -421,6 +423,62 @@ export class DragDropHandler {
         cardId: gameObject.cardData.id,
         coords,
       };
+
+      // ✨ NEU: Intercept if it's a Dual Card being played to the field
+      const isFieldMove = [ZONES.BATTLEFIELD, ZONES.TERRITORY, ZONES.LAND_OF_BONDAGE, ZONES.SET_ASIDE].includes(toZone);
+      
+      const staticData = staticCardData.cards.find((c: any) => 
+        c.Name === gameObject.cardData.Name && 
+        c.ImageFile === gameObject.cardData.ImageFile && 
+        c.Set === gameObject.cardData.Set
+      );
+
+      if (isFieldMove && staticData && staticData.sides && staticData.sides.length > 1) {
+        log("Input", `[MOVE] Dual Card detected! Showing TypeSelectionOverlay...`);
+        gameObject.setData("drop_action_taken", true);
+        gameObject.setData("waiting_for_overlay", true);
+
+        // Baue Optionen auf Basis der sides
+        const options: TypeSelectionOption[] = [];
+        const sides = staticData.sides;
+        
+        sides.forEach((side: any, index: number) => {
+          options.push({
+            id: side.Type || side.Alignment || `side${index}`,
+            iconKey: this.getIconForType(side.Type || side.Alignment),
+            label: side.Type || side.Alignment || `Option ${index + 1}`
+          });
+        });
+
+        const overlay = new TypeSelectionOverlay(
+          this.scene,
+          this.animationManager,
+          staticData,
+          options,
+          (selectedId: string) => {
+            // Callback: Option wurde gewählt
+            log("Input", `[MOVE] Dual Card option selected: ${selectedId}`);
+            gameObject.setData("waiting_for_overlay", false);
+            
+            // Finde heraus, ob es sich um Type oder Alignment handelte (im echten Spiel ggf. komplexer auflösen)
+            // Wir senden es als inGameType, der Server wird es dem Schema zuordnen.
+            message.inGameType = selectedId;
+            // Alignment separat, falls nötig, ansonsten reicht Type für die Payload. 
+            // Hier für den MVP nehmen wir einfach an, dass der gewählte String der inGameType ist.
+            
+            this.networkManager.sendMoveCard(message);
+          },
+          () => {
+            // Cancelled
+            log("Input", `[MOVE] Dual Card selection cancelled.`);
+            gameObject.setData("waiting_for_overlay", false);
+            this.snapBack(gameObject);
+          }
+        );
+        overlay.show();
+        return;
+      }
+
       log(
         "Input",
         `[MOVE] Sending full moveCard message for zone change:`,
@@ -429,5 +487,27 @@ export class DragDropHandler {
       gameObject.setData("drop_action_taken", true);
       this.networkManager.sendMoveCard(message);
     }
+  }
+
+  // Hilfsmethode, um das passende Icon-Asset für einen Kartentyp zu finden
+  private getIconForType(typeStr: string): string {
+    if (!typeStr) return "icon_search"; // Fallback
+    
+    const typeUpper = typeStr.toUpperCase();
+    if (typeUpper.includes("HERO")) return "Hero";
+    if (typeUpper.includes("EVIL CHARACTER") || typeUpper === "EC") return "EC";
+    if (typeUpper.includes("GOOD ENHANCEMENT") || typeUpper === "GE") return "GE";
+    if (typeUpper.includes("EVIL ENHANCEMENT") || typeUpper === "EE") return "EE";
+    if (typeUpper.includes("COVENANT")) return "Cov";
+    if (typeUpper.includes("CURSE")) return "Curse";
+    if (typeUpper.includes("ARTIFACT")) return "Art";
+    if (typeUpper.includes("SITE")) return "Site";
+    if (typeUpper.includes("GOOD DOMINANT")) return "GoodDom";
+    if (typeUpper.includes("EVIL DOMINANT")) return "EvilDom";
+    if (typeUpper.includes("GOOD FORTRESS") || typeUpper === "GOOD FORT") return "GoodFort";
+    if (typeUpper.includes("EVIL FORTRESS") || typeUpper === "EVIL FORT") return "EvilFort";
+    
+    // Fallback:
+    return "icon_search"; 
   }
 }

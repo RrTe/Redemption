@@ -175,6 +175,8 @@ export class CardInteractionHandler {
    * Handles visual hover effects for cards.
    */
   public handleHoverIn(card: CardUI) {
+    if (card.getData("waiting_for_overlay")) return; // ✨ NEU: Ignoriere Hover für Karten, die auf Overlay warten
+
     if (this.currentHoveredCard && this.currentHoveredCard !== card) {
       this.handleHoverOut(this.currentHoveredCard);
     }
@@ -204,6 +206,8 @@ export class CardInteractionHandler {
    * Cleans up visual hover effects.
    */
   public handleHoverOut(card: CardUI) {
+    if (card.getData("waiting_for_overlay")) return; // ✨ NEU: Ignoriere Hover für Karten, die auf Overlay warten
+
     this.previewManager.hide();
 
     const isMyHandCard =

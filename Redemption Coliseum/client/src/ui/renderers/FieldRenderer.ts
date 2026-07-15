@@ -154,19 +154,19 @@ export class FieldRenderer {
     const { territory } = playerState;
     const rootCards = territory.filter((c) => !c.attachedTo);
 
-    const heroes = rootCards.filter((card) => card.Type === CARD_TYPES.HERO);
+    const heroes = rootCards.filter((card) => (card.inGameType || card.Type) === CARD_TYPES.HERO);
     const fortresses = rootCards.filter(
       (card) =>
-        card.Type === CARD_TYPES.FORTRESS || card.Type === CARD_TYPES.SITE,
+        (card.inGameType || card.Type) === CARD_TYPES.FORTRESS || (card.inGameType || card.Type) === CARD_TYPES.SITE,
     );
     const evilCharacters = rootCards.filter(
-      (card) => card.Type === CARD_TYPES.EC,
+      (card) => (card.inGameType || card.Type) === CARD_TYPES.EC,
     );
     const artifacts = rootCards.filter(
-      (card) => card.Type === CARD_TYPES.ARTIFACT,
+      (card) => (card.inGameType || card.Type) === CARD_TYPES.ARTIFACT,
     );
     const unmanagedCards = rootCards.filter(
-      (card) => !MANAGED_TERRITORY_TYPES.includes(card.Type),
+      (card) => !MANAGED_TERRITORY_TYPES.includes(card.inGameType || card.Type),
     );
 
     const areas = isOpponent

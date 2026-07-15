@@ -41,6 +41,8 @@ class Card extends Schema {
     this.y = 0;
     this.counters = new MapSchema();
     this.attachedTo = null; // ✨ NEU: ID der Karte, an die diese Karte angehängt ist
+    this.inGameType = ""; // ✨ NEU: Typ für den aktuellen "Im Spiel"-Zustand
+    this.inGameAlignment = ""; // ✨ NEU: Alignment für den aktuellen "Im Spiel"-Zustand
   }
 }
 
@@ -79,5 +81,7 @@ type("number")(Card.prototype, "x");
 type("number")(Card.prototype, "y");
 type({ map: "number" })(Card.prototype, "counters");
 type("string")(Card.prototype, "attachedTo"); // ✨ NEU: Schema-Definition für attachedTo
+type("string")(Card.prototype, "inGameType"); // ✨ NEU: Typ für den aktuellen "Im Spiel"-Zustand
+type("string")(Card.prototype, "inGameAlignment"); // ✨ NEU: Alignment für den aktuellen "Im Spiel"-Zustand
 
 module.exports = { Card };

@@ -265,6 +265,11 @@ export class CardRenderer {
         this.animationManager.stopHandHoverAnimation(cardUI);
       }
 
+      // ✨ NEU: Sobald sich die Zone ändert, warten wir definitiv nicht mehr auf ein Overlay
+      if (oldZone !== newZone) {
+        cardUI.setData("waiting_for_overlay", false);
+      }
+
       // Wir prüfen, ob die Karte die Hand verlässt und in einen Spielbereich (Territory, LoB, Battlefield) geht.
       // Bewegungen auf Stapel (Deck, Discard, Reserve, Banish, LoR) sollen keine Play-Animation auslösen.
       const isPlayMove =
@@ -285,6 +290,11 @@ export class CardRenderer {
 
       // Prüfe auch, ob bereits eine Animation läuft, um Doppelungen zu vermeiden.
       // ✨ KORREKTUR: Die Variable isAnimating haben wir bereits oben definiert.
+
+      // ✨ FIX: Wir müssen die cardData jetzt schon aktualisieren, damit 
+      // sekundäre Effekte (wie SymbolZoom) Zugriff auf das aktuelle inGameType haben!
+      const hasMoved = cardData.lastMoved > cardUI.cardData.lastMoved;
+      cardUI.cardData = cardData;
 
       if (isPlayMove && !isAnimating) {
         // Starte die Animation von der AKTUELLEN Position (Drop-Position) zum neuen Ziel.
@@ -309,12 +319,10 @@ export class CardRenderer {
 
       // Wenn eine Animation läuft, dürfen wir die Position nicht manuell überschreiben.
       // Der Tween hat die Kontrolle.
-      const hasMoved = cardData.lastMoved > cardUI.cardData.lastMoved;
       if (hasMoved) {
         this.scene.children.bringToTop(cardUI);
       }
       cardUI.updateFaceDownStatus(isFaceDown);
-      cardUI.cardData = cardData;
       cardUI.updateCounters(); // ✨ NEU: Counter-Anzeige aktualisieren
       cardUI.currentZone = cardData.zone; // ✨ NEU: Aktualisiere unseren Zonen-Speicher
     }
@@ -340,7 +348,7 @@ export class CardRenderer {
     // 1. Sie nicht am Ziel ist
     // 2. KEINE Animation läuft (frische Prüfung!)
     // 3. Sie NICHT gerade vom User gezogen wird (oder auf Server-Drop-Bestätigung wartet)
-    if (!isAtTarget && !isAnimating && !cardUI.isBeingDragged) {
+    if (!isAtTarget && !isAnimating && !cardUI.isBeingDragged && !cardUI.getData("waiting_for_overlay")) {
       // ✨ NEU: Smooth transition for cards shifting within the same play area (like Lost Souls adjusting to hand size)
       if (oldZone === newZone && 
           (oldZone === ZONES.LAND_OF_BONDAGE || oldZone === ZONES.TERRITORY || oldZone === ZONES.BATTLEFIELD)) {

@@ -251,4 +251,47 @@ export class AnimationManager {
     });
     card.setData("hoverTween", returnTween);
   }
+
+  /**
+   * Startet eine pulsierende Animation auf einem GameObject (Skalierung vergrößern/verkleinern).
+   * Verwendet für die Auswahl-Buttons bei Dual-Cards.
+   */
+  public startPulseAnimation(
+    scene: Phaser.Scene, 
+    targets: Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[], 
+    pulseAmplitude: number = 0.1, 
+    pulsePerSecond: number = 0.6
+  ): { stop: () => void } {
+    
+    // Wir nutzen das update event der Szene für den mathematischen Pulse
+    const updatePulse = (time: number, delta: number) => {
+      const pulse = 1 + pulseAmplitude * Math.sin((time * pulsePerSecond * 2 * Math.PI) / 1000);
+      
+      const targetArray = Array.isArray(targets) ? targets : [targets];
+      targetArray.forEach(target => {
+        if (target && target.active && 'setScale' in target) {
+          // Wir wenden den Multiplikator auf eine Basis-Skalierung an
+          // Dazu muss die Basis-Skalierung vorher auf dem Objekt hinterlegt sein (z.B. in getData)
+          const baseScale = target.getData('baseScale') || 1;
+          (target as any).setScale(baseScale * pulse);
+        }
+      });
+    };
+
+    scene.events.on("update", updatePulse);
+
+    return {
+      stop: () => {
+        scene.events.off("update", updatePulse);
+        // Resette auf baseScale
+        const targetArray = Array.isArray(targets) ? targets : [targets];
+        targetArray.forEach(target => {
+          if (target && target.active && 'setScale' in target) {
+            const baseScale = target.getData('baseScale') || 1;
+            (target as any).setScale(baseScale);
+          }
+        });
+      }
+    };
+  }
 }

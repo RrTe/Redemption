@@ -23,6 +23,8 @@ class MoveCardCommand extends BaseCommand {
         message.cardId ?? message.index ?? 0,
         message.count ?? 1,
         message.coords,
+        message.inGameType,
+        message.inGameAlignment
       );
 
       const movedCards = result.movedCards || [];

@@ -14,6 +14,8 @@ export interface MoveCardMessage {
     position?: "bottom";
     attachTo?: string; // ✨ NEU: ID der Zielkarte für Attach-Aktionen
   }; // ✨ Erweitert um die ID des Zielspielers
+  inGameType?: string; // ✨ NEU: Zwingend erforderlich beim Ausspielen ins Territory/Battlefield
+  inGameAlignment?: string; // ✨ NEU: Zwingend erforderlich beim Ausspielen ins Territory/Battlefield
 }
 
 export interface ResolveSearchPileMessage {
