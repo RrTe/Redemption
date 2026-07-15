@@ -323,6 +323,7 @@ export class CardRenderer {
         this.scene.children.bringToTop(cardUI);
       }
       cardUI.updateFaceDownStatus(isFaceDown);
+      cardUI.visuals.updateBadge();
       cardUI.updateCounters(); // ✨ NEU: Counter-Anzeige aktualisieren
       cardUI.currentZone = cardData.zone; // ✨ NEU: Aktualisiere unseren Zonen-Speicher
     }

@@ -102,6 +102,15 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     // ✨ NEU: Lausche auf Einstellungsänderungen, um Effekte live an-/abschalten zu können.
     this.scene.events.on("settings-changed", this.onSettingsChanged, this);
+
+    // ✨ FIX: Halte die Rotation des Badges aufrecht (darf sich nicht mitdrehen)
+    this.scene.events.on("update", this.onUpdate, this);
+
+    // ✨ FIX: Event Listener beim Zerstören der Karte sauber entfernen
+    this.on("destroy", () => {
+      this.scene.events.off("settings-changed", this.onSettingsChanged, this);
+      this.scene.events.off("update", this.onUpdate, this);
+    });
   }
 
   public updateSize(width: number, height: number) {
@@ -317,5 +326,13 @@ export class CardUI extends Phaser.GameObjects.Container {
     if (!this.areEffectsEnabled()) {
       this.stopGlow(); // Stoppt den Hover-Glow sofort
     }
+  }
+
+  /**
+   * ✨ FIX: Wird jeden Frame aufgerufen.
+   */
+  private onUpdate() {
+    if (!this.active) return;
+    this.visuals.syncBadgeRotation();
   }
 }

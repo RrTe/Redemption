@@ -23,6 +23,10 @@ export class CardVisuals {
   private shadow: Phaser.GameObjects.NineSlice;
   private brightnessOverlay: Phaser.GameObjects.Rectangle;
 
+  // Dual Card Badge
+  private badgeImage: Phaser.GameObjects.Image | null = null;
+  private badgeBg: Phaser.GameObjects.Graphics | null = null;
+
   // Glow / Spark Effect
   private glowEmitter: Phaser.GameObjects.Particles.ParticleEmitter | null =
     null;
@@ -92,6 +96,13 @@ export class CardVisuals {
       .setBlendMode(Phaser.BlendModes.ADD)
       .setVisible(false);
     this.cardUI.add(this.brightnessOverlay);
+
+    if (this.badgeBg) {
+      this.badgeBg.setPosition(0, 0);
+    }
+    if (this.badgeImage) {
+      this.badgeImage.setPosition(0, 0);
+    }
   }
 
   /** Prüft globale Einstellungen. */
@@ -145,6 +156,7 @@ export class CardVisuals {
       this.cardUI.isLocked,
     );
     this.onUpdateSize();
+    this.updateBadge();
   }
 
   /** Setzt das Vorderseiten-Bild nach dem Laden. */
@@ -188,6 +200,7 @@ export class CardVisuals {
       this.background.visible;
 
     this.cardUI.setVisible(shouldBeVisible);
+    this.updateBadge();
   }
 
   /** Wendet Tint auf die Bilder an. */
@@ -213,6 +226,87 @@ export class CardVisuals {
     } else if (tintColor !== undefined) {
       this.brightnessOverlay.setVisible(false);
       this.setTint(tintColor);
+    }
+  }
+
+  // Hilfsmethode für das Badge-Icon
+  private getIconForType(typeStr: string): string {
+    if (!typeStr) return ""; 
+    
+    const typeUpper = typeStr.toUpperCase();
+    if (typeUpper.includes("HERO")) return "Hero";
+    if (typeUpper.includes("EVIL CHARACTER") || typeUpper === "EC") return "EC";
+    if (typeUpper.includes("GOOD ENHANCEMENT") || typeUpper === "GE") return "GE";
+    if (typeUpper.includes("EVIL ENHANCEMENT") || typeUpper === "EE") return "EE";
+    if (typeUpper.includes("COVENANT")) return "Cov";
+    if (typeUpper.includes("CURSE")) return "Curse";
+    if (typeUpper.includes("ARTIFACT")) return "Art";
+    if (typeUpper.includes("SITE")) return "Site";
+    if (typeUpper.includes("GOOD DOMINANT")) return "GoodDom";
+    if (typeUpper.includes("EVIL DOMINANT")) return "EvilDom";
+    if (typeUpper.includes("GOOD FORTRESS") || typeUpper === "GOOD FORT") return "GoodFort";
+    if (typeUpper.includes("EVIL FORTRESS") || typeUpper === "EVIL FORT") return "EvilFort";
+    
+    return ""; 
+  }
+
+  public syncBadgeRotation() {
+    // ✨ FIX: Wenn der Container (cardUI) gedreht wird, 
+    // drehen wir das Badge exakt entgegengesetzt, sodass es immer aufrecht bleibt!
+    if (this.badgeBg) {
+      this.badgeBg.setRotation(-this.cardUI.rotation);
+    }
+    if (this.badgeImage) {
+      this.badgeImage.setRotation(-this.cardUI.rotation);
+    }
+  }
+
+  public updateBadge() {
+    const { cardData } = this.cardUI;
+    const isDualCard = cardData.inGameType && cardData.inGameType !== cardData.Type;
+
+    if (isDualCard && !this.cardUI.isCurrentlyFaceDown()) {
+       const iconId = this.getIconForType(cardData.inGameType);
+       if (iconId) {
+         const textureKey = `${iconId}_small`;
+         if (this.scene.textures.exists(textureKey)) {
+             if (!this.badgeBg) {
+               this.badgeBg = this.scene.add.graphics();
+               // Zeichne einen runden Hintergrund (Farbe wie DeckEditor Buttonbars)
+               this.badgeBg.fillStyle(0x1a1a2e, 0.9);
+               this.badgeBg.fillCircle(0, 0, 24);
+               this.badgeBg.lineStyle(2, 0x444466, 0.8);
+               this.badgeBg.strokeCircle(0, 0, 24);
+               
+               this.badgeBg.setPosition(0, 0);
+               this.cardUI.add(this.badgeBg);
+             }
+           
+           if (!this.badgeImage) {
+             this.badgeImage = this.scene.add.image(0, 0, textureKey);
+             this.badgeImage.setOrigin(0.5);
+             // ✨ Badge skalieren, passend zum Kreis (deutlich größer)
+             this.badgeImage.setScale(1.8);
+             this.cardUI.add(this.badgeImage);
+           } else {
+             this.badgeImage.setTexture(textureKey);
+           }
+           
+           // Stelle sicher, dass Hintergrund und dann das Bild oben liegen
+           this.cardUI.bringToTop(this.badgeBg);
+           this.cardUI.bringToTop(this.badgeImage);
+           return;
+         }
+       }
+    }
+
+    if (this.badgeBg) {
+      this.badgeBg.destroy();
+      this.badgeBg = null;
+    }
+    if (this.badgeImage) {
+      this.badgeImage.destroy();
+      this.badgeImage = null;
     }
   }
 
