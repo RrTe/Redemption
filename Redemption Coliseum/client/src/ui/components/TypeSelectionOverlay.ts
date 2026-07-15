@@ -92,10 +92,19 @@ export class TypeSelectionOverlay {
       icon.setScale(baseScale);
       icon.setData('baseScale', baseScale);
 
+      // Start Pulse Animation for icon
+      let pulseControl = this.animationManager.startPulseAnimation(this.scene, icon, 0.1, 0.6);
+      this.pulseControls.push(pulseControl);
+
       // Setup interaction
       icon.setInteractive({ useHandCursor: true });
       icon.on("pointerover", () => {
         this.scene.game.events.emit("playSound", "MENU_HOVER");
+        // Pulse stoppen während wir hovern
+        if (pulseControl) {
+          pulseControl.stop();
+        }
+
         // Enlarge and glow
         this.scene.tweens.add({
           targets: icon,
@@ -105,7 +114,7 @@ export class TypeSelectionOverlay {
         });
 
         // Add glow effect similar to RadialMenu/HubScene
-        const glow = this.scene.add.image(0, 0, "light_glow").setAlpha(0.6).setScale(baseScale * 2);
+        const glow = this.scene.add.image(0, 0, "light_glow").setAlpha(0.6).setScale(baseScale * 1.0);
         icon.setData("glow", glow);
         btnContainer.addAt(glow, 0); // Put glow behind icon
       });
@@ -115,7 +124,12 @@ export class TypeSelectionOverlay {
           targets: icon,
           scale: baseScale,
           duration: 150,
-          ease: "Power2"
+          ease: "Power2",
+          onComplete: () => {
+             // Pulse wieder starten nach dem Rauszoomen
+             pulseControl = this.animationManager.startPulseAnimation(this.scene, icon, 0.1, 0.6);
+             this.pulseControls.push(pulseControl);
+          }
         });
         const glow = icon.getData("glow");
         if (glow) {
@@ -145,10 +159,6 @@ export class TypeSelectionOverlay {
       btnContainer.add(labelText);
 
       this.container.add(btnContainer);
-
-      // Start Pulse Animation for icon
-      const pulseControl = this.animationManager.startPulseAnimation(this.scene, icon, 0.1, 0.6);
-      this.pulseControls.push(pulseControl);
     });
 
     // Cancel Button
