@@ -54,10 +54,13 @@ export class TypeSelectionOverlay {
     this.container.add(this.blocker);
 
     // Title
-    // Etwas größerer Minimalwert für bessere Lesbarkeit auf Handys
+    // Slightly larger minimum value for better readability on mobile,
+    // but move closer to the card on desktop by decreasing Y.
+    const isDesktop = width >= 800;
+    const yPos = isDesktop ? height * 0.20 : height * 0.15; // Move down on Desktop
     const fontSize = Math.min(48, Math.max(32, ViewportManager.vmin(10)));
     const titleText = this.scene.add
-      .bitmapText(centerX, height * 0.15, "fairydust", "Choose how to play this card:", fontSize)
+      .bitmapText(centerX, yPos, "fairydust", "Choose how to play this card:", fontSize)
       .setOrigin(0.5)
       .setTint(0xffd700)
       .setDropShadow(4, 4, 0x000000, 0.8);
@@ -90,11 +93,11 @@ export class TypeSelectionOverlay {
       const iconContainer = this.scene.add.container(0, 0);
 
       const maxDim = Math.max(icon.width, icon.height);
-      // Begrenzung auf maximal 90 Pixel, damit es auf dem Desktop nicht zu riesig wird
+      // Limit to max 90 pixels to prevent it from becoming too large on desktop
       const targetSize = Math.min(90, ViewportManager.vmin(12));
       const baseScale = targetSize / maxDim;
       
-      // Badge-Hintergrund für Kontrast (wie auf den Karten)
+      // Background circle for contrast
       const bgCircle = this.scene.add.graphics();
       bgCircle.fillStyle(0x1a1a2e, 0.9);
       bgCircle.fillCircle(0, 0, targetSize * 0.75);
@@ -108,7 +111,7 @@ export class TypeSelectionOverlay {
       
       btnContainer.add(iconContainer);
 
-      // Wir definieren die HitArea für das iconContainer
+      // Define hit area for iconContainer
       const hitAreaSize = targetSize * 1.5;
       iconContainer.setSize(hitAreaSize, hitAreaSize);
       iconContainer.setInteractive({ useHandCursor: true });
@@ -118,11 +121,11 @@ export class TypeSelectionOverlay {
       this.pulseControls.push(pulseControl);
 
       iconContainer.on("pointerover", () => {
-        // ✨ FIX: Z-Index anpassen, damit das aktuell gehoverte Icon ganz vorne liegt
+        // Adjust z-index so hovered icon is always on top
         this.container.bringToTop(btnContainer);
         
         this.scene.game.events.emit("playSound", "MENU_HOVER");
-        // Pulse stoppen während wir hovern
+        // Stop pulse animation during hover
         if (pulseControl) {
           pulseControl.stop();
         }
@@ -148,7 +151,7 @@ export class TypeSelectionOverlay {
           duration: 150,
           ease: "Power2",
           onComplete: () => {
-             // Pulse wieder starten nach dem Rauszoomen
+             // Restart pulse animation after zoom out
              pulseControl = this.animationManager.startPulseAnimation(this.scene, iconContainer, 0.1, 0.6);
              this.pulseControls.push(pulseControl);
           }
@@ -166,7 +169,7 @@ export class TypeSelectionOverlay {
       });
 
       // Label below icon
-      // Splitte den Text bei Leerzeichen in neue Zeilen für schmale Bildschirme
+      // Split text on spaces for narrow screens
       const labelTextLines = opt.label.replace(" ", "\n");
       const labelText = this.scene.add
         .text(0, targetSize * 0.75 + 15, labelTextLines, {
@@ -185,8 +188,9 @@ export class TypeSelectionOverlay {
     });
 
     // Cancel Button
+    const cancelY = isDesktop ? height * 0.75 : height * 0.9;
     const cancelBtn = this.scene.add
-      .text(centerX, height * 0.85, "Cancel", {
+      .text(centerX, cancelY, "Cancel", {
         fontFamily: "Arial",
         fontSize: "24px",
         color: "#ff8888",

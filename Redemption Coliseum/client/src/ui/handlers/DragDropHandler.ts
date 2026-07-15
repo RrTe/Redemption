@@ -438,45 +438,53 @@ export class DragDropHandler {
         gameObject.setData("drop_action_taken", true);
         gameObject.setData("waiting_for_overlay", true);
 
-        // Baue Optionen auf Basis der sides
+        // Baue Optionen auf Basis der sides (ohne Duplikate!)
         const options: TypeSelectionOption[] = [];
         const sides = staticData.sides;
         
         sides.forEach((side: any, index: number) => {
-          options.push({
-            id: side.Type || side.Alignment || `side${index}`,
-            iconKey: this.getIconForType(side.Type || side.Alignment),
-            label: side.Type || side.Alignment || `Option ${index + 1}`
-          });
+          const id = side.Type || side.Alignment || `side${index}`;
+          if (!options.some(opt => opt.id === id)) {
+            options.push({
+              id: id,
+              iconKey: this.getIconForType(side.Type || side.Alignment),
+              label: side.Type || side.Alignment || `Option ${index + 1}`
+            });
+          }
         });
 
-        const overlay = new TypeSelectionOverlay(
-          this.scene,
-          this.animationManager,
-          staticData,
-          options,
-          (selectedId: string) => {
-            // Callback: Option wurde gewählt
-            log("Input", `[MOVE] Dual Card option selected: ${selectedId}`);
-            gameObject.setData("waiting_for_overlay", false);
-            
-            // Finde heraus, ob es sich um Type oder Alignment handelte (im echten Spiel ggf. komplexer auflösen)
-            // Wir senden es als inGameType, der Server wird es dem Schema zuordnen.
-            message.inGameType = selectedId;
-            // Alignment separat, falls nötig, ansonsten reicht Type für die Payload. 
-            // Hier für den MVP nehmen wir einfach an, dass der gewählte String der inGameType ist.
-            
-            this.networkManager.sendMoveCard(message);
-          },
-          () => {
-            // Cancelled
-            log("Input", `[MOVE] Dual Card selection cancelled.`);
-            gameObject.setData("waiting_for_overlay", false);
-            this.snapBack(gameObject);
-          }
-        );
-        overlay.show();
-        return;
+        if (options.length > 1) {
+          log("Input", `[MOVE] Dual Card detected! Showing TypeSelectionOverlay...`);
+          gameObject.setData("drop_action_taken", true);
+          gameObject.setData("waiting_for_overlay", true);
+
+          const overlay = new TypeSelectionOverlay(
+            this.scene,
+            this.animationManager,
+            staticData,
+            options,
+            (selectedId: string) => {
+              // Callback: Option wurde gewählt
+              log("Input", `[MOVE] Dual Card option selected: ${selectedId}`);
+              gameObject.setData("waiting_for_overlay", false);
+              
+              message.inGameType = selectedId;
+              
+              this.networkManager.sendMoveCard(message);
+            },
+            () => {
+              // Cancelled
+              log("Input", `[MOVE] Dual Card selection cancelled.`);
+              gameObject.setData("waiting_for_overlay", false);
+              this.snapBack(gameObject);
+            }
+          );
+          overlay.show();
+          return;
+        } else if (options.length === 1) {
+          // Beide Seiten haben exakt denselben Typ! Kein Overlay nötig.
+          message.inGameType = options[0].id;
+        }
       }
 
       log(
