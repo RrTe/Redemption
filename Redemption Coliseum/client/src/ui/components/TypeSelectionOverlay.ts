@@ -54,8 +54,10 @@ export class TypeSelectionOverlay {
     this.container.add(this.blocker);
 
     // Title
+    // Etwas größerer Minimalwert für bessere Lesbarkeit auf Handys
+    const fontSize = Math.min(48, Math.max(32, ViewportManager.vmin(10)));
     const titleText = this.scene.add
-      .bitmapText(centerX, height * 0.15, "fairydust", "Choose how to play this card:", 48)
+      .bitmapText(centerX, height * 0.15, "fairydust", "Choose how to play this card:", fontSize)
       .setOrigin(0.5)
       .setTint(0xffd700)
       .setDropShadow(4, 4, 0x000000, 0.8);
@@ -85,20 +87,40 @@ export class TypeSelectionOverlay {
 
       const icon = this.scene.add.image(0, 0, opt.iconKey);
 
-      // Determine base scale based on texture size
-      const maxDim = Math.max(icon.width, icon.height);
-      const targetSize = ViewportManager.vmin(12);
-      const baseScale = targetSize / maxDim;
-      icon.setScale(baseScale);
-      icon.setData('baseScale', baseScale);
+      const iconContainer = this.scene.add.container(0, 0);
 
-      // Start Pulse Animation for icon
-      let pulseControl = this.animationManager.startPulseAnimation(this.scene, icon, 0.1, 0.6);
+      const maxDim = Math.max(icon.width, icon.height);
+      // Begrenzung auf maximal 90 Pixel, damit es auf dem Desktop nicht zu riesig wird
+      const targetSize = Math.min(90, ViewportManager.vmin(12));
+      const baseScale = targetSize / maxDim;
+      
+      // Badge-Hintergrund für Kontrast (wie auf den Karten)
+      const bgCircle = this.scene.add.graphics();
+      bgCircle.fillStyle(0x1a1a2e, 0.9);
+      bgCircle.fillCircle(0, 0, targetSize * 0.75);
+      bgCircle.lineStyle(3, 0x444466, 0.8);
+      bgCircle.strokeCircle(0, 0, targetSize * 0.75);
+      
+      iconContainer.add(bgCircle);
+      
+      icon.setScale(baseScale);
+      iconContainer.add(icon);
+      
+      btnContainer.add(iconContainer);
+
+      // Wir definieren die HitArea für das iconContainer
+      const hitAreaSize = targetSize * 1.5;
+      iconContainer.setSize(hitAreaSize, hitAreaSize);
+      iconContainer.setInteractive({ useHandCursor: true });
+
+      // Start Pulse Animation for iconContainer
+      let pulseControl = this.animationManager.startPulseAnimation(this.scene, iconContainer, 0.1, 0.6);
       this.pulseControls.push(pulseControl);
 
-      // Setup interaction
-      icon.setInteractive({ useHandCursor: true });
-      icon.on("pointerover", () => {
+      iconContainer.on("pointerover", () => {
+        // ✨ FIX: Z-Index anpassen, damit das aktuell gehoverte Icon ganz vorne liegt
+        this.container.bringToTop(btnContainer);
+        
         this.scene.game.events.emit("playSound", "MENU_HOVER");
         // Pulse stoppen während wir hovern
         if (pulseControl) {
@@ -107,55 +129,56 @@ export class TypeSelectionOverlay {
 
         // Enlarge and glow
         this.scene.tweens.add({
-          targets: icon,
-          scale: baseScale * 1.3,
+          targets: iconContainer,
+          scale: 1.3,
           duration: 150,
           ease: "Power2"
         });
 
         // Add glow effect similar to RadialMenu/HubScene
-        const glow = this.scene.add.image(0, 0, "light_glow").setAlpha(0.6).setScale(baseScale * 1.0);
-        icon.setData("glow", glow);
-        btnContainer.addAt(glow, 0); // Put glow behind icon
+        const glow = this.scene.add.image(0, 0, "light_glow").setAlpha(0.6).setScale(baseScale * 1.5);
+        iconContainer.setData("glow", glow);
+        iconContainer.addAt(glow, 0); // Put glow behind everything in the container
       });
 
-      icon.on("pointerout", () => {
+      iconContainer.on("pointerout", () => {
         this.scene.tweens.add({
-          targets: icon,
-          scale: baseScale,
+          targets: iconContainer,
+          scale: 1.0,
           duration: 150,
           ease: "Power2",
           onComplete: () => {
              // Pulse wieder starten nach dem Rauszoomen
-             pulseControl = this.animationManager.startPulseAnimation(this.scene, icon, 0.1, 0.6);
+             pulseControl = this.animationManager.startPulseAnimation(this.scene, iconContainer, 0.1, 0.6);
              this.pulseControls.push(pulseControl);
           }
         });
-        const glow = icon.getData("glow");
+        const glow = iconContainer.getData("glow");
         if (glow) {
           glow.destroy();
-          icon.setData("glow", null);
+          iconContainer.setData("glow", null);
         }
       });
 
-      icon.on("pointerdown", () => {
+      iconContainer.on("pointerdown", () => {
         this.scene.game.events.emit("playSound", "MENU_SELECT");
         this.select(opt.id);
       });
 
-      btnContainer.add(icon);
-
       // Label below icon
+      // Splitte den Text bei Leerzeichen in neue Zeilen für schmale Bildschirme
+      const labelTextLines = opt.label.replace(" ", "\n");
       const labelText = this.scene.add
-        .text(0, targetSize / 2 + 10, opt.label, {
+        .text(0, targetSize * 0.75 + 15, labelTextLines, {
           fontFamily: "Arial",
           fontSize: "18px",
           color: "#ffffff",
           fontStyle: "bold",
           stroke: "#000000",
           strokeThickness: 4,
+          align: "center"
         })
-        .setOrigin(0.5);
+        .setOrigin(0.5, 0); // Top-Center Alignment
       btnContainer.add(labelText);
 
       this.container.add(btnContainer);

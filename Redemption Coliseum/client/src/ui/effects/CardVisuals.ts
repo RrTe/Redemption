@@ -103,6 +103,31 @@ export class CardVisuals {
     if (this.badgeImage) {
       this.badgeImage.setPosition(0, 0);
     }
+    this.updateBadgeSize();
+  }
+
+  /** ✨ NEU: Skaliert das Badge dynamisch passend zur aktuellen Kartengröße */
+  private updateBadgeSize() {
+    // Badge sollte nun ca. 55% der Kartenbreite einnehmen (größerer Anteil)
+    let targetDiameter = this.cardUI.width * 0.55;
+    
+    // Absolutes Minimum für Lesbarkeit auf Handys (minimal kleiner als vorher), und ein höheres Maximum für Desktop-Karten
+    targetDiameter = Math.max(22, Math.min(targetDiameter, 120));
+    
+    // Unser Graphics-Kreis hat einen festen Radius von 24, also Durchmesser 48.
+    const bgScale = targetDiameter / 48;
+    
+    if (this.badgeBg) {
+      this.badgeBg.setScale(bgScale);
+    }
+    
+    // Das Icon-Bild soll ca. 75% des Kreises füllen, damit der Rahmen sichtbar bleibt
+    if (this.badgeImage) {
+      const imgTargetSize = targetDiameter * 0.75;
+      this.badgeImage.setDisplaySize(imgTargetSize, imgTargetSize);
+      // Den scale resetten, da wir setDisplaySize nutzen
+      this.badgeImage.setScale(this.badgeImage.scaleX); // setDisplaySize ändert scale intern, das ist ok
+    }
   }
 
   /** Prüft globale Einstellungen. */
@@ -295,6 +320,9 @@ export class CardVisuals {
            // Stelle sicher, dass Hintergrund und dann das Bild oben liegen
            this.cardUI.bringToTop(this.badgeBg);
            this.cardUI.bringToTop(this.badgeImage);
+           
+           // Badge-Größe initial an die aktuelle Kartengröße anpassen
+           this.updateBadgeSize();
            return;
          }
        }
