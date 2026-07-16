@@ -31,7 +31,7 @@ export class CardUI extends Phaser.GameObjects.Container {
   public dragTargetX: number | null = null;
   public dragTargetY: number | null = null;
   // ✨ NEU: Noise/Glitter Effekt
-  private visuals: CardVisuals; // ✨ NEU: Umbenannt
+  public visuals: CardVisuals; // ✨ NEU: Umbenannt
   private attachVisuals: CardAttachVisuals; // ✨ NEU
   private physicsHandler: CardPhysicsEffects; // ✨ FIX: Typ aktualisiert
   private counterVisuals: CardCounterVisuals; // ✨ NEU
