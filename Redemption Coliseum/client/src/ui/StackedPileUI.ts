@@ -35,7 +35,7 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
   private getCountFontSize(height: number): number {
     let size = Math.round(height * 0.3);
     // Wenn die Höhe sehr klein ist (Handy), wende diese spezielle Formel an:
-    if (height < 100) size = Math.max(16, Math.round(height * 0.2));
+    if (height < 100) size = Math.max(14, Math.round(height * 0.1));
     return size;
   }
 
@@ -276,9 +276,7 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
   private drawBadge() {
     this.badgeBg.clear();
     // Ein dezenter Kreis, der sich an der Textgröße orientiert
-    // ✨ FIX: Auf dem Handy (height < 100) kein zusätzliches Padding, damit es eleganter/enger anliegt
-    const padding = this.height < 100 ? 0 : 4;
-    const radius = Math.max(this.countText.width, this.countText.height) / 2 + padding;
+    const radius = Math.max(this.countText.width, this.countText.height) / 2 + 4;
 
     this.badgeBg.fillStyle(0x000000, 0.6);
     this.badgeBg.fillCircle(this.countText.x, this.countText.y, radius);

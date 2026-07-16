@@ -250,8 +250,7 @@ export class CardRenderer {
         "Renderer",
         `  -> POSITIONS: Current (${cardUI.x.toFixed(0)}, ${cardUI.y.toFixed(
           0,
-        )}) -> Target (${targetX.toFixed(0)}, ${targetY.toFixed(0)}) | Depth: ${
-          cardUI.depth
+        )}) -> Target (${targetX.toFixed(0)}, ${targetY.toFixed(0)}) | Depth: ${cardUI.depth
         }`,
       );
 
@@ -351,8 +350,8 @@ export class CardRenderer {
     // 3. Sie NICHT gerade vom User gezogen wird (oder auf Server-Drop-Bestätigung wartet)
     if (!isAtTarget && !isAnimating && !cardUI.isBeingDragged && !cardUI.getData("waiting_for_overlay")) {
       // ✨ NEU: Smooth transition for cards shifting within the same play area (like Lost Souls adjusting to hand size)
-      if (oldZone === newZone && 
-          (oldZone === ZONES.LAND_OF_BONDAGE || oldZone === ZONES.TERRITORY || oldZone === ZONES.BATTLEFIELD)) {
+      if (oldZone === newZone &&
+        (oldZone === ZONES.LAND_OF_BONDAGE || oldZone === ZONES.TERRITORY || oldZone === ZONES.BATTLEFIELD)) {
         this.scene.tweens.add({
           targets: cardUI,
           x: targetX,
@@ -444,8 +443,8 @@ export class CardRenderer {
         log(
           "Renderer",
           `[ATTACH DEBUG] Parent ${parentCard.id.slice(-4)} @ (${parentX.toFixed(0)}, ${parentY.toFixed(0)}) ` +
-            `| Child ${att.id.slice(-4)} Target @ (${targetX.toFixed(0)}, ${targetY.toFixed(0)}) ` +
-            `| Offset: (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`,
+          `| Child ${att.id.slice(-4)} Target @ (${targetX.toFixed(0)}, ${targetY.toFixed(0)}) ` +
+          `| Offset: (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`,
         );
       }
 

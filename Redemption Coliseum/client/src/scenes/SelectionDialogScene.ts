@@ -132,7 +132,8 @@ export class SelectionDialogScene extends Phaser.Scene {
     this.uiManager.createPaginationControls(
       this.paginationManager,
       (d) => this.changePage(d),
-      this.dialogData.isMyAction
+      this.dialogData.isMyAction,
+      filterY
     );
     this.renderPage(true, 1);
     this.uiManager.updatePaginationControls(this.paginationManager);

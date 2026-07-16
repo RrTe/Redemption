@@ -46,12 +46,18 @@ export class SelectionDialogUIManager {
   public createPaginationControls(
     paginationManager: SelectionDialogPaginationManager,
     changePageCallback: (delta: number) => void,
-    isMyAction: boolean = true
+    isMyAction: boolean = true,
+    filterY?: number
   ) {
-    const cardHeight = (this.scene.scale.width / 16) * 1.4;
-    const yOffset = isMyAction ? 115 : 60;
-    const buttonY = this.scene.scale.height - yOffset;
-    const buttonXOffset = this.scene.scale.width * 0.47; // Push slightly further to the edge
+    const rawScale = this.scene.scale.width / 1920;
+    const filterScale = this.scene.scale.height < 600 ? rawScale * 1.4 : rawScale;
+    const bgWidth = 880 * filterScale;
+    const buttonXOffset = bgWidth / 2 + 40 * filterScale; // 40px spacing from filter area
+
+    // If filterY is provided, center vertically to it, otherwise use fallback
+    const fallbackYOffset = isMyAction ? 115 : 60;
+    const buttonY = filterY !== undefined ? filterY + 35 * filterScale : this.scene.scale.height - fallbackYOffset; 
+    // Note: +35*filterScale approximates vertical center of filter bg
 
     this.prevButton = this.scene.add
       .image(this.scene.scale.width / 2 - buttonXOffset, buttonY, "arrow_left")
@@ -63,7 +69,7 @@ export class SelectionDialogUIManager {
       .setTint(0x888888);
 
     this.pageText = this.scene.add
-      .text(this.scene.scale.width / 2, this.scene.scale.height - yOffset, "", {
+      .text(this.scene.scale.width / 2, buttonY + 70 * filterScale, "", {
         fontSize: "18px",
         color: "#cccccc",
       })
