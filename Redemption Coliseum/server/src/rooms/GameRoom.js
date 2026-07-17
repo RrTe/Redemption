@@ -11,6 +11,8 @@ const SECRET_KEY =
   process.env.SAVE_GAME_SECRET || "RedemptionColiseum_SuperSecretKey_2026";
 
 const logger = require("../utils/logger");
+const { Room } = require("@colyseus/core");
+const { StateView } = require("@colyseus/schema");
 const { logGameEvent } = require("../utils/gameLogger");
 const { RoomState } = require("../state/RoomState");
 const { Card } = require("../state/Card");
@@ -52,7 +54,12 @@ class GameRoom extends colyseus.Room {
     this.startTime = Date.now(); // Startzeit speichern
     logGameEvent("started", { startedAt: this.startTime });
 
-    this.state = new RoomState();
+    this.setState(new RoomState());
+    
+    // ✨ DEBUG/BUGFIX: Zentrale View-Map für alle verbundenen Clients (für StateView)
+    this.clientViews = new Map();
+    this.state._clientViews = this.clientViews;
+
     // ✨ DEINE IDEE: Eine zentrale, nicht-synchronisierte Map für schnellen Kartenzugriff.
     this.cardLookup = new Map();
 
@@ -132,10 +139,21 @@ class GameRoom extends colyseus.Room {
   }
 
   onJoin(client, options) {
+    // ✨ DEBUG/BUGFIX: Jedem Client seine eigene StateView geben
+    const clientView = new StateView();
+    client.view = clientView;
+    this.clientViews.set(client.sessionId, clientView);
+
+    logger.debug(`[GameRoom] onJoin - hasFilters: ${this._serializer.hasFilters}`);
+
     RoomLifecycleService.handleJoin(this, client, options);
   }
 
   async onLeave(client, consented) {
+    // ✨ DEBUG/BUGFIX: View bereinigen
+    this.clientViews.delete(client.sessionId);
+    client.view = null;
+    
     await RoomLifecycleService.handleLeave(this, client, consented);
   }
 

@@ -129,6 +129,19 @@ class MatchService {
             action.description = "Activate Star Ability";
             action.isMandatory = false;
             card.availableActions.push(action);
+            
+            // ✨ FIX: Action explizit zur StateView des Controllers hinzufügen, damit sie gefiltert wird
+            if (room.state._clientViews) {
+              const clientView = room.state._clientViews.get(sessionId);
+              if (clientView) {
+                clientView.add(action);
+              }
+            }
+            
+            // ✨ DEBUG: Loggen, ob die StateView korrekt ist
+            const view = room.state._clientViews && room.state._clientViews.get(sessionId);
+            const inView = view ? view.has(card) : false;
+            logger.info(`[DEBUG_STAR] Card: ${card.Name}, Class: ${card.Class}, actionsLen: ${card.availableActions.length}, inView: ${inView}`);
           }
         });
 

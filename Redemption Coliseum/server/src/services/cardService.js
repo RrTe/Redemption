@@ -230,6 +230,20 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
       card.lastMoved = Date.now();
       card.counters.clear();
       landOfBondage.push(card);
+
+      // ✨ FIX: StateView update for Lost Soul
+      if (state._clientViews) {
+        const oldView = state._clientViews.get(shiftedCard.controllerId);
+        if (oldView) {
+          oldView.remove(shiftedCard);
+        }
+        
+        const newView = state._clientViews.get(card.controllerId);
+        if (newView) {
+          newView.add(card);
+          logger.debug(`[DRAW_FROM_DECK/LS] Added cloned Lost Soul ${card.Name} to StateView of ${card.controllerId}`);
+        }
+      }
     } else {
       validCards.push(card);
       drawnCount++;
@@ -444,6 +458,23 @@ function _moveCardById(
   );
 
   logger.debug(`[MOVE_BY_ID] SUCCESS: ${cardLog}`);
+
+  // ✨ FIX: Update StateView AFTER the card has been added to the state array!
+  if (state._clientViews) {
+    const oldView = state._clientViews.get(oldControllerId);
+    if (oldView) {
+      oldView.remove(splicedCard);
+    }
+    
+    const newView = state._clientViews.get(movedCard.controllerId);
+    if (newView) {
+      newView.add(movedCard);
+      logger.debug(`[MOVE_BY_ID] Added cloned card ${movedCard.Name} to StateView of ${movedCard.controllerId}`);
+    } else {
+      logger.warn(`[MOVE_BY_ID] StateView for controller ${movedCard.controllerId} NOT FOUND!`);
+    }
+  }
+
   return { movedCards: [movedCard], logEntry: logEntry };
 }
 
@@ -482,6 +513,20 @@ function _drawCardsFromDeck(
       // Controller remains the same as the player drawing
     }
     toArr.push(...validCards);
+    
+    // ✨ FIX: StateView update for all drawn cards
+    if (state._clientViews) {
+      for (const card of validCards) {
+        const newView = state._clientViews.get(card.controllerId);
+        if (newView) {
+          newView.add(card);
+          logger.debug(`[DRAW_FROM_DECK] Added cloned card ${card.Name} to StateView of ${card.controllerId}`);
+        } else {
+          logger.warn(`[DRAW_FROM_DECK] StateView for controller ${card.controllerId} NOT FOUND!`);
+        }
+      }
+    }
+
     logger.debug(
       `[DRAW_FROM_DECK] Moved ${validCards.length} valid card(s) to ${to}.`,
       `[DRAW_FROM_DECK] ${player.name} moved ${validCards.length} card(s) to ${to}.`,

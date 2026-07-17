@@ -1,5 +1,5 @@
 // server/state/Card.js
-const { Schema, type, MapSchema, ArraySchema } = require("@colyseus/schema");
+const { Schema, type, MapSchema, ArraySchema, view } = require("@colyseus/schema");
 const { CardAction } = require("../../../shared/actionSchema");
 
 class Card extends Schema {
@@ -86,5 +86,6 @@ type("string")(Card.prototype, "attachedTo"); // ✨ NEU: Schema-Definition für
 type("string")(Card.prototype, "inGameType"); // ✨ NEU: Typ für den aktuellen "Im Spiel"-Zustand
 type("string")(Card.prototype, "inGameAlignment"); // ✨ NEU: Alignment für den aktuellen "Im Spiel"-Zustand
 type([CardAction])(Card.prototype, "availableActions"); // ✨ NEU: Schema-Definition für verfügbare Aktionen
+view()(Card.prototype, "availableActions"); // ✨ FIX: Filter aktivieren!
 
 module.exports = { Card };

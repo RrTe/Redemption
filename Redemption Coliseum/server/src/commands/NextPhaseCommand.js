@@ -73,6 +73,14 @@ class NextPhaseCommand extends BaseCommand {
           action.description = "Activate Star Ability";
           action.isMandatory = false;
           card.availableActions.push(action);
+
+          // ✨ FIX: Action explizit zur StateView des Controllers hinzufügen
+          if (this.state._clientViews) {
+            const clientView = this.state._clientViews.get(card.controllerId);
+            if (clientView) {
+              clientView.add(action);
+            }
+          }
         }
       });
     }

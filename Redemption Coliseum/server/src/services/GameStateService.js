@@ -132,6 +132,15 @@ class GameStateService {
             
           p[zoneName].push(card);
           room.cardLookup.set(card.id, card);
+          
+          // ✨ DEBUG/BUGFIX: Reclaimed Card zur StateView hinzufügen
+          if (room.state._clientViews) {
+            const view = room.state._clientViews.get(client.sessionId);
+            if (view) {
+              view.add(card);
+              logger.debug(`[GameStateService] Added reclaimed card ${card.Name} to StateView of ${client.sessionId}.`);
+            }
+          }
         });
       }
     };
