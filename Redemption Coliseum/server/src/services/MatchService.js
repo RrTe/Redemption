@@ -1,4 +1,6 @@
 const logger = require("../utils/logger");
+const { ActionType } = require("../../../shared/actions");
+const { CardAction } = require("../../../shared/actionSchema");
 const { moveCard } = require("./cardService");
 const { ZONES } = require("../../../shared/zones");
 const { PHASES } = require("../../../shared/phases");
@@ -117,6 +119,18 @@ class MatchService {
         if (client) {
           client.send("cardsDrawn", { cardIds });
         }
+
+        // ✨ NEU: Star-Fähigkeit für gezogene Star-Karten in der Start-Hand aktivieren
+        movedCards.forEach(card => {
+          if (card.Class && (card.Class.includes("Star") || card.Class.includes("star"))) {
+            const action = new CardAction();
+            action.id = `star_${Date.now()}_${card.id}`;
+            action.type = ActionType.ACTIVATE_STAR_ABILITY;
+            action.description = "Activate Star Ability";
+            action.isMandatory = false;
+            card.availableActions.push(action);
+          }
+        });
 
         // Correct log for initial game setup
         room.broadcastGameLog(`${player.name} draws their starting hand.`);

@@ -339,6 +339,7 @@ export class GameLoadingScene extends BaseLoadingScene {
 
     // === Effekte & Partikel ===
     this.load.image("drop_shadow", "assets/gfx/drop_shadow.png");
+    this.load.image("star_symbol", "assets/ui/filter-icons/symbols/star.png");
     this.load.image("spark", "assets/gfx/Sparkle.png");
     this.load.image("blue_corona", "assets/gfx/blue_corona.png");
     this.load.image("blue_sparkle", "assets/gfx/blue_sparkle.png");

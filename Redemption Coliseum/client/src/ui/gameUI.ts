@@ -113,6 +113,7 @@ export class GameUI {
       this.scene,
       this.settingsManager,
     );
+    this.scene.registry.set("animationManager", this.animationManager); // ✨ FIX: Register for CardVisuals access
     this.previewManager = new PreviewManager(this.scene);
     this.assetManager = new AssetManager(this.scene);
     this.scene.registry.set("assetManager", this.assetManager); // ✨ FIX: Register for CardUI access

@@ -1,5 +1,6 @@
 // server/state/Card.js
-const { Schema, type, MapSchema } = require("@colyseus/schema");
+const { Schema, type, MapSchema, ArraySchema } = require("@colyseus/schema");
+const { CardAction } = require("../../../shared/actionSchema");
 
 class Card extends Schema {
   constructor() {
@@ -43,6 +44,7 @@ class Card extends Schema {
     this.attachedTo = null; // ✨ NEU: ID der Karte, an die diese Karte angehängt ist
     this.inGameType = ""; // ✨ NEU: Typ für den aktuellen "Im Spiel"-Zustand
     this.inGameAlignment = ""; // ✨ NEU: Alignment für den aktuellen "Im Spiel"-Zustand
+    this.availableActions = new ArraySchema(); // ✨ NEU: Liste der erlaubten Aktionen für diese Karte
   }
 }
 
@@ -83,5 +85,6 @@ type({ map: "number" })(Card.prototype, "counters");
 type("string")(Card.prototype, "attachedTo"); // ✨ NEU: Schema-Definition für attachedTo
 type("string")(Card.prototype, "inGameType"); // ✨ NEU: Typ für den aktuellen "Im Spiel"-Zustand
 type("string")(Card.prototype, "inGameAlignment"); // ✨ NEU: Alignment für den aktuellen "Im Spiel"-Zustand
+type([CardAction])(Card.prototype, "availableActions"); // ✨ NEU: Schema-Definition für verfügbare Aktionen
 
 module.exports = { Card };

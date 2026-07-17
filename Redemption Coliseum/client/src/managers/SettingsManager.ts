@@ -11,6 +11,7 @@ export interface GameSettings {
   animationsEnabled: boolean; // ✨ NEU: Option für Animationen
   backgroundEffectsEnabled: boolean; // ✨ NEU: Option für Hintergrundeffekte
   handCardsFanned: boolean; // ✨ NEU: Option für aufgefächerte Handkarten
+  inGameSupportEnabled: boolean; // ✨ NEU: Option für In-Game Support (Visualisierungen von Aktionen etc.)
 }
 
 /**
@@ -24,6 +25,7 @@ const DEFAULTS: GameSettings = {
   animationsEnabled: true, // ✨ NEU: Standardmäßig an
   backgroundEffectsEnabled: true, // ✨ NEU: Standardmäßig an
   handCardsFanned: true, // ✨ NEU: Standardmäßig aufgefächert
+  inGameSupportEnabled: true, // ✨ NEU: Standardmäßig an
 };
 
 const STORAGE_KEY = "redemption-coliseum-settings";
@@ -88,5 +90,10 @@ export class SettingsManager {
   /** ✨ NEU: Prüft, ob Hintergrundeffekte aktiviert sind. */
   public areBackgroundEffectsEnabled(): boolean {
     return this.settings.backgroundEffectsEnabled;
+  }
+
+  /** ✨ NEU: Prüft, ob In-Game Support Visualisierungen (wie z.B. das Star-Highlight) aktiviert sind. */
+  public isInGameSupportEnabled(): boolean {
+    return this.settings.inGameSupportEnabled;
   }
 }

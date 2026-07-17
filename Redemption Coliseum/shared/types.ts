@@ -1,6 +1,7 @@
 import { type ArraySchema, type MapSchema } from "@colyseus/schema";
 import type { CardData } from "./card";
 import type { Zone } from "./zones";
+import type { CardAction } from "./actionSchema";
 
 export interface CardState extends CardData {
   id: string;
@@ -20,6 +21,7 @@ export interface CardState extends CardData {
   attachedTo: string | null; // ✨ NEU: ID der Karte, an die diese Karte angehängt ist
   inGameType: string;
   inGameAlignment: string;
+  availableActions: ArraySchema<CardAction>; // ✨ NEU: Liste der erlaubten Aktionen für diese Karte
   toJSON(): any; // ✨ KORREKTUR: Füge die toJSON-Methode hinzu, die von Colyseus-Objekten bereitgestellt wird.
 }
 

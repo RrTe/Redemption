@@ -3,6 +3,7 @@ import { ZONES, PILE_ZONES, type Zone } from "../../../shared/zones.js";
 import type { CardState } from "../../../shared/types";
 import type { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Import für Typisierung
 import { log, DEBUG } from "../utils/logger";
+import { ActionType } from "../../../shared/actions"; // ✨ NEU
 import { CardVisuals } from "./effects/CardVisuals"; // ✨ NEU
 import { CardAttachVisuals } from "./effects/CardAttachVisuals"; // ✨ NEU
 import {
@@ -37,6 +38,7 @@ export class CardUI extends Phaser.GameObjects.Container {
   private counterVisuals: CardCounterVisuals; // ✨ NEU
   private assetManager: AssetManager; // ✨ NEU: AssetManager Instanz
   private inputManager: InputManager; // ✨ NEU: InputManager Instanz
+  private settingsManager: SettingsManager; // ✨ NEU: Referenz speichern
 
   constructor(
     scene: Phaser.Scene,
@@ -53,6 +55,7 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.currentZone = cardData.zone; // ✨ NEU: Initialisiere die Zone
     this.assetManager = scene.registry.get("assetManager"); // ✨ NEU: AssetManager aus Registry holen
     this.inputManager = scene.registry.get("inputManager"); // ✨ FIX: InputManager aus Registry holen
+    this.settingsManager = scene.registry.get("settingsManager"); // ✨ NEU: Speichern
 
     if (!this.assetManager) {
       log(
@@ -291,6 +294,11 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     this.visuals.onUpdate(); // ✨ FIX: Effekte aktualisieren
 
+    // ✨ NEU: Prüfe auf verfügbare Star Action
+    const hasStarAction = this.cardData.availableActions && this.cardData.availableActions.some(a => a.type === ActionType.ACTIVATE_STAR_ABILITY);
+    const inGameSupport = this.settingsManager.isInGameSupportEnabled();
+    this.visuals.updateStarHighlight(hasStarAction && inGameSupport);
+
     // ✨ NEU: Physik-Update an Handler delegieren
     this.physicsHandler.update(delta);
   }
@@ -311,9 +319,7 @@ export class CardUI extends Phaser.GameObjects.Container {
    * ✨ NEU: Hilfsmethode zum Prüfen der globalen Einstellungen.
    */
   private areEffectsEnabled(): boolean {
-    const settings = this.scene.registry.get(
-      "settingsManager",
-    ) as SettingsManager;
+    const settings = this.settingsManager;
     // Falls Settings noch nicht geladen sind (z.B. im Ladebildschirm), Standard: true
     return settings ? settings.areAnimationsEnabled() : true;
   }

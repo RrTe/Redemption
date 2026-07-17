@@ -50,6 +50,11 @@ export class CardVisuals {
   // Debugging
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
 
+  // Star Highlight State
+  private starHighlightActive: boolean = false;
+  private starIcon: Phaser.GameObjects.Image | null = null;
+  private starPulseControl: { stop: () => void } | null = null;
+
   constructor(scene: Phaser.Scene, cardUI: CardUI) {
     this.scene = scene;
     this.cardUI = cardUI;
@@ -110,17 +115,17 @@ export class CardVisuals {
   private updateBadgeSize() {
     // Badge sollte nun ca. 55% der Kartenbreite einnehmen (größerer Anteil)
     let targetDiameter = this.cardUI.width * 0.55;
-    
+
     // Absolutes Minimum für Lesbarkeit auf Handys (minimal kleiner als vorher), und ein höheres Maximum für Desktop-Karten
     targetDiameter = Math.max(22, Math.min(targetDiameter, 120));
-    
+
     // Unser Graphics-Kreis hat einen festen Radius von 24, also Durchmesser 48.
     const bgScale = targetDiameter / 48;
-    
+
     if (this.badgeBg) {
       this.badgeBg.setScale(bgScale);
     }
-    
+
     // Das Icon-Bild soll ca. 75% des Kreises füllen, damit der Rahmen sichtbar bleibt
     if (this.badgeImage) {
       const imgTargetSize = targetDiameter * 0.75;
@@ -256,8 +261,8 @@ export class CardVisuals {
 
   // Hilfsmethode für das Badge-Icon
   private getIconForType(typeStr: string): string {
-    if (!typeStr) return ""; 
-    
+    if (!typeStr) return "";
+
     const typeUpper = typeStr.toUpperCase();
     if (typeUpper.includes("HERO")) return "Hero";
     if (typeUpper.includes("EVIL CHARACTER") || typeUpper === "EC") return "EC";
@@ -271,8 +276,8 @@ export class CardVisuals {
     if (typeUpper.includes("EVIL DOMINANT")) return "EvilDom";
     if (typeUpper.includes("GOOD FORTRESS") || typeUpper === "GOOD FORT") return "GoodFort";
     if (typeUpper.includes("EVIL FORTRESS") || typeUpper === "EVIL FORT") return "EvilFort";
-    
-    return ""; 
+
+    return "";
   }
 
   public syncBadgeRotation() {
@@ -291,41 +296,41 @@ export class CardVisuals {
     const isDualCard = cardData.inGameType && cardData.inGameType !== cardData.Type;
 
     if (isDualCard && !this.cardUI.isCurrentlyFaceDown()) {
-       const iconId = this.getIconForType(cardData.inGameType);
-       if (iconId) {
-         const textureKey = `${iconId}_small`;
-         if (this.scene.textures.exists(textureKey)) {
-             if (!this.badgeBg) {
-               this.badgeBg = this.scene.add.graphics();
-               // Zeichne einen runden Hintergrund (Farbe wie DeckEditor Buttonbars)
-               this.badgeBg.fillStyle(0x1a1a2e, 0.9);
-               this.badgeBg.fillCircle(0, 0, 24);
-               this.badgeBg.lineStyle(2, 0x444466, 0.8);
-               this.badgeBg.strokeCircle(0, 0, 24);
-               
-               this.badgeBg.setPosition(0, 0);
-               this.cardUI.add(this.badgeBg);
-             }
-           
-           if (!this.badgeImage) {
-             this.badgeImage = this.scene.add.image(0, 0, textureKey);
-             this.badgeImage.setOrigin(0.5);
-             // ✨ Badge skalieren, passend zum Kreis (deutlich größer)
-             this.badgeImage.setScale(1.8);
-             this.cardUI.add(this.badgeImage);
-           } else {
-             this.badgeImage.setTexture(textureKey);
-           }
-           
-           // Stelle sicher, dass Hintergrund und dann das Bild oben liegen
-           this.cardUI.bringToTop(this.badgeBg);
-           this.cardUI.bringToTop(this.badgeImage);
-           
-           // Badge-Größe initial an die aktuelle Kartengröße anpassen
-           this.updateBadgeSize();
-           return;
-         }
-       }
+      const iconId = this.getIconForType(cardData.inGameType);
+      if (iconId) {
+        const textureKey = `${iconId}_small`;
+        if (this.scene.textures.exists(textureKey)) {
+          if (!this.badgeBg) {
+            this.badgeBg = this.scene.add.graphics();
+            // Zeichne einen runden Hintergrund (Farbe wie DeckEditor Buttonbars)
+            this.badgeBg.fillStyle(0x1a1a2e, 0.9);
+            this.badgeBg.fillCircle(0, 0, 24);
+            this.badgeBg.lineStyle(2, 0x444466, 0.8);
+            this.badgeBg.strokeCircle(0, 0, 24);
+
+            this.badgeBg.setPosition(0, 0);
+            this.cardUI.add(this.badgeBg);
+          }
+
+          if (!this.badgeImage) {
+            this.badgeImage = this.scene.add.image(0, 0, textureKey);
+            this.badgeImage.setOrigin(0.5);
+            // ✨ Badge skalieren, passend zum Kreis (deutlich größer)
+            this.badgeImage.setScale(1.8);
+            this.cardUI.add(this.badgeImage);
+          } else {
+            this.badgeImage.setTexture(textureKey);
+          }
+
+          // Stelle sicher, dass Hintergrund und dann das Bild oben liegen
+          this.cardUI.bringToTop(this.badgeBg);
+          this.cardUI.bringToTop(this.badgeImage);
+
+          // Badge-Größe initial an die aktuelle Kartengröße anpassen
+          this.updateBadgeSize();
+          return;
+        }
+      }
     }
 
     if (this.badgeBg) {
@@ -366,9 +371,58 @@ export class CardVisuals {
 
   /** Stoppt den Glow-Effekt. */
   public stopGlow() {
+    if (this.starHighlightActive) return; // ✨ FIX: Wenn Star-Highlight an ist, nicht durch MouseOut stoppen
+
     if (this.glowEmitter) {
       this.glowEmitter.stop();
       this.glowEmitter.setVisible(false);
+    }
+  }
+
+  /** ✨ NEU: Schaltet das Star-Highlight (Flammenrand + Star Icon) ein oder aus. */
+  public updateStarHighlight(isActive: boolean) {
+    if (this.starHighlightActive === isActive) return;
+    this.starHighlightActive = isActive;
+
+    if (isActive) {
+      // 1. Spezieller Flammenrand
+      // Blautöne für Star Cards (CFEAFF als Hauptfarbe, gemischt mit etwas dunkleren Blautönen)
+      const blueTint = [0xCFEAFF, 0x87CEFA, 0x1E90FF, 0x7DC5F5];
+      this.updateGlowZone(true, true, blueTint);
+
+      // 2. Star Icon
+      if (!this.starIcon) {
+        // Nutzt das offizielle Star.png Icon aus den Filtern
+        const textureKey = this.scene.textures.exists("star_symbol") ? "star_symbol" : "spark";
+        this.starIcon = this.scene.add.image(0, -this.cardUI.height / 2 - 40, textureKey);
+        this.starIcon.setDepth(100);
+        // Da das Originalicon recht groß ist, skalieren wir es runter
+        this.starIcon.setData("baseScale", 0.25);
+        this.starIcon.setScale(0.25);
+        this.cardUI.add(this.starIcon);
+      }
+      this.starIcon.setVisible(true);
+
+      // 3. Pulse Animation (nutzt den AnimationManager)
+      const animManager = this.scene.registry.get("animationManager");
+      if (animManager) {
+        this.starPulseControl = animManager.startPulseAnimation(this.scene, this.starIcon);
+      }
+    } else {
+      // Ausschalten
+      if (this.starPulseControl) {
+        this.starPulseControl.stop();
+        this.starPulseControl = null;
+      }
+      if (this.starIcon) {
+        this.starIcon.setVisible(false);
+      }
+
+      // Glow-Emitter stoppen (sofern nicht Mouseover aktiv ist, aber wir stoppen ihn einfach mal)
+      if (this.glowEmitter) {
+        this.glowEmitter.stop();
+        this.glowEmitter.setVisible(false);
+      }
     }
   }
 
@@ -430,6 +484,7 @@ export class CardVisuals {
   private updateGlowZone(
     createIfMissing: boolean = false,
     forceVisible?: boolean,
+    customTint?: number[]
   ) {
     let w = this.cardUI.width;
     let h = this.cardUI.height;
@@ -443,14 +498,21 @@ export class CardVisuals {
         if (this.glowEmitter) this.glowEmitter.destroy();
 
         const shape = new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h);
-        this.glowEmitter = this.scene.add.particles(0, 0, "spark", {
+
+        // Wenn Star Highlight aktiv ist, erzwingen wir die blauen Partikel und Farben
+        const textureKey = this.starHighlightActive ? "blue_spark_small" : "spark";
+        const finalTint = this.starHighlightActive
+          ? [0xCFEAFF, 0x87CEFA, 0x1E90FF, 0x7DC5F5]
+          : (customTint || [0xF5CA0A, 0xffa500, 0xff8c00, 0xff4500]);
+
+        this.glowEmitter = this.scene.add.particles(0, 0, textureKey, {
           speedY: { min: -20, max: 20 },
           speedX: { min: -20, max: 20 },
           lifespan: { min: 10, max: 1200 },
           alpha: { start: 0.8, end: 0 },
           scale: { start: 0.1, end: 0 },
           quantity: 100,
-          tint: [0xe0ffff, 0xc0c0c0, 0xffd700, 0xffffff],
+          tint: finalTint,
           blendMode: "ADD",
           emitZone: { type: "edge", source: shape, quantity: 200 },
         });
