@@ -14,17 +14,22 @@ class NextPhaseCommand extends BaseCommand {
 
     let result = null;
     try {
-      // ✨ NEU: Vor dem Phasenwechsel bereinigen wir die Aktionen der aktuellen Phase
-      if (this.state.currentPhase === PHASES.DRAW) {
-        player.hand.forEach(card => {
-          if (card.availableActions) {
-            const idx = card.availableActions.findIndex(a => a.type === ActionType.ACTIVATE_STAR_ABILITY);
-            if (idx !== -1) {
-              card.availableActions.splice(idx, 1);
-            }
+      // ✨ NEU: Vor dem Phasenwechsel bereinigen wir ALLE Aktionen auf dem gesamten Board.
+      // Da Aktionen immer phasenabhängig neu generiert werden, stellen wir so sicher,
+      // dass keine veralteten Actions (egal von welchem Spieler) in die neue Phase leaken.
+      const allZones = ['hand', 'deck', 'discard', 'reserve', 'landOfRedemption', 'landOfBondage', 'territory', 'setAside', 'banish'];
+      this.state.players.forEach(p => {
+        allZones.forEach(zone => {
+          if (p[zone]) {
+            p[zone].forEach(card => {
+              if (card.availableActions && card.availableActions.length > 0) {
+                // Wir leeren das Array, ohne die ArraySchema-Instanz zu zerstören
+                card.availableActions.splice(0, card.availableActions.length);
+              }
+            });
           }
         });
-      }
+      });
 
       // Delegate to phaseService (attached to room)
       result = this.room.phaseService.advancePhase(
