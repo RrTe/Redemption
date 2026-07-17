@@ -75,7 +75,12 @@ class RoomLifecycleService {
 
     try {
       // Wait for reconnection
-      await room.allowReconnection(client, 60);
+      const reconnectedClient = await room.allowReconnection(client, 60);
+
+      // ✨ FIX: Restore StateView for the reconnected client!
+      if (room.clientViews && room.clientViews.has(reconnectedClient.sessionId)) {
+        reconnectedClient.view = room.clientViews.get(reconnectedClient.sessionId);
+      }
 
       if (player) {
         player.connected = true;
@@ -89,6 +94,9 @@ class RoomLifecycleService {
     } catch (e) {
       // Reconnection timeout
       room.state.players.delete(client.sessionId);
+      if (room.clientViews) {
+        room.clientViews.delete(client.sessionId);
+      }
       logger.info(
         `[Lifecycle] Player removed after timeout: ${client.sessionId}`,
       );

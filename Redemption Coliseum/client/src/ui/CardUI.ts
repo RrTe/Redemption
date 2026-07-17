@@ -97,13 +97,6 @@ export class CardUI extends Phaser.GameObjects.Container {
     // Initialen Zustand der Counter setzen
     this.updateCounters();
 
-    // ✨ DEBUG/BUGFIX: Logge den initialen Zustand
-    if (this.cardData.availableActions) {
-      log("CardUI", `[DEBUG_STAR] initial availableActions for ${this.cardData.Name}: ${this.cardData.availableActions.length}`);
-    } else {
-      log("CardUI", `[DEBUG_STAR] availableActions is UNDEFINED initially for ${this.cardData.Name}`);
-    }
-
     // Füge den Container zur Szene hinzu
     scene.add.existing(this);
 

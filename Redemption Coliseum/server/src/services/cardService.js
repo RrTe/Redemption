@@ -617,10 +617,34 @@ function shuffle(arr) {
   }
 }
 
+/**
+ * Fügt einer Karte eine verfügbare Aktion hinzu und registriert diese 
+ * sicher in der StateView des Controllers, sodass sie nicht geleakt wird.
+ * @param {RoomState} state - Der globale Raumzustand.
+ * @param {Card} card - Die Karte, die die Aktion erhält.
+ * @param {CardAction} action - Die neue Aktion.
+ */
+function addAvailableAction(state, card, action) {
+  if (!card || !action) return;
+  card.availableActions.push(action);
+  
+  if (state && state._clientViews) {
+    const clientView = state._clientViews.get(card.controllerId);
+    if (clientView) {
+      // ✨ FIX: In Colyseus 0.15 muss bei einem @view() auf ein ArraySchema
+      // zwingend das ArraySchema SELBST der StateView hinzugefügt werden,
+      // damit der Encoder überhaupt in das Array hineinschaut!
+      clientView.add(card.availableActions);
+      clientView.add(action);
+    }
+  }
+}
+
 module.exports = {
   moveCard,
   getZoneCollection,
   shuffle,
   findCardById,
-  getZoneDisplayName
+  getZoneDisplayName,
+  addAvailableAction
 };

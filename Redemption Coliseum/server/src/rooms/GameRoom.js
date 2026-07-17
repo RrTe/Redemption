@@ -144,15 +144,10 @@ class GameRoom extends colyseus.Room {
     client.view = clientView;
     this.clientViews.set(client.sessionId, clientView);
 
-    logger.debug(`[GameRoom] onJoin - hasFilters: ${this._serializer.hasFilters}`);
-
     RoomLifecycleService.handleJoin(this, client, options);
   }
 
   async onLeave(client, consented) {
-    // ✨ DEBUG/BUGFIX: View bereinigen
-    this.clientViews.delete(client.sessionId);
-    client.view = null;
     
     await RoomLifecycleService.handleLeave(this, client, consented);
   }

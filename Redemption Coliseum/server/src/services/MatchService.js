@@ -1,7 +1,7 @@
 const logger = require("../utils/logger");
 const { ActionType } = require("../../../shared/actions");
 const { CardAction } = require("../../../shared/actionSchema");
-const { moveCard } = require("./cardService");
+const cardService = require("./cardService");
 const { ZONES } = require("../../../shared/zones");
 const { PHASES } = require("../../../shared/phases");
 
@@ -99,7 +99,7 @@ class MatchService {
         `[MatchService] Drawing starting hand for ${player.name} (${sessionId})`,
       );
 
-      const result = moveCard(
+      const result = cardService.moveCard(
         player,
         room.state,
         room.cardLookup,
@@ -128,20 +128,9 @@ class MatchService {
             action.type = ActionType.ACTIVATE_STAR_ABILITY;
             action.description = "Activate Star Ability";
             action.isMandatory = false;
-            card.availableActions.push(action);
             
-            // ✨ FIX: Action explizit zur StateView des Controllers hinzufügen, damit sie gefiltert wird
-            if (room.state._clientViews) {
-              const clientView = room.state._clientViews.get(sessionId);
-              if (clientView) {
-                clientView.add(action);
-              }
-            }
-            
-            // ✨ DEBUG: Loggen, ob die StateView korrekt ist
-            const view = room.state._clientViews && room.state._clientViews.get(sessionId);
-            const inView = view ? view.has(card) : false;
-            logger.info(`[DEBUG_STAR] Card: ${card.Name}, Class: ${card.Class}, actionsLen: ${card.availableActions.length}, inView: ${inView}`);
+            // ✨ FIX: Verwende zentrale Hilfsmethode
+            cardService.addAvailableAction(room.state, card, action);
           }
         });
 
