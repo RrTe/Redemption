@@ -394,11 +394,22 @@ export class CardVisuals {
       if (!this.starIcon) {
         // Nutzt das offizielle Star.png Icon aus den Filtern
         const textureKey = this.scene.textures.exists("star_symbol") ? "star_symbol" : "spark";
-        this.starIcon = this.scene.add.image(0, -this.cardUI.height / 2 - 40, textureKey);
+        
+        this.starIcon = this.scene.add.image(0, 0, textureKey);
         this.starIcon.setDepth(100);
-        // Da das Originalicon recht groß ist, skalieren wir es runter
-        this.starIcon.setData("baseScale", 0.25);
-        this.starIcon.setScale(0.25);
+        
+        // Da das Originalicon recht groß ist, skalieren wir es runter. Auf Handys noch etwas kleiner.
+        const isSmallScreen = this.scene.scale.width < 1024;
+        const baseScale = isSmallScreen ? 0.15 : 0.25;
+        this.starIcon.setData("baseScale", baseScale);
+        this.starIcon.setScale(baseScale);
+        
+        // Exakte Berechnung des Abstands: Obere Kante - gewünschter Abstand - halbe Icon-Höhe
+        const topEdge = -this.cardUI.height / 2;
+        const gap = this.cardUI.height * 0.15; // 15% der Kartenhöhe als sauberer Abstand
+        const iconRadius = (this.starIcon.height * baseScale) / 2;
+        this.starIcon.setY(topEdge - gap - iconRadius);
+        
         this.cardUI.add(this.starIcon);
       }
       this.starIcon.setVisible(true);
