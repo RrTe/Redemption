@@ -53,6 +53,10 @@ export class SettingsDialogScene extends Phaser.Scene {
     this.soundManager = this.registry.get("soundManager") as SoundManager;
   }
 
+  preload() {
+    this.load.image("icon_handcards", "assets/ui/icons/cardfan_small.png");
+  }
+
   create() {
     const width = this.scale.width;
     const height = this.scale.height;
