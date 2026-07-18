@@ -25,11 +25,11 @@ export class HubScene extends Phaser.Scene {
     // 2. Preload button graphics and fonts
     this.load.image(
       "btn_coliseum_img",
-      "assets/ui/buttons/Copilot_20260517_235633_Coliseum_neu.png",
+      "assets/backgrounds/Copilot_20260517_235633_Coliseum_neu.png",
     );
     this.load.image(
       "btn_catacombs_img",
-      "assets/ui/buttons/Copilot_20260517_235633_Catacombs.png",
+      "assets/backgrounds/Copilot_20260517_235633_Catacombs.png",
     );
     this.load.bitmapFont(
       "fairydust",
