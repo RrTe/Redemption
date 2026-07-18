@@ -141,6 +141,9 @@ export default class CardGameScene extends Phaser.Scene {
         const enabled = this.ui.settingsManager.areBackgroundEffectsEnabled();
         this.currentBackground?.onSettingsChanged(enabled);
         
+        // ✨ FIX: Leite das globale Event an die lokalen UI-Elemente der Szene (wie CardUI) weiter
+        this.events.emit("settings-changed");
+
         // ✨ NEU: UI neu rendern, z. B. um das Handkarten-Layout (Fan vs Gerade) sofort anzuwenden
         if (this.room && this.room.state) {
           this.ui.render(this.room.state, this.room.sessionId);

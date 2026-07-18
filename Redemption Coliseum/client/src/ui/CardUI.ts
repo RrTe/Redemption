@@ -332,6 +332,13 @@ export class CardUI extends Phaser.GameObjects.Container {
     if (!this.areEffectsEnabled()) {
       this.stopGlow(); // Stoppt den Hover-Glow sofort
     }
+
+    // ✨ FIX: Star-Highlight bei Settings-Änderung sofort evaluieren!
+    if (this.cardData) {
+      const hasStarAction = this.cardData.availableActions && this.cardData.availableActions.some(a => a.type === ActionType.ACTIVATE_STAR_ABILITY);
+      const inGameSupport = this.settingsManager.isInGameSupportEnabled();
+      this.visuals.updateStarHighlight(hasStarAction && inGameSupport);
+    }
   }
 
   /**

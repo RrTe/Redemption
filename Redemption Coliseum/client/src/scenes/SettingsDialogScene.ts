@@ -178,7 +178,7 @@ export class SettingsDialogScene extends Phaser.Scene {
 
     // Reihe 1 (Sterne und Glühlampe)
     this.createToggle(leftColX, toggleY, "✨", "animationsEnabled");
-    this.createToggle(rightColX, toggleY, "💡", "inGameSupportEnabled");
+    this.createToggle(rightColX, toggleY, "🧭", "inGameSupportEnabled"); // survey on discord between 💡 and 🧭
     toggleY += gapY;
 
     // Reihe 2 (Landschaft und Fächer)
@@ -462,6 +462,7 @@ export class SettingsDialogScene extends Phaser.Scene {
       key === "animationsEnabled" ||
       key === "backgroundEffectsEnabled" ||
       key === "handCardsFanned" ||
+      key === "inGameSupportEnabled" ||
       key === "musicVolume" ||
       key === "sfxVolume"
     ) {
