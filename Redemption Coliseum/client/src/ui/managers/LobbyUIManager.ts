@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { type RoomAvailable } from "colyseus.js";
 import { type SoundManager } from "../../managers/SoundManager";
 import { log } from "../../utils/logger";
+import { SidebarButton } from "../components/SidebarButton";
 
 export class LobbyUIManager {
   private scene: Phaser.Scene;
@@ -18,8 +19,8 @@ export class LobbyUIManager {
   public deckSelectBtn!: Phaser.GameObjects.Container;
   public loadGameBtn!: Phaser.GameObjects.Container;
   public reconnectBtn!: Phaser.GameObjects.Container;
-  public settingsButton!: Phaser.GameObjects.Image;
-  public helpButton!: Phaser.GameObjects.Image;
+  public settingsButton!: SidebarButton;
+  public helpButton!: SidebarButton;
   public legalBtn!: Phaser.GameObjects.Text;
   public privacyBtn!: Phaser.GameObjects.Text;
   private background!: Phaser.GameObjects.Image; // ✨ NEU: Hintergrundbild-Referenz
@@ -107,19 +108,28 @@ export class LobbyUIManager {
       .setVisible(false);
 
     // Settings & Help Buttons
-    this.settingsButton = this.scene.add
-      .image(width + 12, height * 0.18, "button_settings")
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .setDisplaySize(48, 48)
-      .setAlpha(0.6);
+    this.settingsButton = new SidebarButton(
+      this.scene,
+      "button_settings",
+      height * 0.18,
+      true, // Right side
+      () => {
+        this.soundManager.playSound("UI_TOGGLE");
+        this.scene.scene.pause();
+        this.scene.scene.launch("SettingsDialogScene", { parentScene: "LobbyScene" });
+      }
+    );
 
-    this.helpButton = this.scene.add
-      .image(-12, height * 0.7, "button_help")
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .setDisplaySize(48, 48)
-      .setAlpha(0.6);
+    this.helpButton = new SidebarButton(
+      this.scene,
+      "button_help",
+      height * 0.7,
+      false, // Left side
+      () => {
+        this.soundManager.playSound("UI_TOGGLE");
+        this.scene.events.emit("help_button_clicked");
+      }
+    );
 
     // Footer Links
     this.legalBtn = this.scene.add
@@ -379,8 +389,8 @@ export class LobbyUIManager {
 
     this.statusText?.setPosition(width / 2, height - 40);
     this.debugText?.setPosition(width - 10, height - 10);
-    this.settingsButton?.setPosition(width + 12, height * 0.1);
-    this.helpButton?.setPosition(-12, height * 0.1);
+    this.settingsButton?.resize(width, height * 0.18);
+    this.helpButton?.resize(width, height * 0.7);
     this.legalBtn?.setPosition(10, height - 10);
     this.privacyBtn?.setPosition(160, height - 10);
   }

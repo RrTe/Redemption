@@ -26,6 +26,7 @@ import { DeckValidator } from "../../../../shared/DeckValidator.js";
 import { filterConfigData } from "../../ui/config/filter_config";
 // DeckMetricsDialogScene removed - now using HTML DOM overlay approach like the standalone editor
 import { NotificationManager } from "../../ui/notifications/NotificationManager";
+import { SidebarButton } from "../../ui/components/SidebarButton";
 
 
 const EDITOR_CONFIG = {
@@ -87,7 +88,10 @@ export class DeckEditorScene extends Phaser.Scene {
   private cardsSelectedText!: Phaser.GameObjects.BitmapText;
 
   private allCardViews: DeckCardView[] = [];
-  private settingsButton!: Phaser.GameObjects.Image;
+  private buttons: { bg: Phaser.GameObjects.Image; text: Phaser.GameObjects.BitmapText; shadow: Phaser.GameObjects.BitmapText }[] = [];
+  private settingsButton!: SidebarButton;
+  private helpButton!: SidebarButton;
+  private soundManager!: SoundManager;
 
   private savedDeckIDsJSON: string | null = null;
   private layoutConfig!: {
@@ -147,6 +151,10 @@ export class DeckEditorScene extends Phaser.Scene {
     this.load.image(
       "button_settings",
       "assets/ui/buttons/button-gold-7850928_1920.png",
+    );
+    this.load.image(
+      "button_help",
+      "assets/ui/buttons/Button_Help_Copilot_20260216_130131_small.png"
     );
     this.load.image(
       "delete",
@@ -814,7 +822,21 @@ export class DeckEditorScene extends Phaser.Scene {
       this.cardMetricsOverlay.hide();
     });
 
-    this.createSettingsButton();
+    this.createSideButtons();
+  }
+
+  resize(gameSize: { width: number; height: number }) {
+    const width = gameSize.width;
+    const height = gameSize.height;
+
+    // Recalculate Layout Config based on new sizes
+    this.layoutConfig = this.calculateLayout(width, height);
+
+    this.adjustBackgroundSize();
+    this.updateLayout();
+    
+    if (this.settingsButton) this.settingsButton.resize(width, height * 0.18);
+    if (this.helpButton) this.helpButton.resize(width, height * 0.7);
   }
 
   private calculateLayoutConfig(width: number, height: number) {
@@ -898,52 +920,35 @@ export class DeckEditorScene extends Phaser.Scene {
     }
   }
 
-  private createSettingsButton() {
+  private createSideButtons() {
+    if (this.settingsButton) this.settingsButton.destroy();
+    if (this.helpButton) this.helpButton.destroy();
+
     const width = this.scale.width;
     const height = this.scale.height;
 
-    if (this.settingsButton) this.settingsButton.destroy();
+    this.settingsButton = new SidebarButton(
+      this,
+      "button_settings",
+      height * 0.18,
+      true, // Right side
+      () => {
+        this.soundManager.playSound("UI_TOGGLE");
+        this.scene.pause();
+        this.scene.launch("SettingsDialogScene", { parentScene: "DeckEditorScene" });
+      }
+    );
 
-    this.settingsButton = this.add
-      .image(
-        width + 12 * this.layoutConfig.scale,
-        height * 0.18,
-        "button_settings",
-      )
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .setDisplaySize(
-        48 * this.layoutConfig.scale,
-        48 * this.layoutConfig.scale,
-      )
-      .setAlpha(0.6)
-      .setDepth(2000); // make sure it's above background
-
-    this.settingsButton.on("pointerover", () => {
-      this.tweens.add({
-        targets: this.settingsButton,
-        x: width - 24 * this.layoutConfig.scale,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
-
-    this.settingsButton.on("pointerout", () => {
-      this.tweens.add({
-        targets: this.settingsButton,
-        x: width + 12 * this.layoutConfig.scale,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
-
-    this.settingsButton.on("pointerdown", () => {
-      this.soundManager.playSound("DECK_CTRL_CLICK");
-      this.scene.pause();
-      this.scene.launch("SettingsDialogScene", {
-        parentScene: "DeckEditorScene",
-      });
-    });
+    this.helpButton = new SidebarButton(
+      this,
+      "button_help",
+      height * 0.7,
+      false, // Left side
+      () => {
+        this.soundManager.playSound("UI_TOGGLE");
+        console.log("[DEBUG] Help Button clicked");
+      }
+    );
   }
 
   /**

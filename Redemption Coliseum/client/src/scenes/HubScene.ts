@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { type SoundManager } from "../managers/SoundManager";
 import { SettingsDialogScene } from "./SettingsDialogScene";
 import { MenuTile } from "../ui/components/MenuTile";
+import { SidebarButton } from "../ui/components/SidebarButton";
 
 const DECK_EDITOR_ENABLED = true; // Feature toggle to easily enable/disable deck editor access
 
@@ -9,7 +10,8 @@ export class HubScene extends Phaser.Scene {
   private soundManager!: SoundManager;
   private buttons: MenuTile[] = [];
   private background!: Phaser.GameObjects.Image;
-  private settingsButton!: Phaser.GameObjects.Image;
+  private settingsButton!: SidebarButton;
+  private helpButton!: SidebarButton;
   private titleText!: Phaser.GameObjects.BitmapText;
 
   constructor() {
@@ -41,10 +43,14 @@ export class HubScene extends Phaser.Scene {
     // 3. Preload particles/flares for premium hover glow effect
     this.load.image("light_glow", "assets/particles/lightGlow.png"); // Soft base glow
 
-    // 4. Settings button assets
+    // 4. Settings and Help button assets
     this.load.image(
       "button_settings",
       "assets/ui/buttons/button-gold-7850928_1920.png",
+    );
+    this.load.image(
+      "button_help",
+      "assets/ui/buttons/Button_Help_Copilot_20260216_130131_small.png"
     );
     this.load.image("scroll_bg", "assets/ui/paper-8527340_optimised.png");
 
@@ -90,8 +96,8 @@ export class HubScene extends Phaser.Scene {
     // Create Hub Navigation Buttons
     this.createImageButtons(width, height);
 
-    // Create Settings Sidebar Button (aligned 1:1 with LobbyScene)
-    this.createSettingsButton(width, height);
+    // Create Settings Sidebar Buttons
+    this.createSideButtons(width, height);
 
     // Handle screen resize
     this.scale.on("resize", this.resize, this);
@@ -179,40 +185,32 @@ export class HubScene extends Phaser.Scene {
     }
   }
 
-  private createSettingsButton(width: number, height: number) {
+  private createSideButtons(width: number, height: number) {
     if (this.settingsButton) this.settingsButton.destroy();
+    if (this.helpButton) this.helpButton.destroy();
 
-    // Position settings button aligned 1:1 with LobbyScene
-    this.settingsButton = this.add
-      .image(width + 12, height * 0.18, "button_settings")
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .setDisplaySize(48, 48)
-      .setAlpha(0.6);
+    this.settingsButton = new SidebarButton(
+      this,
+      "button_settings",
+      height * 0.18,
+      true, // Right side
+      () => {
+        this.soundManager.playSound("UI_TOGGLE");
+        this.scene.pause();
+        this.scene.launch("SettingsDialogScene", { parentScene: "HubScene" });
+      }
+    );
 
-    this.settingsButton.on("pointerover", () => {
-      this.tweens.add({
-        targets: this.settingsButton,
-        x: width - 24,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
-
-    this.settingsButton.on("pointerout", () => {
-      this.tweens.add({
-        targets: this.settingsButton,
-        x: width + 12,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
-
-    this.settingsButton.on("pointerdown", () => {
-      this.soundManager.playSound("UI_TOGGLE");
-      this.scene.pause();
-      this.scene.launch("SettingsDialogScene", { parentScene: "HubScene" });
-    });
+    this.helpButton = new SidebarButton(
+      this,
+      "button_help",
+      height * 0.7,
+      false, // Left side
+      () => {
+        this.soundManager.playSound("UI_TOGGLE");
+        console.log("[DEBUG] Help Button clicked");
+      }
+    );
   }
 
   resize(gameSize: { width: number; height: number }) {
@@ -228,6 +226,8 @@ export class HubScene extends Phaser.Scene {
     }
 
     this.createImageButtons(width, height);
-    this.createSettingsButton(width, height);
+    
+    if (this.settingsButton) this.settingsButton.resize(width, height * 0.18);
+    if (this.helpButton) this.helpButton.resize(width, height * 0.7);
   }
 }

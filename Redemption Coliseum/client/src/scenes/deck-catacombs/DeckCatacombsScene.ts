@@ -2,12 +2,16 @@ import Phaser from "phaser";
 import { MenuTile, type MenuTileData } from "../../ui/components/MenuTile";
 import { type SoundManager } from "../../managers/SoundManager";
 import { DirectoryPicker } from "../../utils/DirectoryPicker";
+import { SidebarButton } from "../../ui/components/SidebarButton";
+import { SettingsDialogScene } from "../SettingsDialogScene";
 
 export class DeckCatacombsScene extends Phaser.Scene {
   private soundManager!: SoundManager;
   private background!: Phaser.GameObjects.Image;
   private backButton!: Phaser.GameObjects.Image;
   private buttons: MenuTile[] = [];
+  private settingsButton!: SidebarButton;
+  private helpButton!: SidebarButton;
 
   constructor() {
     super("DeckCatacombsScene");
@@ -35,6 +39,16 @@ export class DeckCatacombsScene extends Phaser.Scene {
       "assets/ui/buttons/button-gold-7850928_1920.png"
     );
 
+    // Settings and Help Buttons
+    this.load.image(
+      "button_settings",
+      "assets/ui/buttons/button-gold-7850928_1920.png"
+    );
+    this.load.image(
+      "button_help",
+      "assets/ui/buttons/Button_Help_Copilot_20260216_130131_small.png"
+    );
+
     // Fonts
     this.load.bitmapFont(
       "fairydust",
@@ -44,6 +58,10 @@ export class DeckCatacombsScene extends Phaser.Scene {
   }
 
   create() {
+    if (!this.scene.get("SettingsDialogScene")) {
+      this.scene.add("SettingsDialogScene", SettingsDialogScene, false);
+    }
+
     this.soundManager = this.registry.get("soundManager");
 
     const width = this.scale.width;
@@ -59,8 +77,39 @@ export class DeckCatacombsScene extends Phaser.Scene {
     // Create 3 Menu Tiles
     this.createTiles(width, height);
 
+    // Create Side Buttons
+    this.createSideButtons(width, height);
+
     // Handle screen resize
     this.scale.on("resize", this.resize, this);
+  }
+
+  private createSideButtons(width: number, height: number) {
+    if (this.settingsButton) this.settingsButton.destroy();
+    if (this.helpButton) this.helpButton.destroy();
+
+    this.settingsButton = new SidebarButton(
+      this,
+      "button_settings",
+      height * 0.18,
+      true, // Right side
+      () => {
+        if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
+        this.scene.pause();
+        this.scene.launch("SettingsDialogScene", { parentScene: "DeckCatacombsScene" });
+      }
+    );
+
+    this.helpButton = new SidebarButton(
+      this,
+      "button_help",
+      height * 0.7,
+      false, // Left side
+      () => {
+        if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
+        console.log("[DEBUG] Help Button clicked");
+      }
+    );
   }
 
   private adjustBackgroundSize() {
@@ -191,5 +240,8 @@ export class DeckCatacombsScene extends Phaser.Scene {
 
     this.adjustBackgroundSize();
     this.createTiles(width, height);
+    
+    if (this.settingsButton) this.settingsButton.resize(width, height * 0.18);
+    if (this.helpButton) this.helpButton.resize(width, height * 0.7);
   }
 }

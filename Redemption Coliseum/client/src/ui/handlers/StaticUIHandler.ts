@@ -26,10 +26,9 @@ export class StaticUIHandler {
   }
 
   public registerHandlers() {
-    const { settingsButton, saveButton, helpButton, concedeButton } =
-      this.elementManager.staticElements;
+    const { concedeButton } = this.elementManager.staticElements;
 
-    settingsButton.on("pointerdown", () => {
+    this.scene.events.on("settings_button_clicked", () => {
       this.playClick();
       this.scene.scene.pause("CardGame");
       this.scene.scene.launch("SettingsDialogScene", {
@@ -37,13 +36,13 @@ export class StaticUIHandler {
       });
     });
 
-    saveButton.on("pointerdown", () => {
+    this.scene.events.on("save_button_clicked", () => {
       this.playClick();
       log("UI", "Requesting save game from server...");
       this.room.send("requestSaveGame", {});
     });
 
-    helpButton.on("pointerdown", () => {
+    this.scene.events.on("help_button_clicked", () => {
       this.playClick();
       this.domUIManager.toggleHelp(); // ✨ NEU: Delegation an DomUIManager
     });

@@ -250,22 +250,14 @@ export class ElementManager {
     );
 
     // ✨ NEU: Settings Button oben rechts positionieren
-    this.staticElements.settingsButton.setPosition(
-      this.layout.settingsButton.hiddenX,
-      this.layout.settingsButton.y,
-    );
+    const width = this.scene.scale.width;
+    this.staticElements.settingsButton.resize(width, this.layout.settingsButton.y);
 
     // ✨ NEU: Save Button positionieren
-    this.staticElements.saveButton.setPosition(
-      this.layout.saveButton.hiddenX,
-      this.layout.saveButton.y,
-    );
+    this.staticElements.saveButton.resize(width, this.layout.saveButton.y);
 
     // ✨ NEU: Help Button positionieren
-    this.staticElements.helpButton.setPosition(
-      this.layout.helpButton.hiddenX,
-      this.layout.helpButton.y,
-    );
+    this.staticElements.helpButton.resize(width, this.layout.helpButton.y);
 
     // ✨ NEU: Info-Texte positionieren
     this.staticElements.playerInfoText.setPosition(

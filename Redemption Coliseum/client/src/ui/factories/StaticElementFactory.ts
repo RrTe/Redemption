@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { PHASES } from "../../../../shared/phases.js";
 import { type StaticElements } from "../types/ElementTypes";
 import { DEBUG } from "../../utils/logger";
+import { SidebarButton } from "../components/SidebarButton";
 
 export class StaticElementFactory {
   private scene: Phaser.Scene;
@@ -21,79 +22,39 @@ export class StaticElementFactory {
     const concedeButton = this.createConcedeButton();
 
     // Settings Button (Gold)
-    const settingsButton = this.scene.add
-      .image(0, 0, "button_settings")
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .setDisplaySize(48, 48)
-      .setAlpha(0.6);
-    
-    settingsButton.on("pointerover", () => {
-      this.scene.tweens.add({
-        targets: settingsButton,
-        x: this.scene.scale.width - 24,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
-    settingsButton.on("pointerout", () => {
-      this.scene.tweens.add({
-        targets: settingsButton,
-        x: this.scene.scale.width + 12,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
+    const settingsButton = new SidebarButton(
+      this.scene,
+      "button_settings",
+      this.scene.scale.height * 0.18,
+      true, // Right side
+      () => {
+        // Handled in StaticUIHandler usually, but we can emit an event here or leave it empty and bind later
+        // wait, SidebarButton takes onClick. We can just emit an event:
+        this.scene.events.emit("settings_button_clicked");
+      }
+    );
 
     // Save Button
-    const saveButton = this.scene.add
-      .image(0, 0, "button_save")
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .setDisplaySize(48, 48)
-      .setAlpha(0.7);
-    
-    saveButton.on("pointerover", () => {
-      this.scene.tweens.add({
-        targets: saveButton,
-        x: this.scene.scale.width - 24,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
-    saveButton.on("pointerout", () => {
-      this.scene.tweens.add({
-        targets: saveButton,
-        x: this.scene.scale.width + 12,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
+    const saveButton = new SidebarButton(
+      this.scene,
+      "button_save",
+      this.scene.scale.height * 0.3,
+      true, // Right side
+      () => {
+        this.scene.events.emit("save_button_clicked");
+      }
+    );
 
     // Help Button
-    const helpButton = this.scene.add
-      .image(0, 0, "button_help")
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .setDisplaySize(48, 48)
-      .setAlpha(0.6);
-    
-    helpButton.on("pointerover", () => {
-      this.scene.tweens.add({
-        targets: helpButton,
-        x: 24,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
-    helpButton.on("pointerout", () => {
-      this.scene.tweens.add({
-        targets: helpButton,
-        x: -12,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
+    const helpButton = new SidebarButton(
+      this.scene,
+      "button_help",
+      this.scene.scale.height * 0.7,
+      false, // Left side
+      () => {
+        this.scene.events.emit("help_button_clicked");
+      }
+    );
 
     // Phasen-Indikatoren
     const phaseIndicator = this.scene.add.graphics();

@@ -44,19 +44,10 @@ export class LobbyInputHandler {
     
     this.scene.input.on("wheel", this.handleWheel, this);
 
-    // Side Button Hover Tweens
-    this.setupSideButtonHover(this.uiManager.settingsButton, true);
-    this.setupSideButtonHover(this.uiManager.helpButton, false);
-
-    this.uiManager.helpButton.on("pointerdown", () => {
-      this.playClick();
+    // Side Button Hover Tweens are now handled internally by SidebarButton
+    // Click logic is also passed in the constructor of SidebarButton in LobbyUIManager
+    this.scene.events.on("help_button_clicked", () => {
       this.domManager.toggleHelp();
-    });
-
-    this.uiManager.settingsButton.on("pointerdown", () => {
-      this.playClick();
-      this.scene.scene.pause();
-      this.scene.scene.launch("SettingsDialogScene", { parentScene: "LobbyScene" });
     });
 
     this.uiManager.legalBtn.on("pointerdown", () => {
@@ -174,33 +165,12 @@ export class LobbyInputHandler {
     }
   }
 
-  private setupSideButtonHover(button: Phaser.GameObjects.Image, isSettings: boolean) {
-    button.on("pointerover", () => {
-      const targetX = isSettings ? this.scene.scale.width - 24 : 24;
-      this.scene.tweens.add({
-        targets: button,
-        x: targetX,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
-
-    button.on("pointerout", () => {
-      const targetX = isSettings ? this.scene.scale.width + 12 : -12;
-      this.scene.tweens.add({
-        targets: button,
-        x: targetX,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
-  }
-
   /**
    * Cleans up global listeners.
    */
   public destroy() {
     this.scene.input.off("wheel", this.handleWheel, this);
+    this.scene.events.off("help_button_clicked");
   }
 
   private playClick() {

@@ -1,15 +1,16 @@
 import Phaser from "phaser";
 import { PileUI } from "../PileUI";
 import { StackedPileUI } from "../StackedPileUI";
+import { SidebarButton } from "../components/SidebarButton";
 
 export type StaticElements = {
   boardText: Phaser.GameObjects.Text;
   phaseIcons: { [key: string]: Phaser.GameObjects.Image };
   nextPhaseButton: Phaser.GameObjects.Container;
   concedeButton: Phaser.GameObjects.Container;
-  settingsButton: Phaser.GameObjects.Image;
-  saveButton: Phaser.GameObjects.Image;
-  helpButton: Phaser.GameObjects.Image;
+  settingsButton: SidebarButton;
+  saveButton: SidebarButton;
+  helpButton: SidebarButton;
   phaseIndicator: Phaser.GameObjects.Graphics;
   phaseBar: Phaser.GameObjects.Graphics;
   playerInfoText: Phaser.GameObjects.BitmapText;
