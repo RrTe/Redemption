@@ -10,10 +10,8 @@ const COLOR_KNOB = 0xf5e6c4; // Pergament (für Knöpfe)
 // ✨ NEU: Zentrale Layout-Konstanten für einfache Anpassungen
 const LAYOUT = {
   START_Y: -160,
-  GAP_Y: 85,
-  ICON_X: -75,
-  CONTROL_X: -45,
-  SLIDER_WIDTH: 130,
+  GAP_Y: 80,
+  SLIDER_WIDTH: 200,
   SLIDER_HEIGHT: 12,
   TOGGLE_WIDTH: 60,
   TOGGLE_HEIGHT: 24,
@@ -137,13 +135,14 @@ export class SettingsDialogScene extends Phaser.Scene {
 
     // --- Schriftrollen-Optik (Bild) ---
     const scrollBg = this.add.image(0, 0, "scroll_bg");
-    // ✨ NEU: Schriftrolle vertikal etwas strecken, damit alle 5 Optionen und der Schließen-Button Platz haben
-    scrollBg.setDisplaySize(scrollBg.width, scrollBg.height + 90);
+    // ✨ NEU: Schriftrolle breiter und vertikal etwas strecken, damit alle Optionen im neuen 2-Spalten Layout Platz haben
+    // TIPP: Hier kannst du die Breite der Rolle einstellen! (Zuvor 1.4, jetzt 1.3)
+    scrollBg.setDisplaySize(scrollBg.width * 1.3, scrollBg.height + 60);
     this.container.add(scrollBg);
 
     const scrollHeight = scrollBg.displayHeight; // Für die Positionierung der Elemente nutzen
     const scrollWidth = scrollBg.displayWidth;
-    
+
     // ✨ NEU: Auf Mobile-Screens (Landscape) herunterskalieren, wenn es zu groß ist
     const availableHeight = height * 0.9;
     if (scrollHeight > availableHeight) {
@@ -160,30 +159,39 @@ export class SettingsDialogScene extends Phaser.Scene {
     let currentY = LAYOUT.START_Y;
     const gapY = LAYOUT.GAP_Y;
 
-    // (Master Volume entfernt, wie gewünscht)
+    // TIPP: Hiermit kannst du alle Regler und Schalter zusammen nach links (Minus-Wert) 
+    // oder rechts (Plus-Wert) verschieben, um die Ränder der Rolle perfekt auszutarieren.
+    const globalOffsetX = 20;
+
     // 2. Music Volume
-    this.createSlider(0, currentY, "🎵", "musicVolume"); // Note
+    this.createSlider(globalOffsetX, currentY, "🎵", "musicVolume"); // Note
     currentY += gapY;
 
     // 3. SFX Volume
-    this.createSlider(0, currentY, "🔊", "sfxVolume"); // Lautsprecher
+    this.createSlider(globalOffsetX, currentY, "🔊", "sfxVolume"); // Lautsprecher
     currentY += gapY;
 
-    // 4. Animations Toggle
-    this.createToggle(0, currentY, "✨", "animationsEnabled"); // Sterne
-    currentY += gapY;
+    // --- 2-Spalten Layout für Toggles ---
+    const leftColX = -80 + globalOffsetX;
+    const rightColX = 80 + globalOffsetX;
+    let toggleY = currentY;
 
-    // 5. Background Effects Toggle (Neu)
-    this.createToggle(0, currentY, "🌄", "backgroundEffectsEnabled"); // Nebel/Atmosphäre
-    currentY += gapY;
+    // Reihe 1 (Sterne und Glühlampe)
+    this.createToggle(leftColX, toggleY, "✨", "animationsEnabled");
+    this.createToggle(rightColX, toggleY, "💡", "inGameSupportEnabled");
+    toggleY += gapY;
 
-    // 6. Hand Cards Fanned Toggle (Neu)
-    this.createToggle(0, currentY, "icon_handcards", "handCardsFanned", true);
-    currentY += gapY;
+    // Reihe 2 (Landschaft und Fächer)
+    this.createToggle(leftColX, toggleY, "🌄", "backgroundEffectsEnabled");
+    this.createToggle(rightColX, toggleY, "icon_handcards", "handCardsFanned", true);
 
     // 5. Close Button (Unten)
+    // TIPP: Hier kannst du die vertikale Position des roten X einstellen! 
+    // Wir nehmen den Y-Wert der letzten Schalterreihe (toggleY), rechnen einen Standardabstand (gapY) dazu
+    // und korrigieren ihn dann nach oben oder unten (z.B. +10 schiebt es weiter nach unten).
+    const closeBtnY = toggleY + gapY + 25;
     const closeBtn = this.add
-      .text(0, scrollHeight / 2 - 35, "✖", {
+      .text(0, closeBtnY, "✖", {
         fontSize: "40px",
         color: "#8b0000",
         fontStyle: "bold",
@@ -219,10 +227,9 @@ export class SettingsDialogScene extends Phaser.Scene {
     iconChar: string,
     settingKey: string,
   ) {
-    // ✨ NEU: Kompakteres Layout und mittige Ausrichtung
     const width = LAYOUT.SLIDER_WIDTH;
-    const iconX = LAYOUT.ICON_X;
-    const sliderX = LAYOUT.CONTROL_X;
+    const iconX = x - width / 2 - 40;
+    const sliderX = x - width / 2;
     const height = LAYOUT.SLIDER_HEIGHT;
 
     // Icon
@@ -335,10 +342,9 @@ export class SettingsDialogScene extends Phaser.Scene {
     settingKey: string,
     isImage: boolean = false
   ) {
-    // ✨ NEU: Gleiche Ausrichtung und Maße wie Slider
-    const iconX = LAYOUT.ICON_X;
-    const toggleX = LAYOUT.CONTROL_X;
     const toggleWidth = LAYOUT.TOGGLE_WIDTH;
+    const iconX = x - toggleWidth / 2 - 35;
+    const toggleX = x - toggleWidth / 2;
     const height = LAYOUT.TOGGLE_HEIGHT;
 
     // Icon
