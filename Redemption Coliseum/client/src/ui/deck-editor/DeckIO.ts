@@ -57,4 +57,47 @@ export class DeckIO {
     document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
   }
+
+  /**
+   * Triggers a local browser file picker to save a file, allowing the user to select
+   * between .txt and .dek formats. Fallbacks to .txt if File System Access API is not available.
+   * @param defaultFilename Suggested filename without extension
+   * @param contentProvider Function to generate content based on chosen extension
+   */
+  public static async saveLackeyDeck(
+    defaultFilename: string,
+    contentProvider: (extension: string) => string
+  ): Promise<void> {
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: defaultFilename,
+          types: [
+            {
+              description: 'Lackey Deck (.txt)',
+              accept: { 'text/plain': ['.txt'] }
+            },
+            {
+              description: 'Lackey Deck (.dek)',
+              accept: { 'application/xml': ['.dek'] }
+            }
+          ]
+        });
+        const file = await handle.getFile();
+        const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+        const content = contentProvider(ext === '.dek' ? '.dek' : '.txt');
+        const writable = await handle.createWritable();
+        await writable.write(content);
+        await writable.close();
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error("Save failed:", err);
+        }
+      }
+    } else {
+      // Fallback
+      const content = contentProvider('.txt');
+      this.saveDeckFile(defaultFilename + ".txt", content, "text/plain");
+    }
+  }
 }

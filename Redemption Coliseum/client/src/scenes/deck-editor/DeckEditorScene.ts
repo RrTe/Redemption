@@ -91,7 +91,6 @@ export class DeckEditorScene extends Phaser.Scene {
   private buttons: { bg: Phaser.GameObjects.Image; text: Phaser.GameObjects.BitmapText; shadow: Phaser.GameObjects.BitmapText }[] = [];
   private settingsButton!: SidebarButton;
   private helpButton!: SidebarButton;
-  private soundManager!: SoundManager;
 
   private savedDeckIDsJSON: string | null = null;
   private layoutConfig!: {
@@ -339,9 +338,9 @@ export class DeckEditorScene extends Phaser.Scene {
       }
     });
 
-    this.scale.on("resize", this.resize, this);
-    this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.scale.off("resize", this.resize, this);
+    this.scale.on("resize", this.handleResize, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off("resize", this.handleResize, this);
       // Cancel any pending card-creation batch to avoid callbacks firing after scene teardown
       this.batchActive = false;
       if (this.batchTimer) {
@@ -956,7 +955,7 @@ export class DeckEditorScene extends Phaser.Scene {
    * before restarting the scene. This prevents multiple rapid restarts
    * during window dragging and eliminates the "frozen / black screen" effect.
    */
-  private resize() {
+  private handleResize() {
     if (this.resizeTimer) clearTimeout(this.resizeTimer);
     this.resizeTimer = setTimeout(() => {
       this.resizeTimer = null;
@@ -1625,14 +1624,15 @@ export class DeckEditorScene extends Phaser.Scene {
   }
 
   private saveDeckLackey() {
-    const deckTXT = this.deckListModel.deckAsTxt();
-    const filename = (this.loadedDeckName || "deck") + ".txt";
-    DeckIO.saveDeckFile(filename, deckTXT, "text/plain");
+    const defaultName = this.loadedDeckName || "deck";
+    DeckIO.saveLackeyDeck(defaultName, (ext) => {
+      return ext === ".dek" ? this.deckListModel.deckAsDek() : this.deckListModel.deckAsTxt();
+    });
     this.isDirty = false;
   }
 
   private loadDeckLackey() {
-    DeckIO.loadDeckFile(".txt", (content, filename) => {
+    DeckIO.loadDeckFile(".txt,.dek", (content, filename) => {
       try {
         this.loadedDeckName = filename.replace(/\.[^/.]+$/, "");
         const deck = DeckUtils.parseDeck(content, filename);

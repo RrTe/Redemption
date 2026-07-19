@@ -17,6 +17,8 @@ export class DeckUtils {
 
     if (fileName.endsWith(".json") || trimmed.startsWith("{")) {
       deck = this.parseJsonDeck(trimmed);
+    } else if (fileName.endsWith(".dek") || trimmed.startsWith("<deck")) {
+      deck = this.parseXmlDeck(trimmed);
     } else {
       deck = this.parseTxtDeck(trimmed);
     }
@@ -105,9 +107,53 @@ export class DeckUtils {
         main: mainIds,
         reserve: reserveIds,
       };
+
     } catch (e) {
-      error("DeckUtils", "Invalid JSON deck:", e); // ✨ FIX: Logger nutzen
-      return { main: [], reserve: [] };
+      log("DeckUtils", "Failed to parse JSON deck", e);
+      throw new Error("Invalid JSON deck format");
     }
+  }
+
+  /**
+   * Parst das XML-Format (.dek).
+   */
+  private static parseXmlDeck(xmlString: string): DeckData {
+    const deck: DeckData = { main: [], reserve: [] };
+    try {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+      
+      const superzones = xmlDoc.getElementsByTagName("superzone");
+      for (let i = 0; i < superzones.length; i++) {
+        const sz = superzones[i];
+        const szName = sz.getAttribute("name")?.toLowerCase() || "";
+        
+        let targetList: string[] | null = null;
+        if (szName === "deck" || szName === "main") {
+          targetList = deck.main;
+        } else if (szName === "reserve") {
+          targetList = deck.reserve;
+        }
+
+        if (targetList) {
+          const cards = sz.getElementsByTagName("card");
+          for (let j = 0; j < cards.length; j++) {
+            const card = cards[j];
+            const nameElement = card.getElementsByTagName("name")[0];
+            if (nameElement && nameElement.textContent) {
+              targetList.push(nameElement.textContent.trim());
+            }
+          }
+        }
+      }
+      log(
+        "DeckUtils",
+        `Parsed XML deck with ${deck.main.length} main and ${deck.reserve.length} reserve cards.`
+      );
+    } catch (e) {
+      log("DeckUtils", "Failed to parse XML deck", e);
+      throw new Error("Invalid XML deck format");
+    }
+    return deck;
   }
 }

@@ -174,4 +174,49 @@ export class DeckListModel {
     });
     return deckTXT;
   }
+
+  /**
+   * Serializes the deck and reserve cards as XML in LackeyCCG .dek format.
+   */
+  public deckAsDek(): string {
+    let dekXML = '<deck version="0.8">\n\t<meta>\n\t\t<game>Redemption</game>\n\t</meta>\n';
+    
+    dekXML += '\t<superzone name="Deck">\n';
+    this.deck.forEach((stack) => {
+      for (let i = 0; i < stack.quantity; i++) {
+        const escapedName = this.escapeXml(stack.card.Name);
+        const escapedId = this.escapeXml(stack.card.id);
+        const escapedSet = this.escapeXml(stack.card.Set || "");
+        dekXML += `\t\t<card><name id="${escapedId}">${escapedName}</name><set>${escapedSet}</set></card>\n`;
+      }
+    });
+    dekXML += '\t</superzone>\n';
+    
+    dekXML += '\t<superzone name="Reserve">\n';
+    this.reserve.forEach((stack) => {
+      for (let i = 0; i < stack.quantity; i++) {
+        const escapedName = this.escapeXml(stack.card.Name);
+        const escapedId = this.escapeXml(stack.card.id);
+        const escapedSet = this.escapeXml(stack.card.Set || "");
+        dekXML += `\t\t<card><name id="${escapedId}">${escapedName}</name><set>${escapedSet}</set></card>\n`;
+      }
+    });
+    dekXML += '\t</superzone>\n';
+    
+    dekXML += '</deck>';
+    return dekXML;
+  }
+
+  private escapeXml(unsafe: string): string {
+    return unsafe.replace(/[<>&'"]/g, (c) => {
+      switch (c) {
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '&': return '&amp;';
+        case '\'': return '&apos;';
+        case '"': return '&quot;';
+        default: return c;
+      }
+    });
+  }
 }
