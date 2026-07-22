@@ -824,19 +824,6 @@ export class DeckEditorScene extends Phaser.Scene {
     this.createSideButtons();
   }
 
-  resize(gameSize: { width: number; height: number }) {
-    const width = gameSize.width;
-    const height = gameSize.height;
-
-    // Recalculate Layout Config based on new sizes
-    this.layoutConfig = this.calculateLayout(width, height);
-
-    this.adjustBackgroundSize();
-    this.updateLayout();
-    
-    if (this.settingsButton) this.settingsButton.resize(width, height * 0.18);
-    if (this.helpButton) this.helpButton.resize(width, height * 0.7);
-  }
 
   private calculateLayoutConfig(width: number, height: number) {
     const boundary = 0.01;

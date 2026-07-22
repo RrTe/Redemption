@@ -1,7 +1,7 @@
-import { log, error } from "./logger"; // ✨ FIX: Import error
+import { log, error } from "./logger";
 
 export interface DeckData {
-  name?: string; // ✨ NEU: Optionaler Name des Decks
+  name?: string;
   main: string[];
   reserve: string[];
 }
@@ -23,7 +23,7 @@ export class DeckUtils {
       deck = this.parseTxtDeck(trimmed);
     }
 
-    // ✨ NEU: Verhindert das Laden von ungültigen/leeren Dateien
+    // Verhindert das Laden von ungültigen/leeren Dateien
     if (deck.main.length === 0) {
       throw new Error("The file contains no valid cards or has a wrong format.");
     }
@@ -39,19 +39,15 @@ export class DeckUtils {
     const deck: DeckData = { main: [], reserve: [] };
     const lines = text.split("\n");
 
-    // ✨ FIX: Status-Variable für die aktuelle Sektion.
-    // Startet standardmäßig im Main-Deck.
     let currentSection: "main" | "reserve" | "other" = "main";
 
     for (const line of lines) {
       const trimmedLine = line.trim();
       if (!trimmedLine) continue;
 
-      // Prüfen, ob die Zeile mit einer Zahl beginnt (Karten-Definition: "1  CardName")
       const cardMatch = trimmedLine.match(/^(\d+)\s+(.+)$/);
 
       if (cardMatch) {
-        // Wenn wir in einer unbekannten Sektion sind (z.B. Sideboard), ignorieren wir die Karte.
         if (currentSection === "other") continue;
 
         const count = parseInt(cardMatch[1], 10);
@@ -61,26 +57,22 @@ export class DeckUtils {
           if (currentSection === "reserve") {
             deck.reserve.push(cardName);
           } else {
-            // Landet im Main-Deck (auch wenn kein expliziter Header da war)
             deck.main.push(cardName);
           }
         }
       } else {
-        // Keine Zahl am Anfang -> Wahrscheinlich ein Sektions-Header
         const lower = trimmedLine.toLowerCase();
 
         if (lower.startsWith("reserve")) {
           currentSection = "reserve";
         } else if (lower.startsWith("main")) {
-          // Falls explizit "Main:" oder "Main Deck:" angegeben wird
           currentSection = "main";
         } else {
-          // Unbekannte Sektion (z.B. "Sideboard:", "Presentation:", Kommentare)
-          // Wir wechseln in den 'other'-Modus und ignorieren folgende Karten.
           currentSection = "other";
         }
       }
     }
+    
     log(
       "DeckUtils",
       `Parsed TXT deck with ${deck.main.length} main and ${deck.reserve.length} reserve cards.`,
@@ -89,15 +81,24 @@ export class DeckUtils {
   }
 
   /**
-   * Parst das JSON-Format (IDs).
-   * Flacht Main-Deck und Reserve zu einer Liste ab.
+   * Parst das JSON-Format (IDs oder WrappedDeck format).
    */
   private static parseJsonDeck(jsonString: string): DeckData {
     try {
       const data = JSON.parse(jsonString);
-      // Struktur: { deck: { main: [...], reserve: [...] } }
-      const mainIds = (data.deck?.main || []).map(String);
-      const reserveIds = (data.deck?.reserve || []).map(String);
+      
+      let mainIds: string[] = [];
+      let reserveIds: string[] = [];
+
+      // Check for new WrappedDeck format
+      if (data.deckData) {
+        mainIds = (data.deckData.main || []).map(String);
+        reserveIds = (data.deckData.reserve || []).map(String);
+      } else {
+        // Fallback to old format: { deck: { main: [...], reserve: [...] } }
+        mainIds = (data.deck?.main || []).map(String);
+        reserveIds = (data.deck?.reserve || []).map(String);
+      }
 
       log(
         "DeckUtils",

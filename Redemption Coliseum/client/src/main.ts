@@ -11,6 +11,7 @@ import { SoundManager } from "./managers/SoundManager"; // ✨ NEU
 import { HubScene } from "./scenes/HubScene"; // ✨ NEU
 import { DeckEditorScene } from "./scenes/deck-editor/DeckEditorScene"; // ✨ NEU
 import { DeckCatacombsScene } from "./scenes/deck-catacombs/DeckCatacombsScene";
+import { LocalDecksScene } from "./scenes/deck-catacombs/LocalDecksScene";
 import { NotificationManager } from "./ui/notifications/NotificationManager";
 import { ViewportManager } from "./ui/managers/ViewportManager"; // ✨ NEU: Responsives Layouting
 import { cardData } from "./utils/CardService";
@@ -92,6 +93,7 @@ window.addEventListener("DOMContentLoaded", () => {
   game.scene.add("GameLoadingScene", GameLoadingScene); // ✨ NEU: Registrieren
   game.scene.add("HubScene", HubScene); // ✨ NEU
   game.scene.add("DeckCatacombsScene", DeckCatacombsScene);
+  game.scene.add("LocalDecksScene", LocalDecksScene);
   game.scene.add("DeckEditorScene", DeckEditorScene); // ✨ NEU
   // DeckMetricsDialogScene removed - replaced by HTML overlay in DeckEditorScene
 

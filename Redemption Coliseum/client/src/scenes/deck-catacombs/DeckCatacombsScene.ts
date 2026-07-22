@@ -4,7 +4,7 @@ import { type SoundManager } from "../../managers/SoundManager";
 import { DirectoryPicker } from "../../utils/DirectoryPicker";
 import { SidebarButton } from "../../ui/components/SidebarButton";
 import { SettingsDialogScene } from "../SettingsDialogScene";
-
+import { log } from "../../utils/logger";
 export class DeckCatacombsScene extends Phaser.Scene {
   private soundManager!: SoundManager;
   private background!: Phaser.GameObjects.Image;
@@ -28,6 +28,21 @@ export class DeckCatacombsScene extends Phaser.Scene {
     this.load.image(
       "btn_catacombs_img",
       "assets/backgrounds/Copilot_20260517_235633_Catacombs.png"
+    );
+
+    this.load.image(
+      "btn_local_decks",
+      "assets/backgrounds/Copilot_20260720_233159_Chest.png"
+    );
+
+    this.load.image(
+      "btn_community_decks",
+      "assets/backgrounds/Copilot_20260720_233159_Library.png"
+    );
+
+    this.load.image(
+      "btn_deck_editor",
+      "assets/backgrounds/Copilot_20260721_210751_Deck_Blacksmith.png"
     );
 
     // Particles/flares for premium hover glow effect (MenuTile needs these)
@@ -173,27 +188,19 @@ export class DeckCatacombsScene extends Phaser.Scene {
     const buttonData: MenuTileData[] = [
       {
         id: "local_decks",
-        imageKey: "btn_catacombs_img",
+        imageKey: "btn_local_decks",
         labelText: "Local Decks",
         enabled: true,
         comingSoon: false,
         action: async () => {
           if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
           
-          let dir = await DirectoryPicker.getSavedDirectory();
-          if (dir) {
-            console.log("[DEBUG] Local Decks Directory known:", dir.name);
-          } else {
-            dir = await DirectoryPicker.pickDirectory();
-            if (dir) {
-              console.log("[DEBUG] Selected Local Decks Directory:", dir.name);
-            }
-          }
+          this.scene.start("LocalDecksScene");
         },
       },
       {
         id: "community_decks",
-        imageKey: "btn_catacombs_img",
+        imageKey: "btn_community_decks",
         labelText: "Community Decks",
         enabled: true,
         comingSoon: false,
@@ -204,15 +211,15 @@ export class DeckCatacombsScene extends Phaser.Scene {
       },
       {
         id: "deck_editor",
-        imageKey: "btn_catacombs_img",
-        labelText: "Deck Editor",
+        imageKey: "btn_deck_editor",
+        labelText: "Deck Smith",
         enabled: true,
         comingSoon: false,
         action: () => {
           if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
           this.scene.start("GameLoadingScene", {
             targetScene: "DeckEditorScene",
-            backgroundKey: "btn_catacombs_img",
+            backgroundKey: "btn_deck_editor",
           });
         },
       },
