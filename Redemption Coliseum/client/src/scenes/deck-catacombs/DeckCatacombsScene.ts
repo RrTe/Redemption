@@ -47,7 +47,7 @@ export class DeckCatacombsScene extends Phaser.Scene {
 
     // Particles/flares for premium hover glow effect (MenuTile needs these)
     this.load.image("light_glow", "assets/particles/lightGlow.png");
-    
+
     // Back button placeholder (using settings button graphic)
     this.load.image(
       "button_back_placeholder",
@@ -135,7 +135,7 @@ export class DeckCatacombsScene extends Phaser.Scene {
     const scaleX = width / this.background.width;
     const scaleY = height / this.background.height;
     const scale = Math.max(scaleX, scaleY);
-    
+
     this.background.setPosition(width / 2, height / 2);
     this.background.setScale(scale);
   }
@@ -194,7 +194,7 @@ export class DeckCatacombsScene extends Phaser.Scene {
         comingSoon: false,
         action: async () => {
           if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
-          
+
           this.scene.start("LocalDecksScene");
         },
       },
@@ -228,7 +228,7 @@ export class DeckCatacombsScene extends Phaser.Scene {
     // Layout settings for 3 tiles
     const targetWidth = width * 0.25; // Slightly smaller to fit 3
     const gap = width * 0.05;
-    
+
     // Calculate starting X so they are centered
     const totalWidth = (targetWidth * 3) + (gap * 2);
     const startX = (width - totalWidth) / 2 + targetWidth / 2;
@@ -247,7 +247,7 @@ export class DeckCatacombsScene extends Phaser.Scene {
 
     this.adjustBackgroundSize();
     this.createTiles(width, height);
-    
+
     if (this.settingsButton) this.settingsButton.resize(width, height * 0.18);
     if (this.helpButton) this.helpButton.resize(width, height * 0.7);
   }

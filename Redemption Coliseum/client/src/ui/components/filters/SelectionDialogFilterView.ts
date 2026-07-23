@@ -3,6 +3,8 @@ import { FilterManager } from "./FilterManager";
 import { IconToggleGroup } from "../IconToggleGroup";
 import type { CardState } from "../../../../../shared/types";
 
+import { filterConfigData } from "../../config/filter_config";
+
 export class SelectionDialogFilterView {
   private scene: Phaser.Scene;
   private onFilterChanged: () => void;
@@ -22,7 +24,7 @@ export class SelectionDialogFilterView {
     this.scene = scene;
     this.onFilterChanged = onFilterChanged;
 
-    const configData = scene.cache.json.get("filterConfig");
+    const configData = scene.cache.json.get("filterConfig") || filterConfigData;
     this.filterManager = new FilterManager(configData);
   }
 
@@ -121,8 +123,10 @@ export class SelectionDialogFilterView {
     const row3Y = y + 70 * scale;
 
     // Cards Selected label (prominent font size 32px)
+    const fontKey = this.scene.cache.bitmapFont.exists("wazoo") ? "wazoo" : "fairydust";
+
     this.cardsSelectedText = this.scene.add
-      .bitmapText(x - 420 * scale, row3Y, "wazoo", "Cards selected: 0/0", 32 * scale)
+      .bitmapText(x - 420 * scale, row3Y, fontKey, "Cards selected: 0/0", 32 * scale)
       .setOrigin(0, 0.5)
       .setDepth(21);
 
@@ -136,24 +140,44 @@ export class SelectionDialogFilterView {
       position: "absolute",
       "caret-color": "#e9cd45",
       color: "transparent",
-      "font-size": Math.max(12, Math.min(24, Math.round(20 * scale))) + "px",
-      "font-family": "Arial, Helvetica, sans-serif",
-      padding: "0 0 0 8px",
-      outline: "none",
-      border: "none",
       background: "transparent",
-      "-moz-user-select": "none",
-      "-webkit-user-select": "none",
-      "-ms-user-select": "none",
-      "user-select": "none",
-      cursor: "text",
-      "box-sizing": "border-box",
+      border: "none",
+      outline: "none",
+      width: `${inputWidth}px`,
+      font: `${26 * scale}px sans-serif`,
+      left: "0px",
+      top: "0px",
+      "z-index": "25",
     };
 
-    this.textFilterElem = this.scene.add.dom(inputX, row3Y, "input", style);
-    this.textFilterElem.setOrigin(0, 0.5);
-    (this.textFilterElem.node as HTMLElement).style.width = inputWidth + "px";
-    this.textFilterElem.setDepth(20);
+    const textFilterElem = this.scene.add
+      .dom(inputX, row3Y - inputHeight / 2)
+      .createFromHTML(
+        `<input type="text" id="selection-dialog-filter-input" style="${Object.entries(style)
+          .map(([k, v]) => `${k}:${v}`)
+          .join(";")}">`
+      )
+      .setOrigin(0, 0)
+      .setDepth(25);
+    
+    this.textFilterElem = textFilterElem;
+
+    const inputElem = textFilterElem.getChildByID(
+      "selection-dialog-filter-input"
+    ) as HTMLInputElement;
+
+    if (inputElem) {
+      inputElem.value = this.filterManager.getFilterText();
+
+      inputElem.addEventListener("input", () => {
+        const query = inputElem.value;
+        this.filterManager.setFilterText(query);
+        if (this.textFilterInputTxt) {
+          this.textFilterInputTxt.setText(query);
+        }
+        this.onFilterChanged();
+      });
+    }
 
     // Border graphics for search field
     this.textFilterInput = this.scene.add.graphics().setDepth(20);
@@ -164,7 +188,7 @@ export class SelectionDialogFilterView {
 
     // Search overlay text
     this.textFilterInputTxt = this.scene.add
-      .bitmapText(inputX + 6, row3Y, "wazoo", "", 26 * scale)
+      .bitmapText(inputX + 6, row3Y, fontKey, "", 26 * scale)
       .setOrigin(0, 0.5)
       .setDepth(21);
 
@@ -186,7 +210,7 @@ export class SelectionDialogFilterView {
     textFilters.forEach((filter, i) => {
       const xPos = labelStartX + (labelDistances[i] ?? i * 80 * scale);
       this.scene.add
-        .bitmapText(xPos, row3Y - 21 * scale, "wazoo", `${filter.label}:`, textFilterFontSize)
+        .bitmapText(xPos, row3Y - 21 * scale, fontKey, `${filter.label}:`, textFilterFontSize)
         .setOrigin(0.5, 0)
         .setDepth(21);
     });

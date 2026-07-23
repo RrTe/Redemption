@@ -11,6 +11,7 @@ import { SelectionDialogUIManager } from "../ui/managers/SelectionDialogUIManage
 import { SelectionDialogTransitionHandler } from "../ui/handlers/SelectionDialogTransitionHandler";
 import { log } from "../utils/logger";
 import { SelectionDialogFilterView } from "../ui/components/filters/SelectionDialogFilterView";
+import { filterConfigData } from "../ui/config/filter_config";
 
 // CARDS_PER_PAGE is now calculated dynamically based on screen height
 export interface SelectionAction {
@@ -28,11 +29,14 @@ export interface SelectedCardInfo {
 export interface SelectionDialogData {
   title: string;
   cards: CardState[];
-  room: TypedRoom;
+  room?: TypedRoom;
   showCloseButton: boolean;
   isInteractive: boolean;
   isMyAction: boolean;
   selectionRules?: { min: number; max: number };
+  maxSelectableCount?: number;
+  hidePlayerLabels?: boolean;
+  confirmButtonLabel?: string;
   toZone?: Zone;
   fromZone?: Zone;
   actionType?: "search" | "look" | "reveal";
@@ -65,6 +69,9 @@ export class SelectionDialogScene extends Phaser.Scene {
   }
 
   init(data: SelectionDialogData) {
+    if (!this.cache.json.exists("filterConfig")) {
+      this.cache.json.add("filterConfig", filterConfigData);
+    }
     this.dialogData = data;
     this.room = data.room;
     const cardsPerPage = this.scale.height < 600 ? 9 : 18;
@@ -83,6 +90,8 @@ export class SelectionDialogScene extends Phaser.Scene {
   }
 
   create() {
+    this.scene.bringToTop();
+
     this.add
       .rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.7)
       .setOrigin(0, 0)
@@ -147,6 +156,8 @@ export class SelectionDialogScene extends Phaser.Scene {
         this.dialogData.possibleActions,
         this.dialogData.isInteractive,
         this.dialogData.isMyAction,
+        this.dialogData.hidePlayerLabels,
+        this.dialogData.confirmButtonLabel,
         (zone, target, isOpponent) =>
           this.handleZoneButtonClick(zone, target, isOpponent),
       );

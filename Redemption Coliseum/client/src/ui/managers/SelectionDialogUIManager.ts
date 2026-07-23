@@ -106,6 +106,8 @@ export class SelectionDialogUIManager {
     possibleActions: SelectionAction[] | undefined,
     isInteractive: boolean,
     isMyAction: boolean,
+    hidePlayerLabels: boolean | undefined,
+    confirmButtonLabel: string | undefined,
     onButtonClick: (
       zone: Zone,
       target: "me" | "opponent",
@@ -113,6 +115,36 @@ export class SelectionDialogUIManager {
     ) => void, // Callback for button clicks
   ) {
     if (!isInteractive) return;
+
+    if (confirmButtonLabel) {
+      const h = this.scene.scale.height;
+      const bWidth = 160;
+      const bHeight = 48;
+      const startX = this.scene.scale.width / 2;
+      const yPos = h - 60;
+
+      const btn = this.scene.add.container(startX, yPos).setDepth(100);
+      const bg = this.scene.add
+        .image(0, 0, "button_parchment")
+        .setDisplaySize(bWidth, bHeight);
+      const txt = this.scene.add
+        .bitmapText(0, -3, "fairydust", confirmButtonLabel, 26)
+        .setOrigin(0.5)
+        .setTint(0xfff580)
+        .setDropShadow(3, 3, 0x000000, 1.0);
+      btn
+        .add([bg, txt])
+        .setSize(bWidth, bHeight)
+        .setInteractive({ useHandCursor: true })
+        .setData("zone", "hand")
+        .setData("target", "me");
+      btn.on("pointerdown", () => {
+        if (btn.alpha < 1) return;
+        onButtonClick("hand" as Zone, "me", false);
+      });
+      this.actionButtons.push(btn);
+      return;
+    }
 
     const zones = [
       { label: "Hand", zone: "hand" as Zone },
@@ -139,17 +171,19 @@ export class SelectionDialogUIManager {
       const textY = isOpponent ? (isShort ? h * 0.04 : 40) : (isShort ? h * 0.95 : h - 30);
       const yPos = isOpponent ? (isShort ? h * 0.15 : 90) : (isShort ? h * 0.89 : h - 80);
 
-      this.scene.add
-        .bitmapText(
-          this.scene.scale.width / 2,
-          textY,
-          "fairydust",
-          isOpponent ? "Opponent" : "You",
-          titleSize,
-        )
-        .setOrigin(0.5)
-        .setTint(0xffd700)
-        .setDepth(100);
+      if (!hidePlayerLabels) {
+        this.scene.add
+          .bitmapText(
+            this.scene.scale.width / 2,
+            textY,
+            "fairydust",
+            isOpponent ? "Opponent" : "You",
+            titleSize,
+          )
+          .setOrigin(0.5)
+          .setTint(0xffd700)
+          .setDepth(100);
+      }
 
       let startX =
         (this.scene.scale.width - zones.length * (bWidth + 10)) / 2 +
@@ -265,8 +299,8 @@ export class SelectionDialogUIManager {
       card.setData("baseY", ty);
 
       // ✨ FIX: Disable standard drag-and-drop for cards inside the Selection Dialog
-      // This
-      this.setupCardInteractivity(card, isInteractive, previewManager, (this.scene as any).room.sessionId, transitionHandler, () => onCardClicked(card));
+      const sessionId = (this.scene as any).room?.sessionId || "";
+      this.setupCardInteractivity(card, isInteractive, previewManager, sessionId, transitionHandler, () => onCardClicked(card));
       if (selectedCards.has(data.id)) {
         card.setTint(0x00ff00);
       }
