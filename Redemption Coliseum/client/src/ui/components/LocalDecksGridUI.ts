@@ -252,9 +252,28 @@ export class LocalDecksGridUI {
     if (winFullIn) {
       winFullIn.focus();
       winFullIn.select();
-    }
+    }    let isSaved = false;
 
-    let isSaved = false;
+    const cleanupOutsideListener = () => {
+      document.removeEventListener("pointerdown", handleOutsideClick);
+    };
+
+    const cancelAndRestore = () => {
+      if (isSaved) return;
+      isSaved = true;
+      cleanupOutsideListener();
+      restoreNormalView();
+    };
+
+    const handleOutsideClick = (e: PointerEvent | MouseEvent) => {
+      if (!statsContainer.contains(e.target as Node)) {
+        cancelAndRestore();
+      }
+    };
+
+    setTimeout(() => {
+      document.addEventListener("pointerdown", handleOutsideClick);
+    }, 50);
 
     const restoreNormalView = () => {
       statsContainer.innerHTML = originalContent;
@@ -272,6 +291,7 @@ export class LocalDecksGridUI {
     const saveStats = async () => {
       if (isSaved) return;
       isSaved = true;
+      cleanupOutsideListener();
 
       const newFullWins = Math.max(0, parseInt(winFullIn?.value || "0") || 0);
       const newPartialWins = Math.max(0, parseInt(winPartIn?.value || "0") || 0);
@@ -307,8 +327,7 @@ export class LocalDecksGridUI {
       if (e.key === "Enter") {
         saveStats();
       } else if (e.key === "Escape") {
-        isSaved = true;
-        restoreNormalView();
+        cancelAndRestore();
       }
     };
 
@@ -332,29 +351,34 @@ export class LocalDecksGridUI {
     input.focus();
     input.select();
 
-    const saveName = async () => {
-      const newName = input.value.trim();
-      if (newName && newName !== currentName) {
-        deck.name = newName;
-        await this.scanner.saveMetadataPermanently(deck);
-        if (callbacks.onDeckRenamed) callbacks.onDeckRenamed(deck, newName);
-      }
+    let isDone = false;
+
+    const restoreTitleSpan = () => {
+      if (isDone) return;
+      isDone = true;
       const newSpan = document.createElement("span");
       newSpan.className = "deck-tile-title";
       newSpan.innerText = deck.name;
       input.replaceWith(newSpan);
     };
 
+    const saveName = async () => {
+      if (isDone) return;
+      isDone = true;
+      const newName = input.value.trim();
+      if (newName && newName !== currentName) {
+        deck.name = newName;
+        await this.scanner.saveMetadataPermanently(deck);
+        if (callbacks.onDeckRenamed) callbacks.onDeckRenamed(deck, newName);
+      }
+      restoreTitleSpan();
+    };
+
     input.onkeydown = (e) => {
       if (e.key === "Enter") saveName();
-      if (e.key === "Escape") {
-        const newSpan = document.createElement("span");
-        newSpan.className = "deck-tile-title";
-        newSpan.innerText = currentName;
-        input.replaceWith(newSpan);
-      }
+      if (e.key === "Escape") restoreTitleSpan();
     };
-    input.onblur = saveName;
+    input.onblur = () => restoreTitleSpan();
   }
 
   private openMetrics(scene: Phaser.Scene, deck: DeckMetadata, cardDatabase: any[]) {
