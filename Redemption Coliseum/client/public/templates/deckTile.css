@@ -62,9 +62,12 @@
 }
 
 @keyframes goldPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 12px rgba(255, 215, 0, 0.4);
   }
+
   50% {
     box-shadow: 0 0 22px rgba(255, 215, 0, 0.8);
   }
@@ -118,7 +121,7 @@
   background: #222;
   border: 1px solid #ffd83a;
   color: #fff;
-  font-size: 14px;
+  font-size: 16px;
   padding: 2px 5px;
   border-radius: 4px;
   width: 80%;
@@ -208,10 +211,79 @@
   text-shadow: 1px 1px 2px #000000;
   background: rgba(15, 15, 15, 0.65);
   border-radius: 4px;
-  padding: 4px 10px;
+  padding: 3px 8px 3px 12px;
   box-sizing: border-box;
   width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.deck-tile-stats-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
   text-align: center;
+}
+
+.deck-tile-stats-edit-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 18px;
+  text-shadow: 1px 1px 2px #000;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.deck-tile-stats-edit-btn:hover {
+  color: #fff;
+}
+
+.deck-stat-edit-container {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 14px;
+  color: #ffd83a;
+  width: 100%;
+  justify-content: center;
+}
+
+.deck-stat-input {
+  width: 28px;
+  background: #222;
+  border: 1px solid #ffd83a;
+  color: #fff;
+  font-size: 14px;
+  padding: 1px 2px;
+  border-radius: 3px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.deck-stat-save-btn {
+  background: #b8860b;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 4px;
+  font-weight: bold;
+}
+
+.deck-stat-save-btn:hover {
+  background: #daa520;
 }
 
 .deck-tile-btn-group {

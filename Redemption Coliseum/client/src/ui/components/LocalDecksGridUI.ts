@@ -2,6 +2,7 @@ import type { DeckMetadata } from "../../types/DeckMetadata";
 import { BRIGADE_COLORS } from "../../config/BrigadeConfig";
 import { DeckMetricsOverlayManager } from "../managers/DeckMetricsOverlayManager";
 import { LocalDecksDB } from "../../utils/LocalDecksDB";
+import { LocalDeckScanner } from "../../managers/LocalDeckScanner";
 import { log, error } from "../../utils/logger";
 
 export const TROPHY_THRESHOLDS = {
@@ -20,10 +21,12 @@ export interface LocalDecksGridCallbacks {
 export class LocalDecksGridUI {
   private containerEl: HTMLElement | null = null;
   private db: LocalDecksDB;
+  private scanner: LocalDeckScanner;
   private templateNode: HTMLElement | null = null;
 
   constructor() {
     this.db = new LocalDecksDB();
+    this.scanner = new LocalDeckScanner([]);
     this.ensureStylesheetLoaded();
   }
 
@@ -169,13 +172,16 @@ export class LocalDecksGridUI {
 
     // 4. Footer: Stats & Counts
     const statsContainer = tile.querySelector(".deck-tile-stats") as HTMLElement;
-    if (statsContainer) {
-      const fullWins = deck.stats?.wins?.full || 0;
-      const partialWins = deck.stats?.wins?.partial || 0;
-      const fullLosses = deck.stats?.losses?.full || 0;
-      const partialLosses = deck.stats?.losses?.partial || 0;
-      const t = deck.stats?.ties || 0;
-      statsContainer.innerText = `W:${fullWins}/${partialWins} L:${fullLosses}/${partialLosses} T:${t} | M:${deck.cardCount?.main || 0} R:${deck.cardCount?.reserve || 0}`;
+    const statsText = tile.querySelector(".deck-tile-stats-text") as HTMLElement;
+    const statsEditBtn = tile.querySelector(".deck-tile-stats-edit-btn") as HTMLButtonElement;
+
+    this.updateStatsText(statsText, deck);
+
+    if (statsEditBtn) {
+      statsEditBtn.onclick = (e) => {
+        e.stopPropagation();
+        this.enableInlineStatsEdit(tile, statsContainer, deck, callbacks);
+      };
     }
 
     // 5. Action Buttons (Smith & Battle)
@@ -190,6 +196,125 @@ export class LocalDecksGridUI {
     }
 
     return tile;
+  }
+
+  private updateStatsText(statsText: HTMLElement | null, deck: DeckMetadata): void {
+    if (!statsText) return;
+    const fullWins = deck.stats?.wins?.full || 0;
+    const partialWins = deck.stats?.wins?.partial || 0;
+    const fullLosses = deck.stats?.losses?.full || 0;
+    const partialLosses = deck.stats?.losses?.partial || 0;
+    const t = deck.stats?.ties || 0;
+    statsText.innerText = `W:${fullWins}/${partialWins} L:${fullLosses}/${partialLosses} T:${t} | M:${deck.cardCount?.main || 0} R:${deck.cardCount?.reserve || 0}`;
+  }
+
+  private async enableInlineStatsEdit(
+    tile: HTMLElement,
+    statsContainer: HTMLElement,
+    deck: DeckMetadata,
+    callbacks: LocalDecksGridCallbacks
+  ) {
+    const fullWins = deck.stats?.wins?.full || 0;
+    const partialWins = deck.stats?.wins?.partial || 0;
+    const fullLosses = deck.stats?.losses?.full || 0;
+    const partialLosses = deck.stats?.losses?.partial || 0;
+    const ties = deck.stats?.ties || 0;
+
+    const originalContent = statsContainer.innerHTML;
+    statsContainer.innerHTML = "";
+
+    const editWrapper = document.createElement("div");
+    editWrapper.className = "deck-stat-edit-container";
+
+    editWrapper.innerHTML = `
+      <span>W:</span>
+      <input type="number" min="0" class="deck-stat-input win-full" value="${fullWins}">
+      <span>/</span>
+      <input type="number" min="0" class="deck-stat-input win-part" value="${partialWins}">
+      <span style="margin-left:2px;">L:</span>
+      <input type="number" min="0" class="deck-stat-input loss-full" value="${fullLosses}">
+      <span>/</span>
+      <input type="number" min="0" class="deck-stat-input loss-part" value="${partialLosses}">
+      <span style="margin-left:2px;">T:</span>
+      <input type="number" min="0" class="deck-stat-input ties-input" value="${ties}">
+      <button class="deck-stat-save-btn" title="Save Stats">✓</button>
+    `;
+
+    statsContainer.appendChild(editWrapper);
+
+    const winFullIn = editWrapper.querySelector(".win-full") as HTMLInputElement;
+    const winPartIn = editWrapper.querySelector(".win-part") as HTMLInputElement;
+    const lossFullIn = editWrapper.querySelector(".loss-full") as HTMLInputElement;
+    const lossPartIn = editWrapper.querySelector(".loss-part") as HTMLInputElement;
+    const tiesIn = editWrapper.querySelector(".ties-input") as HTMLInputElement;
+    const saveBtn = editWrapper.querySelector(".deck-stat-save-btn") as HTMLButtonElement;
+
+    if (winFullIn) {
+      winFullIn.focus();
+      winFullIn.select();
+    }
+
+    let isSaved = false;
+
+    const restoreNormalView = () => {
+      statsContainer.innerHTML = originalContent;
+      const newStatsText = statsContainer.querySelector(".deck-tile-stats-text") as HTMLElement;
+      this.updateStatsText(newStatsText, deck);
+      const newEditBtn = statsContainer.querySelector(".deck-tile-stats-edit-btn") as HTMLButtonElement;
+      if (newEditBtn) {
+        newEditBtn.onclick = (ev) => {
+          ev.stopPropagation();
+          this.enableInlineStatsEdit(tile, statsContainer, deck, callbacks);
+        };
+      }
+    };
+
+    const saveStats = async () => {
+      if (isSaved) return;
+      isSaved = true;
+
+      const newFullWins = Math.max(0, parseInt(winFullIn?.value || "0") || 0);
+      const newPartialWins = Math.max(0, parseInt(winPartIn?.value || "0") || 0);
+      const newFullLosses = Math.max(0, parseInt(lossFullIn?.value || "0") || 0);
+      const newPartialLosses = Math.max(0, parseInt(lossPartIn?.value || "0") || 0);
+      const newTies = Math.max(0, parseInt(tiesIn?.value || "0") || 0);
+
+      deck.stats = {
+        ...(deck.stats || {}),
+        wins: { full: newFullWins, partial: newPartialWins },
+        losses: { full: newFullLosses, partial: newPartialLosses },
+        ties: newTies,
+      };
+
+      await this.scanner.saveMetadataPermanently(deck);
+
+      const totalWins = newFullWins + newPartialWins;
+      tile.className = `deck-tile ${this.getTierClass(totalWins)}`;
+
+      restoreNormalView();
+
+      if (callbacks.onDeckRenamed) {
+        callbacks.onDeckRenamed(deck, deck.name);
+      }
+    };
+
+    saveBtn.onclick = (e) => {
+      e.stopPropagation();
+      saveStats();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        saveStats();
+      } else if (e.key === "Escape") {
+        isSaved = true;
+        restoreNormalView();
+      }
+    };
+
+    editWrapper.querySelectorAll("input").forEach((inp) => {
+      inp.onkeydown = handleKeyDown;
+    });
   }
 
   private async enableInlineRename(
@@ -211,7 +336,7 @@ export class LocalDecksGridUI {
       const newName = input.value.trim();
       if (newName && newName !== currentName) {
         deck.name = newName;
-        await this.db.saveCachedMetadata(deck);
+        await this.scanner.saveMetadataPermanently(deck);
         if (callbacks.onDeckRenamed) callbacks.onDeckRenamed(deck, newName);
       }
       const newSpan = document.createElement("span");

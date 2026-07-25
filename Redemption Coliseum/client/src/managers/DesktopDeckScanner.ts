@@ -227,4 +227,25 @@ export class DesktopDeckScanner {
       error("DesktopDeckScanner", `Failed to import ${file.name}`, err);
     }
   }
+
+  public async updateDeckMetadataOnDisk(meta: DeckMetadata): Promise<void> {
+    try {
+      const targetDir = await this.db.getDirectoryHandle("target_dir");
+      if (!targetDir) return;
+      const targetFileName = `${meta.name}.json`;
+      const fileHandle = await targetDir.getFileHandle(targetFileName, { create: false });
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (data) {
+        data.meta = meta;
+        const writable = await fileHandle.createWritable();
+        await writable.write(JSON.stringify(data, null, 2));
+        await writable.close();
+        log("DesktopDeckScanner", `Updated target JSON file ${targetFileName} on disk.`);
+      }
+    } catch (err) {
+      log("DesktopDeckScanner", `Could not update target JSON file on disk for ${meta.name}`, err);
+    }
+  }
 }

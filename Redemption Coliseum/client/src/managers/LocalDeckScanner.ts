@@ -1,3 +1,4 @@
+import type { DeckMetadata } from "../types/DeckMetadata";
 import { LocalDecksDB } from "../utils/LocalDecksDB";
 import { DesktopDeckScanner } from "./DesktopDeckScanner";
 import { MobileDeckScanner } from "./MobileDeckScanner";
@@ -26,6 +27,19 @@ export class LocalDeckScanner {
       }
     } else {
       await this.mobileScanner.syncVirtualToCache();
+    }
+  }
+
+  /**
+   * Permanently updates deck metadata in both cache and target storage (disk JSON or virtual deck).
+   */
+  public async saveMetadataPermanently(meta: DeckMetadata): Promise<void> {
+    await this.db.saveCachedMetadata(meta);
+
+    if ("showDirectoryPicker" in window) {
+      await this.desktopScanner.updateDeckMetadataOnDisk(meta);
+    } else {
+      await this.mobileScanner.updateDeckMetadataInVirtual(meta);
     }
   }
 

@@ -1,3 +1,4 @@
+import type { DeckMetadata } from "../types/DeckMetadata";
 import { LocalDecksDB } from "../utils/LocalDecksDB";
 import { DeckUtils } from "../utils/DeckUtils";
 import { LocalDeckMetadataGenerator } from "./LocalDeckMetadataGenerator";
@@ -99,6 +100,19 @@ export class MobileDeckScanner {
       } catch (err) {
         error("MobileDeckScanner", `Failed to process file ${file.name}`, err);
       }
+    }
+  }
+
+  public async updateDeckMetadataInVirtual(meta: DeckMetadata): Promise<void> {
+    try {
+      const wrapped = await this.db.getVirtualDeck(meta.name);
+      if (wrapped) {
+        wrapped.meta = meta;
+        await this.db.saveVirtualDeck(wrapped);
+        log("MobileDeckScanner", `Updated virtual deck metadata for ${meta.name}.`);
+      }
+    } catch (err) {
+      log("MobileDeckScanner", `Could not update virtual deck metadata for ${meta.name}`, err);
     }
   }
 }
