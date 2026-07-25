@@ -15,7 +15,9 @@ export class LocalDeckMetadataGenerator {
     deckData: DeckData,
     filename: string,
     lastModified: number,
-    cardDatabase: any[]
+    cardDatabase: any[],
+    existingMeta?: DeckMetadata,
+    resetStats: boolean = false
   ): DeckMetadata {
     const deckName = filename.replace(/\.[^/.]+$/, ""); // Remove extension
     const cardIds = new Set<string>();
@@ -58,15 +60,26 @@ export class LocalDeckMetadataGenerator {
     deckData.main.forEach(processCard);
     deckData.reserve.forEach(processCard);
 
-    // Initial default stats
-    const stats: DeckStats = {
+    const defaultStats: DeckStats = {
       wins: { full: 0, partial: 0 },
       losses: { full: 0, partial: 0 },
       ties: 0,
     };
 
+    const stats: DeckStats = resetStats
+      ? defaultStats
+      : (existingMeta?.stats || deckData.rawMeta?.stats || defaultStats);
+
+    const visuals = existingMeta?.visuals || deckData.rawMeta?.visuals || {
+      heroCharacterCardId,
+      evilCharacterCardId,
+      fallbackGraphic: "Copilot_20260517_235633_Catacombs.png",
+    };
+
+    const id = existingMeta?.id || deckData.rawMeta?.id || crypto.randomUUID();
+
     return {
-      id: crypto.randomUUID(),
+      id,
       name: deckName,
       lastModified,
       cardCount: {
@@ -78,11 +91,7 @@ export class LocalDeckMetadataGenerator {
       isValid: true, // TODO: Run centralized validation logic
       brigades: Array.from(brigades),
       cardIds: Array.from(cardIds),
-      visuals: {
-        heroCharacterCardId,
-        evilCharacterCardId,
-        fallbackGraphic: "Copilot_20260517_235633_Catacombs.png",
-      },
+      visuals,
       stats,
     };
   }

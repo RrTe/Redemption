@@ -87,7 +87,7 @@ export class LocalDecksGridUI {
 
     const editBtn = document.createElement("button");
     editBtn.className = "deck-tile-edit-btn";
-    editBtn.innerHTML = "✎";
+    editBtn.innerHTML = "🖉";
     editBtn.title = "Rename Deck";
 
     editBtn.onclick = (e) => {
@@ -169,11 +169,20 @@ export class LocalDecksGridUI {
     // Left: Brigades
     const brigadesContainer = document.createElement("div");
     brigadesContainer.className = "deck-tile-brigades";
+
+    // const brigadesLabel = document.createElement("span");
+    // brigadesLabel.className = "deck-tile-brigades-label";
+    // brigadesLabel.innerText = "Brigades:";
+    // brigadesContainer.appendChild(brigadesLabel);
+
     (deck.brigades || []).slice(0, 6).forEach((bName) => {
       const gem = document.createElement("span");
       gem.className = "brigade-gem";
       const hex = BRIGADE_COLORS[bName] ?? 0x808080;
-      gem.style.backgroundColor = `#${hex.toString(16).padStart(6, "0")}`;
+      const hexStr = hex.toString(16).padStart(6, "0");
+      gem.style.backgroundColor = `#${hexStr}`;
+      gem.style.backgroundImage = "linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 60%)";
+      gem.style.boxShadow = `inset -2px -2px 4px rgba(0,0,0,0.5), 0 0 6px #${hexStr}`;
       gem.title = bName;
       brigadesContainer.appendChild(gem);
     });
@@ -282,27 +291,29 @@ export class LocalDecksGridUI {
         gap: 20px; z-index: 1000; padding-bottom: 20px; box-sizing: border-box;
       }
       .local-decks-empty-text { color: #aaa; font-family: sans-serif; font-size: 18px; grid-column: 1 / -1; text-align: center; margin-top: 50px; }
-      .deck-tile { border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; color: #fff; font-family: sans-serif; box-sizing: border-box; backdrop-filter: blur(5px); }
-      .tier-stone { border: 2px solid #555; background: linear-gradient(135deg, rgba(42,42,42,0.9), rgba(26,26,26,0.9)); }
-      .tier-bronze { border: 2px solid #cd7f32; background: linear-gradient(135deg, rgba(61,38,18,0.9), rgba(31,19,8,0.9)); box-shadow: 0 0 10px rgba(205,127,50,0.3); }
-      .tier-silver { border: 2px solid #c0c0c0; background: linear-gradient(135deg, rgba(58,63,71,0.9), rgba(28,32,38,0.9)); box-shadow: 0 0 12px rgba(192,192,192,0.4); }
-      .tier-gold { border: 2px solid #ffd700; background: linear-gradient(135deg, rgba(77,61,0,0.9), rgba(38,31,0,0.9)); transform: translateZ(0); will-change: opacity, box-shadow; animation: goldPulse 2.5s infinite ease-in-out; }
+      .deck-tile { border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; color: #fff; font-family: sans-serif; box-sizing: border-box; background-size: 100% 100%; background-position: center; background-repeat: no-repeat; box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.65); }
+      .tier-stone { border: 2px solid #555; background-image: url('assets/backgrounds/stocksnap-grey-2620586_640.jpg'); }
+      .tier-bronze { border: 2px solid #cd7f32; background-image: url('assets/backgrounds/Bronze.jpg'); box-shadow: 0 0 10px rgba(205,127,50,0.3); }
+      .tier-silver { border: 2px solid #c0c0c0; background-image: url('assets/backgrounds/Silver.jpg'); }
+      .tier-gold { border: 2px solid #ffd700; background-image: url('assets/backgrounds/Gold.jpg'); transform: translateZ(0); will-change: opacity, box-shadow; animation: goldPulse 2.5s infinite ease-in-out; }
       @keyframes goldPulse { 0%, 100% { box-shadow: 0 0 12px rgba(255,215,0,0.4); } 50% { box-shadow: 0 0 22px rgba(255,215,0,0.8); } }
-      .deck-tile-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 16px; color: #ffd700; }
-      .deck-tile-edit-btn { background: none; border: none; color: #aaa; cursor: pointer; font-size: 16px; }
+      .deck-tile-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 18px; color: #ffd83a; text-shadow: 1px 1px 2px #000000; background: rgba(15, 15, 15, 0.65); border-radius: 4px; padding: 3px 8px 3px 12px; box-sizing: border-box; width: 100%; gap: 8px; }
+      .deck-tile-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; cursor: default; }
+      .deck-tile-edit-btn { background: none; border: none; color: #aaa; cursor: pointer; font-size: 18px; text-shadow: 1px 1px 2px #000; flex-shrink: 0; margin-left: auto; padding: 0; line-height: 1; display: flex; align-items: center; }
       .deck-tile-edit-btn:hover { color: #fff; }
-      .deck-tile-title-input { background: #222; border: 1px solid #ffd700; color: #fff; font-size: 14px; padding: 2px 5px; border-radius: 4px; width: 80%; }
-      .deck-tile-banner { height: 145px; border-radius: 8px; background-size: cover; background-position: center; position: relative; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
-      .deck-tile-medallion { width: 115px; height: 115px; border-radius: 50%; border: 3px solid #b8860b; background-size: cover; background-position: center; box-shadow: 0 0 14px rgba(0,0,0,0.9); }
+      .deck-tile-title-input { background: #222; border: 1px solid #ffd83a; color: #fff; font-size: 14px; padding: 2px 5px; border-radius: 4px; width: 80%; }
+      .deck-tile-banner { height: 145px; border-radius: 8px; background-size: cover; background-position: top center; position: relative; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0px 5px 8px rgba(0, 0, 0, 0.65); }
+      .deck-tile-medallion { width: 115px; height: 115px; border-radius: 50%; border: 3px solid #b8860b; background-size: cover; background-position: top center; box-shadow: 0px 5px 12px rgba(0, 0, 0, 0.85), 0 0 10px rgba(255,215,0,0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+      .deck-tile-medallion:hover { transform: scale(1.04) translateY(-2px); box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.9), 0 0 16px rgba(255,215,0,0.6); }
       .deck-tile-banner-actions { position: absolute; top: 6px; right: 6px; display: flex; gap: 6px; }
-      .deck-banner-action-btn { background: rgba(0,0,0,0.7); border: 1px solid #b8860b; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 14px; }
+      .deck-banner-action-btn { background: rgba(0,0,0,0.7); border: 1px solid #b8860b; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 14px; box-shadow: 0px 3px 6px rgba(0,0,0,0.6); }
       .deck-banner-action-btn:hover { transform: scale(1.1); background: rgba(0,0,0,0.9); }
       .deck-tile-footer { display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
-      .deck-tile-brigades { display: flex; gap: 6px; }
-      .brigade-gem { width: 14px; height: 14px; border-radius: 50%; border: 1px solid #000; box-shadow: 0 0 4px rgba(0,0,0,0.5); }
-      .deck-tile-stats { color: #c59b27ff; font-size: 16px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+      .deck-tile-brigades { display: flex; align-items: center; gap: 6px; }
+      .brigade-gem { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.8); box-sizing: border-box; }
+      .deck-tile-stats { color: #ffd83a; font-size: 15px; font-weight: bold; text-shadow: 1px 1px 2px #000000; background: rgba(15, 15, 15, 0.65); border-radius: 4px; padding: 4px 10px; box-sizing: border-box; width: 100%; text-align: center; }
       .deck-tile-btn-group { display: flex; gap: 8px; margin-top: 4px; }
-      .deck-action-btn { flex: 1; padding: 8px 10px; border: 1px solid #b8860b; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; font-family: 'FairyDust', 'Georgia', serif, sans-serif; color: #fff580; text-shadow: 1px 1px 2px #000; box-shadow: 0 2px 4px rgba(0,0,0,0.5); transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease; }
+      .deck-action-btn { flex: 1; padding: 8px 10px; border: 1px solid #b8860b; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; font-family: 'FairyDust', 'Georgia', serif, sans-serif; color: #ffd83a; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000, 1px -1px 2px #000, -1px 1px 2px #000; box-shadow: 0 4px 6px rgba(0,0,0,0.6); transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease; }
       .deck-action-btn.smith { background: linear-gradient(180deg, #b8860b 0%, #684a04 100%); }
       .deck-action-btn.smith:hover { background: linear-gradient(180deg, #daa520 0%, #8b6508 100%); transform: scale(1.02); box-shadow: 0 0 8px rgba(218,165,32,0.6); }
       .deck-action-btn.battle { background: linear-gradient(180deg, #8b0000 0%, #4a0000 100%); }

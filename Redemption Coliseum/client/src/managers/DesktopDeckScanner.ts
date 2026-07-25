@@ -83,12 +83,37 @@ export class DesktopDeckScanner {
     }
   }
 
+  /**
+   * Reads all .json files in targetDirHandle and syncs their metadata into deck_cache.
+   * Ensures manual edits to JSON files or game stat updates are reloaded on startup.
+   */
+  public async syncTargetJsonToCache(targetDirHandle: any): Promise<void> {
+    try {
+      for await (const entry of targetDirHandle.values()) {
+        if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".json")) {
+          try {
+            const file = await entry.getFile();
+            const text = await file.text();
+            const data = JSON.parse(text);
+            if (data && data.meta) {
+              await this.db.saveCachedMetadata(data.meta);
+            }
+          } catch (err) {
+            log("DesktopDeckScanner", `Could not sync target JSON ${entry.name}`, err);
+          }
+        }
+      }
+    } catch (err) {
+      log("DesktopDeckScanner", "Could not iterate target directory for cache sync", err);
+    }
+  }
+
   private async getFilesFromDirectory(dirHandle: any): Promise<any[]> {
     const files = [];
     for await (const entry of dirHandle.values()) {
       if (entry.kind === "file") {
         const lowerName = entry.name.toLowerCase();
-        if (lowerName.endsWith(".txt") || lowerName.endsWith(".dek")) {
+        if (lowerName.endsWith(".txt") || lowerName.endsWith(".dek") || lowerName.endsWith(".json")) {
           files.push(entry);
         }
       }
@@ -101,8 +126,8 @@ export class DesktopDeckScanner {
     const baseName = file.name.replace(/\.[^/.]+$/, "");
     const targetFileName = `${baseName}.json`;
     
-    // Check cache
-    const cachedMeta = await this.db.getCachedMetadata(baseName);
+    // Check existing metadata in cache or target JSON file
+    const cachedMeta = await this.getExistingMeta(baseName, targetDirHandle);
     
     if (cachedMeta) {
       if (file.lastModified > cachedMeta.lastModified) {
@@ -115,6 +140,25 @@ export class DesktopDeckScanner {
       log("DesktopDeckScanner", `New deck found: ${file.name}`);
       await this.importAndSave(file, targetFileName, targetDirHandle);
     }
+  }
+
+  private async getExistingMeta(baseName: string, targetDirHandle: any): Promise<DeckMetadata | undefined> {
+    const cached = await this.db.getCachedMetadata(baseName);
+    if (cached) return cached;
+
+    try {
+      const targetFileName = `${baseName}.json`;
+      const fileHandle = await targetDirHandle.getFileHandle(targetFileName);
+      const file = await fileHandle.getFile();
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (data && data.meta) {
+        return data.meta as DeckMetadata;
+      }
+    } catch {
+      // File doesn't exist in target directory yet
+    }
+    return undefined;
   }
 
   private async handleConflict(
@@ -144,14 +188,15 @@ export class DesktopDeckScanner {
     const resetStats = baseAction === "update_reset_stats";
     log("DesktopDeckScanner", `Updating ${file.name} (Reset Stats: ${resetStats})`);
     
-    await this.importAndSave(file, targetFileName, targetDirHandle, resetStats ? undefined : cachedMeta);
+    await this.importAndSave(file, targetFileName, targetDirHandle, cachedMeta, resetStats);
   }
 
   private async importAndSave(
     file: File, 
     targetFileName: string, 
     targetDirHandle: any,
-    existingMeta?: DeckMetadata
+    existingMeta?: DeckMetadata,
+    resetStats: boolean = false
   ): Promise<void> {
     try {
       const content = await file.text();
@@ -161,13 +206,10 @@ export class DesktopDeckScanner {
         deckData,
         file.name,
         file.lastModified,
-        this.cardDatabase
+        this.cardDatabase,
+        existingMeta,
+        resetStats
       );
-
-      // Preserve stats if required
-      if (existingMeta) {
-        newMeta.stats = existingMeta.stats;
-      }
 
       const wrappedDeck = LocalDeckMetadataGenerator.wrapDeck(newMeta, deckData);
       const jsonContent = JSON.stringify(wrappedDeck, null, 2);

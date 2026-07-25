@@ -134,6 +134,18 @@ export class LocalDecksDB {
     });
   }
 
+  public async getAllVirtualDecks(): Promise<WrappedDeck[]> {
+    const db = await this.initDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction("virtual_decks", "readonly");
+      const store = tx.objectStore("virtual_decks");
+      const request = store.getAll();
+      
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
   // --- Reset / Clear ---
 
   public async clearAll(): Promise<void> {

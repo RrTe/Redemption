@@ -4,6 +4,7 @@ export interface DeckData {
   name?: string;
   main: string[];
   reserve: string[];
+  rawMeta?: any;
 }
 
 export class DeckUtils {
@@ -107,6 +108,7 @@ export class DeckUtils {
       return {
         main: mainIds,
         reserve: reserveIds,
+        rawMeta: data.meta || undefined,
       };
 
     } catch (e) {

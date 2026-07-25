@@ -46,6 +46,23 @@ export class MobileDeckScanner {
     });
   }
 
+  /**
+   * Syncs all virtual_decks in IndexedDB to deck_cache.
+   * Ensures manual edits or saved game stats in virtual_decks are reloaded.
+   */
+  public async syncVirtualToCache(): Promise<void> {
+    try {
+      const virtualDecks = await this.db.getAllVirtualDecks();
+      for (const wrapped of virtualDecks) {
+        if (wrapped && wrapped.meta) {
+          await this.db.saveCachedMetadata(wrapped.meta);
+        }
+      }
+    } catch (err) {
+      log("MobileDeckScanner", "Could not sync virtual decks to cache", err);
+    }
+  }
+
   private async processFiles(
     files: File[],
     onProgress?: (current: number, total: number, filename: string) => void
@@ -61,11 +78,16 @@ export class MobileDeckScanner {
         log("MobileDeckScanner", `Processing uploaded file: ${file.name}`);
 
         const deckData = DeckUtils.parseDeck(content, file.name);
+        const baseName = file.name.replace(/\.[^/.]+$/, "");
+        const existingMeta = await this.db.getCachedMetadata(baseName);
+
         const meta = LocalDeckMetadataGenerator.generateMetadata(
           deckData,
           file.name,
           file.lastModified,
-          this.cardDatabase
+          this.cardDatabase,
+          existingMeta,
+          false // Keep stats by default on mobile import
         );
         const wrappedDeck = LocalDeckMetadataGenerator.wrapDeck(meta, deckData);
 

@@ -149,6 +149,9 @@ export class LocalDecksScene extends Phaser.Scene {
   }
 
   private async initializeDecks() {
+    if (this.scanner) {
+      await this.scanner.syncAllToCache();
+    }
     const cachedDecks = await this.db.getAllCachedMetadata();
     const cardDatabase = this.registry.get("cardDatabase")?.cards || [];
     
