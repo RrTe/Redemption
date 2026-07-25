@@ -170,10 +170,12 @@ export class LocalDecksGridUI {
     // 4. Footer: Stats & Counts
     const statsContainer = tile.querySelector(".deck-tile-stats") as HTMLElement;
     if (statsContainer) {
-      const w = (deck.stats?.wins?.full || 0) + (deck.stats?.wins?.partial || 0);
-      const l = (deck.stats?.losses?.full || 0) + (deck.stats?.losses?.partial || 0);
+      const fullWins = deck.stats?.wins?.full || 0;
+      const partialWins = deck.stats?.wins?.partial || 0;
+      const fullLosses = deck.stats?.losses?.full || 0;
+      const partialLosses = deck.stats?.losses?.partial || 0;
       const t = deck.stats?.ties || 0;
-      statsContainer.innerText = `W:${w} L:${l} T:${t} | M:${deck.cardCount?.main || 0} R:${deck.cardCount?.reserve || 0}`;
+      statsContainer.innerText = `W:${fullWins}/${partialWins} L:${fullLosses}/${partialLosses} T:${t} | M:${deck.cardCount?.main || 0} R:${deck.cardCount?.reserve || 0}`;
     }
 
     // 5. Action Buttons (Smith & Battle)
