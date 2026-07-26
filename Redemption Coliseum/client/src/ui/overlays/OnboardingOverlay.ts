@@ -1,7 +1,7 @@
 export class OnboardingOverlay {
   private static overlayContainer: HTMLElement | null = null;
 
-  public static show(onConfirm: () => void) {
+  public static show(onConfirm: () => void, onCancel?: () => void) {
     if (this.overlayContainer) return;
 
     // Create container
@@ -22,6 +22,7 @@ export class OnboardingOverlay {
 
     // Create modal
     const modal = document.createElement("div");
+    modal.style.position = "relative";
     modal.style.backgroundColor = "#1e1e1e";
     modal.style.border = "2px solid #b8860b"; // Gold border
     modal.style.borderRadius = "12px";
@@ -32,6 +33,41 @@ export class OnboardingOverlay {
     modal.style.color = "#ffffff";
     modal.style.fontFamily = "Arial, sans-serif";
     modal.style.textAlign = "center";
+
+    // Close cross button (gold circle with X)
+    const closeCross = document.createElement("input");
+    closeCross.type = "image";
+    closeCross.className = "dialog-close-cross";
+    closeCross.src = "/assets/deck-editor/symbols/cross_circle_small_compressed.png";
+    closeCross.style.position = "absolute";
+    closeCross.style.top = "14px";
+    closeCross.style.right = "14px";
+    closeCross.style.width = "26px";
+    closeCross.style.height = "26px";
+    closeCross.style.cursor = "pointer";
+    closeCross.style.transition = "transform 0.15s ease";
+    closeCross.title = "Cancel / Close";
+
+    closeCross.onmouseenter = () => {
+      closeCross.style.transform = "scale(1.15)";
+    };
+    closeCross.onmouseleave = () => {
+      closeCross.style.transform = "scale(1)";
+    };
+
+    let isClosed = false;
+    const handleCancel = () => {
+      if (isClosed) return;
+      isClosed = true;
+      this.hide();
+      if (onCancel) onCancel();
+    };
+
+    closeCross.onclick = (e: MouseEvent) => {
+      e.stopPropagation();
+      handleCancel();
+    };
+    modal.appendChild(closeCross);
 
     // Title
     const title = document.createElement("h2");
@@ -84,6 +120,8 @@ export class OnboardingOverlay {
     };
 
     confirmBtn.onclick = () => {
+      if (isClosed) return;
+      isClosed = true;
       this.hide();
       onConfirm();
     };
@@ -91,6 +129,15 @@ export class OnboardingOverlay {
     modal.appendChild(confirmBtn);
     this.overlayContainer.appendChild(modal);
     document.body.appendChild(this.overlayContainer);
+
+    // ESC Key to close
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        window.removeEventListener("keydown", handleKeyDown);
+        handleCancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
   }
 
   public static hide() {

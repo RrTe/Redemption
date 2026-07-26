@@ -98,6 +98,7 @@ export class LocalDecksScene extends Phaser.Scene {
   private resetButton!: Phaser.GameObjects.Image;
   private gridUI!: LocalDecksGridUI;
   private footerEl: HTMLElement | null = null;
+  private currentDecks: DeckMetadata[] = [];
 
   create() {
     if (!this.scene.get("SettingsDialogScene")) {
@@ -157,33 +158,34 @@ export class LocalDecksScene extends Phaser.Scene {
     
     log("LocalDecksScene", `Loaded ${cachedDecks.length} decks from cache.`);
 
-    let needsOnboarding = false;
-    if ("showDirectoryPicker" in window) {
+    this.syncButton.setVisible(true);
+    this.resetButton.setVisible(true);
+    this.statusText.setText(`${cachedDecks.length} Local Decks`);
+    this.renderGrid(cachedDecks, cardDatabase);
+
+    if (cachedDecks.length === 0) {
       const source = await this.db.getDirectoryHandle("source_dir");
       const target = await this.db.getDirectoryHandle("target_dir");
-      if (!source || !target) needsOnboarding = true;
-    } else {
-      if (cachedDecks.length === 0) needsOnboarding = true;
-    }
-
-    if (needsOnboarding) {
-      this.syncButton.setVisible(false);
-      this.resetButton.setVisible(false);
-      this.statusText.setText("");
-      if (this.gridUI) this.gridUI.destroy();
-      this.showOnboarding();
-    } else {
-      this.syncButton.setVisible(true);
-      this.resetButton.setVisible(true);
-      this.statusText.setText(`${cachedDecks.length} Local Decks`);
-      this.renderGrid(cachedDecks, cardDatabase);
+      if (!source || !target) {
+        this.showOnboarding();
+      }
     }
     
     await this.updateStaticFooter();
   }
 
   private renderGrid(decks: DeckMetadata[], cardDatabase: any[]) {
-    this.gridUI.render(this, decks, cardDatabase, {
+    let decksToRender = decks;
+    if ((!decksToRender || decksToRender.length === 0) && this.currentDecks.length > 0) {
+      decksToRender = this.currentDecks;
+    }
+    if (decksToRender && decksToRender.length > 0) {
+      this.currentDecks = decksToRender;
+    }
+    if (this.statusText) {
+      this.statusText.setText(`${decksToRender.length} Local Decks`);
+    }
+    this.gridUI.render(this, decksToRender, cardDatabase, {
       onOpenDeckEditor: (deck) => {
         if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
         this.cleanup();
@@ -261,6 +263,11 @@ export class LocalDecksScene extends Phaser.Scene {
         isInteractive: true,
         isMyAction: true,
         maxSelectableCount: 2,
+        selectionRules: { min: 0, max: 2 },
+        preSelectedCardIds: [
+          deck.visuals?.heroCharacterCardId,
+          deck.visuals?.evilCharacterCardId,
+        ].filter(Boolean) as string[],
         hidePlayerLabels: true,
         confirmButtonLabel: "OK",
         onComplete: async (result: any) => {
@@ -332,26 +339,34 @@ export class LocalDecksScene extends Phaser.Scene {
   }
 
   private showOnboarding() {
-    OnboardingOverlay.show(async () => {
-      await this.triggerScan();
-    });
+    OnboardingOverlay.show(
+      async () => {
+        await this.triggerScan();
+      },
+      () => {
+        // Simple cancel: overlay hides itself, scene UI remains 100% intact
+      }
+    );
   }
 
   private async triggerScan() {
     ScanProgressOverlay.show("Scanning Local Decks...");
     
-    await this.scanner.scanDecks(
-      async () => {
-        ScanProgressOverlay.hide();
-        this.syncButton.setVisible(true);
-        this.resetButton.setVisible(true);
-        
-        await this.initializeDecks();
-      },
-      (current, total, filename) => {
-        ScanProgressOverlay.updateProgress(current, total, filename);
-      }
-    );
+    try {
+      await this.scanner.scanDecks(
+        async () => {
+          ScanProgressOverlay.hide();
+          await this.initializeDecks();
+        },
+        (current, total, filename) => {
+          ScanProgressOverlay.updateProgress(current, total, filename);
+        }
+      );
+    } catch (err) {
+      log("LocalDecksScene", "Scan cancelled or failed", err);
+    } finally {
+      ScanProgressOverlay.hide();
+    }
   }
 
   private createSideButtons(height: number) {
@@ -430,7 +445,7 @@ export class LocalDecksScene extends Phaser.Scene {
     
     this.syncButton.on("pointerdown", () => {
       if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
-      this.triggerScan();
+      this.showOnboarding();
     });
   }
 

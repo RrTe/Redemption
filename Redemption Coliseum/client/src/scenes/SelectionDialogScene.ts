@@ -35,6 +35,7 @@ export interface SelectionDialogData {
   isMyAction: boolean;
   selectionRules?: { min: number; max: number };
   maxSelectableCount?: number;
+  preSelectedCardIds?: string[];
   hidePlayerLabels?: boolean;
   confirmButtonLabel?: string;
   toZone?: Zone;
@@ -86,6 +87,13 @@ export class SelectionDialogScene extends Phaser.Scene {
 
     this.selectedCards.clear();
     this.cardPositions.clear();
+
+    if (data.preSelectedCardIds && Array.isArray(data.preSelectedCardIds)) {
+      data.preSelectedCardIds.forEach((id) => {
+        if (id) this.selectedCards.add(id);
+      });
+    }
+
     this.filterView = new SelectionDialogFilterView(this, () => this.onFilterChanged());
   }
 
@@ -146,6 +154,17 @@ export class SelectionDialogScene extends Phaser.Scene {
     );
     this.renderPage(true, 1);
     this.uiManager.updatePaginationControls(this.paginationManager);
+
+    if (this.selectedCards.size > 0) {
+      const selectedStates = this.paginationManager.getCardsFromIds(
+        this.selectedCards,
+      );
+      this.uiManager.updateSelectedCardsDisplay(
+        selectedStates,
+        this.room?.sessionId || "",
+        this.previewManager,
+      );
+    }
 
     if (this.dialogData.showCloseButton) {
       this.uiManager.createCloseButton(() => this.closeDialog());
@@ -325,7 +344,7 @@ export class SelectionDialogScene extends Phaser.Scene {
 
     this.uiManager.updateSelectedCardsDisplay(
       selectedStates,
-      this.room.sessionId,
+      this.room?.sessionId || "",
       this.previewManager,
     );
 

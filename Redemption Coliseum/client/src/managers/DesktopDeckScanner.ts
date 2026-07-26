@@ -26,23 +26,19 @@ export class DesktopDeckScanner {
     try {
       // 1. Get or prompt for directories
       let sourceDir = await this.db.getDirectoryHandle("source_dir");
-      if (!sourceDir) {
+      if (!sourceDir || !(await this.verifyPermission(sourceDir))) {
         sourceDir = await (window as any).showDirectoryPicker({
           mode: "read",
         });
         await this.db.saveDirectoryHandle("source_dir", sourceDir);
-      } else {
-        await this.verifyPermission(sourceDir);
       }
 
       let targetDir = await this.db.getDirectoryHandle("target_dir");
-      if (!targetDir) {
+      if (!targetDir || !(await this.verifyPermission(targetDir))) {
         targetDir = await (window as any).showDirectoryPicker({
           mode: "readwrite",
         });
         await this.db.saveDirectoryHandle("target_dir", targetDir);
-      } else {
-        await this.verifyPermission(targetDir);
       }
 
       // 2. Iterate source files
@@ -62,6 +58,7 @@ export class DesktopDeckScanner {
       }
       
       log("DesktopDeckScanner", "Directory scan completed successfully.");
+      onComplete();
     } catch (err: any) {
       if (err.name === 'AbortError') {
         log("DesktopDeckScanner", "User cancelled directory picker.");
@@ -70,16 +67,18 @@ export class DesktopDeckScanner {
       }
     } finally {
       this.currentBulkAction = null;
-      onComplete();
     }
   }
 
-  private async verifyPermission(handle: any): Promise<void> {
-    const options = { mode: "readwrite" };
-    if ((await handle.queryPermission(options)) !== "granted") {
-      if ((await handle.requestPermission(options)) !== "granted") {
-        throw new Error("Permission to directory not granted");
-      }
+  private async verifyPermission(handle: any): Promise<boolean> {
+    try {
+      const options = { mode: "readwrite" };
+      if ((await handle.queryPermission(options)) === "granted") return true;
+      if ((await handle.requestPermission(options)) === "granted") return true;
+      return false;
+    } catch (err) {
+      log("DesktopDeckScanner", "Permission check failed", err);
+      return false;
     }
   }
 
@@ -89,6 +88,11 @@ export class DesktopDeckScanner {
    */
   public async syncTargetJsonToCache(targetDirHandle: any): Promise<void> {
     try {
+      const perm = await targetDirHandle.queryPermission({ mode: "readwrite" });
+      if (perm !== "granted") {
+        log("DesktopDeckScanner", "No permission for target_dir during background sync. Using IndexedDB cache.");
+        return;
+      }
       for await (const entry of targetDirHandle.values()) {
         if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".json")) {
           try {
@@ -220,8 +224,9 @@ export class DesktopDeckScanner {
       await writable.write(jsonContent);
       await writable.close();
 
-      // Update cache
+      // Update cache & persistent IndexedDB backup
       await this.db.saveCachedMetadata(newMeta);
+      await this.db.saveVirtualDeck(wrappedDeck);
       log("DesktopDeckScanner", `Successfully saved ${targetFileName}`);
     } catch (err) {
       error("DesktopDeckScanner", `Failed to import ${file.name}`, err);
@@ -239,10 +244,11 @@ export class DesktopDeckScanner {
       const data = JSON.parse(text);
       if (data) {
         data.meta = meta;
+        await this.db.saveVirtualDeck(data);
         const writable = await fileHandle.createWritable();
         await writable.write(JSON.stringify(data, null, 2));
         await writable.close();
-        log("DesktopDeckScanner", `Updated target JSON file ${targetFileName} on disk.`);
+        log("DesktopDeckScanner", `Updated target JSON file ${targetFileName} on disk and virtual DB.`);
       }
     } catch (err) {
       log("DesktopDeckScanner", `Could not update target JSON file on disk for ${meta.name}`, err);

@@ -25,9 +25,8 @@ export class LocalDeckScanner {
       if (targetDir) {
         await this.desktopScanner.syncTargetJsonToCache(targetDir);
       }
-    } else {
-      await this.mobileScanner.syncVirtualToCache();
     }
+    await this.mobileScanner.syncVirtualToCache();
   }
 
   /**
