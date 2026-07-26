@@ -22,6 +22,7 @@ import { editorEvents } from "../../ui/deck-editor/EditorEventCenter";
 import { CardMetricsOverlay } from "../../ui/deck-editor/CardMetricsOverlay";
 import { FilterManager } from "../../ui/components/filters/FilterManager";
 import { DeckMetricsOverlayManager } from "../../ui/managers/DeckMetricsOverlayManager";
+import { LocalDecksDB } from "../../utils/LocalDecksDB";
 import { log } from "../../utils/logger";
 import { DeckValidator } from "../../../../shared/DeckValidator.js";
 import { filterConfigData } from "../../ui/config/filter_config";
@@ -473,6 +474,33 @@ export class DeckEditorScene extends Phaser.Scene {
     // without a long black-screen freeze.
     this.allCardViews = [];
     this.createCardViewsBatched();
+
+    if (this.loadedDeckName) {
+      const localDB = new LocalDecksDB();
+      localDB.getVirtualDeck(this.loadedDeckName).then(async (wrapped) => {
+        if (wrapped && wrapped.deckData) {
+          this.loadDeckFromIDs(
+            wrapped.deckData.main || [],
+            wrapped.deckData.reserve || []
+          );
+        } else if ("showDirectoryPicker" in window) {
+          try {
+            const targetDir = await localDB.getDirectoryHandle("target_dir");
+            if (targetDir) {
+              const fileHandle = await targetDir.getFileHandle(`${this.loadedDeckName}.json`, { create: false });
+              const file = await fileHandle.getFile();
+              const text = await file.text();
+              const parsed = JSON.parse(text);
+              const main = parsed.deckData?.main || parsed.deck?.main || parsed.main || [];
+              const reserve = parsed.deckData?.reserve || parsed.deck?.reserve || parsed.reserve || [];
+              this.loadDeckFromIDs(main, reserve);
+            }
+          } catch (err) {
+            log("DeckEditorScene", `Could not load deck file from disk for ${this.loadedDeckName}`, err);
+          }
+        }
+      });
+    }
   }
 
   /**
@@ -1353,10 +1381,27 @@ export class DeckEditorScene extends Phaser.Scene {
 
 
 
-  private saveDeckJSON() {
-    const deckIDs = this.deckListModel.deckAsIDs();
-    const filename = (this.loadedDeckName || "deck") + ".json";
-    DeckIO.saveDeckFile(filename, deckIDs);
+  private async saveDeckJSON() {
+    const deckIDsString = this.deckListModel.deckAsIDs();
+    const name = this.loadedDeckName || "deck";
+    const filename = name + ".json";
+    DeckIO.saveDeckFile(filename, deckIDsString);
+
+    try {
+      const localDB = new LocalDecksDB();
+      const existing = await localDB.getVirtualDeck(name);
+      if (existing) {
+        const parsed = typeof deckIDsString === "string" ? JSON.parse(deckIDsString) : deckIDsString;
+        existing.deckData = {
+          main: parsed.deck?.main || parsed.main || [],
+          reserve: parsed.deck?.reserve || parsed.reserve || []
+        };
+        await localDB.saveVirtualDeck(existing);
+      }
+    } catch (err) {
+      log("DeckEditorScene", "Could not save virtual deck on JSON save", err);
+    }
+
     this.isDirty = false;
   }
 
@@ -1365,11 +1410,13 @@ export class DeckEditorScene extends Phaser.Scene {
       try {
         this.loadedDeckName = filename.replace(/\.[^/.]+$/, "");
         const deckData = JSON.parse(content);
-        this.loadDeckFromIDs(
-          deckData.deck?.main || [],
-          deckData.deck?.reserve || [],
-        );
+
+        const main = deckData.deckData?.main || deckData.deck?.main || deckData.main || [];
+        const reserve = deckData.deckData?.reserve || deckData.deck?.reserve || deckData.reserve || [];
+
+        this.loadDeckFromIDs(main, reserve);
       } catch (err) {
+        log("DeckEditorScene", "Error loading JSON deck file", err);
         this.soundManager.playSound("DECK_ERROR"); // locked sfx
       }
     });
@@ -1413,12 +1460,18 @@ export class DeckEditorScene extends Phaser.Scene {
     this.deckListModel.clear();
 
     deckIDArray.forEach((id) => {
-      const card = this.cardListModel.getCard(id);
+      let card = this.cardListModel.getCard(id);
+      if (!card) {
+        card = this.cardListModel.cards.find((c) => c.id === id || c.Name === id || c.ImageFile === id) as any;
+      }
       if (card) this.deckListModel.addCardToDeck(card, true);
     });
 
     reserveIDArray.forEach((id) => {
-      const card = this.cardListModel.getCard(id);
+      let card = this.cardListModel.getCard(id);
+      if (!card) {
+        card = this.cardListModel.cards.find((c) => c.id === id || c.Name === id || c.ImageFile === id) as any;
+      }
       if (card) this.deckListModel.addCardToReserve(card, true);
     });
 

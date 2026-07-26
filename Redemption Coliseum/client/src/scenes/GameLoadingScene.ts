@@ -485,7 +485,7 @@ export class GameLoadingScene extends BaseLoadingScene {
 
     if (this.targetScene === "DeckEditorScene") {
       // Transition to DeckEditor (No music stopping needed to keep seamless Hub BGM!)
-      this.scene.start("DeckEditorScene");
+      this.scene.start("DeckEditorScene", this.targetData);
     } else {
       // Transition to CardGame (Stop Lobby music with fade out)
       if (soundManager) {
