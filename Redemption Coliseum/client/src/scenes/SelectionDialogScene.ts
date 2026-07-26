@@ -35,6 +35,7 @@ export interface SelectionDialogData {
   isMyAction: boolean;
   selectionRules?: { min: number; max: number };
   maxSelectableCount?: number;
+  autoReplaceOnMax?: boolean;
   preSelectedCardIds?: string[];
   hidePlayerLabels?: boolean;
   confirmButtonLabel?: string;
@@ -327,16 +328,29 @@ export class SelectionDialogScene extends Phaser.Scene {
     const rules = this.dialogData.selectionRules || { min: 0, max: Infinity };
     if (this.selectedCards.has(id)) {
       this.selectedCards.delete(id);
-      card.clearTint();
     } else if (this.selectedCards.size < rules.max) {
       this.selectedCards.add(id);
-      card.setTint(0x00ff00);
+    } else if (this.dialogData.autoReplaceOnMax && rules.max > 0) {
+      const oldestId = this.selectedCards.values().next().value;
+      if (oldestId) {
+        this.selectedCards.delete(oldestId);
+      }
+      this.selectedCards.add(id);
     }
-    this.uiManager.setToggleInteractivity(
-      id,
-      !this.selectedCards.has(id),
-      this.uiManager.cardUIs,
-    );
+
+    this.uiManager.cardUIs.forEach((cUI) => {
+      const cId = cUI.cardData.id;
+      if (this.selectedCards.has(cId)) {
+        cUI.setTint(0x00ff00);
+      } else {
+        cUI.clearTint();
+      }
+      this.uiManager.setToggleInteractivity(
+        cId,
+        !this.selectedCards.has(cId),
+        this.uiManager.cardUIs,
+      );
+    });
 
     const selectedStates = this.paginationManager.getCardsFromIds(
       this.selectedCards,

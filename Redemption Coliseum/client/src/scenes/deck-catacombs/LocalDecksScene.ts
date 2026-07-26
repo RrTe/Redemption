@@ -218,38 +218,41 @@ export class LocalDecksScene extends Phaser.Scene {
         ? [...(wrapped.deckData.main || []), ...(wrapped.deckData.reserve || [])]
         : (deck.cardIds || []);
       
-      let charCards = allIds
+      const rawCards = allIds
         .map((id) => cardDatabase.find((c: any) => c.id === id || c.Name === id || c.ImageFile === id))
-        .filter(Boolean)
-        .filter((c: any) => {
-          const types = Array.isArray(c.Type) ? c.Type : [c.Type];
-          return types.some((t: string) =>
-            t && (t.includes("Hero") || t.includes("Evil") || t.includes("Character") || t.includes("DAC"))
-          );
-        })
-        .map((c: any) => ({
+        .filter(Boolean);
+
+      // Include ALL cards in the deck without any card type restrictions
+      const charCards = rawCards.map((c: any, index: number) => {
+        const cardKey = c.id || c.Name || c.ImageFile;
+        return {
           ...c,
-          id: c.id || c.Name || c.ImageFile,
+          cardKey: cardKey,
+          id: `${cardKey}__idx_${index}`, // Unique instance ID for SelectionDialog UI
           ImageFile: c.ImageFile || "cardback",
           Name: c.Name || "Unknown Card",
-        }));
-
-      // Fallback: If no character cards detected, use all matched deck cards
-      if (charCards.length === 0) {
-        charCards = allIds
-          .map((id) => cardDatabase.find((c: any) => c.id === id || c.Name === id || c.ImageFile === id))
-          .filter(Boolean)
-          .map((c: any) => ({
-            ...c,
-            id: c.id || c.Name || c.ImageFile,
-            ImageFile: c.ImageFile || "cardback",
-            Name: c.Name || "Unknown Card",
-          }));
-      }
+        };
+      });
 
       if (charCards.length === 0) {
         log("LocalDecksScene", "No cards found in deck to assign champions.");
         return;
+      }
+
+      // Map pre-selected card keys to corresponding unique instance IDs
+      const heroKey = deck.visuals?.heroCharacterCardId;
+      const evilKey = deck.visuals?.evilCharacterCardId;
+
+      const preSelectedInstanceIds: string[] = [];
+      if (heroKey) {
+        const heroMatch = charCards.find((c: any) => c.cardKey === heroKey || c.Name === heroKey || c.ImageFile === heroKey);
+        if (heroMatch) preSelectedInstanceIds.push(heroMatch.id);
+      }
+      if (evilKey) {
+        const evilMatch = charCards.find(
+          (c: any) => (c.cardKey === evilKey || c.Name === evilKey || c.ImageFile === evilKey) && !preSelectedInstanceIds.includes(c.id)
+        );
+        if (evilMatch) preSelectedInstanceIds.push(evilMatch.id);
       }
 
       this.gridUI.setVisible(false);
@@ -257,40 +260,30 @@ export class LocalDecksScene extends Phaser.Scene {
 
       this.scene.pause();
       this.scene.launch("SelectionDialogScene", {
-        title: `Select Champions for ${deck.name}`,
+        title: `Select Cards for ${deck.name} Tile`,
         cards: charCards,
         showCloseButton: true,
         isInteractive: true,
         isMyAction: true,
         maxSelectableCount: 2,
         selectionRules: { min: 0, max: 2 },
-        preSelectedCardIds: [
-          deck.visuals?.heroCharacterCardId,
-          deck.visuals?.evilCharacterCardId,
-        ].filter(Boolean) as string[],
+        autoReplaceOnMax: true,
+        preSelectedCardIds: preSelectedInstanceIds,
         hidePlayerLabels: true,
         confirmButtonLabel: "OK",
         onComplete: async (result: any) => {
-          const selectedIds = (result.selectedCards || []).map((sc: any) => sc.id);
-          const heroCard = charCards.find((c: any) => {
-            if (!selectedIds.includes(c.id)) return false;
-            const types = Array.isArray(c.Type) ? c.Type : [c.Type];
-            return types.some((t: string) => t && (t.includes("Hero") || t.includes("DAC")));
-          }) || charCards.find((c: any) => selectedIds.includes(c.id));
-
-          const evilCard = charCards.find((c: any) => {
-            if (!selectedIds.includes(c.id)) return false;
-            const types = Array.isArray(c.Type) ? c.Type : [c.Type];
-            return types.some((t: string) => t && t.includes("Evil"));
-          }) || charCards.find((c: any) => selectedIds.includes(c.id) && c.id !== heroCard?.id);
+          const selectedInstanceIds = (result.selectedCards || []).map((sc: any) => sc.id);
+          const chosenCards = charCards.filter((c: any) => selectedInstanceIds.includes(c.id));
 
           if (!deck.visuals) {
             deck.visuals = { heroCharacterCardId: null, evilCharacterCardId: null, fallbackGraphic: "assets/cards/cardback.jpg" };
           }
-          if (heroCard) deck.visuals.heroCharacterCardId = heroCard.id;
-          if (evilCard) deck.visuals.evilCharacterCardId = evilCard.id;
+          
+          deck.visuals.heroCharacterCardId = chosenCards[0] ? chosenCards[0].cardKey : null;
+          deck.visuals.evilCharacterCardId = chosenCards[1] ? chosenCards[1].cardKey : null;
 
-          await this.db.saveCachedMetadata(deck);
+          await this.scanner.saveMetadataPermanently(deck);
+
           this.gridUI.setVisible(true);
           if (this.footerEl) this.footerEl.style.display = "flex";
           this.scene.resume();
