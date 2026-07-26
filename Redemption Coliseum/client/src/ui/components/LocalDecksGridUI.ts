@@ -1,5 +1,5 @@
 import type { DeckMetadata } from "../../types/DeckMetadata";
-import { BRIGADE_COLORS } from "../../config/BrigadeConfig";
+import { BRIGADE_COLORS, GOOD_BRIGADES, EVIL_BRIGADES } from "../../config/BrigadeConfig";
 import { DeckMetricsOverlayManager } from "../managers/DeckMetricsOverlayManager";
 import { LocalDecksDB } from "../../utils/LocalDecksDB";
 import { LocalDeckScanner } from "../../managers/LocalDeckScanner";
@@ -153,18 +153,23 @@ export class LocalDecksGridUI {
       };
     }
 
-    // 3. Footer: Brigades
+    // 3. Footer: Brigades (Top Good & Top Evil Brigades, including ties)
     const brigadesContainer = tile.querySelector(".deck-tile-brigades") as HTMLElement;
     if (brigadesContainer) {
       brigadesContainer.innerHTML = "";
-      (deck.brigades || []).slice(0, 6).forEach((bName) => {
+      const dominantBrigades = this.getDominantBrigades(deck, cardDatabase);
+
+      dominantBrigades.forEach((bName) => {
         const gem = document.createElement("span");
         gem.className = "brigade-gem";
-        const hex = BRIGADE_COLORS[bName] ?? 0x808080;
-        const hexStr = hex.toString(16).padStart(6, "0");
+        const numColor = BRIGADE_COLORS[bName] ?? (BRIGADE_COLORS as any)[`${bName} Good`] ?? (BRIGADE_COLORS as any)[`${bName} Evil`] ?? 0x808080;
+        const hexStr = numColor.toString(16).padStart(6, "0");
         gem.style.backgroundColor = `#${hexStr}`;
-        gem.style.backgroundImage = "linear-gradient(to bottom, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 60%)";
+        gem.style.backgroundImage = "linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 60%)";
         gem.style.boxShadow = `inset -2px -2px 4px rgba(0,0,0,0.5), 0 0 6px #${hexStr}`;
+        if (bName === "Black") {
+          gem.style.border = "1px solid #777";
+        }
         gem.title = bName;
         brigadesContainer.appendChild(gem);
       });
@@ -410,5 +415,75 @@ export class LocalDecksGridUI {
     link.rel = "stylesheet";
     link.href = "templates/deckTile.css";
     document.head.appendChild(link);
+  }
+
+  private getDominantBrigades(deck: DeckMetadata, cardDatabase: any[]): string[] {
+    const goodCounts = new Map<string, number>();
+    const evilCounts = new Map<string, number>();
+
+    const GOOD_SET = new Set(GOOD_BRIGADES);
+    const EVIL_SET = new Set(EVIL_BRIGADES);
+
+    const allIdentifiers = deck.cardIds && deck.cardIds.length > 0 ? deck.cardIds : [];
+
+    const addBrigade = (b: string) => {
+      if (!b || b === "None" || b === "Multi") return;
+      const parts = b.split(/[\/,]/).map((p) => p.trim());
+      parts.forEach((part) => {
+        const normGood = Array.from(GOOD_SET).find((g) => g.toLowerCase() === part.toLowerCase());
+        const normEvil = Array.from(EVIL_SET).find((e) => e.toLowerCase() === part.toLowerCase());
+
+        if (normGood) {
+          goodCounts.set(normGood, (goodCounts.get(normGood) || 0) + 1);
+        } else if (normEvil) {
+          evilCounts.set(normEvil, (evilCounts.get(normEvil) || 0) + 1);
+        }
+      });
+    };
+
+    if (cardDatabase && cardDatabase.length > 0 && allIdentifiers.length > 0) {
+      allIdentifiers.forEach((id) => {
+        const match = cardDatabase.find((c: any) => c.id === id || c.Name === id || c.ImageFile === id);
+        if (match && match.Brigade) {
+          if (Array.isArray(match.Brigade)) {
+            match.Brigade.forEach((b: string) => addBrigade(b));
+          } else if (typeof match.Brigade === "string") {
+            addBrigade(match.Brigade);
+          }
+        }
+      });
+    } else if (deck.brigades && deck.brigades.length > 0) {
+      deck.brigades.forEach((b) => addBrigade(b));
+    }
+
+    let maxGood = 0;
+    goodCounts.forEach((count) => {
+      if (count > maxGood) maxGood = count;
+    });
+
+    const topGood: string[] = [];
+    if (maxGood > 0) {
+      goodCounts.forEach((count, bName) => {
+        if (count === maxGood) topGood.push(bName);
+      });
+    }
+
+    let maxEvil = 0;
+    evilCounts.forEach((count) => {
+      if (count > maxEvil) maxEvil = count;
+    });
+
+    const topEvil: string[] = [];
+    if (maxEvil > 0) {
+      evilCounts.forEach((count, bName) => {
+        if (count === maxEvil) topEvil.push(bName);
+      });
+    }
+
+    const result = [...topGood, ...topEvil];
+    if (result.length === 0) {
+      return (deck.brigades || []).slice(0, 6);
+    }
+    return result;
   }
 }
