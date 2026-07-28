@@ -3,6 +3,7 @@ import { FilterManager } from "./FilterManager";
 import { IconToggleGroup, type ToggleItemConfig } from "../IconToggleGroup";
 import { TIER_CONFIG } from "../../../config/BrigadeConfig";
 import { filterConfigData } from "../../config/filter_config";
+import { TooltipManager } from "../../managers/TooltipManager";
 
 export interface DeckFilterOptions {
   searchQuery: string;
@@ -393,9 +394,14 @@ export class DeckHeaderFilterUI {
           duration: 150,
           ease: "Sine.easeOut"
         });
+        if (this.resetBtn) {
+          const bounds = this.resetBtn.getBounds();
+          TooltipManager.show(bounds.centerX, bounds.top, "button_reset");
+        }
       });
 
       this.resetBtn.on("pointerout", () => {
+        TooltipManager.hide();
         this.scene.tweens.add({
           targets: this.resetBtn,
           scaleX: baseResetScale,
@@ -406,6 +412,7 @@ export class DeckHeaderFilterUI {
       });
 
       this.resetBtn.on("pointerdown", () => {
+        TooltipManager.hide();
         this.scene.game.events.emit("playSound", "DECK_CHECK_SELECT");
         if (this.callbacks?.onReset) this.callbacks.onReset();
       });
@@ -429,9 +436,14 @@ export class DeckHeaderFilterUI {
           duration: 150,
           ease: "Sine.easeOut"
         });
+        if (this.syncBtn) {
+          const bounds = this.syncBtn.getBounds();
+          TooltipManager.show(bounds.centerX, bounds.top, "button_sync");
+        }
       });
 
       this.syncBtn.on("pointerout", () => {
+        TooltipManager.hide();
         this.scene.tweens.add({
           targets: this.syncBtn,
           scaleX: baseSyncScale,
@@ -442,6 +454,7 @@ export class DeckHeaderFilterUI {
       });
 
       this.syncBtn.on("pointerdown", () => {
+        TooltipManager.hide();
         this.scene.game.events.emit("playSound", "DECK_CHECK_SELECT");
         if (this.callbacks?.onSync) this.callbacks.onSync();
       });
@@ -497,15 +510,19 @@ export class DeckHeaderFilterUI {
         this.scene.game.events.emit("playSound", "DECK_CHECK_HOVER");
         renderBtnBg(this.sortMode === btn.mode, true);
         txt.setTint(0xffd700);
+        const bounds = txt.getBounds();
+        TooltipManager.show(bounds.centerX, bounds.top - 4, `sort_${btn.mode}`);
       });
 
       txt.on("pointerout", () => {
+        TooltipManager.hide();
         const active = this.sortMode === btn.mode;
         renderBtnBg(active, false);
         txt.setTint(active ? 0xffd700 : 0xcccccc);
       });
 
       txt.on("pointerdown", () => {
+        TooltipManager.hide();
         this.sortMode = btn.mode;
         this.scene.game.events.emit("playSound", "DECK_CHECK_SELECT");
         this.sortButtonsMap.forEach((val, key) => {
@@ -564,6 +581,7 @@ export class DeckHeaderFilterUI {
   }
 
   public destroy(): void {
+    TooltipManager.hide();
     if (this.topLeftBg) this.topLeftBg.destroy();
     if (this.bottomLeftBg) this.bottomLeftBg.destroy();
     if (this.topRightBg) this.topRightBg.destroy();

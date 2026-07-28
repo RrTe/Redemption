@@ -1,9 +1,11 @@
 import Phaser from "phaser";
+import { TooltipManager } from "../managers/TooltipManager";
 
 export class SidebarButton {
   public image: Phaser.GameObjects.Image;
   private scene: Phaser.Scene;
   private isRightSide: boolean;
+  private textureKey: string;
 
   constructor(
     scene: Phaser.Scene,
@@ -14,6 +16,7 @@ export class SidebarButton {
   ) {
     this.scene = scene;
     this.isRightSide = isRightSide;
+    this.textureKey = texture;
 
     const width = scene.scale.width;
     const startX = this.getHiddenX(width);
@@ -32,6 +35,8 @@ export class SidebarButton {
         duration: 200,
         ease: "Sine.easeOut",
       });
+      const bounds = this.image.getBounds();
+      TooltipManager.show(bounds.centerX, bounds.centerY, this.textureKey);
     });
 
     this.image.on("pointerout", () => {
@@ -41,9 +46,13 @@ export class SidebarButton {
         duration: 200,
         ease: "Sine.easeOut",
       });
+      TooltipManager.hide();
     });
 
-    this.image.on("pointerdown", onClick);
+    this.image.on("pointerdown", () => {
+      TooltipManager.hide();
+      onClick();
+    });
   }
 
   private getHiddenX(width: number): number {
@@ -55,13 +64,12 @@ export class SidebarButton {
   }
 
   public resize(width: number, y: number) {
-    // Only kill tweens related to x if we want to ensure we don't mess up hover state,
-    // but a simple killTweensOf and resetting to hidden is safest during resize.
     this.scene.tweens.killTweensOf(this.image);
     this.image.setPosition(this.getHiddenX(width), y);
   }
 
   public destroy() {
+    TooltipManager.hide();
     this.image.destroy();
   }
 }

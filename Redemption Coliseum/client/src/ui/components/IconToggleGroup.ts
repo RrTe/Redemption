@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { TooltipManager } from "../managers/TooltipManager";
 
 export interface ToggleItemConfig {
   id: string;
@@ -9,6 +10,7 @@ export interface ToggleItemConfig {
   attribute?: string;
   values?: string[] | null;
   alignments?: string[] | null;
+  label?: string;
 }
 
 export interface IconToggleGroupConfig {
@@ -117,9 +119,14 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
         if (this.groupConfig.sfxHover) {
           this.scene.game.events.emit("playSound", this.groupConfig.sfxHover);
         }
+
+        const bounds = sprite.getBounds();
+        const textKey = item.label || item.id;
+        TooltipManager.show(bounds.centerX, bounds.top, textKey);
       });
 
       sprite.on("pointerout", () => {
+        TooltipManager.hide();
         if (this.disabledIds.has(item.id)) return;
         sprite.setScale(this.groupConfig.scale);
         const overlay = this.overlays.get(item.id);
@@ -132,6 +139,7 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
       });
 
       sprite.on("pointerdown", () => {
+        TooltipManager.hide();
         if (this.disabledIds.has(item.id)) return;
         this.toggleItem(item);
       });
