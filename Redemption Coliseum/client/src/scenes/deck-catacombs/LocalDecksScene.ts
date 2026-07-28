@@ -17,7 +17,6 @@ export class LocalDecksScene extends Phaser.Scene {
   private soundManager!: SoundManager;
   private background!: Phaser.GameObjects.Image;
   private backButton!: Phaser.GameObjects.Image;
-  private syncButton!: Phaser.GameObjects.Image;
   private settingsButton!: SidebarButton;
   private helpButton!: SidebarButton;
   
@@ -85,6 +84,8 @@ export class LocalDecksScene extends Phaser.Scene {
     this.load.image("button_parchment", "assets/ui/buttons/ChatGPT_Parchment_Button_dark_cracked_transp1_small.png");
     this.load.image("arrow_left", "assets/ui/buttons/arrow-left_small.png");
     this.load.image("arrow_right", "assets/ui/buttons/arrow-right_small.png");
+    this.load.image("button_sync", "assets/ui/buttons/sync.png");
+    this.load.image("button_reset", "assets/ui/buttons/reset.png");
 
     TIER_CONFIG.forEach((t) => {
       this.load.image(`${t.id}_bg`, t.bgImage);
@@ -152,8 +153,6 @@ export class LocalDecksScene extends Phaser.Scene {
 
     this.createBackButton();
     this.createSideButtons(height);
-    this.createSyncButton();
-    this.createResetButton();
 
     this.scale.on("resize", this.resize, this);
     this.events.on("shutdown", this.cleanup, this);
@@ -185,15 +184,27 @@ export class LocalDecksScene extends Phaser.Scene {
     
     log("LocalDecksScene", `Loaded ${cachedDecks.length} decks from cache.`);
 
-    this.syncButton.setVisible(true);
-    this.resetButton.setVisible(true);
     if (this.statusText) this.statusText.setVisible(false);
 
     if (this.headerFilterUI) this.headerFilterUI.destroy();
-    this.headerFilterUI = new DeckHeaderFilterUI(this, (opts) => {
-      this.lastFilterOptions = opts;
-      this.applyFiltersAndSort(opts, cardDatabase);
-    });
+    this.headerFilterUI = new DeckHeaderFilterUI(
+      this,
+      (opts) => {
+        this.lastFilterOptions = opts;
+        this.applyFiltersAndSort(opts, cardDatabase);
+      },
+      {
+        onSync: () => this.showOnboarding(),
+        onReset: async () => {
+          const confirmed = window.confirm("Do you really want to reset local deck folder settings?");
+          if (confirmed) {
+            await this.db.clearAll();
+            log("LocalDecksScene", "Storage reset by user button.");
+            this.scene.restart();
+          }
+        }
+      }
+    );
 
     this.headerFilterUI.createUI(this.scale.width, 0, cachedDecks.length);
 
@@ -547,63 +558,7 @@ export class LocalDecksScene extends Phaser.Scene {
     });
   }
 
-  private createSyncButton() {
-    if (this.syncButton) this.syncButton.destroy();
 
-    const width = this.scale.width;
-    
-    this.syncButton = this.add
-      .image(width - 40, 40, "button_sync_placeholder")
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .setDisplaySize(48, 48)
-      .setAlpha(0.9)
-      .setTint(0xaaaaaa); // Placeholder tint
-
-    const syncText = this.add.bitmapText(width - 40, 40, "fairydust", "Sync", 16)
-      .setOrigin(0.5)
-      .setTint(0xffffff);
-
-    this.syncButton.setVisible(false); // Hidden by default until initialized/onboarded
-
-    this.syncButton.on("pointerover", () => this.hoverTween(this.syncButton, syncText, 1.1));
-    this.syncButton.on("pointerout", () => this.hoverTween(this.syncButton, syncText, 1.0));
-    
-    this.syncButton.on("pointerdown", () => {
-      if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
-      this.showOnboarding();
-    });
-  }
-
-  private createResetButton() {
-    if (this.resetButton) this.resetButton.destroy();
-
-    const width = this.scale.width;
-    
-    this.resetButton = this.add
-      .image(width - 100, 40, "button_sync_placeholder")
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .setDisplaySize(48, 48)
-      .setAlpha(0.9)
-      .setTint(0xff4444); // Red tint for reset
-
-    const resetText = this.add.bitmapText(width - 100, 40, "fairydust", "Reset", 14)
-      .setOrigin(0.5)
-      .setTint(0xffffff);
-
-    this.resetButton.setVisible(false);
-
-    this.resetButton.on("pointerover", () => this.hoverTween(this.resetButton, resetText, 1.1));
-    this.resetButton.on("pointerout", () => this.hoverTween(this.resetButton, resetText, 1.0));
-    
-    this.resetButton.on("pointerdown", async () => {
-      if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
-      await this.db.clearAll();
-      log("LocalDecksScene", "Storage reset by user button.");
-      this.scene.restart();
-    });
-  }
 
   private hoverTween(target: any, text: any, scale: number) {
     this.tweens.add({
@@ -636,9 +591,6 @@ export class LocalDecksScene extends Phaser.Scene {
     if (this.statusText) this.statusText.setPosition(width / 2, 50);
     if (this.settingsButton) this.settingsButton.resize(width, height * 0.18);
     if (this.helpButton) this.helpButton.resize(width, height * 0.7);
-    
-    if (this.syncButton) this.syncButton.setPosition(width - 40, 40);
-    if (this.resetButton) this.resetButton.setPosition(width - 100, 40);
 
     if (this.gridUI) {
       this.gridUI.updateContainerBounds(this);

@@ -15,9 +15,15 @@ export interface DeckFilterOptions {
   isAndMode: boolean;
 }
 
+export interface HeaderFilterCallbacks {
+  onSync?: () => void;
+  onReset?: () => void;
+}
+
 export class DeckHeaderFilterUI {
   private scene: Phaser.Scene;
   private onFilterChange: (options: DeckFilterOptions) => void;
+  private callbacks?: HeaderFilterCallbacks;
   public filterManager: FilterManager;
 
   private topLeftBg!: Phaser.GameObjects.Graphics;
@@ -34,14 +40,22 @@ export class DeckHeaderFilterUI {
   public textFilterInput!: Phaser.GameObjects.Graphics;
   public textFilterInputTxt!: Phaser.GameObjects.BitmapText;
 
+  private syncBtn?: Phaser.GameObjects.Image;
+  private resetBtn?: Phaser.GameObjects.Image;
+
   private activeTiersSet: Set<string> = new Set();
   private sortMode: DeckFilterOptions["sortMode"] = "name_asc";
   private activeFormat: string | null = null;
   private sortButtonsMap: Map<string, { bg: Phaser.GameObjects.Graphics; txt: Phaser.GameObjects.BitmapText }> = new Map();
 
-  constructor(scene: Phaser.Scene, onFilterChange: (options: DeckFilterOptions) => void) {
+  constructor(
+    scene: Phaser.Scene,
+    onFilterChange: (options: DeckFilterOptions) => void,
+    callbacks?: HeaderFilterCallbacks
+  ) {
     this.scene = scene;
     this.onFilterChange = onFilterChange;
+    this.callbacks = callbacks;
 
     const configData = scene.cache.json.get("filterConfig") || filterConfigData;
     this.filterManager = new FilterManager(configData);
@@ -352,8 +366,86 @@ export class DeckHeaderFilterUI {
       }
     });
 
-    // 5. Top-Right Bar Row 1: Sort Controls (A-Z, Z-A, Tier, Format, Color)
+    // 5. Top-Right Bar Row 1: Sort Controls (A-Z, Z-A, Tier, Format, Brigades)
     this.createRightSortControls(deckAreaLeft + 12 * scale, row1Y + 22 * scale, deckAreaWidth - 24 * scale, scale);
+
+    // 6. Top-Right Bar Row 2: Action Buttons (Sync & Reset icons 1:1 like Deck Editor)
+    const rightIconsY = centerRow2Y;
+    const iconSize = 32 * scale;
+    const resetX = deckAreaLeft + deckAreaWidth - 26 * scale;
+    const syncX = resetX - 42 * scale;
+
+    if (this.scene.textures.exists("button_reset")) {
+      this.resetBtn = this.scene.add.image(resetX, rightIconsY, "button_reset")
+        .setOrigin(0.5, 0.5)
+        .setDepth(15)
+        .setInteractive({ useHandCursor: true });
+
+      const baseResetScale = iconSize / Math.max(this.resetBtn.width, this.resetBtn.height);
+      this.resetBtn.setScale(baseResetScale);
+
+      this.resetBtn.on("pointerover", () => {
+        this.scene.game.events.emit("playSound", "DECK_CHECK_HOVER");
+        this.scene.tweens.add({
+          targets: this.resetBtn,
+          scaleX: baseResetScale * 1.12,
+          scaleY: baseResetScale * 1.12,
+          duration: 150,
+          ease: "Sine.easeOut"
+        });
+      });
+
+      this.resetBtn.on("pointerout", () => {
+        this.scene.tweens.add({
+          targets: this.resetBtn,
+          scaleX: baseResetScale,
+          scaleY: baseResetScale,
+          duration: 150,
+          ease: "Sine.easeOut"
+        });
+      });
+
+      this.resetBtn.on("pointerdown", () => {
+        this.scene.game.events.emit("playSound", "DECK_CHECK_SELECT");
+        if (this.callbacks?.onReset) this.callbacks.onReset();
+      });
+    }
+
+    if (this.scene.textures.exists("button_sync")) {
+      this.syncBtn = this.scene.add.image(syncX, rightIconsY, "button_sync")
+        .setOrigin(0.5, 0.5)
+        .setDepth(15)
+        .setInteractive({ useHandCursor: true });
+
+      const baseSyncScale = iconSize / Math.max(this.syncBtn.width, this.syncBtn.height);
+      this.syncBtn.setScale(baseSyncScale);
+
+      this.syncBtn.on("pointerover", () => {
+        this.scene.game.events.emit("playSound", "DECK_CHECK_HOVER");
+        this.scene.tweens.add({
+          targets: this.syncBtn,
+          scaleX: baseSyncScale * 1.12,
+          scaleY: baseSyncScale * 1.12,
+          duration: 150,
+          ease: "Sine.easeOut"
+        });
+      });
+
+      this.syncBtn.on("pointerout", () => {
+        this.scene.tweens.add({
+          targets: this.syncBtn,
+          scaleX: baseSyncScale,
+          scaleY: baseSyncScale,
+          duration: 150,
+          ease: "Sine.easeOut"
+        });
+      });
+
+      this.syncBtn.on("pointerdown", () => {
+        this.scene.game.events.emit("playSound", "DECK_CHECK_SELECT");
+        if (this.callbacks?.onSync) this.callbacks.onSync();
+      });
+    }
   }
 
   private createRightSortControls(startX: number, centerY: number, maxWidth: number, scale: number): void {
@@ -362,30 +454,38 @@ export class DeckHeaderFilterUI {
       { label: "Z-A", mode: "name_desc" as const },
       { label: "Tier", mode: "tier_desc" as const },
       { label: "Format", mode: "format" as const },
-      { label: "Color", mode: "brigade" as const },
+      { label: "Brigades", mode: "brigade" as const },
     ];
 
-    const btnWidth = 54 * scale;
+    const btnWidth = 62 * scale;
     const btnHeight = 32 * scale;
-    const spacingX = 60 * scale;
+    const spacingX = 66 * scale;
 
     sortButtons.forEach((btn, idx) => {
       const bx = startX + idx * spacingX;
       const bg = this.scene.add.graphics().setDepth(14);
       const isSelected = this.sortMode === btn.mode;
 
-      const renderBtnBg = (selected: boolean) => {
+      const renderBtnBg = (selected: boolean, isHovered: boolean = false) => {
         bg.clear();
-        bg.fillStyle(selected ? 0x443311 : 0x111c2e, 0.9);
-        bg.fillRoundedRect(bx, centerY - btnHeight / 2, btnWidth, btnHeight, 6 * scale);
-        bg.lineStyle(1.5, selected ? 0xffd700 : 0x444466, 0.8);
-        bg.strokeRoundedRect(bx, centerY - btnHeight / 2, btnWidth, btnHeight, 6 * scale);
+        if (isHovered) {
+          bg.fillStyle(selected ? 0x554422 : 0x222d42, 0.95);
+          bg.fillRoundedRect(bx, centerY - btnHeight / 2, btnWidth, btnHeight, 6 * scale);
+          bg.lineStyle(2, 0xe9cd45, 0.95);
+          bg.strokeRoundedRect(bx - 1, centerY - btnHeight / 2 - 1, btnWidth + 2, btnHeight + 2, 6 * scale);
+        } else {
+          bg.fillStyle(selected ? 0x443311 : 0x111c2e, 0.9);
+          bg.fillRoundedRect(bx, centerY - btnHeight / 2, btnWidth, btnHeight, 6 * scale);
+          bg.lineStyle(1.5, selected ? 0xffd700 : 0x444466, 0.8);
+          bg.strokeRoundedRect(bx, centerY - btnHeight / 2, btnWidth, btnHeight, 6 * scale);
+        }
       };
 
-      renderBtnBg(isSelected);
+      renderBtnBg(isSelected, false);
 
       const fontKey = this.scene.cache.bitmapFont.exists("wazoo") ? "wazoo" : "fairydust";
-      const txt = this.scene.add.bitmapText(bx + btnWidth / 2, centerY, fontKey, btn.label, 18 * scale)
+      const fontSize = btn.label === "Brigades" ? 15 * scale : 18 * scale;
+      const txt = this.scene.add.bitmapText(bx + btnWidth / 2, centerY, fontKey, btn.label, fontSize)
         .setOrigin(0.5, 0.5)
         .setTint(isSelected ? 0xffd700 : 0xcccccc)
         .setDepth(15)
@@ -395,6 +495,14 @@ export class DeckHeaderFilterUI {
 
       txt.on("pointerover", () => {
         this.scene.game.events.emit("playSound", "DECK_CHECK_HOVER");
+        renderBtnBg(this.sortMode === btn.mode, true);
+        txt.setTint(0xffd700);
+      });
+
+      txt.on("pointerout", () => {
+        const active = this.sortMode === btn.mode;
+        renderBtnBg(active, false);
+        txt.setTint(active ? 0xffd700 : 0xcccccc);
       });
 
       txt.on("pointerdown", () => {
@@ -467,6 +575,8 @@ export class DeckHeaderFilterUI {
     if (this.brigadeToggleGroup) this.brigadeToggleGroup.destroy();
     if (this.tierToggleGroup) this.tierToggleGroup.destroy();
     if (this.checkboxToggleGroup) this.checkboxToggleGroup.destroy();
+    if (this.syncBtn) this.syncBtn.destroy();
+    if (this.resetBtn) this.resetBtn.destroy();
     if (this.sortButtonsMap) {
       this.sortButtonsMap.forEach((val) => {
         val.bg.destroy();
