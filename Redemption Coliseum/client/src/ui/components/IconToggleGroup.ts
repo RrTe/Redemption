@@ -131,7 +131,7 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
         }
       });
 
-      sprite.on("pointerup", () => {
+      sprite.on("pointerdown", () => {
         if (this.disabledIds.has(item.id)) return;
         this.toggleItem(item);
       });

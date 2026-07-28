@@ -10,6 +10,8 @@ import { LocalDecksGridUI } from "../../ui/components/LocalDecksGridUI";
 import type { DeckMetadata } from "../../types/DeckMetadata";
 import { SelectionDialogScene } from "../SelectionDialogScene";
 import { filterConfigData } from "../../ui/config/filter_config";
+import { DeckHeaderFilterUI, type DeckFilterOptions } from "../../ui/components/filters/DeckHeaderFilterUI";
+import { TROPHY_THRESHOLDS, TIER_CONFIG } from "../../config/BrigadeConfig";
 
 export class LocalDecksScene extends Phaser.Scene {
   private soundManager!: SoundManager;
@@ -21,6 +23,9 @@ export class LocalDecksScene extends Phaser.Scene {
   
   private db!: LocalDecksDB;
   private scanner!: LocalDeckScanner;
+  private headerFilterUI!: DeckHeaderFilterUI;
+  private allDecks: DeckMetadata[] = [];
+  private lastFilterOptions: DeckFilterOptions | null = null;
 
   constructor() {
     super("LocalDecksScene");
@@ -80,6 +85,15 @@ export class LocalDecksScene extends Phaser.Scene {
     this.load.image("button_parchment", "assets/ui/buttons/ChatGPT_Parchment_Button_dark_cracked_transp1_small.png");
     this.load.image("arrow_left", "assets/ui/buttons/arrow-left_small.png");
     this.load.image("arrow_right", "assets/ui/buttons/arrow-right_small.png");
+
+    TIER_CONFIG.forEach((t) => {
+      this.load.image(`${t.id}_bg`, t.bgImage);
+    });
+
+    // Audio effects for filter buttons matching DeckEditorScene
+    this.load.audio("checkButtonHover", "assets/sounds/effects/swing-whoosh-110410_short.mp3");
+    this.load.audio("checkButtonSelect", "assets/sounds/effects/notification-sound-7062.mp3");
+    this.load.audio("checkButtonDeselect", "assets/sounds/effects/ToggleSwitchMetal PE1090917.mp3");
 
     if (filterConfigData && filterConfigData.filters) {
       filterConfigData.filters.forEach((filter: any) => {
@@ -146,6 +160,7 @@ export class LocalDecksScene extends Phaser.Scene {
 
   private cleanup() {
     if (this.gridUI) this.gridUI.destroy();
+    if (this.headerFilterUI) this.headerFilterUI.destroy();
     this.removeStaticFooter();
   }
 
@@ -155,13 +170,27 @@ export class LocalDecksScene extends Phaser.Scene {
     }
     const cachedDecks = await this.db.getAllCachedMetadata();
     const cardDatabase = this.registry.get("cardDatabase")?.cards || [];
+    this.allDecks = cachedDecks;
     
     log("LocalDecksScene", `Loaded ${cachedDecks.length} decks from cache.`);
 
     this.syncButton.setVisible(true);
     this.resetButton.setVisible(true);
-    this.statusText.setText(`${cachedDecks.length} Local Decks`);
-    this.renderGrid(cachedDecks, cardDatabase);
+    if (this.statusText) this.statusText.setVisible(false);
+
+    if (this.headerFilterUI) this.headerFilterUI.destroy();
+    this.headerFilterUI = new DeckHeaderFilterUI(this, (opts) => {
+      this.lastFilterOptions = opts;
+      this.applyFiltersAndSort(opts, cardDatabase);
+    });
+
+    this.headerFilterUI.createUI(this.scale.width, 0, cachedDecks.length);
+
+    if (this.lastFilterOptions) {
+      this.applyFiltersAndSort(this.lastFilterOptions, cardDatabase);
+    } else {
+      this.renderGrid(cachedDecks, cardDatabase);
+    }
 
     if (cachedDecks.length === 0) {
       const source = await this.db.getDirectoryHandle("source_dir");
@@ -172,6 +201,97 @@ export class LocalDecksScene extends Phaser.Scene {
     }
     
     await this.updateStaticFooter();
+  }
+
+  private cardNameMap: Map<string, string> = new Map();
+
+  private applyFiltersAndSort(opts: DeckFilterOptions, cardDatabase: any[]) {
+    let result = [...this.allDecks];
+
+    // Build fast lookup map once if needed
+    if (this.cardNameMap.size === 0 && cardDatabase && cardDatabase.length > 0) {
+      cardDatabase.forEach((c: any) => {
+        const name = (c.Name || "").toLowerCase();
+        if (c.id) this.cardNameMap.set(String(c.id), name);
+        if (c.Name) this.cardNameMap.set(String(c.Name), name);
+        if (c.ImageFile) this.cardNameMap.set(String(c.ImageFile), name);
+      });
+    }
+
+    // 1. Text Search Filter
+    if (opts.searchQuery) {
+      const query = opts.searchQuery;
+      result = result.filter((deck) => {
+        let nameMatch = false;
+        if (opts.searchInName) {
+          nameMatch = deck.name.toLowerCase().includes(query);
+        }
+        let cardMatch = false;
+        if (opts.searchInCard && deck.cardIds) {
+          cardMatch = deck.cardIds.some((id) => this.cardNameMap.get(String(id))?.includes(query));
+        }
+        return nameMatch || cardMatch;
+      });
+    }
+
+    // 2. Brigade Color Filter
+    if (opts.activeBrigades && opts.activeBrigades.length > 0) {
+      result = result.filter((deck) => {
+        const deckBrigades = deck.brigades || [];
+        return opts.activeBrigades.some((b) => deckBrigades.includes(b));
+      });
+    }
+
+    // 3. Tier Filter
+    if (opts.activeTiers && opts.activeTiers.length > 0) {
+      result = result.filter((deck) => {
+        const wins = deck.stats?.wins?.full || 0;
+        let tierId = "tier_stone";
+        if (wins >= TROPHY_THRESHOLDS.GOLD) tierId = "tier_gold";
+        else if (wins >= TROPHY_THRESHOLDS.SILVER) tierId = "tier_silver";
+        else if (wins >= TROPHY_THRESHOLDS.BRONZE) tierId = "tier_bronze";
+
+        return opts.activeTiers.includes(tierId);
+      });
+    }
+
+    // 4. Format / DeckType Filter
+    if (opts.activeFormat) {
+      result = result.filter((deck) => deck.format === opts.activeFormat);
+    }
+
+    // 5. Sorting
+    result.sort((a, b) => {
+      if (opts.sortMode === "name_asc") {
+        return a.name.localeCompare(b.name);
+      }
+      if (opts.sortMode === "name_desc") {
+        return b.name.localeCompare(a.name);
+      }
+      if (opts.sortMode === "tier_desc") {
+        return (b.stats?.wins?.full || 0) - (a.stats?.wins?.full || 0);
+      }
+      if (opts.sortMode === "tier_asc") {
+        return (a.stats?.wins?.full || 0) - (b.stats?.wins?.full || 0);
+      }
+      if (opts.sortMode === "brigade") {
+        const bA = a.brigades?.[0] || "";
+        const bB = b.brigades?.[0] || "";
+        return bA.localeCompare(bB);
+      }
+      if (opts.sortMode === "format") {
+        const fA = a.format || "";
+        const fB = b.format || "";
+        return fA.localeCompare(fB);
+      }
+      return 0;
+    });
+
+    if (this.headerFilterUI) {
+      this.headerFilterUI.updateCountText(result.length, this.allDecks.length);
+    }
+
+    this.renderGrid(result, cardDatabase);
   }
 
   private renderGrid(decks: DeckMetadata[], cardDatabase: any[]) {
@@ -506,5 +626,9 @@ export class LocalDecksScene extends Phaser.Scene {
     
     if (this.syncButton) this.syncButton.setPosition(width - 40, 40);
     if (this.resetButton) this.resetButton.setPosition(width - 100, 40);
+
+    if (this.gridUI) {
+      this.gridUI.updateContainerBounds(this);
+    }
   }
 }

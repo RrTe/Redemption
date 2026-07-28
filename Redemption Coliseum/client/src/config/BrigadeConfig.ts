@@ -65,4 +65,15 @@ export const EVIL_BRIGADES = [
   "Pale Green",
   "Multi"
 ];
+export const TROPHY_THRESHOLDS = {
+  BRONZE: 15,
+  SILVER: 30,
+  GOLD: 45,
+};
 
+export const TIER_CONFIG = [
+  { id: "tier_gold", name: "Gold Tier", minWins: 45, bgImage: "assets/backgrounds/Gold.jpg", colorHex: 0xffd700 },
+  { id: "tier_silver", name: "Silver Tier", minWins: 30, bgImage: "assets/backgrounds/Silver.jpg", colorHex: 0xc0c0c0 },
+  { id: "tier_bronze", name: "Bronze Tier", minWins: 15, bgImage: "assets/backgrounds/Bronze.jpg", colorHex: 0xcd7f32 },
+  { id: "tier_stone", name: "Stone Tier", minWins: 0, bgImage: "assets/backgrounds/stocksnap-grey-2620586_640.jpg", colorHex: 0x808080 },
+];

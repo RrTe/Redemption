@@ -1,9 +1,9 @@
 .local-decks-grid-container {
   position: fixed;
-  top: 90px;
+  top: 185px;
   left: 5%;
   width: 90%;
-  height: calc(100% - 150px);
+  height: calc(100% - 235px);
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));

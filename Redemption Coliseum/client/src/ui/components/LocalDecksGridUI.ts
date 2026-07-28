@@ -55,6 +55,8 @@ export class LocalDecksGridUI {
     return tile;
   }
 
+  private currentScene: Phaser.Scene | null = null;
+
   public async render(
     scene: Phaser.Scene,
     decks: DeckMetadata[],
@@ -62,10 +64,13 @@ export class LocalDecksGridUI {
     callbacks: LocalDecksGridCallbacks
   ): Promise<void> {
     this.destroy();
+    this.currentScene = scene;
 
     this.containerEl = document.createElement("div");
     this.containerEl.id = "local-decks-grid-container";
     this.containerEl.className = "local-decks-grid-container";
+
+    this.updateContainerBounds(scene);
 
     if (decks.length === 0) {
       const emptyText = document.createElement("div");
@@ -92,6 +97,24 @@ export class LocalDecksGridUI {
     if (this.containerEl) {
       this.containerEl.remove();
       this.containerEl = null;
+    }
+    this.currentScene = null;
+  }
+
+  public updateContainerBounds(scene?: Phaser.Scene): void {
+    const sc = scene || this.currentScene;
+    if (!this.containerEl || !sc) return;
+
+    const canvas = sc.game.canvas;
+    if (canvas && sc.scale && sc.scale.height > 0) {
+      const bounds = canvas.getBoundingClientRect();
+      const scale = Math.max(0.85, sc.scale.width / 1280);
+      const nativeTop = 152 * scale; // Dynamic bottom of lower bar panel
+      const topPx = Math.round(bounds.top + (nativeTop / sc.scale.height) * bounds.height);
+      const heightPx = Math.max(200, Math.round(bounds.height - (nativeTop / sc.scale.height) * bounds.height - 20));
+
+      this.containerEl.style.top = `${topPx}px`;
+      this.containerEl.style.height = `${heightPx}px`;
     }
   }
 
