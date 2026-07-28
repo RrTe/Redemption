@@ -5,7 +5,7 @@ import { SettingsDialogScene } from "../SettingsDialogScene";
 import { LocalDecksDB } from "../../utils/LocalDecksDB";
 import { LocalDeckScanner } from "../../managers/LocalDeckScanner";
 import { log } from "../../utils/logger";
-import { OnboardingOverlay, ScanProgressOverlay } from "../../ui/overlays";
+import { OnboardingOverlay, ScanProgressOverlay, HelpOverlay } from "../../ui/overlays";
 import { LocalDecksGridUI } from "../../ui/components/LocalDecksGridUI";
 import type { DeckMetadata } from "../../types/DeckMetadata";
 import { SelectionDialogScene } from "../SelectionDialogScene";
@@ -157,6 +157,14 @@ export class LocalDecksScene extends Phaser.Scene {
 
     this.scale.on("resize", this.resize, this);
     this.events.on("shutdown", this.cleanup, this);
+
+    this.events.on("pause", () => {
+      if (this.gridUI) this.gridUI.setVisible(false);
+    });
+
+    this.events.on("resume", () => {
+      if (this.gridUI) this.gridUI.setVisible(true);
+    });
 
     this.initializeDecks();
   }
@@ -510,7 +518,7 @@ export class LocalDecksScene extends Phaser.Scene {
       false, // Left side
       () => {
         if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
-        console.log("[DEBUG] Help Button clicked");
+        HelpOverlay.toggle();
       }
     );
   }

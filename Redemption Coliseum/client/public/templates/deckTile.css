@@ -378,3 +378,24 @@
   background-repeat: no-repeat;
   background-position: center;
 }
+
+/* Empty State Banner in Pergament & Gold Status Style */
+.local-decks-empty-text {
+  grid-column: 1 / -1;
+  justify-self: center;
+  align-self: center;
+  margin: 40px auto;
+  padding: 16px 36px;
+  background: linear-gradient(180deg, rgba(26, 26, 46, 0.92) 0%, rgba(16, 22, 34, 0.95) 100%);
+  border: 2px solid #b8860b;
+  border-radius: 10px;
+  color: #ffd700;
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.15);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(255, 215, 0, 0.4);
+  pointer-events: none;
+}
