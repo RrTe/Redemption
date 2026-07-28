@@ -111,7 +111,9 @@ export class LocalDecksGridUI {
       const scale = Math.max(0.85, sc.scale.width / 1280);
       const nativeTop = 152 * scale; // Dynamic bottom of lower bar panel
       const topPx = Math.round(bounds.top + (nativeTop / sc.scale.height) * bounds.height);
-      const heightPx = Math.max(200, Math.round(bounds.height - (nativeTop / sc.scale.height) * bounds.height - 20));
+      const footerOffset = 50; // 35px footer bar + 15px spacing
+      const maxBottomPx = Math.round(bounds.top + bounds.height - footerOffset);
+      const heightPx = Math.max(150, maxBottomPx - topPx);
 
       this.containerEl.style.top = `${topPx}px`;
       this.containerEl.style.height = `${heightPx}px`;
