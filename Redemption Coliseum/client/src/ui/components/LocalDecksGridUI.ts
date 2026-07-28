@@ -75,7 +75,7 @@ export class LocalDecksGridUI {
     if (decks.length === 0) {
       const emptyText = document.createElement("div");
       emptyText.className = "local-decks-empty-text";
-      emptyText.innerText = "No decks found in storage.";
+      emptyText.innerText = "No decks found matching the selected filter.";
       this.containerEl.appendChild(emptyText);
     } else {
       for (const deck of decks) {

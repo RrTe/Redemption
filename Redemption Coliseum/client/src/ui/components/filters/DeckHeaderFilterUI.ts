@@ -12,6 +12,7 @@ export interface DeckFilterOptions {
   activeTiers: string[];
   activeFormat: string | null;
   sortMode: "name_asc" | "name_desc" | "tier_desc" | "tier_asc" | "brigade" | "format";
+  isAndMode: boolean;
 }
 
 export class DeckHeaderFilterUI {
@@ -93,6 +94,25 @@ export class DeckHeaderFilterUI {
         }
       }
     });
+
+    this.ensureAndFilterTexture();
+  }
+
+  private ensureAndFilterTexture(): void {
+    if (this.scene.textures.exists("AndFilter_med")) {
+      this.scene.textures.remove("AndFilter_med");
+    }
+    if (this.scene.textures.exists("AndFilter")) {
+      const srcImage = this.scene.textures.get("AndFilter").getSourceImage() as HTMLImageElement;
+      if (srcImage && srcImage.width > 0) {
+        const canvas = this.scene.textures.createCanvas("AndFilter_med", 40, 40);
+        if (canvas) {
+          const ctx = canvas.getContext();
+          ctx.drawImage(srcImage, 0, 0, srcImage.width, srcImage.height, 0, 0, 40, 40);
+          canvas.refresh();
+        }
+      }
+    }
   }
 
   public createUI(width: number, topY: number, totalDecksCount: number): void {
@@ -125,8 +145,8 @@ export class DeckHeaderFilterUI {
     this.topRightBg = drawBarBg(deckAreaLeft, row1Y, deckAreaWidth, toolbarHeight);
     this.bottomRightBg = drawBarBg(deckAreaLeft, row2Y, deckAreaWidth, statusBarHeight);
 
-    // 2. Top-Left Bar Row 1: Brigade Filters (18 icons)
-    const brigadeFilters = this.filterManager.getFiltersByCategory("brigade").filter((b) => b.id !== "AndFilter");
+    // 2. Top-Left Bar Row 1: Brigade Filters (18 icons + AndFilter)
+    const brigadeFilters = this.filterManager.getFiltersByCategory("brigade");
     const brigadeItems: ToggleItemConfig[] = brigadeFilters.map((b) => ({
       id: `brigade_${b.id}`,
       texture: `${b.id}_med`,
@@ -150,6 +170,7 @@ export class DeckHeaderFilterUI {
         spacingY: 0,
         columns: brigadeItems.length,
         multiSelect: true,
+        initialSelectedIds: ["brigade_AndFilter"], // AndFilter active by default matching DeckEditor
         selectedOverlayTexture: "filterSelected_med",
         sfxHover: "DECK_CHECK_HOVER",
         sfxChecked: "DECK_CHECK_SELECT",
@@ -406,10 +427,13 @@ export class DeckHeaderFilterUI {
     
     // Read active brigade & tier filters
     const brigadeIds = this.brigadeToggleGroup ? this.brigadeToggleGroup.getSelectedIds() : [];
+    const isAndMode = brigadeIds.includes("brigade_AndFilter");
+
     const activeBrigades = brigadeIds
       .filter(id => id.startsWith("brigade_"))
-      .map(id => {
-        const rawId = id.replace("brigade_", "");
+      .map(id => id.replace("brigade_", ""))
+      .filter(id => id !== "AndFilter")
+      .map(rawId => {
         const match = filterConfigData.filters.find((f: any) => f.id === rawId);
         return match ? match.label.replace(" Brigade", "").trim() : rawId;
       });
@@ -427,6 +451,7 @@ export class DeckHeaderFilterUI {
       activeTiers: Array.from(this.activeTiersSet),
       activeFormat: this.activeFormat,
       sortMode: this.sortMode,
+      isAndMode,
     });
   }
 

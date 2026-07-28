@@ -103,6 +103,9 @@ export class LocalDecksScene extends Phaser.Scene {
           this.load.image(`${filter.id}_med`, medPath);
           const largePath = filter.iconSmallPath.replace("_small.png", ".png");
           this.load.image(`${filter.id}`, largePath);
+        } else if (filter.iconPath) {
+          this.load.image(`${filter.id}`, filter.iconPath);
+          this.load.image(`${filter.id}_med`, filter.iconPath);
         }
       });
     }
@@ -234,11 +237,19 @@ export class LocalDecksScene extends Phaser.Scene {
       });
     }
 
-    // 2. Brigade Color Filter
+    // 2. Brigade Color Filter (AND / OR logic)
     if (opts.activeBrigades && opts.activeBrigades.length > 0) {
       result = result.filter((deck) => {
-        const deckBrigades = deck.brigades || [];
-        return opts.activeBrigades.some((b) => deckBrigades.includes(b));
+        const deckBrigades = (deck.brigades || []).map((b) => b.toLowerCase());
+        if (opts.isAndMode) {
+          return opts.activeBrigades.every((b) =>
+            deckBrigades.includes(b.toLowerCase())
+          );
+        } else {
+          return opts.activeBrigades.some((b) =>
+            deckBrigades.includes(b.toLowerCase())
+          );
+        }
       });
     }
 
@@ -295,17 +306,11 @@ export class LocalDecksScene extends Phaser.Scene {
   }
 
   private renderGrid(decks: DeckMetadata[], cardDatabase: any[]) {
-    let decksToRender = decks;
-    if ((!decksToRender || decksToRender.length === 0) && this.currentDecks.length > 0) {
-      decksToRender = this.currentDecks;
-    }
-    if (decksToRender && decksToRender.length > 0) {
-      this.currentDecks = decksToRender;
-    }
+    this.currentDecks = decks;
     if (this.statusText) {
-      this.statusText.setText(`${decksToRender.length} Local Decks`);
+      this.statusText.setText(`${decks.length} Local Decks`);
     }
-    this.gridUI.render(this, decksToRender, cardDatabase, {
+    this.gridUI.render(this, decks, cardDatabase, {
       onOpenDeckEditor: (deck) => {
         if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
         this.cleanup();
