@@ -19,7 +19,7 @@ export class LocalDecksScene extends Phaser.Scene {
   private backButton!: Phaser.GameObjects.Image;
   private settingsButton!: SidebarButton;
   private helpButton!: SidebarButton;
-  
+
   private db!: LocalDecksDB;
   private scanner!: LocalDeckScanner;
   private headerFilterUI!: DeckHeaderFilterUI;
@@ -35,7 +35,7 @@ export class LocalDecksScene extends Phaser.Scene {
       "deck_catacombs_bg",
       "assets/backgrounds/Copilot_20260517_235633_Catacombs.png"
     );
-    
+
     // UI elements
     this.load.image(
       "button_back_placeholder",
@@ -49,11 +49,11 @@ export class LocalDecksScene extends Phaser.Scene {
       "button_help",
       "assets/ui/buttons/Button_Help_Copilot_20260216_130131_small.png"
     );
-    
+
     // Sync button (placeholder using settings for now, user will provide graphic later)
     this.load.image(
       "button_sync_placeholder",
-      "assets/ui/buttons/button-gold-7850928_1920.png" 
+      "assets/ui/buttons/button-gold-7850928_1920.png"
     );
 
     this.load.bitmapFont(
@@ -126,7 +126,7 @@ export class LocalDecksScene extends Phaser.Scene {
     this.soundManager = this.registry.get("soundManager");
     this.db = new LocalDecksDB();
     this.gridUI = new LocalDecksGridUI();
-    
+
     // Console helper for developer reset
     (window as any).resetLocalDecks = async () => {
       await this.db.clearAll();
@@ -181,7 +181,7 @@ export class LocalDecksScene extends Phaser.Scene {
     const cachedDecks = await this.db.getAllCachedMetadata();
     const cardDatabase = this.registry.get("cardDatabase")?.cards || [];
     this.allDecks = cachedDecks;
-    
+
     log("LocalDecksScene", `Loaded ${cachedDecks.length} decks from cache.`);
 
     if (this.statusText) this.statusText.setVisible(false);
@@ -221,7 +221,7 @@ export class LocalDecksScene extends Phaser.Scene {
         this.showOnboarding();
       }
     }
-    
+
     await this.updateStaticFooter();
   }
 
@@ -361,7 +361,7 @@ export class LocalDecksScene extends Phaser.Scene {
       const allIds = wrapped?.deckData
         ? [...(wrapped.deckData.main || []), ...(wrapped.deckData.reserve || [])]
         : (deck.cardIds || []);
-      
+
       const rawCards = allIds
         .map((id) => cardDatabase.find((c: any) => c.id === id || c.Name === id || c.ImageFile === id))
         .filter(Boolean);
@@ -422,7 +422,7 @@ export class LocalDecksScene extends Phaser.Scene {
           if (!deck.visuals) {
             deck.visuals = { heroCharacterCardId: null, evilCharacterCardId: null, fallbackGraphic: "assets/cards/cardback.jpg" };
           }
-          
+
           deck.visuals.heroCharacterCardId = chosenCards[0] ? chosenCards[0].cardKey : null;
           deck.visuals.evilCharacterCardId = chosenCards[1] ? chosenCards[1].cardKey : null;
 
@@ -488,7 +488,7 @@ export class LocalDecksScene extends Phaser.Scene {
 
   private async triggerScan() {
     ScanProgressOverlay.show("Scanning Local Decks...");
-    
+
     try {
       await this.scanner.scanDecks(
         async () => {
@@ -551,7 +551,7 @@ export class LocalDecksScene extends Phaser.Scene {
 
     this.backButton.on("pointerover", () => this.hoverTween(this.backButton, backText, 1.1));
     this.backButton.on("pointerout", () => this.hoverTween(this.backButton, backText, 1.0));
-    
+
     this.backButton.on("pointerdown", () => {
       if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
       this.scene.start("DeckCatacombsScene");
@@ -576,10 +576,11 @@ export class LocalDecksScene extends Phaser.Scene {
     // Scale background using ENVELOP logic (fill screen, no black borders, crop overflow)
     const scaleX = width / this.background.width;
     const scaleY = height / this.background.height;
-    const scale = Math.max(scaleX, scaleY);
-    
+    const scale = Math.min(scaleX, scaleY);
+
     this.background.setPosition(width / 2, height / 2);
     this.background.setScale(scale);
+    this.background.setTint(0x666666)
   }
 
   private resize(gameSize: { width: number; height: number }) {
@@ -587,7 +588,7 @@ export class LocalDecksScene extends Phaser.Scene {
     const height = gameSize.height;
 
     this.adjustBackgroundSize();
-    
+
     if (this.statusText) this.statusText.setPosition(width / 2, 50);
     if (this.settingsButton) this.settingsButton.resize(width, height * 0.18);
     if (this.helpButton) this.helpButton.resize(width, height * 0.7);
