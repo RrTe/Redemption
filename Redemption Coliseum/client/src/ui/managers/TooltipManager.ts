@@ -23,7 +23,6 @@ export class TooltipManager {
         boxShadow: "0 4px 14px rgba(0, 0, 0, 0.85)",
         textShadow: "1px 1px 2px rgba(0, 0, 0, 0.9)",
         whiteSpace: "nowrap",
-        transform: "translate(-50%, -125%)",
         transition: "opacity 0.12s ease",
         opacity: "0",
       });
@@ -32,15 +31,38 @@ export class TooltipManager {
     return this.tooltipEl;
   }
 
-  public static show(xPx: number, yPx: number, textKeyOrRaw: string): void {
+  public static show(xPx: number, yPx: number, textKeyOrRaw: string, preferredDir: "auto" | "top" | "bottom" = "auto"): void {
     const el = this.getOrCreateElement();
     const text = tooltipConfig[textKeyOrRaw] || textKeyOrRaw;
     if (!text) return;
 
     el.innerText = text;
-    el.style.left = `${Math.round(xPx)}px`;
-    el.style.top = `${Math.round(yPx)}px`;
     el.style.display = "block";
+    el.style.left = "0px";
+    el.style.top = "0px";
+    el.style.transform = "none";
+
+    const rect = el.getBoundingClientRect();
+    const padding = 10;
+    const viewWidth = window.innerWidth;
+
+    // Determine vertical position (top vs bottom) with auto-flip if too close to viewport top
+    let top = yPx - rect.height - 8;
+    if (preferredDir === "bottom" || (preferredDir === "auto" && top < padding)) {
+      top = yPx + 28; // Display cleanly below target
+    }
+
+    // Determine horizontal position (centered, clamped to screen edges)
+    let left = xPx - rect.width / 2;
+    if (left < padding) {
+      left = padding;
+    } else if (left + rect.width > viewWidth - padding) {
+      left = viewWidth - padding - rect.width;
+    }
+
+    el.style.left = `${Math.round(left)}px`;
+    el.style.top = `${Math.round(top)}px`;
+
     requestAnimationFrame(() => {
       if (el) el.style.opacity = "1";
     });

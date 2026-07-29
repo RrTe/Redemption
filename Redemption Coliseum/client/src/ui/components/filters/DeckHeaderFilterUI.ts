@@ -164,6 +164,7 @@ export class DeckHeaderFilterUI {
     const brigadeFilters = this.filterManager.getFiltersByCategory("brigade");
     const brigadeItems: ToggleItemConfig[] = brigadeFilters.map((b) => ({
       id: `brigade_${b.id}`,
+      label: b.label,
       texture: `${b.id}_med`,
       frame: 0,
     }));
@@ -197,6 +198,7 @@ export class DeckHeaderFilterUI {
     // 3. Top-Left Bar Row 2: 4 Tier Filters (Exact pixel right-alignment with last Brigade icon!)
     const tierItems: ToggleItemConfig[] = TIER_CONFIG.map((tier) => ({
       id: tier.id,
+      label: `${tier.name} Tier`,
       texture: `${tier.id}_med`,
       frame: 0,
     }));
@@ -325,6 +327,7 @@ export class DeckHeaderFilterUI {
     const checkboxItems: ToggleItemConfig[] = [
       {
         id: "cb_name",
+        label: "Filter by Deck Name",
         texture: "checkBoxUnChecked",
         frame: 0,
         altTexture: "checkBoxChecked",
@@ -332,6 +335,7 @@ export class DeckHeaderFilterUI {
       },
       {
         id: "cb_card",
+        label: "Filter by Included Card Names",
         texture: "checkBoxUnChecked",
         frame: 0,
         altTexture: "checkBoxChecked",

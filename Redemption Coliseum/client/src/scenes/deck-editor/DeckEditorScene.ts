@@ -1105,6 +1105,7 @@ export class DeckEditorScene extends Phaser.Scene {
     const symbolFilters = manager.getFiltersByCategory("symbol");
     const symbolToggleItems = symbolFilters.map((s) => ({
       id: s.id,
+      label: s.label,
       texture: s.id,
       frame: 0,
       attribute: s.rules[0]?.field,
@@ -1135,6 +1136,7 @@ export class DeckEditorScene extends Phaser.Scene {
     const brigadeFilters = manager.getFiltersByCategory("brigade");
     const brigadeToggleItems = brigadeFilters.map((b) => ({
       id: b.id,
+      label: b.label,
       texture: b.id,
       frame: 0,
       attribute: b.rules[0]?.field,
