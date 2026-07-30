@@ -28,7 +28,7 @@ export class SidebarButton {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true })
       .setDisplaySize(48, 48)
-      .setAlpha(0.6)
+      .setAlpha(0.8)
       .setDepth(9999);
 
     this.image.on("pointerover", () => {
