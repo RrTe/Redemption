@@ -1,9 +1,11 @@
 export const tooltipConfig: Record<string, string> = {
   // Action Buttons
+  button_deck_smith: "Open Deck Smith (Create New Deck)",
   button_sync: "Link / Sync Local Deck Folders",
   button_reset: "Reset Local Storage & Paths",
   button_settings: "Game Settings",
   button_help: "Game Guide & Manual",
+  button_exit: "Exit to Deck Catacombs",
   
   // Sort Buttons
   sort_name_asc: "Sort Alphabetically (A to Z)",

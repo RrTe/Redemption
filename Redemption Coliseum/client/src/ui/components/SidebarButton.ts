@@ -29,14 +29,15 @@ export class SidebarButton {
       .setDepth(9999);
 
     this.image.on("pointerover", () => {
+      const visibleX = this.getVisibleX(scene.scale.width);
       scene.tweens.add({
         targets: this.image,
-        x: this.getVisibleX(scene.scale.width),
+        x: visibleX,
         duration: 200,
         ease: "Sine.easeOut",
       });
       const bounds = this.image.getBounds();
-      TooltipManager.show(bounds.centerX, bounds.centerY, this.textureKey);
+      TooltipManager.show(visibleX, bounds.top, this.textureKey);
     });
 
     this.image.on("pointerout", () => {

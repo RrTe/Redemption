@@ -19,6 +19,7 @@ export interface DeckFilterOptions {
 export interface HeaderFilterCallbacks {
   onSync?: () => void;
   onReset?: () => void;
+  onOpenDeckEditor?: () => void;
 }
 
 export class DeckHeaderFilterUI {
@@ -43,6 +44,7 @@ export class DeckHeaderFilterUI {
 
   private syncBtn?: Phaser.GameObjects.Image;
   private resetBtn?: Phaser.GameObjects.Image;
+  private deckSmithBtn?: Phaser.GameObjects.Image;
 
   private activeTiersSet: Set<string> = new Set();
   private sortMode: DeckFilterOptions["sortMode"] = "name_asc";
@@ -191,6 +193,7 @@ export class DeckHeaderFilterUI {
         sfxHover: "DECK_CHECK_HOVER",
         sfxChecked: "DECK_CHECK_SELECT",
         sfxUnchecked: "DECK_CHECK_DESELECT",
+        tooltipDir: "bottom",
       }
     );
     this.brigadeToggleGroup.setDepth(15);
@@ -198,7 +201,6 @@ export class DeckHeaderFilterUI {
     // 3. Top-Left Bar Row 2: 4 Tier Filters (Exact pixel right-alignment with last Brigade icon!)
     const tierItems: ToggleItemConfig[] = TIER_CONFIG.map((tier) => ({
       id: tier.id,
-      label: `${tier.name} Tier`,
       texture: `${tier.id}_med`,
       frame: 0,
     }));
@@ -222,6 +224,7 @@ export class DeckHeaderFilterUI {
         sfxHover: "DECK_CHECK_HOVER",
         sfxChecked: "DECK_CHECK_SELECT",
         sfxUnchecked: "DECK_CHECK_DESELECT",
+        tooltipDir: "top",
       }
     );
     this.tierToggleGroup.setDepth(15);
@@ -361,6 +364,7 @@ export class DeckHeaderFilterUI {
         sfxHover: "DECK_CHECK_HOVER",
         sfxChecked: "DECK_CHECK_SELECT",
         sfxUnchecked: "DECK_CHECK_DESELECT",
+        tooltipDir: "top",
       }
     );
     this.checkboxToggleGroup.setDepth(21);
@@ -374,11 +378,12 @@ export class DeckHeaderFilterUI {
     // 5. Top-Right Bar Row 1: Sort Controls (A-Z, Z-A, Tier, Format, Brigades)
     this.createRightSortControls(deckAreaLeft + 12 * scale, row1Y + 22 * scale, deckAreaWidth - 24 * scale, scale);
 
-    // 6. Top-Right Bar Row 2: Action Buttons (Sync & Reset icons 1:1 like Deck Editor)
+    // 6. Top-Right Bar Row 2: Action Buttons (Deck Smith, Sync & Reset icons 1:1 like Deck Editor)
     const rightIconsY = centerRow2Y;
     const iconSize = 32 * scale;
     const resetX = deckAreaLeft + deckAreaWidth - 26 * scale;
     const syncX = resetX - 42 * scale;
+    const deckSmithX = syncX - 42 * scale;
 
     if (this.scene.textures.exists("button_reset")) {
       this.resetBtn = this.scene.add.image(resetX, rightIconsY, "button_reset")
@@ -463,6 +468,48 @@ export class DeckHeaderFilterUI {
         if (this.callbacks?.onSync) this.callbacks.onSync();
       });
     }
+
+    if (this.scene.textures.exists("button_deck_smith")) {
+      this.deckSmithBtn = this.scene.add.image(deckSmithX, rightIconsY, "button_deck_smith")
+        .setOrigin(0.5, 0.5)
+        .setDepth(15)
+        .setInteractive({ useHandCursor: true });
+
+      const baseSmithScale = iconSize / Math.max(this.deckSmithBtn.width, this.deckSmithBtn.height);
+      this.deckSmithBtn.setScale(baseSmithScale);
+
+      this.deckSmithBtn.on("pointerover", () => {
+        this.scene.game.events.emit("playSound", "DECK_CHECK_HOVER");
+        this.scene.tweens.add({
+          targets: this.deckSmithBtn,
+          scaleX: baseSmithScale * 1.12,
+          scaleY: baseSmithScale * 1.12,
+          duration: 150,
+          ease: "Sine.easeOut"
+        });
+        if (this.deckSmithBtn) {
+          const bounds = this.deckSmithBtn.getBounds();
+          TooltipManager.show(bounds.centerX, bounds.top, "button_deck_smith");
+        }
+      });
+
+      this.deckSmithBtn.on("pointerout", () => {
+        TooltipManager.hide();
+        this.scene.tweens.add({
+          targets: this.deckSmithBtn,
+          scaleX: baseSmithScale,
+          scaleY: baseSmithScale,
+          duration: 150,
+          ease: "Sine.easeOut"
+        });
+      });
+
+      this.deckSmithBtn.on("pointerdown", () => {
+        TooltipManager.hide();
+        this.scene.game.events.emit("playSound", "DECK_CHECK_SELECT");
+        if (this.callbacks?.onOpenDeckEditor) this.callbacks.onOpenDeckEditor();
+      });
+    }
   }
 
   private createRightSortControls(startX: number, centerY: number, maxWidth: number, scale: number): void {
@@ -514,8 +561,8 @@ export class DeckHeaderFilterUI {
         this.scene.game.events.emit("playSound", "DECK_CHECK_HOVER");
         renderBtnBg(this.sortMode === btn.mode, true);
         txt.setTint(0xffd700);
-        const bounds = txt.getBounds();
-        TooltipManager.show(bounds.centerX, bounds.top - 4, `sort_${btn.mode}`);
+        const btnTop = centerY - btnHeight / 2;
+        TooltipManager.show(bx + btnWidth / 2, btnTop, `sort_${btn.mode}`, "bottom", btnHeight);
       });
 
       txt.on("pointerout", () => {
@@ -599,6 +646,7 @@ export class DeckHeaderFilterUI {
     if (this.checkboxToggleGroup) this.checkboxToggleGroup.destroy();
     if (this.syncBtn) this.syncBtn.destroy();
     if (this.resetBtn) this.resetBtn.destroy();
+    if (this.deckSmithBtn) this.deckSmithBtn.destroy();
     if (this.sortButtonsMap) {
       this.sortButtonsMap.forEach((val) => {
         val.bg.destroy();

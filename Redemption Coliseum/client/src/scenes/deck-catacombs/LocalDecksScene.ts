@@ -16,7 +16,7 @@ import { TROPHY_THRESHOLDS, TIER_CONFIG } from "../../config/BrigadeConfig";
 export class LocalDecksScene extends Phaser.Scene {
   private soundManager!: SoundManager;
   private background!: Phaser.GameObjects.Image;
-  private backButton!: Phaser.GameObjects.Image;
+  private exitButton!: SidebarButton;
   private settingsButton!: SidebarButton;
   private helpButton!: SidebarButton;
 
@@ -38,8 +38,8 @@ export class LocalDecksScene extends Phaser.Scene {
 
     // UI elements
     this.load.image(
-      "button_back_placeholder",
-      "assets/ui/buttons/button-gold-7850928_1920.png"
+      "button_exit",
+      "assets/ui/buttons/Button_Copilot_20260730_001735_exit.png"
     );
     this.load.image(
       "button_settings",
@@ -86,6 +86,10 @@ export class LocalDecksScene extends Phaser.Scene {
     this.load.image("arrow_right", "assets/ui/buttons/arrow-right_small.png");
     this.load.image("button_sync", "assets/ui/buttons/sync.png");
     this.load.image("button_reset", "assets/ui/buttons/reset.png");
+    this.load.image(
+      "button_deck_smith",
+      "assets/ui/buttons/Button_Copilot_20260721_210751_Deck_Blacksmith.png"
+    );
 
     TIER_CONFIG.forEach((t) => {
       this.load.image(`${t.id}_bg`, t.bgImage);
@@ -151,7 +155,6 @@ export class LocalDecksScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setTint(0xffd700);
 
-    this.createBackButton();
     this.createSideButtons(height);
 
     this.scale.on("resize", this.resize, this);
@@ -202,6 +205,14 @@ export class LocalDecksScene extends Phaser.Scene {
             log("LocalDecksScene", "Storage reset by user button.");
             this.scene.restart();
           }
+        },
+        onOpenDeckEditor: () => {
+          if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
+          this.cleanup();
+          this.scene.start("GameLoadingScene", {
+            targetScene: "DeckEditorScene",
+            backgroundKey: "btn_deck_editor",
+          });
         }
       }
     );
@@ -508,6 +519,7 @@ export class LocalDecksScene extends Phaser.Scene {
 
   private createSideButtons(height: number) {
     if (this.settingsButton) this.settingsButton.destroy();
+    if (this.exitButton) this.exitButton.destroy();
     if (this.helpButton) this.helpButton.destroy();
 
     this.settingsButton = new SidebarButton(
@@ -522,6 +534,18 @@ export class LocalDecksScene extends Phaser.Scene {
       }
     );
 
+    this.exitButton = new SidebarButton(
+      this,
+      "button_exit",
+      height * 0.18,
+      false, // Left side
+      () => {
+        if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
+        this.cleanup();
+        this.scene.start("DeckCatacombsScene");
+      }
+    );
+
     this.helpButton = new SidebarButton(
       this,
       "button_help",
@@ -533,32 +557,6 @@ export class LocalDecksScene extends Phaser.Scene {
       }
     );
   }
-
-  private createBackButton() {
-    if (this.backButton) this.backButton.destroy();
-
-    this.backButton = this.add
-      .image(40, 40, "button_back_placeholder")
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .setDisplaySize(48, 48)
-      .setAlpha(0.8)
-      .setTint(0xaaaaaa);
-
-    const backText = this.add.bitmapText(40, 40, "fairydust", "<-", 24)
-      .setOrigin(0.5)
-      .setTint(0xffffff);
-
-    this.backButton.on("pointerover", () => this.hoverTween(this.backButton, backText, 1.1));
-    this.backButton.on("pointerout", () => this.hoverTween(this.backButton, backText, 1.0));
-
-    this.backButton.on("pointerdown", () => {
-      if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
-      this.scene.start("DeckCatacombsScene");
-    });
-  }
-
-
 
   private hoverTween(target: any, text: any, scale: number) {
     this.tweens.add({
@@ -580,7 +578,7 @@ export class LocalDecksScene extends Phaser.Scene {
 
     this.background.setPosition(width / 2, height / 2);
     this.background.setScale(scale);
-    this.background.setTint(0x666666)
+    this.background.setTint(0x666666);
   }
 
   private resize(gameSize: { width: number; height: number }) {
@@ -591,6 +589,7 @@ export class LocalDecksScene extends Phaser.Scene {
 
     if (this.statusText) this.statusText.setPosition(width / 2, 50);
     if (this.settingsButton) this.settingsButton.resize(width, height * 0.18);
+    if (this.exitButton) this.exitButton.resize(width, height * 0.18);
     if (this.helpButton) this.helpButton.resize(width, height * 0.7);
 
     if (this.gridUI) {

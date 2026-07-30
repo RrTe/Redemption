@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { TooltipManager } from "../managers/TooltipManager";
+import { tooltipConfig } from "../config/tooltip_config";
 
 export interface ToggleItemConfig {
   id: string;
@@ -25,6 +26,7 @@ export interface IconToggleGroupConfig {
   sfxUnchecked?: string;
   initialSelectedIds?: string[];
   selectedOverlayTexture?: string;
+  tooltipDir?: "top" | "bottom" | "auto";
 }
 
 export class IconToggleGroup extends Phaser.GameObjects.Container {
@@ -59,6 +61,7 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
       sfxUnchecked: config.sfxUnchecked ?? "checkButtonDeselect",
       initialSelectedIds: config.initialSelectedIds ?? [],
       selectedOverlayTexture: config.selectedOverlayTexture ?? "filterSelected",
+      tooltipDir: config.tooltipDir ?? "top",
     };
 
     this.groupConfig.initialSelectedIds.forEach((id) => this.selectedIds.add(id));
@@ -121,8 +124,12 @@ export class IconToggleGroup extends Phaser.GameObjects.Container {
         }
 
         const bounds = sprite.getBounds();
-        const textKey = item.label || item.id;
-        TooltipManager.show(bounds.centerX, bounds.top, textKey);
+        const lookupKey = item.id.replace("brigade_", "");
+        const textKey = (tooltipConfig as Record<string, string>)[lookupKey]
+          ? lookupKey
+          : (item.label || lookupKey);
+        const dir = this.groupConfig.tooltipDir || "top";
+        TooltipManager.show(bounds.centerX, bounds.top, textKey, dir, bounds.height);
       });
 
       sprite.on("pointerout", () => {

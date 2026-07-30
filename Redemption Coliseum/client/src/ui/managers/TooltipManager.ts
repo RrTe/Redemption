@@ -1,5 +1,11 @@
 import { tooltipConfig } from "../config/tooltip_config";
 
+// Central Tooltip Position Settings
+export const TOOLTIP_CONFIG = {
+  offsetY: 6, // Distance in px from the target element's edge
+  minTopPadding: 2, // Minimum distance from screen top before auto-flipping
+};
+
 export class TooltipManager {
   private static tooltipEl: HTMLElement | null = null;
 
@@ -12,10 +18,10 @@ export class TooltipManager {
         pointerEvents: "none",
         zIndex: "100000",
         display: "none",
-        padding: "6px 12px",
+        padding: "5px 10px",
         background: "rgba(16, 22, 34, 0.95)",
         border: "1px solid #b8860b",
-        borderRadius: "6px",
+        borderRadius: "5px",
         color: "#ffd700",
         fontFamily: "Arial, sans-serif",
         fontSize: "13px",
@@ -31,7 +37,13 @@ export class TooltipManager {
     return this.tooltipEl;
   }
 
-  public static show(xPx: number, yPx: number, textKeyOrRaw: string, preferredDir: "auto" | "top" | "bottom" = "auto"): void {
+  public static show(
+    xPx: number,
+    topYPx: number,
+    textKeyOrRaw: string,
+    preferredDir: "top" | "bottom" | "auto" = "top",
+    targetHeight: number = 32
+  ): void {
     const el = this.getOrCreateElement();
     const text = tooltipConfig[textKeyOrRaw] || textKeyOrRaw;
     if (!text) return;
@@ -40,24 +52,29 @@ export class TooltipManager {
     el.style.display = "block";
     el.style.left = "0px";
     el.style.top = "0px";
-    el.style.transform = "none";
 
     const rect = el.getBoundingClientRect();
-    const padding = 10;
+    const screenPadding = 10;
     const viewWidth = window.innerWidth;
 
-    // Determine vertical position (top vs bottom) with auto-flip if too close to viewport top
-    let top = yPx - rect.height - 8;
-    if (preferredDir === "bottom" || (preferredDir === "auto" && top < padding)) {
-      top = yPx + 28; // Display cleanly below target
+    let top: number;
+    if (preferredDir === "bottom") {
+      // Position below target's bottom edge
+      top = topYPx + targetHeight + TOOLTIP_CONFIG.offsetY;
+    } else {
+      // Position above target's top edge
+      top = topYPx - rect.height - TOOLTIP_CONFIG.offsetY;
+      if (preferredDir === "auto" && top < TOOLTIP_CONFIG.minTopPadding) {
+        top = topYPx + targetHeight + TOOLTIP_CONFIG.offsetY;
+      }
     }
 
     // Determine horizontal position (centered, clamped to screen edges)
     let left = xPx - rect.width / 2;
-    if (left < padding) {
-      left = padding;
-    } else if (left + rect.width > viewWidth - padding) {
-      left = viewWidth - padding - rect.width;
+    if (left < screenPadding) {
+      left = screenPadding;
+    } else if (left + rect.width > viewWidth - screenPadding) {
+      left = viewWidth - screenPadding - rect.width;
     }
 
     el.style.left = `${Math.round(left)}px`;
