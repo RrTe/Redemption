@@ -4,11 +4,12 @@ import { type SoundManager } from "../../managers/SoundManager";
 import { DirectoryPicker } from "../../utils/DirectoryPicker";
 import { SidebarButton } from "../../ui/components/SidebarButton";
 import { SettingsDialogScene } from "../SettingsDialogScene";
+import { HelpOverlay } from "../../ui/overlays";
 import { log } from "../../utils/logger";
 export class DeckCatacombsScene extends Phaser.Scene {
   private soundManager!: SoundManager;
   private background!: Phaser.GameObjects.Image;
-  private backButton!: Phaser.GameObjects.Image;
+  private exitButton!: SidebarButton;
   private buttons: MenuTile[] = [];
   private settingsButton!: SidebarButton;
   private helpButton!: SidebarButton;
@@ -48,10 +49,10 @@ export class DeckCatacombsScene extends Phaser.Scene {
     // Particles/flares for premium hover glow effect (MenuTile needs these)
     this.load.image("light_glow", "assets/particles/lightGlow.png");
 
-    // Back button placeholder (using settings button graphic)
+    // UI elements
     this.load.image(
-      "button_back_placeholder",
-      "assets/ui/buttons/button-gold-7850928_1920.png"
+      "button_exit",
+      "assets/ui/buttons/Button_Copilot_20260730_001735_exit.png"
     );
 
     // Settings and Help Buttons
@@ -86,9 +87,6 @@ export class DeckCatacombsScene extends Phaser.Scene {
     this.background = this.add.image(width / 2, height / 2, "deck_catacombs_bg");
     this.adjustBackgroundSize();
 
-    // Add back button (top left)
-    this.createBackButton();
-
     // Create 3 Menu Tiles
     this.createTiles(width, height);
 
@@ -101,6 +99,7 @@ export class DeckCatacombsScene extends Phaser.Scene {
 
   private createSideButtons(width: number, height: number) {
     if (this.settingsButton) this.settingsButton.destroy();
+    if (this.exitButton) this.exitButton.destroy();
     if (this.helpButton) this.helpButton.destroy();
 
     this.settingsButton = new SidebarButton(
@@ -115,6 +114,18 @@ export class DeckCatacombsScene extends Phaser.Scene {
       }
     );
 
+    this.exitButton = new SidebarButton(
+      this,
+      "button_exit",
+      height * 0.18,
+      false, // Left side
+      () => {
+        if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
+        this.scene.start("HubScene");
+      },
+      "button_exit_to_hub"
+    );
+
     this.helpButton = new SidebarButton(
       this,
       "button_help",
@@ -122,7 +133,7 @@ export class DeckCatacombsScene extends Phaser.Scene {
       false, // Left side
       () => {
         if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
-        console.log("[DEBUG] Help Button clicked");
+        HelpOverlay.toggle();
       }
     );
   }
@@ -138,47 +149,6 @@ export class DeckCatacombsScene extends Phaser.Scene {
 
     this.background.setPosition(width / 2, height / 2);
     this.background.setScale(scale);
-  }
-
-  private createBackButton() {
-    if (this.backButton) this.backButton.destroy();
-
-    // Position back button at top-left
-    this.backButton = this.add
-      .image(40, 40, "button_back_placeholder")
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true })
-      .setDisplaySize(48, 48)
-      .setAlpha(0.8)
-      .setTint(0xaaaaaa); // Tint it slightly to differentiate from settings
-
-    // Label on top of it as it's a placeholder graphic
-    const backText = this.add.bitmapText(40, 40, "fairydust", "<-", 24)
-      .setOrigin(0.5)
-      .setTint(0xffffff);
-
-    this.backButton.on("pointerover", () => {
-      this.tweens.add({
-        targets: [this.backButton, backText],
-        scale: 1.1,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
-
-    this.backButton.on("pointerout", () => {
-      this.tweens.add({
-        targets: [this.backButton, backText],
-        scale: 1.0,
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-    });
-
-    this.backButton.on("pointerdown", () => {
-      if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
-      this.scene.start("HubScene");
-    });
   }
 
   private createTiles(width: number, height: number) {
@@ -249,6 +219,7 @@ export class DeckCatacombsScene extends Phaser.Scene {
     this.createTiles(width, height);
 
     if (this.settingsButton) this.settingsButton.resize(width, height * 0.18);
+    if (this.exitButton) this.exitButton.resize(width, height * 0.18);
     if (this.helpButton) this.helpButton.resize(width, height * 0.7);
   }
 }

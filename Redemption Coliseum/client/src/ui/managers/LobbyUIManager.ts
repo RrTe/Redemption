@@ -20,6 +20,7 @@ export class LobbyUIManager {
   public loadGameBtn!: Phaser.GameObjects.Container;
   public reconnectBtn!: Phaser.GameObjects.Container;
   public settingsButton!: SidebarButton;
+  public exitButton!: SidebarButton;
   public helpButton!: SidebarButton;
   public legalBtn!: Phaser.GameObjects.Text;
   public privacyBtn!: Phaser.GameObjects.Text;
@@ -107,7 +108,7 @@ export class LobbyUIManager {
       .setInteractive({ useHandCursor: true })
       .setVisible(false);
 
-    // Settings & Help Buttons
+    // Settings, Exit & Help Buttons
     this.settingsButton = new SidebarButton(
       this.scene,
       "button_settings",
@@ -118,6 +119,18 @@ export class LobbyUIManager {
         this.scene.scene.pause();
         this.scene.scene.launch("SettingsDialogScene", { parentScene: "LobbyScene" });
       }
+    );
+
+    this.exitButton = new SidebarButton(
+      this.scene,
+      "button_exit",
+      height * 0.18,
+      false, // Left side
+      () => {
+        this.soundManager.playSound("UI_TOGGLE");
+        this.scene.scene.start("HubScene");
+      },
+      "button_exit_to_hub"
     );
 
     this.helpButton = new SidebarButton(
@@ -390,7 +403,8 @@ export class LobbyUIManager {
     this.statusText?.setPosition(width / 2, height - 40);
     this.debugText?.setPosition(width - 10, height - 10);
     this.settingsButton?.resize(width, height * 0.18);
-    this.helpButton?.resize(width, height * 0.7);
+    this.exitButton?.resize(width, height * 0.18);
+    if (this.helpButton) this.helpButton.resize(width, height * 0.7);
     this.legalBtn?.setPosition(10, height - 10);
     this.privacyBtn?.setPosition(160, height - 10);
   }

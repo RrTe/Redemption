@@ -48,12 +48,15 @@ export class LobbyScene extends Phaser.Scene {
     // ✨ NEU: Spezifische Pfeile für Hoch/Runter laden
     this.load.image("arrow_up", "assets/ui/buttons/arrow-up_small.png");
     this.load.image("arrow_down", "assets/ui/buttons/arrow-down_small.png");
-    // ✨ NEU: Settings Button laden (gleiches Asset wie im Spiel)
+    // ✨ NEU: Settings, Help & Exit Buttons
     this.load.image(
       "button_settings",
       "assets/ui/buttons/button-gold-7850928_1920.png",
     );
-    // ✨ NEU: Help Button
+    this.load.image(
+      "button_exit",
+      "assets/ui/buttons/Button_Copilot_20260730_001735_exit.png",
+    );
     this.load.image(
       "button_help",
       "assets/ui/buttons/Button_Help_Copilot_20260216_130131_small.png",

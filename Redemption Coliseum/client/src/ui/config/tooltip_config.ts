@@ -5,7 +5,9 @@ export const tooltipConfig: Record<string, string> = {
   button_reset: "Reset Local Storage & Paths",
   button_settings: "Game Settings",
   button_help: "Game Guide & Manual",
-  button_exit: "Exit to Deck Catacombs",
+  button_exit: "Exit",
+  button_exit_to_catacombs: "Exit to Deck Catacombs",
+  button_exit_to_hub: "Exit to Main Hub",
   
   // Sort Buttons
   sort_name_asc: "Sort Alphabetically (A to Z)",

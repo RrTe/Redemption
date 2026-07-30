@@ -26,9 +26,9 @@ import { LocalDecksDB } from "../../utils/LocalDecksDB";
 import { log } from "../../utils/logger";
 import { DeckValidator } from "../../../../shared/DeckValidator.js";
 import { filterConfigData } from "../../ui/config/filter_config";
-// DeckMetricsDialogScene removed - now using HTML DOM overlay approach like the standalone editor
 import { NotificationManager } from "../../ui/notifications/NotificationManager";
 import { SidebarButton } from "../../ui/components/SidebarButton";
+import { HelpOverlay } from "../../ui/overlays";
 
 
 const EDITOR_CONFIG = {
@@ -92,6 +92,7 @@ export class DeckEditorScene extends Phaser.Scene {
   private allCardViews: DeckCardView[] = [];
   private buttons: { bg: Phaser.GameObjects.Image; text: Phaser.GameObjects.BitmapText; shadow: Phaser.GameObjects.BitmapText }[] = [];
   private settingsButton!: SidebarButton;
+  private exitButton!: SidebarButton;
   private helpButton!: SidebarButton;
 
   private savedDeckIDsJSON: string | null = null;
@@ -152,6 +153,10 @@ export class DeckEditorScene extends Phaser.Scene {
     this.load.image(
       "button_settings",
       "assets/ui/buttons/button-gold-7850928_1920.png",
+    );
+    this.load.image(
+      "button_exit",
+      "assets/ui/buttons/Button_Copilot_20260730_001735_exit.png",
     );
     this.load.image(
       "button_help",
@@ -937,6 +942,7 @@ export class DeckEditorScene extends Phaser.Scene {
 
   private createSideButtons() {
     if (this.settingsButton) this.settingsButton.destroy();
+    if (this.exitButton) this.exitButton.destroy();
     if (this.helpButton) this.helpButton.destroy();
 
     const width = this.scale.width;
@@ -954,6 +960,18 @@ export class DeckEditorScene extends Phaser.Scene {
       }
     );
 
+    this.exitButton = new SidebarButton(
+      this,
+      "button_exit",
+      height * 0.18,
+      false, // Left side
+      () => {
+        this.soundManager.playSound("UI_TOGGLE");
+        this.scene.start("DeckCatacombsScene");
+      },
+      "button_exit_to_catacombs"
+    );
+
     this.helpButton = new SidebarButton(
       this,
       "button_help",
@@ -961,7 +979,7 @@ export class DeckEditorScene extends Phaser.Scene {
       false, // Left side
       () => {
         this.soundManager.playSound("UI_TOGGLE");
-        console.log("[DEBUG] Help Button clicked");
+        HelpOverlay.toggle();
       }
     );
   }

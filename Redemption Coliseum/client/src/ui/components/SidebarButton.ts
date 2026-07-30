@@ -6,17 +6,20 @@ export class SidebarButton {
   private scene: Phaser.Scene;
   private isRightSide: boolean;
   private textureKey: string;
+  private tooltipKey: string;
 
   constructor(
     scene: Phaser.Scene,
     texture: string,
     y: number,
     isRightSide: boolean,
-    onClick: () => void
+    onClick: () => void,
+    tooltipKey?: string
   ) {
     this.scene = scene;
     this.isRightSide = isRightSide;
     this.textureKey = texture;
+    this.tooltipKey = tooltipKey || texture;
 
     const width = scene.scale.width;
     const startX = this.getHiddenX(width);
@@ -37,7 +40,7 @@ export class SidebarButton {
         ease: "Sine.easeOut",
       });
       const bounds = this.image.getBounds();
-      TooltipManager.show(visibleX, bounds.top, this.textureKey);
+      TooltipManager.show(visibleX, bounds.top, this.tooltipKey);
     });
 
     this.image.on("pointerout", () => {

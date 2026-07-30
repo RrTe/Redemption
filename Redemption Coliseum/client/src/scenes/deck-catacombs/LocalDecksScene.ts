@@ -543,7 +543,8 @@ export class LocalDecksScene extends Phaser.Scene {
         if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
         this.cleanup();
         this.scene.start("DeckCatacombsScene");
-      }
+      },
+      "button_exit_to_catacombs"
     );
 
     this.helpButton = new SidebarButton(
