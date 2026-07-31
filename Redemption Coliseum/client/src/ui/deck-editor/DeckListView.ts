@@ -366,9 +366,8 @@ export class DeckListView {
       symbolX -= SYMBOL_SPACING;
     });
 
-    // Render brigade circles using the new BrigadeRenderer utility
-    const goldColorNum = Phaser.Display.Color.HexStringToColor(EDITOR_LAYOUT.goldColor).color;
-    symbolX = renderBrigadeCircles(this.scene, container, symbolX, brigadeSymbols, goldColorNum);
+    // Render brigade circles matching 1:1 local deck tile gem styling
+    symbolX = renderBrigadeCircles(this.scene, container, symbolX, brigadeSymbols);
 
     container.setDepth(this.depth);
     box.setInteractive({ useHandCursor: true });

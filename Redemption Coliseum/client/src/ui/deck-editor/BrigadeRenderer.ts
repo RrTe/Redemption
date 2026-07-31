@@ -17,6 +17,7 @@ function ensureSpecialBrigadeTexture(scene: Phaser.Scene, def: SpecialBrigadeDef
   const ctx = canvasTexture.context;
 
   if (ctx) {
+    // 1. Dual-color base gradient
     const gradient = ctx.createLinearGradient(0, 0, size, size);
     const step = 1 / (def.colors.length - 1);
     def.colors.forEach((color, index) => {
@@ -27,37 +28,43 @@ function ensureSpecialBrigadeTexture(scene: Phaser.Scene, def: SpecialBrigadeDef
     ctx.beginPath();
     ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
     ctx.fill();
+
+    // 2. Gloss highlight (top half translucent white)
+    const glossGrad = ctx.createLinearGradient(0, 0, 0, size * 0.6);
+    glossGrad.addColorStop(0, "rgba(255, 255, 255, 0.4)");
+    glossGrad.addColorStop(1, "rgba(255, 255, 255, 0.0)");
+    ctx.fillStyle = glossGrad;
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.fill();
   }
 
   canvasTexture.refresh();
 }
 
 /**
- * Renders compact brigade colored circles with a gold border.
+ * Renders compact brigade colored circles matching 1:1 the visual style of Local Deck Tiles.
  * Draws circles from right to left starting at symbolX.
  *
  * @param scene The active Phaser scene.
  * @param container The parent container of the list entry.
  * @param symbolX The starting horizontal X position.
  * @param brigadeSymbols The list of brigade symbols to draw.
- * @param strokeColor The hexadecimal border color for the circles.
  * @returns The updated symbolX position to the left of the drawn circles.
  */
 export function renderBrigadeCircles(
   scene: Phaser.Scene,
   container: Phaser.GameObjects.Container,
   symbolX: number,
-  brigadeSymbols: any[],
-  strokeColor: number = 0xe9cd45
+  brigadeSymbols: any[]
 ): number {
   if (brigadeSymbols.length === 0) {
     return symbolX;
   }
 
-  const R = 8; // Radius of each circle
-  const strokeWidth = 1.5;
-  const spacing = 1;
-  const step = 2 * R + spacing; // 17px horizontal step
+  const R = 7; // Radius of 7px (14px diameter, matching deck tile brigade-gem size)
+  const spacing = 2;
+  const step = 2 * R + spacing; // 16px horizontal step
 
   const graphics = scene.add.graphics();
 
@@ -74,13 +81,19 @@ export function renderBrigadeCircles(
       container.add(img);
     } else {
       const color = BRIGADE_COLORS[symbol.id] ?? 0x808080;
-      // Draw the filled circle
+      
+      // 1. Solid brigade color fill
       graphics.fillStyle(color, 1.0);
       graphics.fillCircle(cx, cy, R);
+
+      // 2. Glossy 3D top highlight (matching linear-gradient gloss on deck tiles)
+      graphics.fillStyle(0xffffff, 0.35);
+      graphics.fillCircle(cx, cy - 2, 4.5);
     }
 
-    // Draw the gold border outline
-    graphics.lineStyle(strokeWidth, strokeColor, 1.0);
+    // 3. Dark 1px border outline (matching 1px solid rgba(0,0,0,0.8) on deck tiles)
+    const borderColor = symbol.id === "Black" ? 0x777777 : 0x000000;
+    graphics.lineStyle(1, borderColor, 0.85);
     graphics.strokeCircle(cx, cy, R);
   });
 
