@@ -56,6 +56,7 @@ export class LocalDecksGridUI {
   }
 
   private currentScene: Phaser.Scene | null = null;
+  private currentRenderId: number = 0;
 
   public async render(
     scene: Phaser.Scene,
@@ -63,12 +64,14 @@ export class LocalDecksGridUI {
     cardDatabase: any[],
     callbacks: LocalDecksGridCallbacks
   ): Promise<void> {
+    const renderId = ++this.currentRenderId;
     this.destroy();
     this.currentScene = scene;
 
-    this.containerEl = document.createElement("div");
-    this.containerEl.id = "local-decks-grid-container";
-    this.containerEl.className = "local-decks-grid-container";
+    const container = document.createElement("div");
+    container.id = "local-decks-grid-container";
+    container.className = "local-decks-grid-container";
+    this.containerEl = container;
 
     this.updateContainerBounds(scene);
 
@@ -76,15 +79,27 @@ export class LocalDecksGridUI {
       const emptyText = document.createElement("div");
       emptyText.className = "local-decks-empty-text";
       emptyText.innerText = "No decks found matching the selected filter.";
-      this.containerEl.appendChild(emptyText);
+      container.appendChild(emptyText);
     } else {
       for (const deck of decks) {
+        if (this.currentRenderId !== renderId) {
+          container.remove();
+          return;
+        }
         const tile = await this.createTile(scene, deck, cardDatabase, callbacks);
-        this.containerEl.appendChild(tile);
+        if (this.currentRenderId !== renderId) {
+          container.remove();
+          return;
+        }
+        container.appendChild(tile);
       }
     }
 
-    document.body.appendChild(this.containerEl);
+    if (this.currentRenderId === renderId) {
+      document.body.appendChild(container);
+    } else {
+      container.remove();
+    }
   }
 
   public setVisible(visible: boolean): void {
@@ -98,6 +113,8 @@ export class LocalDecksGridUI {
       this.containerEl.remove();
       this.containerEl = null;
     }
+    const orphanContainers = document.querySelectorAll("#local-decks-grid-container");
+    orphanContainers.forEach((el) => el.remove());
     this.currentScene = null;
   }
 

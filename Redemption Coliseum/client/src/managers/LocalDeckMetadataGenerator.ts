@@ -1,5 +1,6 @@
 import type { DeckMetadata, DeckStats, WrappedDeck } from "../types/DeckMetadata";
 import type { DeckData } from "../utils/DeckUtils";
+import { DECK_VALIDATION_RULES } from "../../../shared/deck-validation-rules.js";
 
 export class LocalDeckMetadataGenerator {
   /**
@@ -9,6 +10,9 @@ export class LocalDeckMetadataGenerator {
    * @param filename The name of the file
    * @param lastModified The timestamp of when the file was last modified
    * @param cardDatabase The global array of card data objects
+   * @param existingMeta Existing DeckMetadata if updating
+   * @param resetStats Whether to reset statistics
+   * @param selectedFormat The format ID chosen during import
    * @returns A complete DeckMetadata object
    */
   public static generateMetadata(
@@ -17,7 +21,8 @@ export class LocalDeckMetadataGenerator {
     lastModified: number,
     cardDatabase: any[],
     existingMeta?: DeckMetadata,
-    resetStats: boolean = false
+    resetStats: boolean = false,
+    selectedFormat?: string
   ): DeckMetadata {
     const deckName = filename.replace(/\.[^/.]+$/, ""); // Remove extension
     const cardIds = new Set<string>();
@@ -78,6 +83,8 @@ export class LocalDeckMetadataGenerator {
 
     const id = existingMeta?.id || deckData.rawMeta?.id || crypto.randomUUID();
 
+    const format = selectedFormat || existingMeta?.format || deckData.rawMeta?.format || DECK_VALIDATION_RULES.defaultFormat || "type_1";
+
     return {
       id,
       name: deckName,
@@ -87,7 +94,7 @@ export class LocalDeckMetadataGenerator {
         reserve: deckData.reserve.length,
       },
       formatVersion: "1.0",
-      format: "Standard", // TODO: Determine from an external configuration file later
+      format,
       isValid: true, // TODO: Run centralized validation logic
       brigades: Array.from(brigades),
       cardIds: Array.from(cardIds),

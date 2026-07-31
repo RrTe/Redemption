@@ -229,7 +229,7 @@ export class DeckHeaderFilterUI {
     );
     this.tierToggleGroup.setDepth(15);
 
-    this.scene.events.on("ui:toggle-changed", (evt: any) => {
+    this.onToggleChangedHandler = (evt: any) => {
       if (evt && (evt.groupId === "header-brigade-group" || evt.groupId === "header-tier-group")) {
         this.activeTiersSet.clear();
         if (this.tierToggleGroup) {
@@ -239,7 +239,8 @@ export class DeckHeaderFilterUI {
         }
         this.emitChange();
       }
-    });
+    };
+    this.scene.events.on("ui:toggle-changed", this.onToggleChangedHandler);
 
     // 4. Bottom-Left Bar: Counter + Search Input + Checkboxes (EXACT 1:1 TextFilterView alignment)
     const fontKey = this.scene.cache.bitmapFont.exists("fairyDust") ? "fairyDust" : "fairydust";
@@ -631,8 +632,14 @@ export class DeckHeaderFilterUI {
     });
   }
 
+  private onToggleChangedHandler?: (evt: any) => void;
+
   public destroy(): void {
     TooltipManager.hide();
+    if (this.onToggleChangedHandler) {
+      this.scene.events.off("ui:toggle-changed", this.onToggleChangedHandler);
+      this.onToggleChangedHandler = undefined;
+    }
     if (this.topLeftBg) this.topLeftBg.destroy();
     if (this.bottomLeftBg) this.bottomLeftBg.destroy();
     if (this.topRightBg) this.topRightBg.destroy();

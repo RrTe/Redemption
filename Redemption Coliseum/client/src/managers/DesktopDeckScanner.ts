@@ -10,6 +10,7 @@ export class DesktopDeckScanner {
   private db: LocalDecksDB;
   private cardDatabase: any[];
   private currentBulkAction: ConflictAction | null = null;
+  private currentBulkFormat: string | null = null;
 
   constructor(db: LocalDecksDB, cardDatabase: any[]) {
     this.db = db;
@@ -46,8 +47,9 @@ export class DesktopDeckScanner {
       const total = entries.length;
       log("DesktopDeckScanner", `Found ${total} valid deck files in source.`);
 
-      // Reset bulk action for this run
+      // Reset bulk choices for this run
       this.currentBulkAction = null;
+      this.currentBulkFormat = null;
 
       for (let i = 0; i < total; i++) {
         const entry = entries[i];
@@ -67,6 +69,7 @@ export class DesktopDeckScanner {
       }
     } finally {
       this.currentBulkAction = null;
+      this.currentBulkFormat = null;
     }
   }
 
@@ -132,17 +135,14 @@ export class DesktopDeckScanner {
     
     // Check existing metadata in cache or target JSON file
     const cachedMeta = await this.getExistingMeta(baseName, targetDirHandle);
+    const isConflict = cachedMeta !== undefined;
     
-    if (cachedMeta) {
-      if (file.lastModified > cachedMeta.lastModified) {
-        log("DesktopDeckScanner", `Conflict: ${file.name} is newer than cache.`);
-        await this.handleConflict(file, targetFileName, targetDirHandle, cachedMeta);
-      } else {
-        log("DesktopDeckScanner", `Skipping ${file.name} (unchanged)`);
-      }
+    if (isConflict) {
+      log("DesktopDeckScanner", `Existing deck found: ${file.name}`);
+      await this.handleImportOrConflict(file, targetFileName, targetDirHandle, true, cachedMeta);
     } else {
       log("DesktopDeckScanner", `New deck found: ${file.name}`);
-      await this.importAndSave(file, targetFileName, targetDirHandle);
+      await this.handleImportOrConflict(file, targetFileName, targetDirHandle, false);
     }
   }
 
@@ -165,34 +165,51 @@ export class DesktopDeckScanner {
     return undefined;
   }
 
-  private async handleConflict(
+  private async handleImportOrConflict(
     file: File, 
     targetFileName: string, 
     targetDirHandle: any,
-    cachedMeta: DeckMetadata
+    isConflict: boolean,
+    cachedMeta?: DeckMetadata
   ): Promise<void> {
-    let action = this.currentBulkAction;
-    
-    if (!action) {
-      action = await ConflictResolutionManager.promptUser(file.name);
-      
-      if (action.endsWith("_all")) {
-        this.currentBulkAction = action;
+    let action: ConflictAction = "import";
+    let format = this.currentBulkFormat || cachedMeta?.format;
+
+    const needConflictPrompt = isConflict && !this.currentBulkAction;
+    const needFormatPrompt = !this.currentBulkFormat;
+
+    if (needConflictPrompt || needFormatPrompt) {
+      const promptResult = await ConflictResolutionManager.promptUser(
+        file.name,
+        isConflict,
+        format || undefined
+      );
+
+      if (promptResult.bulkApply) {
+        if (promptResult.format) {
+          this.currentBulkFormat = promptResult.format;
+        }
+        if (promptResult.action && promptResult.action !== "import") {
+          this.currentBulkAction = promptResult.action;
+        }
       }
+
+      action = isConflict ? promptResult.action : "import";
+      format = promptResult.format;
+    } else if (isConflict && this.currentBulkAction) {
+      action = this.currentBulkAction;
     }
 
-    // Strip "_all" for logic processing
     const baseAction = action.replace("_all", "");
-
     if (baseAction === "skip") {
       log("DesktopDeckScanner", `Skipped update for ${file.name}`);
       return;
     }
 
     const resetStats = baseAction === "update_reset_stats";
-    log("DesktopDeckScanner", `Updating ${file.name} (Reset Stats: ${resetStats})`);
+    log("DesktopDeckScanner", `Processing ${file.name} (Format: ${format}, Reset Stats: ${resetStats})`);
     
-    await this.importAndSave(file, targetFileName, targetDirHandle, cachedMeta, resetStats);
+    await this.importAndSave(file, targetFileName, targetDirHandle, cachedMeta, resetStats, format || undefined);
   }
 
   private async importAndSave(
@@ -200,7 +217,8 @@ export class DesktopDeckScanner {
     targetFileName: string, 
     targetDirHandle: any,
     existingMeta?: DeckMetadata,
-    resetStats: boolean = false
+    resetStats: boolean = false,
+    selectedFormat?: string
   ): Promise<void> {
     try {
       const content = await file.text();
@@ -212,7 +230,8 @@ export class DesktopDeckScanner {
         file.lastModified,
         this.cardDatabase,
         existingMeta,
-        resetStats
+        resetStats,
+        selectedFormat
       );
 
       const wrappedDeck = LocalDeckMetadataGenerator.wrapDeck(newMeta, deckData);

@@ -2,6 +2,7 @@ import type { DeckMetadata } from "../types/DeckMetadata";
 import { LocalDecksDB } from "../utils/LocalDecksDB";
 import { DeckUtils } from "../utils/DeckUtils";
 import { LocalDeckMetadataGenerator } from "./LocalDeckMetadataGenerator";
+import { ConflictResolutionManager, type ConflictAction } from "./ConflictResolutionManager";
 import { log, error } from "../utils/logger";
 
 export class MobileDeckScanner {
@@ -69,6 +70,9 @@ export class MobileDeckScanner {
     onProgress?: (current: number, total: number, filename: string) => void
   ): Promise<void> {
     const total = files.length;
+    let currentBulkAction: ConflictAction | null = null;
+    let currentBulkFormat: string | null = null;
+
     for (let i = 0; i < total; i++) {
       const file = files[i];
       if (onProgress) {
@@ -81,6 +85,43 @@ export class MobileDeckScanner {
         const deckData = DeckUtils.parseDeck(content, file.name);
         const baseName = file.name.replace(/\.[^/.]+$/, "");
         const existingMeta = await this.db.getCachedMetadata(baseName);
+        const isConflict = existingMeta !== undefined;
+
+        let action: ConflictAction = "import";
+        let format = currentBulkFormat || existingMeta?.format;
+
+        const needConflictPrompt = isConflict && !currentBulkAction;
+        const needFormatPrompt = !currentBulkFormat;
+
+        if (needConflictPrompt || needFormatPrompt) {
+          const promptResult = await ConflictResolutionManager.promptUser(
+            file.name,
+            isConflict,
+            format || undefined
+          );
+
+          if (promptResult.bulkApply) {
+            if (promptResult.format) {
+              currentBulkFormat = promptResult.format;
+            }
+            if (promptResult.action && promptResult.action !== "import") {
+              currentBulkAction = promptResult.action;
+            }
+          }
+
+          action = isConflict ? promptResult.action : "import";
+          format = promptResult.format;
+        } else if (isConflict && currentBulkAction) {
+          action = currentBulkAction;
+        }
+
+        const baseAction = action.replace("_all", "");
+        if (baseAction === "skip") {
+          log("MobileDeckScanner", `Skipped update for ${file.name}`);
+          continue;
+        }
+
+        const resetStats = baseAction === "update_reset_stats";
 
         const meta = LocalDeckMetadataGenerator.generateMetadata(
           deckData,
@@ -88,7 +129,8 @@ export class MobileDeckScanner {
           file.lastModified,
           this.cardDatabase,
           existingMeta,
-          false // Keep stats by default on mobile import
+          resetStats,
+          format || undefined
         );
         const wrappedDeck = LocalDeckMetadataGenerator.wrapDeck(meta, deckData);
 
