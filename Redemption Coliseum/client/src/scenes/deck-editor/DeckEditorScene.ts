@@ -366,7 +366,6 @@ export class DeckEditorScene extends Phaser.Scene {
       editorEvents.off("clear-deck", this.clearDeck, this);
       editorEvents.off("share-deck", this.shareDeck, this);
       editorEvents.off("show-deck-metrics", this.showDeckMetrics, this);
-      editorEvents.off("logout-editor", this.logoutEditor, this);
       editorEvents.off("battle-start", this.startBattleFromEditor, this);
     });
 
@@ -1082,18 +1081,8 @@ export class DeckEditorScene extends Phaser.Scene {
       buttonScale,
     );
     this.buttonManager.createButton(
-      "logoutButton",
-      endX,
-      centerY + 36 * this.layoutConfig.scale,
-      "logout",
-      0.1,
-      "logout-editor",
-      "MENU_SELECT",
-      buttonScale,
-    );
-    this.buttonManager.createButton(
       "battleButton",
-      endX - spacing,
+      endX,
       centerY + 36 * this.layoutConfig.scale,
       "battle",
       0.1,
@@ -1226,26 +1215,9 @@ export class DeckEditorScene extends Phaser.Scene {
     editorEvents.on("save-deck-lackey", this.saveDeckLackey, this);
     editorEvents.on("load-deck-lackey", this.loadDeckLackey, this);
     editorEvents.on("clear-deck", this.clearDeck, this);
-    editorEvents.on("logout-editor", this.logoutEditor, this);
-
     editorEvents.on("share-deck", this.shareDeck, this);
     editorEvents.on("show-deck-metrics", this.showDeckMetrics, this);
     editorEvents.on("battle-start", this.startBattleFromEditor, this);
-  }
-
-  /**
-   * Transitions the user from the Deck Editor scene back to the main Hub scene.
-   *
-   * Args: None
-   * Returns: Void
-   */
-  private logoutEditor() {
-    this.soundManager.playSound("MENU_SELECT");
-    this.input.enabled = false;
-    this.cameras.main.fadeOut(250, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      this.scene.start("HubScene");
-    });
   }
 
   /**
