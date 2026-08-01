@@ -32,4 +32,9 @@ export class DeckValidator {
     reserveInput: any[],
     formatId?: string | null
   ): ValidationResult;
+
+  /**
+   * Generates human-readable rule violation messages from a validation result object.
+   */
+  static getRuleViolationMessages(result: ValidationResult): string[];
 }

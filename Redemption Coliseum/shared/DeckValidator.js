@@ -162,4 +162,46 @@ export class DeckValidator {
       }
     };
   }
+
+  /**
+   * Generates human-readable rule violation messages from a validation result object.
+   * 
+   * @param {Object} result The object returned by DeckValidator.validate
+   * @returns {Array<String>} List of violation message strings
+   */
+  static getRuleViolationMessages(result) {
+    if (!result || result.isValid) return [];
+    const messages = [];
+
+    if (result.deckSize && !result.deckSize.isValid) {
+      const { current, min, max } = result.deckSize;
+      if (current < min) {
+        messages.push(`Deck size: ${current} cards (minimum ${min} required)`);
+      } else if (max !== null && current > max) {
+        messages.push(`Deck size: ${current} cards (maximum ${max} allowed)`);
+      }
+    }
+
+    if (result.reserveSize && !result.reserveSize.isValid) {
+      const { current, min, max, hasDisallowedTypes } = result.reserveSize;
+      if (current < min) {
+        messages.push(`Reserve size: ${current} cards (minimum ${min} required)`);
+      } else if (max !== null && current > max) {
+        messages.push(`Reserve size: ${current} cards (maximum ${max} allowed)`);
+      }
+      if (hasDisallowedTypes) {
+        messages.push("Reserve contains disallowed card types (Dominant or Lost Soul)");
+      }
+    }
+
+    if (result.dominants && !result.dominants.isValid) {
+      messages.push(`Dominants: ${result.dominants.current} (maximum ${result.dominants.maxAllowed} allowed)`);
+    }
+
+    if (result.lostSouls && !result.lostSouls.isValid) {
+      messages.push(`Lost Souls: ${result.lostSouls.current} (minimum ${result.lostSouls.minRequired} required)`);
+    }
+
+    return messages;
+  }
 }

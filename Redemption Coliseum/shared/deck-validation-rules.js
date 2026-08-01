@@ -8,6 +8,7 @@ export const DECK_VALIDATION_RULES = {
   formats: {
     type_1: {
       displayName: "Type 1",
+      shortName: "T1",
       rules: {
         deck: {
           minCards: 50,

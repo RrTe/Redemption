@@ -1,5 +1,6 @@
 export interface DeckValidationFormatRules {
   displayName: string;
+  shortName?: string;
   rules: {
     deck: {
       minCards: number;

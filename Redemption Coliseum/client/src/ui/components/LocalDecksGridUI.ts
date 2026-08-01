@@ -4,6 +4,8 @@ import { DeckMetricsOverlayManager } from "../managers/DeckMetricsOverlayManager
 import { LocalDecksDB } from "../../utils/LocalDecksDB";
 import { LocalDeckScanner } from "../../managers/LocalDeckScanner";
 import { log, error } from "../../utils/logger";
+import { DECK_VALIDATION_RULES } from "../../../../shared/deck-validation-rules.js";
+import { DeckValidator } from "../../../../shared/DeckValidator.js";
 
 export const TROPHY_THRESHOLDS = {
   BRONZE: 15,
@@ -217,6 +219,73 @@ export class LocalDecksGridUI {
       });
     }
 
+    // Format & Validity Row
+    const formatSpan = tile.querySelector(".deck-tile-format") as HTMLElement;
+    if (formatSpan) {
+      formatSpan.innerText = this.getFormatShortCode(deck.format);
+    }
+
+    const validityContainer = tile.querySelector(".deck-tile-validity") as HTMLElement;
+    if (validityContainer) {
+      validityContainer.innerHTML = "";
+      let mainCards: any[] = [];
+      let reserveCards: any[] = [];
+
+      if (deck.cardIds && deck.cardIds.length > 0) {
+        mainCards = deck.cardIds.map((id) => cardDatabase.find((c) => c.id === id || c.Name === id) || id);
+      }
+
+      const valResult = DeckValidator.validate(mainCards, reserveCards, deck.format);
+      const isValid = valResult.isValid;
+
+      const validImgSrc = "assets/ui/icons/deck_valid.png";
+      const invalidImgSrc = "assets/ui/icons/deck_invalid.png";
+
+      if (isValid) {
+        const img = document.createElement("img");
+        img.className = "deck-validity-icon";
+        img.src = validImgSrc;
+        const formatName = DECK_VALIDATION_RULES.formats[deck.format]?.displayName || "Type 1";
+        img.title = `Deck is valid for ${formatName}`;
+
+        img.onerror = () => {
+          const badge = document.createElement("span");
+          badge.className = "deck-validity-badge valid";
+          badge.innerText = "✓";
+          badge.title = img.title;
+          if (validityContainer.contains(img)) {
+            validityContainer.removeChild(img);
+          }
+          validityContainer.appendChild(badge);
+        };
+
+        validityContainer.appendChild(img);
+      } else {
+        const violations = DeckValidator.getRuleViolationMessages(valResult);
+        const tooltipText = violations.length > 0
+          ? `Invalid Deck Building Rules:\n• ${violations.join("\n• ")}`
+          : "Invalid Deck Building Rules";
+
+        const img = document.createElement("img");
+        img.className = "deck-validity-icon";
+        img.src = invalidImgSrc;
+        img.title = tooltipText;
+
+        img.onerror = () => {
+          const badge = document.createElement("span");
+          badge.className = "deck-validity-badge invalid";
+          badge.innerText = "✕";
+          badge.title = tooltipText;
+          if (validityContainer.contains(img)) {
+            validityContainer.removeChild(img);
+          }
+          validityContainer.appendChild(badge);
+        };
+
+        validityContainer.appendChild(img);
+      }
+    }
+
     // 4. Footer: Stats & Counts
     const statsContainer = tile.querySelector(".deck-tile-stats") as HTMLElement;
     const statsText = tile.querySelector(".deck-tile-stats-text") as HTMLElement;
@@ -243,6 +312,19 @@ export class LocalDecksGridUI {
     }
 
     return tile;
+  }
+
+  private getFormatShortCode(formatId?: string): string {
+    if (!formatId) return "T1";
+    const rule = DECK_VALIDATION_RULES.formats[formatId];
+    if (rule && rule.shortName) {
+      return rule.shortName.slice(0, 7);
+    }
+    if (formatId.startsWith("type_")) {
+      return `T${formatId.replace("type_", "")}`.slice(0, 7);
+    }
+    const name = rule?.displayName || formatId;
+    return name.slice(0, 7);
   }
 
   private updateStatsText(statsText: HTMLElement | null, deck: DeckMetadata): void {
