@@ -238,8 +238,8 @@ export class LocalDecksGridUI {
       const valResult = DeckValidator.validate(mainCards, reserveCards, deck.format);
       const isValid = valResult.isValid;
 
-      const validImgSrc = "assets/ui/icons/deck_valid.png";
-      const invalidImgSrc = "assets/ui/icons/deck_invalid.png";
+      const validImgSrc = "assets/ui/icons/green_checkmark_small_compressed.png";
+      const invalidImgSrc = "assets/ui/icons/red_cross_small_compressed.png";
 
       if (isValid) {
         const img = document.createElement("img");
