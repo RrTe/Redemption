@@ -1291,7 +1291,7 @@ export class DeckEditorScene extends Phaser.Scene {
       ...this.deckListModel.reserve.flatMap((entry) => Array(entry.quantity).fill(entry.card)),
     ];
 
-    DeckMetricsOverlayManager.showMetrics(this, allCards);
+    DeckMetricsOverlayManager.showMetrics(this, allCards, this.loadedDeckName || "Deck");
   }
 
   private createBackButton() {

@@ -228,21 +228,25 @@ export class LocalDecksGridUI {
     const validityContainer = tile.querySelector(".deck-tile-validity") as HTMLElement;
     if (validityContainer) {
       validityContainer.innerHTML = "";
-      let mainCards: any[] = [];
-      let reserveCards: any[] = [];
+      let isValid = deck.isValid;
+      let violations = deck.validationErrors || [];
 
-      const wrapped = await this.db.getVirtualDeck(deck.name);
-      if (wrapped && wrapped.deckData) {
-        const mainInput = wrapped.deckData.main || [];
-        const reserveInput = wrapped.deckData.reserve || [];
-        mainCards = mainInput.map((idOrName) => cardDatabase.find((c) => c.id === idOrName || c.Name === idOrName) || idOrName);
-        reserveCards = reserveInput.map((idOrName) => cardDatabase.find((c) => c.id === idOrName || c.Name === idOrName) || idOrName);
-      } else if (deck.cardIds && deck.cardIds.length > 0) {
-        mainCards = deck.cardIds.map((id) => cardDatabase.find((c) => c.id === id || c.Name === id) || id);
+      if (typeof isValid !== "boolean" || (isValid === false && violations.length === 0)) {
+        let mainCards: any[] = [];
+        let reserveCards: any[] = [];
+        const wrapped = await this.db.getVirtualDeck(deck.name);
+        if (wrapped && wrapped.deckData) {
+          const mainInput = wrapped.deckData.main || [];
+          const reserveInput = wrapped.deckData.reserve || [];
+          mainCards = mainInput.map((idOrName) => cardDatabase.find((c) => c.id === idOrName || c.Name === idOrName) || idOrName);
+          reserveCards = reserveInput.map((idOrName) => cardDatabase.find((c) => c.id === idOrName || c.Name === idOrName) || idOrName);
+        } else if (deck.cardIds && deck.cardIds.length > 0) {
+          mainCards = deck.cardIds.map((id) => cardDatabase.find((c) => c.id === id || c.Name === id) || id);
+        }
+        const valResult = DeckValidator.validate(mainCards, reserveCards, deck.format);
+        isValid = valResult.isValid;
+        violations = DeckValidator.getRuleViolationMessages(valResult);
       }
-
-      const valResult = DeckValidator.validate(mainCards, reserveCards, deck.format);
-      const isValid = valResult.isValid;
 
       const validImgSrc = "assets/ui/icons/green_checkmark_small_compressed.png";
       const invalidImgSrc = "assets/ui/icons/red_cross_small_compressed.png";
@@ -267,7 +271,6 @@ export class LocalDecksGridUI {
 
         validityContainer.appendChild(img);
       } else {
-        const violations = DeckValidator.getRuleViolationMessages(valResult);
         const tooltipText = violations.length > 0
           ? `Invalid Deck Building Rules:\n• ${violations.join("\n• ")}`
           : "Invalid Deck Building Rules";
@@ -526,7 +529,7 @@ export class LocalDecksGridUI {
         .map((id) => cardDatabase.find((c) => c.id === id || c.Name === id || c.ImageFile === id))
         .filter(Boolean);
 
-      DeckMetricsOverlayManager.showMetrics(scene, cardList);
+      DeckMetricsOverlayManager.showMetrics(scene, cardList, deck.name);
     });
   }
 

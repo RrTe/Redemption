@@ -8,6 +8,7 @@ export class DeckMetricsOverlayManager {
   public static async showMetrics(
     scene: Phaser.Scene,
     cards: any[],
+    deckTitle: string = "",
     onClose?: () => void
   ): Promise<void> {
     const viewW = window.innerWidth;
@@ -46,6 +47,11 @@ export class DeckMetricsOverlayManager {
       return;
     }
 
+    const titleEl = document.getElementById("deckMetricsDeckTitle");
+    if (titleEl) {
+      titleEl.textContent = deckTitle ? `Deck Name: ${deckTitle}` : "";
+    }
+
     const node = domElement.node as HTMLElement | null;
     if (node) {
       node.style.zIndex = "3000";
@@ -56,7 +62,6 @@ export class DeckMetricsOverlayManager {
 
     overlay.style.visibility = "visible";
     overlay.style.zIndex = "3000";
-    scene.scene.pause();
 
     requestAnimationFrame(() => {
       if (!overlay || !domElement) return;
@@ -93,7 +98,6 @@ export class DeckMetricsOverlayManager {
         (e) => {
           e.stopPropagation();
           domElement.setVisible(false);
-          scene.scene.resume();
           if (onClose) onClose();
         },
         { once: true }

@@ -11,7 +11,7 @@
         background-repeat: no-repeat;
         background-position: center;
         background-size: contain;
-        padding: 10px;
+        padding: 8px;
         overflow: hidden;
 
         box-sizing: border-box;
@@ -19,21 +19,43 @@
         font-family: Georgia, 'Times New Roman', serif !important;
         font-size: 15px;
         scrollbar-width: none;
-        gap: 12px;
+        gap: 8px;
     }
 
     #deckMetrics .title-row {
         width: 100%;
         display: flex;
-        flex-direction: row;
-        justify-content: space-between;
+        flex-direction: column;
+        justify-content: center;
         align-items: center;
         white-space: nowrap;
-        margin-bottom: 6px;
+        margin-bottom: 0px;
+        position: relative;
+    }
+
+    #deckMetrics .deck-metrics-deck-title {
+        color: #ffd83a;
+        font-family: Georgia, 'Times New Roman', serif !important;
+        font-size: 26px;
+        font-weight: bold;
+        text-align: center;
+        text-shadow: 
+          -1px -1px 0 #000,
+           1px -1px 0 #000,
+          -1px  1px 0 #000,
+           1px  1px 0 #000,
+           0px  2px 4px rgba(0, 0, 0, 0.9);
+        letter-spacing: 0.5px;
+        margin-top: 2px;
+        margin-bottom: 4px;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     #deckMetrics .title-img {
-        height: 98px !important;
+        height: 84px !important;
         width: auto !important;
         display: block;
     }
@@ -56,7 +78,7 @@
         justify-content: space-around;
         align-items: stretch;
         flex-wrap: wrap;
-        row-gap: 15px;
+        row-gap: 14px;
         column-gap: 10px;
     }
 
@@ -87,7 +109,8 @@
     #deckMetrics .metric-header {
         width: max-content;
         margin: 0 auto 0px auto;
-        padding: 3px 10px;
+        padding: 0px 10px;
+        line-height: 1.15;
         background: #3e3761;
         border-radius: 3px;
         font-size: 2.0em;
@@ -97,12 +120,15 @@
         font-family: Georgia, 'Times New Roman', serif !important;
         font-weight: normal !important;
         z-index: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
     }
 
     #deckMetrics .metric-header img {
         width: 48px !important;
         height: 27px !important;
-        vertical-align: middle;
         object-fit: contain;
     }
 
@@ -266,6 +292,7 @@
         onpointerdown="event.stopPropagation();" onpointerup="event.stopPropagation();">
     <div class="title-row">
         <img class="title-img" src="/assets/deck-editor/Deck Metrics.png" />
+        <div id="deckMetricsDeckTitle" class="deck-metrics-deck-title"></div>
     </div>
     <div class="content-grid">
         <!-- Card Distribution Box -->

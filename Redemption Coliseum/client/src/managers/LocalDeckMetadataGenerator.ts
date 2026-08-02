@@ -1,6 +1,7 @@
 import type { DeckMetadata, DeckStats, WrappedDeck } from "../types/DeckMetadata";
 import type { DeckData } from "../utils/DeckUtils";
 import { DECK_VALIDATION_RULES } from "../../../shared/deck-validation-rules.js";
+import { DeckValidator } from "../../../shared/DeckValidator.js";
 
 export class LocalDeckMetadataGenerator {
   /**
@@ -85,6 +86,21 @@ export class LocalDeckMetadataGenerator {
 
     const format = selectedFormat || existingMeta?.format || deckData.rawMeta?.format || DECK_VALIDATION_RULES.defaultFormat || "type_1";
 
+    // Run centralized validation logic
+    let isValid = true;
+    let validationErrors: string[] = [];
+    try {
+      const mainCards = deckData.main.map((idOrName) => cardDatabase.find((c: any) => c.id === idOrName || c.Name === idOrName) || idOrName);
+      const reserveCards = deckData.reserve.map((idOrName) => cardDatabase.find((c: any) => c.id === idOrName || c.Name === idOrName) || idOrName);
+      const valResult = DeckValidator.validate(mainCards, reserveCards, format);
+      isValid = valResult.isValid;
+      if (!isValid) {
+        validationErrors = DeckValidator.getRuleViolationMessages(valResult);
+      }
+    } catch {
+      // Fallback
+    }
+
     return {
       id,
       name: deckName,
@@ -95,7 +111,8 @@ export class LocalDeckMetadataGenerator {
       },
       formatVersion: "1.0",
       format,
-      isValid: true, // TODO: Run centralized validation logic
+      isValid,
+      validationErrors,
       brigades: Array.from(brigades),
       cardIds: Array.from(cardIds),
       visuals,
