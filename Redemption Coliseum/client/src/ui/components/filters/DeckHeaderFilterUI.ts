@@ -4,6 +4,7 @@ import { IconToggleGroup, type ToggleItemConfig } from "../IconToggleGroup";
 import { TIER_CONFIG } from "../../../config/BrigadeConfig";
 import { filterConfigData } from "../../config/filter_config";
 import { TooltipManager } from "../../managers/TooltipManager";
+import { DECK_VALIDATION_RULES } from "../../../../../shared/deck-validation-rules.js";
 
 export interface DeckFilterOptions {
   searchQuery: string;
@@ -11,7 +12,7 @@ export interface DeckFilterOptions {
   searchInCard: boolean;
   activeBrigades: string[];
   activeTiers: string[];
-  activeFormat: string | null;
+  activeFormats: string[];
   sortMode: "name_asc" | "name_desc" | "tier_desc" | "tier_asc" | "brigade" | "format";
   isAndMode: boolean;
 }
@@ -35,6 +36,7 @@ export class DeckHeaderFilterUI {
 
   private brigadeToggleGroup!: IconToggleGroup;
   private tierToggleGroup!: IconToggleGroup;
+  private formatToggleGroup!: IconToggleGroup;
   private checkboxToggleGroup!: IconToggleGroup;
 
   public countLabel!: Phaser.GameObjects.BitmapText;
@@ -48,7 +50,6 @@ export class DeckHeaderFilterUI {
 
   private activeTiersSet: Set<string> = new Set();
   private sortMode: DeckFilterOptions["sortMode"] = "name_asc";
-  private activeFormat: string | null = null;
   private sortButtonsMap: Map<string, { bg: Phaser.GameObjects.Graphics; txt: Phaser.GameObjects.BitmapText }> = new Map();
 
   constructor(
@@ -63,6 +64,7 @@ export class DeckHeaderFilterUI {
     const configData = scene.cache.json.get("filterConfig") || filterConfigData;
     this.filterManager = new FilterManager(configData);
     this.ensureTierTextures();
+    this.ensureFormatTextures();
   }
 
   private ensureTierTextures(): void {
@@ -113,6 +115,46 @@ export class DeckHeaderFilterUI {
     });
 
     this.ensureAndFilterTexture();
+  }
+
+  private ensureFormatTextures(): void {
+    const formats = Object.entries(DECK_VALIDATION_RULES.formats || {}).map(([id, cfg]: [string, any]) => ({
+      id,
+      key: `format_${id}_med`,
+      shortName: (cfg.shortName || id).slice(0, 7),
+      displayName: cfg.displayName || id,
+    }));
+
+    formats.forEach((f) => {
+      if (!this.scene.textures.exists(f.key)) {
+        const canvas = this.scene.textures.createCanvas(f.key, 40, 40);
+        if (canvas) {
+          const ctx = canvas.getContext();
+          ctx.fillStyle = "#1e2238";
+          ctx.beginPath();
+          ctx.roundRect(2, 2, 36, 36, 6);
+          ctx.fill();
+
+          ctx.strokeStyle = "#e9cd45";
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.roundRect(2, 2, 36, 36, 6);
+          ctx.stroke();
+
+          ctx.fillStyle = "#ffd83a";
+          ctx.font = "bold 16px Georgia, serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.shadowColor = "#000000";
+          ctx.shadowBlur = 3;
+          ctx.shadowOffsetX = 1;
+          ctx.shadowOffsetY = 1;
+          ctx.fillText(f.shortName, 20, 21);
+
+          canvas.refresh();
+        }
+      }
+    });
   }
 
   private ensureAndFilterTexture(): void {
@@ -198,7 +240,43 @@ export class DeckHeaderFilterUI {
     );
     this.brigadeToggleGroup.setDepth(15);
 
-    // 3. Top-Left Bar Row 2: 4 Tier Filters (Exact pixel right-alignment with last Brigade icon!)
+    // 3. Top-Left Bar Row 2: Format Filters (Left) & Tier Filters (Right)
+    const formatEntries = Object.entries(DECK_VALIDATION_RULES.formats || {}).map(([id, cfg]: [string, any]) => ({
+      id,
+      label: cfg.displayName || id,
+      shortName: (cfg.shortName || id).slice(0, 7),
+      texture: `format_${id}_med`,
+    }));
+
+    const formatItems: ToggleItemConfig[] = formatEntries.map((f) => ({
+      id: f.id,
+      label: `${f.label} (${f.shortName})`,
+      texture: f.texture,
+      frame: 0,
+    }));
+
+    this.formatToggleGroup = new IconToggleGroup(
+      this.scene,
+      brigadeStartX,
+      row1Y + 62 * scale,
+      formatItems,
+      {
+        id: "header-format-group",
+        scale: unifiedScale,
+        spacingX: spacingX,
+        spacingY: 0,
+        columns: formatItems.length,
+        multiSelect: true,
+        initialSelectedIds: formatItems.map((f) => f.id),
+        selectedOverlayTexture: "filterSelected_med",
+        sfxHover: "DECK_CHECK_HOVER",
+        sfxChecked: "DECK_CHECK_SELECT",
+        sfxUnchecked: "DECK_CHECK_DESELECT",
+        tooltipDir: "top",
+      }
+    );
+    this.formatToggleGroup.setDepth(15);
+
     const tierItems: ToggleItemConfig[] = TIER_CONFIG.map((tier) => ({
       id: tier.id,
       texture: `${tier.id}_med`,
@@ -230,7 +308,12 @@ export class DeckHeaderFilterUI {
     this.tierToggleGroup.setDepth(15);
 
     this.onToggleChangedHandler = (evt: any) => {
-      if (evt && (evt.groupId === "header-brigade-group" || evt.groupId === "header-tier-group")) {
+      if (
+        evt &&
+        (evt.groupId === "header-brigade-group" ||
+          evt.groupId === "header-tier-group" ||
+          evt.groupId === "header-format-group")
+      ) {
         this.activeTiersSet.clear();
         if (this.tierToggleGroup) {
           (this.tierToggleGroup.getSelectedIds() || []).forEach((id: string) => {
@@ -615,6 +698,11 @@ export class DeckHeaderFilterUI {
         return match ? match.label.replace(" Brigade", "").trim() : rawId;
       });
 
+    // Read active format filters
+    const activeFormats = this.formatToggleGroup
+      ? this.formatToggleGroup.getSelectedIds()
+      : [];
+
     // Read active checkboxes
     const cbIds = this.checkboxToggleGroup ? this.checkboxToggleGroup.getSelectedIds() : [];
     const searchInName = cbIds.includes("cb_name");
@@ -626,7 +714,7 @@ export class DeckHeaderFilterUI {
       searchInCard,
       activeBrigades,
       activeTiers: Array.from(this.activeTiersSet),
-      activeFormat: this.activeFormat,
+      activeFormats,
       sortMode: this.sortMode,
       isAndMode,
     });
@@ -650,6 +738,7 @@ export class DeckHeaderFilterUI {
     if (this.countLabel) this.countLabel.destroy();
     if (this.brigadeToggleGroup) this.brigadeToggleGroup.destroy();
     if (this.tierToggleGroup) this.tierToggleGroup.destroy();
+    if (this.formatToggleGroup) this.formatToggleGroup.destroy();
     if (this.checkboxToggleGroup) this.checkboxToggleGroup.destroy();
     if (this.syncBtn) this.syncBtn.destroy();
     if (this.resetBtn) this.resetBtn.destroy();

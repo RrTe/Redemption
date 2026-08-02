@@ -297,8 +297,15 @@ export class LocalDecksScene extends Phaser.Scene {
     }
 
     // 4. Format / DeckType Filter
-    if (opts.activeFormat) {
-      result = result.filter((deck) => deck.format === opts.activeFormat);
+    if (opts.activeFormats !== undefined) {
+      if (opts.activeFormats.length > 0) {
+        result = result.filter((deck) => {
+          const deckFormat = deck.format || "type_1";
+          return opts.activeFormats.includes(deckFormat);
+        });
+      } else {
+        result = [];
+      }
     }
 
     // 5. Sorting
