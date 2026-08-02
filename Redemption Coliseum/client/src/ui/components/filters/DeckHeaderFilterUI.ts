@@ -43,6 +43,8 @@ export class DeckHeaderFilterUI {
   public textFilterElem!: Phaser.GameObjects.DOMElement;
   public textFilterInput!: Phaser.GameObjects.Graphics;
   public textFilterInputTxt!: Phaser.GameObjects.BitmapText;
+  private nameLabel?: Phaser.GameObjects.BitmapText;
+  private cardLabel?: Phaser.GameObjects.BitmapText;
 
   private syncBtn?: Phaser.GameObjects.Image;
   private resetBtn?: Phaser.GameObjects.Image;
@@ -400,13 +402,13 @@ export class DeckHeaderFilterUI {
     const cb2X = labelStartX + 85 * scale;
 
     // Label: Name:
-    this.scene.add
+    this.nameLabel = this.scene.add
       .bitmapText(cb1X, centerRow2Y - 10, wazooFont, "Name:", textFilterFontSize)
       .setOrigin(0.5, 0.5)
       .setDepth(21);
 
     // Label: Card:
-    this.scene.add
+    this.cardLabel = this.scene.add
       .bitmapText(cb2X, centerRow2Y - 10, wazooFont, "Card:", textFilterFontSize)
       .setOrigin(0.5, 0.5)
       .setDepth(21);
@@ -735,6 +737,8 @@ export class DeckHeaderFilterUI {
     if (this.textFilterElem) this.textFilterElem.destroy();
     if (this.textFilterInput) this.textFilterInput.destroy();
     if (this.textFilterInputTxt) this.textFilterInputTxt.destroy();
+    if (this.nameLabel) this.nameLabel.destroy();
+    if (this.cardLabel) this.cardLabel.destroy();
     if (this.countLabel) this.countLabel.destroy();
     if (this.brigadeToggleGroup) this.brigadeToggleGroup.destroy();
     if (this.tierToggleGroup) this.tierToggleGroup.destroy();
