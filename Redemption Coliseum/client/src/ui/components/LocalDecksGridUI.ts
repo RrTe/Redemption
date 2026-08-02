@@ -231,7 +231,13 @@ export class LocalDecksGridUI {
       let mainCards: any[] = [];
       let reserveCards: any[] = [];
 
-      if (deck.cardIds && deck.cardIds.length > 0) {
+      const wrapped = await this.db.getVirtualDeck(deck.name);
+      if (wrapped && wrapped.deckData) {
+        const mainInput = wrapped.deckData.main || [];
+        const reserveInput = wrapped.deckData.reserve || [];
+        mainCards = mainInput.map((idOrName) => cardDatabase.find((c) => c.id === idOrName || c.Name === idOrName) || idOrName);
+        reserveCards = reserveInput.map((idOrName) => cardDatabase.find((c) => c.id === idOrName || c.Name === idOrName) || idOrName);
+      } else if (deck.cardIds && deck.cardIds.length > 0) {
         mainCards = deck.cardIds.map((id) => cardDatabase.find((c) => c.id === id || c.Name === id) || id);
       }
 
