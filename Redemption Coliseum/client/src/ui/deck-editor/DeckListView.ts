@@ -375,7 +375,7 @@ export class DeckListView {
     const triggerHoverIn = () => {
       const pointer = this.scene.input.activePointer;
       const isTouchInteraction = ViewportManager.isTouchPrimary() || pointer.wasTouch;
-      if ((this.scene as any).isDragging || (pointer.isDown && !isTouchInteraction)) return;
+      if ((this.scene as any)?.isModalOpen || (this.scene as any)?.isDragging || (pointer.isDown && !isTouchInteraction)) return;
 
       // Schließe vorheriges, falls auf Mobile
       if (this.currentlyHoveredBox && this.currentlyHoveredBox !== box) {

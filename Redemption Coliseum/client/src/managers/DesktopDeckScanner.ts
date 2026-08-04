@@ -91,9 +91,16 @@ export class DesktopDeckScanner {
    */
   public async syncTargetJsonToCache(targetDirHandle: any): Promise<void> {
     try {
-      const perm = await targetDirHandle.queryPermission({ mode: "readwrite" });
+      let perm = await targetDirHandle.queryPermission({ mode: "read" });
       if (perm !== "granted") {
-        log("DesktopDeckScanner", "No permission for target_dir during background sync. Using IndexedDB cache.");
+        try {
+          perm = await targetDirHandle.requestPermission({ mode: "read" });
+        } catch {
+          // Ignore if permission request cannot be prompted automatically
+        }
+      }
+      if (perm !== "granted") {
+        log("DesktopDeckScanner", "No read permission for target_dir during background sync. Using IndexedDB cache.");
         return;
       }
       for await (const entry of targetDirHandle.values()) {
@@ -104,6 +111,7 @@ export class DesktopDeckScanner {
             const data = JSON.parse(text);
             if (data && data.meta) {
               await this.db.saveCachedMetadata(data.meta);
+              await this.db.saveVirtualDeck(data);
             }
           } catch (err) {
             log("DesktopDeckScanner", `Could not sync target JSON ${entry.name}`, err);

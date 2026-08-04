@@ -23,12 +23,15 @@ import { CardMetricsOverlay } from "../../ui/deck-editor/CardMetricsOverlay";
 import { FilterManager } from "../../ui/components/filters/FilterManager";
 import { DeckMetricsOverlayManager } from "../../ui/managers/DeckMetricsOverlayManager";
 import { LocalDecksDB } from "../../utils/LocalDecksDB";
+import { LocalDeckMetadataGenerator } from "../../managers/LocalDeckMetadataGenerator";
+import { LocalDeckScanner } from "../../managers/LocalDeckScanner";
 import { log } from "../../utils/logger";
 import { DeckValidator } from "../../../../shared/DeckValidator.js";
 import { filterConfigData } from "../../ui/config/filter_config";
 import { NotificationManager } from "../../ui/notifications/NotificationManager";
 import { SidebarButton } from "../../ui/components/SidebarButton";
 import { HelpOverlay } from "../../ui/overlays";
+import { DeckSaveModal } from "../../ui/components/DeckSaveModal";
 
 
 const EDITOR_CONFIG = {
@@ -824,6 +827,10 @@ export class DeckEditorScene extends Phaser.Scene {
         imgBounds?: { x: number; y: number },
         align?: "left" | "right",
       ) => {
+        if ((this as any)?.isModalOpen) {
+          this.cardMetricsOverlay.hide();
+          return;
+        }
         // imgBounds optional param from DeckListView / DeckCardView
         if (imgBounds) {
           this.cardMetricsOverlay.show(
@@ -1373,28 +1380,32 @@ export class DeckEditorScene extends Phaser.Scene {
 
 
 
-  private async saveDeckJSON() {
-    const deckIDsString = this.deckListModel.deckAsIDs();
-    const name = this.loadedDeckName || "deck";
-    const filename = name + ".json";
-    DeckIO.saveDeckFile(filename, deckIDsString);
+  private saveDeckJSON() {
+    const suggestedName = this.loadedDeckName || "New Deck";
+    const modal = new DeckSaveModal({
+      scene: this,
+      initialName: suggestedName,
+      formatLabel: "JSON Deck (.json)",
+      onSave: async (chosenName) => {
+        this.loadedDeckName = chosenName;
+        const deckIDsString = this.deckListModel.deckAsIDs();
+        const filename = chosenName + ".json";
+        const savedName = await DeckIO.saveJSONDeck(filename, deckIDsString);
+        const finalName = savedName || chosenName;
 
-    try {
-      const localDB = new LocalDecksDB();
-      const existing = await localDB.getVirtualDeck(name);
-      if (existing) {
-        const parsed = typeof deckIDsString === "string" ? JSON.parse(deckIDsString) : deckIDsString;
-        existing.deckData = {
-          main: parsed.deck?.main || parsed.main || [],
-          reserve: parsed.deck?.reserve || parsed.reserve || []
-        };
-        await localDB.saveVirtualDeck(existing);
-      }
-    } catch (err) {
-      log("DeckEditorScene", "Could not save virtual deck on JSON save", err);
-    }
+        try {
+          const rawDb = this.registry.get("cardDatabase");
+          const cardDatabase = Array.isArray(rawDb) ? rawDb : (rawDb?.cards || []);
+          const scanner = new LocalDeckScanner(cardDatabase);
+          await scanner.importAndSaveDeck(`${finalName}.json`, deckIDsString);
+        } catch (err) {
+          log("DeckEditorScene", "Could not save deck via central scanner", err);
+        }
 
-    this.isDirty = false;
+        this.isDirty = false;
+      },
+    });
+    modal.show();
   }
 
   private loadDeckJSON() {
@@ -1415,11 +1426,34 @@ export class DeckEditorScene extends Phaser.Scene {
   }
 
   private saveDeckLackey() {
-    const defaultName = this.loadedDeckName || "deck";
-    DeckIO.saveLackeyDeck(defaultName, (ext) => {
-      return ext === ".dek" ? this.deckListModel.deckAsDek() : this.deckListModel.deckAsTxt();
+    const suggestedName = this.loadedDeckName || "New Deck";
+    const modal = new DeckSaveModal({
+      scene: this,
+      initialName: suggestedName,
+      formatLabel: "Lackey Deck (.txt)",
+      onSave: async (chosenName) => {
+        this.loadedDeckName = chosenName;
+        let chosenExt = ".txt";
+        const savedName = await DeckIO.saveLackeyDeck(chosenName, (ext) => {
+          chosenExt = ext;
+          return ext === ".dek" ? this.deckListModel.deckAsDek() : this.deckListModel.deckAsTxt();
+        });
+        const finalName = savedName || chosenName;
+
+        try {
+          const rawDb = this.registry.get("cardDatabase");
+          const cardDatabase = Array.isArray(rawDb) ? rawDb : (rawDb?.cards || []);
+          const content = chosenExt === ".dek" ? this.deckListModel.deckAsDek() : this.deckListModel.deckAsTxt();
+          const scanner = new LocalDeckScanner(cardDatabase);
+          await scanner.importAndSaveDeck(`${finalName}${chosenExt}`, content);
+        } catch (err) {
+          log("DeckEditorScene", "Could not save Lackey deck via central scanner", err);
+        }
+
+        this.isDirty = false;
+      },
     });
-    this.isDirty = false;
+    modal.show();
   }
 
   private loadDeckLackey() {

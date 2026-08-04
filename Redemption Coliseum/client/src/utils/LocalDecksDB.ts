@@ -73,11 +73,12 @@ export class LocalDecksDB {
   // --- Deck Cache (Metadata for UI) ---
 
   public async getCachedMetadata(name: string): Promise<DeckMetadata | null> {
+    const cleanName = name.replace(/\.[^/.]+$/, "");
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction("deck_cache", "readonly");
       const store = tx.objectStore("deck_cache");
-      const request = store.get(name);
+      const request = store.get(cleanName);
       
       request.onsuccess = () => resolve(request.result || null);
       request.onerror = () => reject(request.error);
@@ -97,6 +98,9 @@ export class LocalDecksDB {
   }
 
   public async saveCachedMetadata(meta: DeckMetadata): Promise<void> {
+    if (meta && meta.name) {
+      meta.name = meta.name.replace(/\.[^/.]+$/, "");
+    }
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction("deck_cache", "readwrite");
@@ -111,6 +115,9 @@ export class LocalDecksDB {
   // --- Virtual Decks (Mobile/PWA Mode) ---
 
   public async saveVirtualDeck(wrappedDeck: WrappedDeck): Promise<void> {
+    if (wrappedDeck && wrappedDeck.meta && wrappedDeck.meta.name) {
+      wrappedDeck.meta.name = wrappedDeck.meta.name.replace(/\.[^/.]+$/, "");
+    }
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction("virtual_decks", "readwrite");
@@ -123,11 +130,12 @@ export class LocalDecksDB {
   }
 
   public async getVirtualDeck(name: string): Promise<WrappedDeck | null> {
+    const cleanName = name.replace(/\.[^/.]+$/, "");
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction("virtual_decks", "readonly");
       const store = tx.objectStore("virtual_decks");
-      const request = store.get(name);
+      const request = store.get(cleanName);
       
       request.onsuccess = () => resolve(request.result || null);
       request.onerror = () => reject(request.error);

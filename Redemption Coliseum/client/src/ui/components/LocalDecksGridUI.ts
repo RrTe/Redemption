@@ -521,12 +521,18 @@ export class LocalDecksGridUI {
 
   private openMetrics(scene: Phaser.Scene, deck: DeckMetadata, cardDatabase: any[]) {
     this.db.getVirtualDeck(deck.name).then((wrapped) => {
-      const allIds = wrapped?.deckData
+      const allItems = wrapped?.deckData
         ? [...(wrapped.deckData.main || []), ...(wrapped.deckData.reserve || [])]
         : (deck.cardIds || []);
 
-      const cardList = allIds
-        .map((id) => cardDatabase.find((c) => c.id === id || c.Name === id || c.ImageFile === id))
+      const cardList = allItems
+        .map((item) => {
+          if (typeof item === "object" && item !== null) {
+            const cardKey = item.id || item.Name || item.ImageFile;
+            return cardDatabase.find((c) => c.id === cardKey || c.Name === cardKey || c.ImageFile === cardKey) || item;
+          }
+          return cardDatabase.find((c) => c.id === item || c.Name === item || c.ImageFile === item);
+        })
         .filter(Boolean);
 
       DeckMetricsOverlayManager.showMetrics(scene, cardList, deck.name);

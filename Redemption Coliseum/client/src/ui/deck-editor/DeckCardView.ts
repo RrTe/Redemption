@@ -486,7 +486,7 @@ export class DeckCardView extends Phaser.GameObjects.Sprite {
 
     if (isTouchInteraction && !forceZoom) return;
 
-    if ((this.scene as any).isDragging || (pointer.isDown && !isTouchInteraction))
+    if ((this.scene as any)?.isModalOpen || (this.scene as any)?.isDragging || (pointer.isDown && !isTouchInteraction))
       return;
 
     if (!this.isZoomed) {
