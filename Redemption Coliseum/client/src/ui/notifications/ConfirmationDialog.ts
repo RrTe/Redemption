@@ -46,7 +46,7 @@ export class ConfirmationDialog extends BaseDialog {
     subtitle.className = "dialog-subtitle";
     subtitle.style.lineHeight = "1.5";
     subtitle.style.marginBottom = "20px";
-    subtitle.textContent = this.messageText;
+    subtitle.innerHTML = this.messageText;
     this.panel.appendChild(subtitle);
 
     // Button Row Container

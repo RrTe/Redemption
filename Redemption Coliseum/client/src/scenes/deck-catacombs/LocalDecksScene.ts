@@ -590,7 +590,7 @@ export class LocalDecksScene extends Phaser.Scene {
 
     this.background.setPosition(width / 2, height / 2);
     this.background.setScale(scale);
-    this.background.setTint(0x666666);
+    this.background.setTint(0x333333);
   }
 
   private resize(gameSize: { width: number; height: number }) {

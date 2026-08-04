@@ -34,6 +34,16 @@ export class LocalDeckScanner {
   }
 
   /**
+   * Deletes physical file from disk in desktop mode if linked.
+   */
+  public async deleteDeckFile(deckName: string): Promise<boolean> {
+    if ("showDirectoryPicker" in window) {
+      return await this.desktopScanner.deleteFileFromTargetDir(deckName);
+    }
+    return false;
+  }
+
+  /**
    * Centralized method to parse deck content, generate metadata, wrap deck, and save to cache & database.
    */
   public async importAndSaveDeck(

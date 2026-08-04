@@ -281,4 +281,30 @@ export class DesktopDeckScanner {
       log("DesktopDeckScanner", `Could not update target JSON file on disk for ${meta.name}`, err);
     }
   }
+
+  public async deleteFileFromTargetDir(deckName: string): Promise<boolean> {
+    try {
+      const cleanName = deckName.replace(/\.[^/.]+$/, "");
+      const targetDir = await this.db.getDirectoryHandle("target_dir");
+      if (!targetDir || !(await this.verifyPermission(targetDir))) {
+        return false;
+      }
+
+      let deletedAny = false;
+      const extensions = [".json", ".txt", ".dek"];
+      for (const ext of extensions) {
+        try {
+          await targetDir.removeEntry(`${cleanName}${ext}`);
+          deletedAny = true;
+          log("DesktopDeckScanner", `Successfully deleted physical file ${cleanName}${ext} from target_dir on disk.`);
+        } catch (err) {
+          // File with this specific extension might not exist in targetDir
+        }
+      }
+      return deletedAny;
+    } catch (err) {
+      error("DesktopDeckScanner", `Failed to delete physical file from target_dir for ${deckName}`, err);
+      return false;
+    }
+  }
 }

@@ -160,18 +160,29 @@ export class LocalDecksGridUI {
 
     const deleteBtn = tile.querySelector(".deck-tile-delete-btn") as HTMLButtonElement;
     if (deleteBtn) {
-      deleteBtn.onclick = (e) => {
+      deleteBtn.onclick = async (e) => {
         e.stopPropagation();
+        const hasDiskFolder = "showDirectoryPicker" in window && !!(await this.db.getDirectoryHandle("target_dir"));
+
+        const noteHtml = hasDiskFolder
+          ? `<div style="margin-top: 14px; font-size: 13px; color: #f5e6c8; text-shadow: 0 1px 3px rgba(0,0,0,0.9); line-height: 1.45;">⚠️ <b><i>Note: The corresponding file will also be deleted from your linked local deck folder on your disk.</i></b></div>`
+          : `<div style="margin-top: 14px; font-size: 13px; color: #f5e6c8; text-shadow: 0 1px 3px rgba(0,0,0,0.9); line-height: 1.45;">💡 <b><i>Note: The deck will be deleted from your local deck list.</i></b></div>`;
+
+        const messageText = `<div>Are you sure you want to delete the deck <b>"${deck.name}"</b>?</div>${noteHtml}`;
+
         new ConfirmationDialog({
           title: "Delete Deck",
-          message: `Are you sure you want to delete the deck "${deck.name}" from your local deck list?\n\nNote: The corresponding file on your local disk will NOT be deleted.`,
+          message: messageText,
           confirmLabel: "OK",
           cancelLabel: "Cancel",
           severity: "warning",
           onConfirm: async () => {
             try {
               await this.db.deleteDeck(deck.name);
-              log("LocalDecksGridUI", `Deleted deck "${deck.name}" from IndexedDB.`);
+              if (hasDiskFolder) {
+                await this.scanner.deleteDeckFile(deck.name);
+              }
+              log("LocalDecksGridUI", `Deleted deck "${deck.name}" from IndexedDB and disk.`);
               if (callbacks.onDeckDeleted) {
                 callbacks.onDeckDeleted(deck);
               } else if (this.currentScene && typeof (this.currentScene as any).initializeDecks === "function") {
