@@ -102,6 +102,45 @@
   cursor: default;
 }
 
+.deck-tile-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.deck-tile-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.deck-tile:hover .deck-tile-delete-btn {
+  opacity: 0.75;
+  pointer-events: auto;
+}
+
+.deck-tile-delete-btn:hover {
+  opacity: 1 !important;
+  transform: scale(1.15);
+}
+
+.deck-tile-delete-btn img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  filter: drop-shadow(1px 1px 2px #000);
+}
+
 .deck-tile-edit-btn {
   background: none;
   border: none;
@@ -110,7 +149,6 @@
   font-size: 18px;
   text-shadow: 1px 1px 2px #000;
   flex-shrink: 0;
-  margin-left: auto;
   padding: 0;
   line-height: 1;
   display: flex;
@@ -119,6 +157,15 @@
 
 .deck-tile-edit-btn:hover {
   color: #fff;
+}
+
+.deck-tile-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  cursor: default;
 }
 
 .deck-tile-title-input {

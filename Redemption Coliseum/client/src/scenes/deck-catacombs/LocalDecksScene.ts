@@ -177,8 +177,8 @@ export class LocalDecksScene extends Phaser.Scene {
     this.removeStaticFooter();
   }
 
-  private async initializeDecks() {
-    if (this.scanner) {
+  private async initializeDecks(skipDiskSync: boolean = false) {
+    if (this.scanner && !skipDiskSync) {
       await this.scanner.syncAllToCache();
     }
     const cachedDecks = await this.db.getAllCachedMetadata();
@@ -368,6 +368,10 @@ export class LocalDecksScene extends Phaser.Scene {
       onDeckRenamed: (deck, newName) => {
         log("LocalDecksScene", `Deck renamed to ${newName}`);
         this.initializeDecks();
+      },
+      onDeckDeleted: (deck) => {
+        log("LocalDecksScene", `Deck deleted: ${deck.name}`);
+        this.initializeDecks(true);
       }
     });
   }

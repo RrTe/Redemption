@@ -181,7 +181,7 @@ export class DeckEditorScene extends Phaser.Scene {
     this.load.image("save", "assets/deck-editor/symbols/Save_small.png");
     this.load.image(
       "clear",
-      "assets/deck-editor/symbols/Delete_small_compressed.png",
+      "assets/ui/icons/delete_small_compressed.png",
     );
     this.load.image(
       "logout",

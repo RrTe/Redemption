@@ -154,6 +154,29 @@ export class LocalDecksDB {
     });
   }
 
+  public async deleteDeck(name: string): Promise<void> {
+    const cleanName = name.replace(/\.[^/.]+$/, "");
+    const db = await this.initDB();
+
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction("deck_cache", "readwrite");
+      const store = tx.objectStore("deck_cache");
+      const request = store.delete(cleanName);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction("virtual_decks", "readwrite");
+      const store = tx.objectStore("virtual_decks");
+      const request = store.delete(cleanName);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+
+    log("LocalDecksDB", `Successfully deleted deck "${cleanName}" from deck_cache and virtual_decks.`);
+  }
+
   // --- Reset / Clear ---
 
   public async clearAll(): Promise<void> {

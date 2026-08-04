@@ -6,6 +6,7 @@ import { LocalDeckScanner } from "../../managers/LocalDeckScanner";
 import { log, error } from "../../utils/logger";
 import { DECK_VALIDATION_RULES } from "../../../../shared/deck-validation-rules.js";
 import { DeckValidator } from "../../../../shared/DeckValidator.js";
+import { ConfirmationDialog } from "../notifications/ConfirmationDialog";
 
 export const TROPHY_THRESHOLDS = {
   BRONZE: 15,
@@ -18,6 +19,7 @@ export interface LocalDecksGridCallbacks {
   onStartBattle: (deck: DeckMetadata) => void;
   onSelectChampions: (deck: DeckMetadata) => void;
   onDeckRenamed?: (deck: DeckMetadata, newName: string) => void;
+  onDeckDeleted?: (deck: DeckMetadata) => void;
 }
 
 export class LocalDecksGridUI {
@@ -154,6 +156,33 @@ export class LocalDecksGridUI {
     const titleSpan = tile.querySelector(".deck-tile-title") as HTMLElement;
     if (titleSpan) {
       titleSpan.innerText = deck.name;
+    }
+
+    const deleteBtn = tile.querySelector(".deck-tile-delete-btn") as HTMLButtonElement;
+    if (deleteBtn) {
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        new ConfirmationDialog({
+          title: "Delete Deck",
+          message: `Are you sure you want to delete the deck "${deck.name}" from your local deck list?\n\nNote: The corresponding file on your local disk will NOT be deleted.`,
+          confirmLabel: "OK",
+          cancelLabel: "Cancel",
+          severity: "warning",
+          onConfirm: async () => {
+            try {
+              await this.db.deleteDeck(deck.name);
+              log("LocalDecksGridUI", `Deleted deck "${deck.name}" from IndexedDB.`);
+              if (callbacks.onDeckDeleted) {
+                callbacks.onDeckDeleted(deck);
+              } else if (this.currentScene && typeof (this.currentScene as any).initializeDecks === "function") {
+                (this.currentScene as any).initializeDecks();
+              }
+            } catch (err) {
+              error("LocalDecksGridUI", `Failed to delete deck "${deck.name}"`, err);
+            }
+          },
+        }).show();
+      };
     }
 
     const editBtn = tile.querySelector(".deck-tile-edit-btn") as HTMLButtonElement;
