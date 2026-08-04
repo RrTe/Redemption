@@ -17,6 +17,7 @@ export interface DeckMetadata {
   formatVersion: string;
   format: string; // To be derived from an external configuration file later
   isValid: boolean; // Evaluated by centralized validation logic (using current DeckEditor logic for now)
+  validationErrors?: string[];
   brigades: string[];
   cardIds: string[];
   visuals: {

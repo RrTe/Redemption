@@ -160,13 +160,20 @@ export class LocalDecksGridUI {
 
     const deleteBtn = tile.querySelector(".deck-tile-delete-btn") as HTMLButtonElement;
     if (deleteBtn) {
+      this.db.getDirectoryHandle("target_dir").then((targetDir) => {
+        const hasDiskFolder = "showDirectoryPicker" in window && !!targetDir;
+        deleteBtn.title = hasDiskFolder
+          ? "Delete Deck from Local List & Disk"
+          : "Delete Deck from Local List";
+      });
+
       deleteBtn.onclick = async (e) => {
         e.stopPropagation();
         const hasDiskFolder = "showDirectoryPicker" in window && !!(await this.db.getDirectoryHandle("target_dir"));
 
         const noteHtml = hasDiskFolder
-          ? `<div style="margin-top: 14px; font-size: 13px; color: #f5e6c8; text-shadow: 0 1px 3px rgba(0,0,0,0.9); line-height: 1.45;">⚠️ <b><i>Note: The corresponding file will also be deleted from your linked local deck folder on your disk.</i></b></div>`
-          : `<div style="margin-top: 14px; font-size: 13px; color: #f5e6c8; text-shadow: 0 1px 3px rgba(0,0,0,0.9); line-height: 1.45;">💡 <b><i>Note: The deck will be deleted from your local deck list.</i></b></div>`;
+          ? `<div style="margin-top: 14px; font-size: 14px; color: #f5e6c8; text-shadow: 0 1px 3px rgba(0,0,0,0.9); line-height: 1.45;">⚠️ <b><i>Note: The corresponding file will also be deleted from your linked local deck folder on your disk.</i></b></div>`
+          : `<div style="margin-top: 14px; font-size: 14px; color: #f5e6c8; text-shadow: 0 1px 3px rgba(0,0,0,0.9); line-height: 1.45;">💡 <b><i>Note: The deck will be deleted from your local deck list.</i></b></div>`;
 
         const messageText = `<div>Are you sure you want to delete the deck <b>"${deck.name}"</b>?</div>${noteHtml}`;
 
@@ -430,7 +437,7 @@ export class LocalDecksGridUI {
     if (winFullIn) {
       winFullIn.focus();
       winFullIn.select();
-    }    let isSaved = false;
+    } let isSaved = false;
 
     const cleanupOutsideListener = () => {
       document.removeEventListener("pointerdown", handleOutsideClick);
@@ -567,8 +574,9 @@ export class LocalDecksGridUI {
 
       const cardList = allItems
         .map((item) => {
-          if (typeof item === "object" && item !== null) {
-            const cardKey = item.id || item.Name || item.ImageFile;
+          if (item && typeof item === "object") {
+            const cardObj = item as any;
+            const cardKey = cardObj.id || cardObj.Name || cardObj.ImageFile;
             return cardDatabase.find((c) => c.id === cardKey || c.Name === cardKey || c.ImageFile === cardKey) || item;
           }
           return cardDatabase.find((c) => c.id === item || c.Name === item || c.ImageFile === item);
