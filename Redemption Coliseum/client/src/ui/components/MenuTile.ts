@@ -6,6 +6,7 @@ export interface MenuTileData {
   labelText: string;
   enabled: boolean;
   comingSoon: boolean;
+  overlayImageKey?: string;
   action: () => void;
 }
 
@@ -71,6 +72,30 @@ export class MenuTile {
     btnImg.setScale(targetScale);
     btnImg.setInteractive({ useHandCursor: true });
     this.container.add(btnImg);
+
+    let overlayImg: Phaser.GameObjects.Image | null = null;
+    let overlayScaleX = 1;
+    let overlayScaleY = 1;
+    let overlayMaskGfx: Phaser.GameObjects.Graphics | null = null;
+
+    if (data.overlayImageKey) {
+      overlayImg = scene.add.image(0, 0, data.overlayImageKey);
+      overlayImg.setDisplaySize(displayWidth, displayHeight);
+      overlayScaleX = overlayImg.scaleX;
+      overlayScaleY = overlayImg.scaleY;
+      this.container.add(overlayImg);
+
+      overlayMaskGfx = scene.make.graphics({ x: x, y: y });
+      overlayMaskGfx.fillStyle(0xffffff);
+      overlayMaskGfx.fillRoundedRect(
+        -displayWidth / 2,
+        -displayHeight / 2,
+        displayWidth,
+        displayHeight,
+        20
+      );
+      overlayImg.setMask(overlayMaskGfx.createGeometryMask());
+    }
 
     // 4. Rounded Corner Masks (using off-display-list graphics objects in world space so they render correctly)
     const maskGfx = scene.make.graphics({ x: x, y: y });
@@ -188,6 +213,24 @@ export class MenuTile {
         ease: "Cubic.easeOut",
       });
 
+      if (overlayImg && overlayMaskGfx) {
+        scene.tweens.add({
+          targets: overlayImg,
+          y: -15,
+          scaleX: overlayScaleX * 1.08,
+          scaleY: overlayScaleY * 1.08,
+          duration: 200,
+          ease: "Cubic.easeOut",
+        });
+        scene.tweens.add({
+          targets: overlayMaskGfx,
+          y: y - 15,
+          scale: 1.08,
+          duration: 200,
+          ease: "Cubic.easeOut",
+        });
+      }
+
       scene.tweens.add({
         targets: maskGfx,
         y: y - 15,
@@ -255,6 +298,24 @@ export class MenuTile {
         duration: 200,
         ease: "Cubic.easeOut",
       });
+
+      if (overlayImg && overlayMaskGfx) {
+        scene.tweens.add({
+          targets: overlayImg,
+          y: 0,
+          scaleX: overlayScaleX,
+          scaleY: overlayScaleY,
+          duration: 200,
+          ease: "Cubic.easeOut",
+        });
+        scene.tweens.add({
+          targets: overlayMaskGfx,
+          y: y,
+          scale: 1.0,
+          duration: 200,
+          ease: "Cubic.easeOut",
+        });
+      }
 
       scene.tweens.add({
         targets: maskGfx,

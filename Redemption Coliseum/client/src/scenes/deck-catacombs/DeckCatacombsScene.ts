@@ -42,6 +42,11 @@ export class DeckCatacombsScene extends Phaser.Scene {
     );
 
     this.load.image(
+      "chain_lock_overlay",
+      "assets/gfx/Copilot_20260805_231447_chain_lock_small_compressed.png"
+    );
+
+    this.load.image(
       "btn_deck_editor",
       "assets/backgrounds/Copilot_20260721_210751_Deck_Blacksmith.png"
     );
@@ -172,11 +177,11 @@ export class DeckCatacombsScene extends Phaser.Scene {
         id: "community_decks",
         imageKey: "btn_community_decks",
         labelText: "Community Decks",
-        enabled: true,
+        enabled: false,
         comingSoon: false,
+        overlayImageKey: "chain_lock_overlay",
         action: () => {
-          if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
-          console.log("[DEBUG] Community Decks geklickt");
+          if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
         },
       },
       {
