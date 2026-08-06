@@ -94,11 +94,12 @@ export class LocalDeckScanner {
    */
   public async scanDecks(
     onComplete: () => void,
-    onProgress?: (current: number, total: number, filename: string) => void
+    onProgress?: (current: number, total: number, filename: string) => void,
+    onDiskProgress?: (written: number, total: number) => void
   ): Promise<void> {
     if ("showDirectoryPicker" in window) {
       log("LocalDeckScanner", "File System Access API supported. Using Desktop Mode.");
-      await this.desktopScanner.scanDecks(onComplete, onProgress);
+      await this.desktopScanner.scanDecks(onComplete, onProgress, onDiskProgress);
     } else {
       log("LocalDeckScanner", "File System Access API not supported. Using Mobile/PWA Mode.");
       await this.mobileScanner.scanDecks(onComplete, onProgress);

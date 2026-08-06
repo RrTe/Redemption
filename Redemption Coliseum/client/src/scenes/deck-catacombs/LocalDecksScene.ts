@@ -496,6 +496,84 @@ export class LocalDecksScene extends Phaser.Scene {
     }
   }
 
+  private ensureFooterDiskStatusStyle() {
+    if (!document.getElementById("footer-disk-status-style")) {
+      const style = document.createElement("style");
+      style.id = "footer-disk-status-style";
+      style.innerHTML = `
+        @keyframes footerDiskStatusBlink {
+          0% { opacity: 1; filter: drop-shadow(0 0 6px #0CED35); }
+          50% { opacity: 0.2; filter: none; }
+          100% { opacity: 1; filter: drop-shadow(0 0 6px #0CED35); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+
+  private updateFooterDiskProgress(written: number, total: number) {
+    if (!this.footerEl) return;
+    this.ensureFooterDiskStatusStyle();
+
+    let diskStatusSpan = document.getElementById("footer-disk-status") as HTMLElement;
+
+    if (!diskStatusSpan) {
+      const separator = document.createElement("span");
+      separator.id = "footer-disk-separator";
+      separator.innerText = "|";
+      separator.style.color = "#ccc";
+
+      diskStatusSpan = document.createElement("span");
+      diskStatusSpan.id = "footer-disk-status";
+      diskStatusSpan.style.cssText = `
+        color: #ffd700;
+        font-weight: bold;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      `;
+
+      this.footerEl.appendChild(separator);
+      this.footerEl.appendChild(diskStatusSpan);
+    }
+
+    diskStatusSpan.innerHTML = `💾 <span>Writing to disk: <strong>${written}/${total}</strong></span>`;
+
+    if (written >= total && total > 0) {
+      if ((diskStatusSpan as any).hasCompleted) return;
+      (diskStatusSpan as any).hasCompleted = true;
+
+      diskStatusSpan.style.color = "#0CED35";
+      diskStatusSpan.style.animation = "footerDiskStatusBlink 2.75s ease-in-out 3";
+
+      setTimeout(() => {
+        const separator = document.getElementById("footer-disk-separator");
+        if (diskStatusSpan) {
+          diskStatusSpan.style.animation = "none";
+          diskStatusSpan.style.transition = "opacity 2.75s ease-out";
+          diskStatusSpan.style.opacity = "1";
+        }
+        if (separator) {
+          separator.style.animation = "none";
+          separator.style.transition = "opacity 2.75s ease-out";
+          separator.style.opacity = "1";
+        }
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (diskStatusSpan) diskStatusSpan.style.opacity = "0";
+            if (separator) separator.style.opacity = "0";
+          });
+        });
+
+        setTimeout(() => {
+          if (diskStatusSpan && diskStatusSpan.parentNode) diskStatusSpan.remove();
+          if (separator && separator.parentNode) separator.remove();
+        }, 2750);
+      }, 8250);
+    }
+  }
+
   private showOnboarding() {
     OnboardingOverlay.show(
       async () => {
@@ -518,6 +596,9 @@ export class LocalDecksScene extends Phaser.Scene {
         },
         (current, total, filename) => {
           ScanProgressOverlay.updateProgress(current, total, filename);
+        },
+        (written, total) => {
+          this.updateFooterDiskProgress(written, total);
         }
       );
     } catch (err) {

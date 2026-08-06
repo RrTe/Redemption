@@ -25,7 +25,8 @@ export class DesktopDeckScanner {
    */
   public async scanDecks(
     onComplete: () => void,
-    onProgress?: (current: number, total: number, filename: string) => void
+    onProgress?: (current: number, total: number, filename: string) => void,
+    onDiskProgress?: (written: number, total: number) => void
   ): Promise<void> {
     try {
       // 1. Get or prompt for directories
@@ -107,11 +108,11 @@ export class DesktopDeckScanner {
       }
 
       log("DesktopDeckScanner", "Directory scan completed successfully. Unlocking UI.");
-      onComplete();
+      if (onComplete) onComplete();
 
       // Non-blocking background flush of physical files to target disk folder
       if (diskWriteTasks.length > 0) {
-        this.flushDiskFiles(targetDir, diskWriteTasks).catch((err) => {
+        this.flushDiskFiles(targetDir, diskWriteTasks, onDiskProgress).catch((err) => {
           error("DesktopDeckScanner", "Background disk write error", err);
         });
       }
@@ -129,9 +130,15 @@ export class DesktopDeckScanner {
 
   private async flushDiskFiles(
     targetDir: any,
-    tasks: { targetFileName: string; jsonContent: string }[]
+    tasks: { targetFileName: string; jsonContent: string }[],
+    onDiskProgress?: (written: number, total: number) => void
   ): Promise<void> {
+    const total = tasks.length;
+    let written = 0;
     const DISK_BATCH_SIZE = 20;
+    
+    if (onDiskProgress) onDiskProgress(0, total);
+
     for (let i = 0; i < tasks.length; i += DISK_BATCH_SIZE) {
       const chunk = tasks.slice(i, i + DISK_BATCH_SIZE);
       await Promise.all(
@@ -143,6 +150,11 @@ export class DesktopDeckScanner {
             await writable.close();
           } catch (err) {
             error("DesktopDeckScanner", `Failed writing disk file ${task.targetFileName}`, err);
+          } finally {
+            written++;
+            if (onDiskProgress) {
+              onDiskProgress(written, total);
+            }
           }
         })
       );
