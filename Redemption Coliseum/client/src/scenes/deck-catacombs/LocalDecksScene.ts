@@ -12,6 +12,7 @@ import { SelectionDialogScene } from "../SelectionDialogScene";
 import { filterConfigData } from "../../ui/config/filter_config";
 import { DeckHeaderFilterUI, type DeckFilterOptions } from "../../ui/components/filters/DeckHeaderFilterUI";
 import { TROPHY_THRESHOLDS, TIER_CONFIG } from "../../config/BrigadeConfig";
+import { CardRepository } from "../../../../shared/CardRepository.js";
 
 export class LocalDecksScene extends Phaser.Scene {
   private soundManager!: SoundManager;
@@ -141,6 +142,9 @@ export class LocalDecksScene extends Phaser.Scene {
     };
 
     const cardDatabase = this.registry.get("cardDatabase")?.cards || [];
+    if (cardDatabase.length > 0) {
+      CardRepository.initialize(cardDatabase);
+    }
     this.scanner = new LocalDeckScanner(cardDatabase);
 
     const width = this.scale.width;
@@ -236,19 +240,11 @@ export class LocalDecksScene extends Phaser.Scene {
     await this.updateStaticFooter();
   }
 
-  private cardNameMap: Map<string, string> = new Map();
-
   private applyFiltersAndSort(opts: DeckFilterOptions, cardDatabase: any[]) {
     let result = [...this.allDecks];
 
-    // Build fast lookup map once if needed
-    if (this.cardNameMap.size === 0 && cardDatabase && cardDatabase.length > 0) {
-      cardDatabase.forEach((c: any) => {
-        const name = (c.Name || "").toLowerCase();
-        if (c.id) this.cardNameMap.set(String(c.id), name);
-        if (c.Name) this.cardNameMap.set(String(c.Name), name);
-        if (c.ImageFile) this.cardNameMap.set(String(c.ImageFile), name);
-      });
+    if (!CardRepository.isInitialized && cardDatabase && cardDatabase.length > 0) {
+      CardRepository.initialize(cardDatabase);
     }
 
     // 1. Text Search Filter
@@ -261,7 +257,10 @@ export class LocalDecksScene extends Phaser.Scene {
         }
         let cardMatch = false;
         if (opts.searchInCard && deck.cardIds) {
-          cardMatch = deck.cardIds.some((id) => this.cardNameMap.get(String(id))?.includes(query));
+          cardMatch = deck.cardIds.some((id) => {
+            const card = CardRepository.get(id);
+            return card?.Name?.toLowerCase().includes(query);
+          });
         }
         return nameMatch || cardMatch;
       });

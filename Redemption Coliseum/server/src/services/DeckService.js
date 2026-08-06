@@ -2,6 +2,7 @@ const logger = require("../utils/logger");
 const { cardDatabase } = require("../data/cardDatabase");
 const { shuffle } = require("./cardService");
 const { hash, generateCardId } = require("../../../shared/utils");
+const { CardRepository } = require("../../../shared/CardRepository.js");
 
 class DeckService {
   /**
@@ -18,7 +19,8 @@ class DeckService {
         }
       }
     });
-    logger.info(`[DeckService] Card database initialized with ${cardDatabase.length} entries.`);
+    CardRepository.initialize(cardDatabase);
+    logger.info(`[DeckService] Card database & CardRepository initialized with ${cardDatabase.length} entries.`);
   }
 
   /**
@@ -53,11 +55,12 @@ class DeckService {
    * @private
    */
   static _lookupCards(identifiers) {
+    if (!CardRepository.isInitialized) {
+      CardRepository.initialize(cardDatabase);
+    }
     const defs = [];
     identifiers.forEach((id) => {
-      const cardDef = cardDatabase.find(
-        (c) => c.Name === id || c.id == id
-      );
+      const cardDef = CardRepository.get(id);
       if (cardDef) {
         defs.push(cardDef);
       } else {

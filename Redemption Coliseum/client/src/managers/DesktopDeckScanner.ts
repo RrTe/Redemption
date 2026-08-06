@@ -20,6 +20,9 @@ export class DesktopDeckScanner {
   /**
    * Scans the desktop directories using the File System Access API.
    */
+  /**
+   * Scans the desktop directories using the File System Access API.
+   */
   public async scanDecks(
     onComplete: () => void,
     onProgress?: (current: number, total: number, filename: string) => void
@@ -42,25 +45,76 @@ export class DesktopDeckScanner {
         await this.db.saveDirectoryHandle("target_dir", targetDir);
       }
 
-      // 2. Iterate source files
-      const entries = await this.getFilesFromDirectory(sourceDir);
-      const total = entries.length;
-      log("DesktopDeckScanner", `Found ${total} valid deck files in source.`);
+      // 2. Iterate source files and deduplicate by base name (Pass 1)
+      const allEntries = await this.getFilesFromDirectory(sourceDir);
+      const groupedMap = new Map<string, any[]>();
+      for (const entry of allEntries) {
+        const baseName = entry.name.replace(/\.[^/.]+$/, "");
+        if (!groupedMap.has(baseName)) {
+          groupedMap.set(baseName, []);
+        }
+        groupedMap.get(baseName)!.push(entry);
+      }
+
+      // Select canonical handle per baseName (.json > .dek > .txt)
+      const uniqueEntries: any[] = [];
+      groupedMap.forEach((entries) => {
+        entries.sort((a, b) => {
+          const extA = a.name.split(".").pop()?.toLowerCase() || "";
+          const extB = b.name.split(".").pop()?.toLowerCase() || "";
+          const priority: Record<string, number> = { json: 1, dek: 2, txt: 3 };
+          return (priority[extA] || 99) - (priority[extB] || 99);
+        });
+        uniqueEntries.push(entries[0]);
+      });
+
+      const total = uniqueEntries.length;
+      log("DesktopDeckScanner", `Found ${allEntries.length} total files, deduplicated to ${total} unique deck names.`);
 
       // Reset bulk choices for this run
       this.currentBulkAction = null;
       this.currentBulkFormat = null;
 
+      const metasToSave: DeckMetadata[] = [];
+      const virtualDecksToSave: any[] = [];
+      const diskWriteTasks: { targetFileName: string; jsonContent: string }[] = [];
+
+      // Calculate dynamic frame delay so progress bar animates smoothly over ~1-2 seconds regardless of deck count
+      const stepDelay = Math.max(4, Math.min(25, Math.floor(1500 / Math.max(1, total))));
+
       for (let i = 0; i < total; i++) {
-        const entry = entries[i];
+        const entry = uniqueEntries[i];
         if (onProgress) {
           onProgress(i + 1, total, entry.name);
+          // Yield to browser main thread so DOM repaints the progress bar animation smoothly
+          await new Promise((resolve) => setTimeout(resolve, stepDelay));
         }
-        await this.processFile(entry, targetDir);
+        const result = await this.processFile(entry, targetDir);
+        if (result) {
+          metasToSave.push(result.meta);
+          virtualDecksToSave.push(result.wrappedDeck);
+          diskWriteTasks.push({
+            targetFileName: result.targetFileName,
+            jsonContent: result.jsonContent,
+          });
+        }
       }
-      
-      log("DesktopDeckScanner", "Directory scan completed successfully.");
+
+      // Single bulk transaction write to IndexedDB (Instant UI update)
+      if (metasToSave.length > 0) {
+        await this.db.saveCachedMetadataBatch(metasToSave);
+        await this.db.saveVirtualDeckBatch(virtualDecksToSave);
+      }
+
+      log("DesktopDeckScanner", "Directory scan completed successfully. Unlocking UI.");
       onComplete();
+
+      // Non-blocking background flush of physical files to target disk folder
+      if (diskWriteTasks.length > 0) {
+        this.flushDiskFiles(targetDir, diskWriteTasks).catch((err) => {
+          error("DesktopDeckScanner", "Background disk write error", err);
+        });
+      }
     } catch (err: any) {
       if (err.name === 'AbortError') {
         log("DesktopDeckScanner", "User cancelled directory picker.");
@@ -71,6 +125,29 @@ export class DesktopDeckScanner {
       this.currentBulkAction = null;
       this.currentBulkFormat = null;
     }
+  }
+
+  private async flushDiskFiles(
+    targetDir: any,
+    tasks: { targetFileName: string; jsonContent: string }[]
+  ): Promise<void> {
+    const DISK_BATCH_SIZE = 20;
+    for (let i = 0; i < tasks.length; i += DISK_BATCH_SIZE) {
+      const chunk = tasks.slice(i, i + DISK_BATCH_SIZE);
+      await Promise.all(
+        chunk.map(async (task) => {
+          try {
+            const targetFileHandle = await targetDir.getFileHandle(task.targetFileName, { create: true });
+            const writable = await targetFileHandle.createWritable();
+            await writable.write(task.jsonContent);
+            await writable.close();
+          } catch (err) {
+            error("DesktopDeckScanner", `Failed writing disk file ${task.targetFileName}`, err);
+          }
+        })
+      );
+    }
+    log("DesktopDeckScanner", `Finished background disk flush of ${tasks.length} JSON files.`);
   }
 
   private async verifyPermission(handle: any): Promise<boolean> {
@@ -103,6 +180,10 @@ export class DesktopDeckScanner {
         log("DesktopDeckScanner", "No read permission for target_dir during background sync. Using IndexedDB cache.");
         return;
       }
+
+      const metas: DeckMetadata[] = [];
+      const virtuals: any[] = [];
+
       for await (const entry of targetDirHandle.values()) {
         if (entry.kind === "file" && entry.name.toLowerCase().endsWith(".json")) {
           try {
@@ -110,13 +191,18 @@ export class DesktopDeckScanner {
             const text = await file.text();
             const data = JSON.parse(text);
             if (data && data.meta) {
-              await this.db.saveCachedMetadata(data.meta);
-              await this.db.saveVirtualDeck(data);
+              metas.push(data.meta);
+              virtuals.push(data);
             }
           } catch (err) {
             log("DesktopDeckScanner", `Could not sync target JSON ${entry.name}`, err);
           }
         }
+      }
+
+      if (metas.length > 0) {
+        await this.db.saveCachedMetadataBatch(metas);
+        await this.db.saveVirtualDeckBatch(virtuals);
       }
     } catch (err) {
       log("DesktopDeckScanner", "Could not iterate target directory for cache sync", err);
@@ -136,7 +222,10 @@ export class DesktopDeckScanner {
     return files;
   }
 
-  private async processFile(sourceFileHandle: any, targetDirHandle: any): Promise<void> {
+  private async processFile(
+    sourceFileHandle: any,
+    targetDirHandle: any
+  ): Promise<{ meta: DeckMetadata; wrappedDeck: any; targetFileName: string; jsonContent: string } | null> {
     const file = await sourceFileHandle.getFile();
     const baseName = file.name.replace(/\.[^/.]+$/, "");
     const targetFileName = `${baseName}.json`;
@@ -147,10 +236,10 @@ export class DesktopDeckScanner {
     
     if (isConflict) {
       log("DesktopDeckScanner", `Existing deck found: ${file.name}`);
-      await this.handleImportOrConflict(file, targetFileName, targetDirHandle, true, cachedMeta);
+      return await this.handleImportOrConflict(file, targetFileName, targetDirHandle, true, cachedMeta);
     } else {
       log("DesktopDeckScanner", `New deck found: ${file.name}`);
-      await this.handleImportOrConflict(file, targetFileName, targetDirHandle, false);
+      return await this.handleImportOrConflict(file, targetFileName, targetDirHandle, false);
     }
   }
 
@@ -179,7 +268,7 @@ export class DesktopDeckScanner {
     targetDirHandle: any,
     isConflict: boolean,
     cachedMeta?: DeckMetadata
-  ): Promise<void> {
+  ): Promise<{ meta: DeckMetadata; wrappedDeck: any; targetFileName: string; jsonContent: string } | null> {
     let action: ConflictAction = "import";
     let format = this.currentBulkFormat || cachedMeta?.format;
 
@@ -211,13 +300,13 @@ export class DesktopDeckScanner {
     const baseAction = action.replace("_all", "");
     if (baseAction === "skip") {
       log("DesktopDeckScanner", `Skipped update for ${file.name}`);
-      return;
+      return null;
     }
 
     const resetStats = baseAction === "update_reset_stats";
     log("DesktopDeckScanner", `Processing ${file.name} (Format: ${format}, Reset Stats: ${resetStats})`);
     
-    await this.importAndSave(file, targetFileName, targetDirHandle, cachedMeta, resetStats, format || undefined);
+    return await this.importAndSave(file, targetFileName, targetDirHandle, cachedMeta, resetStats, format || undefined);
   }
 
   private async importAndSave(
@@ -227,7 +316,7 @@ export class DesktopDeckScanner {
     existingMeta?: DeckMetadata,
     resetStats: boolean = false,
     selectedFormat?: string
-  ): Promise<void> {
+  ): Promise<{ meta: DeckMetadata; wrappedDeck: any; targetFileName: string; jsonContent: string } | null> {
     try {
       const content = await file.text();
       const deckData = DeckUtils.parseDeck(content, file.name);
@@ -245,18 +334,11 @@ export class DesktopDeckScanner {
       const wrappedDeck = LocalDeckMetadataGenerator.wrapDeck(newMeta, deckData);
       const jsonContent = JSON.stringify(wrappedDeck, null, 2);
 
-      // Write to target directory
-      const targetFileHandle = await targetDirHandle.getFileHandle(targetFileName, { create: true });
-      const writable = await targetFileHandle.createWritable();
-      await writable.write(jsonContent);
-      await writable.close();
-
-      // Update cache & persistent IndexedDB backup
-      await this.db.saveCachedMetadata(newMeta);
-      await this.db.saveVirtualDeck(wrappedDeck);
-      log("DesktopDeckScanner", `Successfully saved ${targetFileName}`);
+      log("DesktopDeckScanner", `Successfully processed ${targetFileName} in memory`);
+      return { meta: newMeta, wrappedDeck, targetFileName, jsonContent };
     } catch (err) {
       error("DesktopDeckScanner", `Failed to import ${file.name}`, err);
+      return null;
     }
   }
 

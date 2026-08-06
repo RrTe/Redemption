@@ -2,6 +2,7 @@ import type { DeckMetadata, DeckStats, WrappedDeck } from "../types/DeckMetadata
 import type { DeckData } from "../utils/DeckUtils";
 import { DECK_VALIDATION_RULES } from "../../../shared/deck-validation-rules.js";
 import { DeckValidator } from "../../../shared/DeckValidator.js";
+import { CardRepository } from "../../../shared/CardRepository.js";
 
 export class LocalDeckMetadataGenerator {
   /**
@@ -25,6 +26,10 @@ export class LocalDeckMetadataGenerator {
     resetStats: boolean = false,
     selectedFormat?: string
   ): DeckMetadata {
+    if (!CardRepository.isInitialized && cardDatabase && cardDatabase.length > 0) {
+      CardRepository.initialize(cardDatabase);
+    }
+
     const deckName = filename.replace(/\.[^/.]+$/, ""); // Remove extension
     const cardIds = new Set<string>();
     const brigades = new Set<string>();
@@ -34,13 +39,10 @@ export class LocalDeckMetadataGenerator {
 
     // Helper to process a card string (which could be an ID or a Name)
     const processCard = (cardIdentifier: string) => {
-      // Existing utility approach: check ID first, then Name
-      const match = cardDatabase.find(
-        (c: any) => c.id === cardIdentifier || c.Name === cardIdentifier
-      );
+      const match = CardRepository.get(cardIdentifier);
 
       if (match) {
-        cardIds.add(match.id);
+        if (match.id) cardIds.add(String(match.id));
 
         // Extract Brigade
         if (match.Brigade) {
@@ -53,11 +55,11 @@ export class LocalDeckMetadataGenerator {
 
         // Check for Hero / Evil Character
         const types = Array.isArray(match.Type) ? match.Type : [match.Type];
-        if (types.includes("Hero") && !heroCharacterCardId) {
-          heroCharacterCardId = match.id;
+        if (types.includes("Hero") && !heroCharacterCardId && match.id) {
+          heroCharacterCardId = String(match.id);
         }
-        if (types.includes("Evil Character") && !evilCharacterCardId) {
-          evilCharacterCardId = match.id;
+        if (types.includes("Evil Character") && !evilCharacterCardId && match.id) {
+          evilCharacterCardId = String(match.id);
         }
       }
     };
@@ -90,8 +92,8 @@ export class LocalDeckMetadataGenerator {
     let isValid = true;
     let validationErrors: string[] = [];
     try {
-      const mainCards = deckData.main.map((idOrName) => cardDatabase.find((c: any) => c.id === idOrName || c.Name === idOrName) || idOrName);
-      const reserveCards = deckData.reserve.map((idOrName) => cardDatabase.find((c: any) => c.id === idOrName || c.Name === idOrName) || idOrName);
+      const mainCards = deckData.main.map((idOrName) => CardRepository.get(idOrName) || idOrName);
+      const reserveCards = deckData.reserve.map((idOrName) => CardRepository.get(idOrName) || idOrName);
       const valResult = DeckValidator.validate(mainCards, reserveCards, format);
       isValid = valResult.isValid;
       if (!isValid) {

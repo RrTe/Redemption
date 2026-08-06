@@ -98,34 +98,46 @@ export class LocalDecksDB {
   }
 
   public async saveCachedMetadata(meta: DeckMetadata): Promise<void> {
-    if (meta && meta.name) {
-      meta.name = meta.name.replace(/\.[^/.]+$/, "");
-    }
+    return this.saveCachedMetadataBatch([meta]);
+  }
+
+  public async saveCachedMetadataBatch(metas: DeckMetadata[]): Promise<void> {
+    if (!metas || metas.length === 0) return;
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction("deck_cache", "readwrite");
       const store = tx.objectStore("deck_cache");
-      const request = store.put(meta);
-      
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      metas.forEach((meta) => {
+        if (meta && meta.name) {
+          meta.name = meta.name.replace(/\.[^/.]+$/, "");
+        }
+        store.put(meta);
+      });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
     });
   }
 
   // --- Virtual Decks (Mobile/PWA Mode) ---
 
   public async saveVirtualDeck(wrappedDeck: WrappedDeck): Promise<void> {
-    if (wrappedDeck && wrappedDeck.meta && wrappedDeck.meta.name) {
-      wrappedDeck.meta.name = wrappedDeck.meta.name.replace(/\.[^/.]+$/, "");
-    }
+    return this.saveVirtualDeckBatch([wrappedDeck]);
+  }
+
+  public async saveVirtualDeckBatch(wrappedDecks: WrappedDeck[]): Promise<void> {
+    if (!wrappedDecks || wrappedDecks.length === 0) return;
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction("virtual_decks", "readwrite");
       const store = tx.objectStore("virtual_decks");
-      const request = store.put(wrappedDeck);
-      
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      wrappedDecks.forEach((wrappedDeck) => {
+        if (wrappedDeck && wrappedDeck.meta && wrappedDeck.meta.name) {
+          wrappedDeck.meta.name = wrappedDeck.meta.name.replace(/\.[^/.]+$/, "");
+        }
+        store.put(wrappedDeck);
+      });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
     });
   }
 

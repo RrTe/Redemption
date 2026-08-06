@@ -7,6 +7,7 @@ import { log, error } from "../../utils/logger";
 import { DECK_VALIDATION_RULES } from "../../../../shared/deck-validation-rules.js";
 import { DeckValidator } from "../../../../shared/DeckValidator.js";
 import { ConfirmationDialog } from "../notifications/ConfirmationDialog";
+import { CardRepository } from "../../../../shared/CardRepository.js";
 
 export const TROPHY_THRESHOLDS = {
   BRONZE: 15,
@@ -79,22 +80,25 @@ export class LocalDecksGridUI {
 
     this.updateContainerBounds(scene);
 
+    if (!CardRepository.isInitialized && cardDatabase && cardDatabase.length > 0) {
+      CardRepository.initialize(cardDatabase);
+    }
+
     if (decks.length === 0) {
       const emptyText = document.createElement("div");
       emptyText.className = "local-decks-empty-text";
       emptyText.innerText = "No decks found matching the selected filter.";
       container.appendChild(emptyText);
     } else {
+      // Pre-fetch template node ONCE so all tiles clone synchronously without network delay
+      await this.getTemplateNode();
+
       for (const deck of decks) {
         if (this.currentRenderId !== renderId) {
           container.remove();
           return;
         }
-        const tile = await this.createTile(scene, deck, cardDatabase, callbacks);
-        if (this.currentRenderId !== renderId) {
-          container.remove();
-          return;
-        }
+        const tile = this.createTileSync(scene, deck, cardDatabase, callbacks);
         container.appendChild(tile);
       }
     }
@@ -141,13 +145,13 @@ export class LocalDecksGridUI {
     }
   }
 
-  private async createTile(
+  private createTileSync(
     scene: Phaser.Scene,
     deck: DeckMetadata,
     cardDatabase: any[],
     callbacks: LocalDecksGridCallbacks
-  ): Promise<HTMLElement> {
-    const tile = await this.getTemplateNode();
+  ): HTMLElement {
+    const tile = this.templateNode ? (this.templateNode.cloneNode(true) as HTMLElement) : this.createFallbackTile();
     const totalWins = (deck.stats?.wins?.full || 0) + (deck.stats?.wins?.partial || 0);
     const tierClass = this.getTierClass(totalWins);
     tile.className = `deck-tile ${tierClass}`;
@@ -211,12 +215,12 @@ export class LocalDecksGridUI {
       };
     }
 
-    // 2. Banner Medallion (Center)
-    const evilCard = cardDatabase.find((c) => c.id === deck.visuals?.evilCharacterCardId);
-    const heroCard = cardDatabase.find((c) => c.id === deck.visuals?.heroCharacterCardId);
+    // 2. Banner Medallion (Center) using O(1) CardRepository
+    const evilCard = deck.visuals?.evilCharacterCardId ? CardRepository.get(deck.visuals.evilCharacterCardId) : undefined;
+    const heroCard = deck.visuals?.heroCharacterCardId ? CardRepository.get(deck.visuals.heroCharacterCardId) : undefined;
 
-    const bgUrl = evilCard ? `assets/cards/${evilCard.ImageFile}.jpg` : "assets/cards/cardback.jpg";
-    const heroUrl = heroCard ? `assets/cards/${heroCard.ImageFile}.jpg` : "assets/cards/cardback.jpg";
+    const bgUrl = evilCard?.ImageFile ? `assets/cards/${evilCard.ImageFile}.jpg` : "assets/cards/cardback.jpg";
+    const heroUrl = heroCard?.ImageFile ? `assets/cards/${heroCard.ImageFile}.jpg` : "assets/cards/cardback.jpg";
 
     const banner = tile.querySelector(".deck-tile-banner") as HTMLElement;
     if (banner) {
@@ -266,7 +270,7 @@ export class LocalDecksGridUI {
       });
     }
 
-    // Format & Validity Row
+    // Format & Validity Row (Instant read from metadata)
     const formatSpan = tile.querySelector(".deck-tile-format") as HTMLElement;
     if (formatSpan) {
       formatSpan.innerText = this.getFormatShortCode(deck.format);
@@ -275,25 +279,8 @@ export class LocalDecksGridUI {
     const validityContainer = tile.querySelector(".deck-tile-validity") as HTMLElement;
     if (validityContainer) {
       validityContainer.innerHTML = "";
-      let isValid = deck.isValid;
-      let violations = deck.validationErrors || [];
-
-      if (typeof isValid !== "boolean" || (isValid === false && violations.length === 0)) {
-        let mainCards: any[] = [];
-        let reserveCards: any[] = [];
-        const wrapped = await this.db.getVirtualDeck(deck.name);
-        if (wrapped && wrapped.deckData) {
-          const mainInput = wrapped.deckData.main || [];
-          const reserveInput = wrapped.deckData.reserve || [];
-          mainCards = mainInput.map((idOrName) => cardDatabase.find((c) => c.id === idOrName || c.Name === idOrName) || idOrName);
-          reserveCards = reserveInput.map((idOrName) => cardDatabase.find((c) => c.id === idOrName || c.Name === idOrName) || idOrName);
-        } else if (deck.cardIds && deck.cardIds.length > 0) {
-          mainCards = deck.cardIds.map((id) => cardDatabase.find((c) => c.id === id || c.Name === id) || id);
-        }
-        const valResult = DeckValidator.validate(mainCards, reserveCards, deck.format);
-        isValid = valResult.isValid;
-        violations = DeckValidator.getRuleViolationMessages(valResult);
-      }
+      const isValid = typeof deck.isValid === "boolean" ? deck.isValid : true;
+      const violations = deck.validationErrors || [];
 
       const validImgSrc = "assets/ui/icons/green_checkmark_small_compressed.png";
       const invalidImgSrc = "assets/ui/icons/red_cross_small_compressed.png";
@@ -628,9 +615,9 @@ export class LocalDecksGridUI {
       });
     };
 
-    if (cardDatabase && cardDatabase.length > 0 && allIdentifiers.length > 0) {
+    if (allIdentifiers.length > 0) {
       allIdentifiers.forEach((id) => {
-        const match = cardDatabase.find((c: any) => c.id === id || c.Name === id || c.ImageFile === id);
+        const match = CardRepository.get(id);
         if (match && match.Brigade) {
           if (Array.isArray(match.Brigade)) {
             match.Brigade.forEach((b: string) => addBrigade(b));

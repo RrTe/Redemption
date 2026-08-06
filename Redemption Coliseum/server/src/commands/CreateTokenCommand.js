@@ -2,6 +2,7 @@ const { BaseCommand } = require("./BaseCommand");
 const { CardFactory } = require("../factories/CardFactory");
 const { ZONES } = require("../../../shared/zones");
 const { cardDatabase } = require("../data/cardDatabase");
+const { CardRepository } = require("../../../shared/CardRepository.js");
 const logger = require("../utils/logger");
 
 class CreateTokenCommand extends BaseCommand {
@@ -12,7 +13,10 @@ class CreateTokenCommand extends BaseCommand {
     
     if (!player) return;
 
-    const cardDef = cardDatabase.find((c) => c.Name === cardId);
+    if (!CardRepository.isInitialized) {
+      CardRepository.initialize(cardDatabase);
+    }
+    const cardDef = CardRepository.get(cardId);
     if (!cardDef) {
       logger.warn(`[CreateTokenCommand] Card definition not found for: ${cardId}`);
       return;

@@ -4,6 +4,7 @@
  */
 
 import { DECK_VALIDATION_RULES } from "./deck-validation-rules.js";
+import { CardRepository } from "./CardRepository.js";
 
 /**
  * Normalizes deck input lists (either raw card definitions or DeckEntry structures)
@@ -15,11 +16,13 @@ import { DECK_VALIDATION_RULES } from "./deck-validation-rules.js";
 function normalizeDeckInput(input) {
   if (!Array.isArray(input)) return [];
   return input.map(item => {
-    if (item && item.card) {
-      return { card: item.card, quantity: item.quantity || 1 };
-    } else {
-      return { card: item, quantity: 1 };
+    let rawCard = item && item.card ? item.card : item;
+    let quantity = item && item.card ? (item.quantity || 1) : 1;
+    let resolvedCard = rawCard;
+    if (typeof rawCard === "string" || typeof rawCard === "number") {
+      resolvedCard = CardRepository.get(rawCard) || rawCard;
     }
+    return { card: resolvedCard, quantity };
   });
 }
 

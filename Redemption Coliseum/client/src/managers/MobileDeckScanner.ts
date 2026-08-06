@@ -55,10 +55,9 @@ export class MobileDeckScanner {
   public async syncVirtualToCache(): Promise<void> {
     try {
       const virtualDecks = await this.db.getAllVirtualDecks();
-      for (const wrapped of virtualDecks) {
-        if (wrapped && wrapped.meta) {
-          await this.db.saveCachedMetadata(wrapped.meta);
-        }
+      const metas = virtualDecks.map((w) => w?.meta).filter(Boolean) as DeckMetadata[];
+      if (metas.length > 0) {
+        await this.db.saveCachedMetadataBatch(metas);
       }
     } catch (err) {
       log("MobileDeckScanner", "Could not sync virtual decks to cache", err);
@@ -73,10 +72,16 @@ export class MobileDeckScanner {
     let currentBulkAction: ConflictAction | null = null;
     let currentBulkFormat: string | null = null;
 
+    const metasToSave: DeckMetadata[] = [];
+    const virtualDecksToSave: any[] = [];
+
+    const stepDelay = Math.max(4, Math.min(25, Math.floor(1500 / Math.max(1, total))));
+
     for (let i = 0; i < total; i++) {
       const file = files[i];
       if (onProgress) {
         onProgress(i + 1, total, file.name);
+        await new Promise((resolve) => setTimeout(resolve, stepDelay));
       }
       try {
         const content = await file.text();
@@ -134,14 +139,18 @@ export class MobileDeckScanner {
         );
         const wrappedDeck = LocalDeckMetadataGenerator.wrapDeck(meta, deckData);
 
-        // Save to cache and virtual storage
-        await this.db.saveVirtualDeck(wrappedDeck);
-        await this.db.saveCachedMetadata(meta);
+        metasToSave.push(meta);
+        virtualDecksToSave.push(wrappedDeck);
 
         log("MobileDeckScanner", `Successfully imported ${file.name} to virtual DB.`);
       } catch (err) {
         error("MobileDeckScanner", `Failed to process file ${file.name}`, err);
       }
+    }
+
+    if (metasToSave.length > 0) {
+      await this.db.saveVirtualDeckBatch(virtualDecksToSave);
+      await this.db.saveCachedMetadataBatch(metasToSave);
     }
   }
 
