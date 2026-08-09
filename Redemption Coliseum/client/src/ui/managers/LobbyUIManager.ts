@@ -338,6 +338,7 @@ export class LobbyUIManager {
     // Haupt-Buttons (in der linken Spalte)
     if (this.reconnectBtn && this.reconnectBtn.visible) {
       this.reconnectBtn.setPosition(leftX, currentY);
+      this.reconnectBtn.setData("baseScale", uiScale);
       this.reconnectBtn.setScale(uiScale);
 
       const dismissBtn = this.reconnectBtn.getByName("dismissBtn") as Phaser.GameObjects.Text;
@@ -353,16 +354,19 @@ export class LobbyUIManager {
     }
     if (this.createBtn) {
       this.createBtn.setPosition(leftX, currentY);
+      this.createBtn.setData("baseScale", uiScale);
       this.createBtn.setScale(uiScale);
     }
     currentY += 70 * uiScale;
     if (this.deckSelectBtn) {
       this.deckSelectBtn.setPosition(leftX, currentY);
+      this.deckSelectBtn.setData("baseScale", uiScale);
       this.deckSelectBtn.setScale(uiScale);
     }
     currentY += 70 * uiScale;
     if (this.loadGameBtn) {
       this.loadGameBtn.setPosition(leftX, currentY);
+      this.loadGameBtn.setData("baseScale", uiScale);
       this.loadGameBtn.setScale(uiScale);
     }
     currentY += 80 * uiScale;
@@ -489,11 +493,30 @@ export class LobbyUIManager {
     container.add([bg, shadow, text]);
     container.setSize(w, h).setInteractive({ useHandCursor: true });
     container.setData("defaultTint", 0xffffff);
+    container.setData("baseScale", 1.0);
 
-    container.on("pointerover", () => bg.setTint(0xdddddd));
-    container.on("pointerout", () =>
-      bg.setTint(container.getData("defaultTint")),
-    );
+    container.on("pointerover", () => {
+      bg.setTint(0xdddddd);
+      const baseScale = container.getData("baseScale") || 1.0;
+      this.scene.tweens.killTweensOf(container);
+      this.scene.tweens.add({
+        targets: container,
+        scale: baseScale * 1.08,
+        duration: 120,
+        ease: "Back.easeOut",
+      });
+    });
+    container.on("pointerout", () => {
+      bg.setTint(container.getData("defaultTint"));
+      const baseScale = container.getData("baseScale") || 1.0;
+      this.scene.tweens.killTweensOf(container);
+      this.scene.tweens.add({
+        targets: container,
+        scale: baseScale,
+        duration: 120,
+        ease: "Cubic.easeOut",
+      });
+    });
     container.on("pointerdown", () => {
       log("LobbyUI", `Button clicked: "${label}"`);
 
