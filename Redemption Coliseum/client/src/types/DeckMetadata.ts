@@ -26,6 +26,7 @@ export interface DeckMetadata {
     fallbackGraphic: string;
   };
   stats: DeckStats;
+  category?: string;
 }
 
 export interface WrappedDeck {

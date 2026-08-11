@@ -13,6 +13,7 @@ import { filterConfigData } from "../../ui/config/filter_config";
 import { DeckHeaderFilterUI, type DeckFilterOptions } from "../../ui/components/filters/DeckHeaderFilterUI";
 import { TROPHY_THRESHOLDS, TIER_CONFIG } from "../../config/BrigadeConfig";
 import { CardRepository } from "../../../../shared/CardRepository.js";
+import { PrebuiltDeckLoader } from "../../managers/PrebuiltDeckLoader";
 
 export class LocalDecksScene extends Phaser.Scene {
   private soundManager!: SoundManager;
@@ -241,10 +242,22 @@ export class LocalDecksScene extends Phaser.Scene {
   }
 
   private applyFiltersAndSort(opts: DeckFilterOptions, cardDatabase: any[]) {
-    let result = [...this.allDecks];
+    const isPrebuiltMode = opts.deckMode === "prebuilt";
+    const sourceDecks = isPrebuiltMode
+      ? PrebuiltDeckLoader.loadAllPrebuiltDecks()
+      : this.allDecks;
+
+    let result = [...sourceDecks];
 
     if (!CardRepository.isInitialized && cardDatabase && cardDatabase.length > 0) {
       CardRepository.initialize(cardDatabase);
+    }
+
+    // 0. Prebuilt Tier Category Filter
+    if (isPrebuiltMode && opts.activeCategories && opts.activeCategories.length > 0) {
+      result = result.filter((deck) =>
+        opts.activeCategories.includes(deck.category || "Starter")
+      );
     }
 
     // 1. Text Search Filter
@@ -335,16 +348,17 @@ export class LocalDecksScene extends Phaser.Scene {
     });
 
     if (this.headerFilterUI) {
-      this.headerFilterUI.updateCountText(result.length, this.allDecks.length);
+      this.headerFilterUI.updateCountText(result.length, sourceDecks.length);
     }
 
-    this.renderGrid(result, cardDatabase);
+    this.renderGrid(result, cardDatabase, { isPrebuilt: isPrebuiltMode });
   }
 
-  private renderGrid(decks: DeckMetadata[], cardDatabase: any[]) {
+  private renderGrid(decks: DeckMetadata[], cardDatabase: any[], options?: { isPrebuilt?: boolean }) {
     this.currentDecks = decks;
     if (this.statusText) {
-      this.statusText.setText(`${decks.length} Local Decks`);
+      const modeLabel = options?.isPrebuilt ? "Prebuild Decks" : "Local Decks";
+      this.statusText.setText(`${decks.length} ${modeLabel}`);
     }
     this.gridUI.render(this, decks, cardDatabase, {
       onOpenDeckEditor: (deck) => {
@@ -372,11 +386,16 @@ export class LocalDecksScene extends Phaser.Scene {
         log("LocalDecksScene", `Deck deleted: ${deck.name}`);
         this.initializeDecks(true);
       }
-    });
+    }, options);
   }
 
   private handleSelectChampions(deck: DeckMetadata) {
-    this.db.getVirtualDeck(deck.name).then((wrapped) => {
+    const isPrebuilt = deck.category && deck.category.toLowerCase() !== "local";
+    const getDeckPromise = isPrebuilt
+      ? Promise.resolve(PrebuiltDeckLoader.getWrappedDeck(deck.name))
+      : this.db.getVirtualDeck(deck.name);
+
+    getDeckPromise.then((wrapped) => {
       const rawDb = this.registry.get("cardDatabase");
       const cardDatabase = Array.isArray(rawDb) ? rawDb : (rawDb?.cards || []);
       const allIds = wrapped?.deckData

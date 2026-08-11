@@ -15,6 +15,8 @@ export interface DeckFilterOptions {
   activeFormats: string[];
   sortMode: "name_asc" | "name_desc" | "tier_desc" | "tier_asc" | "brigade" | "format";
   isAndMode: boolean;
+  deckMode: "local" | "prebuilt";
+  activeCategories: string[];
 }
 
 export interface HeaderFilterCallbacks {
@@ -53,6 +55,14 @@ export class DeckHeaderFilterUI {
   private activeTiersSet: Set<string> = new Set();
   private sortMode: DeckFilterOptions["sortMode"] = "name_asc";
   private sortButtonsMap: Map<string, { bg: Phaser.GameObjects.Graphics; txt: Phaser.GameObjects.BitmapText }> = new Map();
+
+  public deckMode: "local" | "prebuilt" = "local";
+  private activeCategoriesSet: Set<string> = new Set();
+  private categoryButtonsMap: Map<string, { bg: Phaser.GameObjects.Graphics; txt: Phaser.GameObjects.BitmapText; overlay?: Phaser.GameObjects.Image }> = new Map();
+  private radioLocalImg?: Phaser.GameObjects.Image;
+  private radioLocalTxt?: Phaser.GameObjects.BitmapText;
+  private radioPrebuiltImg?: Phaser.GameObjects.Image;
+  private radioPrebuiltTxt?: Phaser.GameObjects.BitmapText;
 
   constructor(
     scene: Phaser.Scene,
@@ -346,8 +356,8 @@ export class DeckHeaderFilterUI {
       .setDepth(21);
 
     // Dynamic Search Input Field (Height 32px 1:1 TextFilterView)
-    const inputX = this.countLabel.x + this.countLabel.width + 15 * scale;
-    const inputWidth = 220 * scale;
+    const inputX = this.countLabel.x + this.countLabel.width + 10 * scale;
+    const inputWidth = 150 * scale;
     const inputHeight = 32;
 
     const style: any = {
@@ -395,11 +405,11 @@ export class DeckHeaderFilterUI {
     });
 
     // Checkboxes (Labels at centerRow2Y - 10, Checkboxes centered at centerRow2Y + 10)
-    const labelStartX = inputX + inputWidth + 10 * scale;
-    const textFilterFontSize = Math.max(14, Math.min(28, Math.round(27 * 0.9 * scale)));
+    const labelStartX = inputX + inputWidth + 6 * scale;
+    const textFilterFontSize = Math.max(12, Math.min(24, Math.round(24 * 0.9 * scale)));
 
-    const cb1X = labelStartX + 20 * scale;
-    const cb2X = labelStartX + 85 * scale;
+    const cb1X = labelStartX + 15 * scale;
+    const cb2X = labelStartX + 65 * scale;
 
     // Label: Name:
     this.nameLabel = this.scene.add
@@ -432,8 +442,8 @@ export class DeckHeaderFilterUI {
       },
     ];
 
-    const toggleScale = 0.15 * scale;
-    const toggleSpacingX = 65 * scale;
+    const toggleScale = 0.14 * scale;
+    const toggleSpacingX = 50 * scale;
     this.checkboxToggleGroup = new IconToggleGroup(
       this.scene,
       cb1X,
@@ -460,6 +470,14 @@ export class DeckHeaderFilterUI {
         this.emitChange();
       }
     });
+
+    // 4b. Category Filter Buttons (Starter, Contender, Challenger, Champion)
+    const categoryStartX = cb2X + 45 * scale;
+    this.createCategoryFilterControls(categoryStartX, centerRow2Y, scale);
+
+    // 4c. Mode Radio Controls (Local Decks vs Prebuild Decks)
+    const radioStartX = categoryStartX + 4 * 66 * scale + 15 * scale;
+    this.createModeRadioControls(radioStartX, centerRow2Y, scale);
 
     // 5. Top-Right Bar Row 1: Sort Controls (A-Z, Z-A, Tier, Format, Brigades)
     this.createRightSortControls(deckAreaLeft + 12 * scale, row1Y + 22 * scale, deckAreaWidth - 24 * scale, scale);
@@ -680,7 +698,8 @@ export class DeckHeaderFilterUI {
 
   public updateCountText(filteredCount: number, totalCount: number): void {
     if (this.countLabel) {
-      this.countLabel.setText(`Local Decks: ${filteredCount}/${totalCount}`);
+      const prefix = this.deckMode === "prebuilt" ? "Prebuild Decks" : "Local Decks";
+      this.countLabel.setText(`${prefix}: ${filteredCount}/${totalCount}`);
     }
   }
 
@@ -719,7 +738,159 @@ export class DeckHeaderFilterUI {
       activeFormats,
       sortMode: this.sortMode,
       isAndMode,
+      deckMode: this.deckMode,
+      activeCategories: Array.from(this.activeCategoriesSet),
     });
+  }
+
+  private createCategoryFilterControls(startX: number, centerY: number, scale: number): void {
+    const categories = [
+      { id: "Starter", label: "Starter" },
+      { id: "Contender", label: "Contender" },
+      { id: "Challenger", label: "Challenger" },
+      { id: "Champion", label: "Champion" },
+    ];
+
+    const btnWidth = 60 * scale;
+    const btnHeight = 28 * scale;
+    const spacingX = 64 * scale;
+
+    categories.forEach((cat, idx) => {
+      const bx = startX + idx * spacingX;
+      const bg = this.scene.add.graphics().setDepth(14);
+      const fontKey = this.scene.cache.bitmapFont.exists("wazoo") ? "wazoo" : "fairydust";
+      const fontSize = cat.label === "Challenger" ? 14 * scale : 16 * scale;
+
+      const txt = this.scene.add.bitmapText(bx + btnWidth / 2, centerY, fontKey, cat.label, fontSize)
+        .setOrigin(0.5, 0.5)
+        .setTint(0xcccccc)
+        .setDepth(15)
+        .setInteractive({ useHandCursor: true });
+
+      let overlay: Phaser.GameObjects.Image | undefined;
+      if (this.scene.textures.exists("filterSelected_med")) {
+        overlay = this.scene.add.image(bx + btnWidth / 2, centerY, "filterSelected_med")
+          .setOrigin(0.5, 0.5)
+          .setScale(0.55 * scale)
+          .setDepth(16)
+          .setVisible(false);
+      }
+
+      const renderBtn = (isSelected: boolean, isHovered: boolean = false) => {
+        bg.clear();
+        if (isHovered) {
+          bg.fillStyle(isSelected ? 0x554422 : 0x222d42, 0.95);
+          bg.fillRoundedRect(bx, centerY - btnHeight / 2, btnWidth, btnHeight, 6 * scale);
+          bg.lineStyle(2, 0xe9cd45, 0.95);
+          bg.strokeRoundedRect(bx - 1, centerY - btnHeight / 2 - 1, btnWidth + 2, btnHeight + 2, 6 * scale);
+        } else {
+          bg.fillStyle(isSelected ? 0x443311 : 0x111c2e, 0.9);
+          bg.fillRoundedRect(bx, centerY - btnHeight / 2, btnWidth, btnHeight, 6 * scale);
+          bg.lineStyle(1.5, isSelected ? 0xffd700 : 0x444466, 0.8);
+          bg.strokeRoundedRect(bx, centerY - btnHeight / 2, btnWidth, btnHeight, 6 * scale);
+        }
+        txt.setTint(isSelected ? 0xffd700 : 0xcccccc);
+        if (overlay) overlay.setVisible(isSelected);
+      };
+
+      renderBtn(false, false);
+
+      txt.on("pointerover", () => {
+        this.scene.game.events.emit("playSound", "DECK_CHECK_HOVER");
+        renderBtn(this.activeCategoriesSet.has(cat.id), true);
+      });
+
+      txt.on("pointerout", () => {
+        renderBtn(this.activeCategoriesSet.has(cat.id), false);
+      });
+
+      txt.on("pointerdown", () => {
+        const isCurrentlyActive = this.activeCategoriesSet.has(cat.id);
+        if (isCurrentlyActive) {
+          this.activeCategoriesSet.delete(cat.id);
+          this.scene.game.events.emit("playSound", "DECK_CHECK_DESELECT");
+        } else {
+          this.activeCategoriesSet.add(cat.id);
+          this.scene.game.events.emit("playSound", "DECK_CHECK_SELECT");
+        }
+        renderBtn(this.activeCategoriesSet.has(cat.id), false);
+        this.emitChange();
+      });
+
+      this.categoryButtonsMap.set(cat.id, { bg, txt, overlay });
+    });
+
+    this.setCategoryButtonsVisible(false);
+  }
+
+  private setCategoryButtonsVisible(visible: boolean): void {
+    this.categoryButtonsMap.forEach((val, key) => {
+      val.bg.setVisible(visible);
+      val.txt.setVisible(visible);
+      if (val.overlay) {
+        val.overlay.setVisible(visible && this.activeCategoriesSet.has(key));
+      }
+    });
+  }
+
+  private createModeRadioControls(startX: number, centerY: number, scale: number): void {
+    const fontKey = this.scene.cache.bitmapFont.exists("wazoo") ? "wazoo" : "fairydust";
+    const fontSize = Math.max(12, Math.min(22, Math.round(20 * scale)));
+
+    const r1X = startX;
+    const r1Y = centerY - 10 * scale;
+    const r2Y = centerY + 10 * scale;
+
+    this.radioLocalImg = this.scene.add.image(r1X, r1Y, "checkBoxChecked")
+      .setOrigin(0.5, 0.5)
+      .setScale(0.14 * scale)
+      .setDepth(21)
+      .setInteractive({ useHandCursor: true });
+
+    this.radioLocalTxt = this.scene.add.bitmapText(r1X + 14 * scale, r1Y, fontKey, "Local Decks", fontSize)
+      .setOrigin(0, 0.5)
+      .setTint(0xffd700)
+      .setDepth(21)
+      .setInteractive({ useHandCursor: true });
+
+    this.radioPrebuiltImg = this.scene.add.image(r1X, r2Y, "checkBoxUnChecked")
+      .setOrigin(0.5, 0.5)
+      .setScale(0.14 * scale)
+      .setDepth(21)
+      .setInteractive({ useHandCursor: true });
+
+    this.radioPrebuiltTxt = this.scene.add.bitmapText(r1X + 14 * scale, r2Y, fontKey, "Prebuild Decks", fontSize)
+      .setOrigin(0, 0.5)
+      .setTint(0xcccccc)
+      .setDepth(21)
+      .setInteractive({ useHandCursor: true });
+
+    const selectMode = (mode: "local" | "prebuilt") => {
+      if (this.deckMode === mode) return;
+      this.deckMode = mode;
+      this.scene.game.events.emit("playSound", "DECK_CHECK_SELECT");
+
+      if (mode === "local") {
+        this.radioLocalImg?.setTexture("checkBoxChecked");
+        this.radioLocalTxt?.setTint(0xffd700);
+        this.radioPrebuiltImg?.setTexture("checkBoxUnChecked");
+        this.radioPrebuiltTxt?.setTint(0xcccccc);
+        this.setCategoryButtonsVisible(false);
+      } else {
+        this.radioLocalImg?.setTexture("checkBoxUnChecked");
+        this.radioLocalTxt?.setTint(0xcccccc);
+        this.radioPrebuiltImg?.setTexture("checkBoxChecked");
+        this.radioPrebuiltTxt?.setTint(0xffd700);
+        this.setCategoryButtonsVisible(true);
+      }
+
+      this.emitChange();
+    };
+
+    this.radioLocalImg.on("pointerdown", () => selectMode("local"));
+    this.radioLocalTxt.on("pointerdown", () => selectMode("local"));
+    this.radioPrebuiltImg.on("pointerdown", () => selectMode("prebuilt"));
+    this.radioPrebuiltTxt.on("pointerdown", () => selectMode("prebuilt"));
   }
 
   private onToggleChangedHandler?: (evt: any) => void;
@@ -753,5 +924,16 @@ export class DeckHeaderFilterUI {
         val.txt.destroy();
       });
     }
+    if (this.categoryButtonsMap) {
+      this.categoryButtonsMap.forEach((val) => {
+        val.bg.destroy();
+        val.txt.destroy();
+        if (val.overlay) val.overlay.destroy();
+      });
+    }
+    if (this.radioLocalImg) this.radioLocalImg.destroy();
+    if (this.radioLocalTxt) this.radioLocalTxt.destroy();
+    if (this.radioPrebuiltImg) this.radioPrebuiltImg.destroy();
+    if (this.radioPrebuiltTxt) this.radioPrebuiltTxt.destroy();
   }
 }

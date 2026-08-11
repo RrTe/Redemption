@@ -67,7 +67,8 @@ export class LocalDecksGridUI {
     scene: Phaser.Scene,
     decks: DeckMetadata[],
     cardDatabase: any[],
-    callbacks: LocalDecksGridCallbacks
+    callbacks: LocalDecksGridCallbacks,
+    options?: { isPrebuilt?: boolean }
   ): Promise<void> {
     const renderId = ++this.currentRenderId;
     this.destroy();
@@ -93,13 +94,47 @@ export class LocalDecksGridUI {
       // Pre-fetch template node ONCE so all tiles clone synchronously without network delay
       await this.getTemplateNode();
 
-      for (const deck of decks) {
-        if (this.currentRenderId !== renderId) {
-          container.remove();
-          return;
+      if (options?.isPrebuilt) {
+        const categories = [
+          { id: "Starter", title: "⚔️ STARTER DECKS" },
+          { id: "Contender", title: "🛡️ CONTENDER DECKS" },
+          { id: "Challenger", title: "🏆 CHALLENGER DECKS" },
+          { id: "Champion", title: "👑 CHAMPION DECKS" },
+        ];
+
+        for (const cat of categories) {
+          const categoryDecks = decks.filter(
+            (d) => (d.category || "Starter").toLowerCase() === cat.id.toLowerCase()
+          );
+
+          if (categoryDecks.length > 0) {
+            const headerEl = document.createElement("div");
+            headerEl.className = "prebuild-section-header";
+            headerEl.innerHTML = `
+              <span class="prebuild-section-title">${cat.title}</span>
+              <div class="prebuild-section-line"></div>
+            `;
+            container.appendChild(headerEl);
+
+            for (const deck of categoryDecks) {
+              if (this.currentRenderId !== renderId) {
+                container.remove();
+                return;
+              }
+              const tile = this.createTileSync(scene, deck, cardDatabase, callbacks);
+              container.appendChild(tile);
+            }
+          }
         }
-        const tile = this.createTileSync(scene, deck, cardDatabase, callbacks);
-        container.appendChild(tile);
+      } else {
+        for (const deck of decks) {
+          if (this.currentRenderId !== renderId) {
+            container.remove();
+            return;
+          }
+          const tile = this.createTileSync(scene, deck, cardDatabase, callbacks);
+          container.appendChild(tile);
+        }
       }
     }
 
@@ -154,7 +189,8 @@ export class LocalDecksGridUI {
     const tile = this.templateNode ? (this.templateNode.cloneNode(true) as HTMLElement) : this.createFallbackTile();
     const totalWins = (deck.stats?.wins?.full || 0) + (deck.stats?.wins?.partial || 0);
     const tierClass = this.getTierClass(totalWins);
-    tile.className = `deck-tile ${tierClass}`;
+    const isPrebuilt = deck.category && deck.category.toLowerCase() !== "local";
+    tile.className = `deck-tile ${tierClass} ${isPrebuilt ? "prebuild-deck-tile" : ""}`;
 
     // 1. Header
     const titleSpan = tile.querySelector(".deck-tile-title") as HTMLElement;
@@ -164,12 +200,16 @@ export class LocalDecksGridUI {
 
     const deleteBtn = tile.querySelector(".deck-tile-delete-btn") as HTMLButtonElement;
     if (deleteBtn) {
-      this.db.getDirectoryHandle("target_dir").then((targetDir) => {
-        const hasDiskFolder = "showDirectoryPicker" in window && !!targetDir;
-        deleteBtn.title = hasDiskFolder
-          ? "Delete Deck from Local List & Disk"
-          : "Delete Deck from Local List";
-      });
+      if (isPrebuilt) {
+        deleteBtn.style.display = "none";
+      } else {
+        this.db.getDirectoryHandle("target_dir").then((targetDir) => {
+          const hasDiskFolder = "showDirectoryPicker" in window && !!targetDir;
+          deleteBtn.title = hasDiskFolder
+            ? "Delete Deck from Local List & Disk"
+            : "Delete Deck from Local List";
+        });
+      }
 
       deleteBtn.onclick = async (e) => {
         e.stopPropagation();
