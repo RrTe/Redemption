@@ -2,17 +2,12 @@ import type { DeckMetadata, WrappedDeck } from "../types/DeckMetadata";
 import { log, error } from "../utils/logger";
 
 export class PrebuiltDeckLoader {
-  private static cachedDecks: DeckMetadata[] | null = null;
   private static cachedWrapped: Map<string, WrappedDeck> = new Map();
 
   /**
    * Loads all prebuilt decks from client/public/prebuilt-decks/ using eager globbing.
    */
   public static loadAllPrebuiltDecks(): DeckMetadata[] {
-    if (this.cachedDecks) {
-      return this.cachedDecks;
-    }
-
     const decks: DeckMetadata[] = [];
     this.cachedWrapped.clear();
 
@@ -37,7 +32,6 @@ export class PrebuiltDeckLoader {
     }
 
     log("PrebuiltDeckLoader", `Loaded ${decks.length} prebuilt decks.`);
-    this.cachedDecks = decks;
     return decks;
   }
 
@@ -45,7 +39,7 @@ export class PrebuiltDeckLoader {
    * Retrieves a full WrappedDeck by deck name.
    */
   public static getWrappedDeck(deckName: string): WrappedDeck | undefined {
-    if (!this.cachedDecks) {
+    if (this.cachedWrapped.size === 0) {
       this.loadAllPrebuiltDecks();
     }
     return this.cachedWrapped.get(deckName);
@@ -53,18 +47,25 @@ export class PrebuiltDeckLoader {
 
   /**
    * Normalizes raw json imports into a standard WrappedDeck format.
+   * Handles both "deckData" property and "deck" property exported by Deck Editor.
    */
   private static normalizeDeckData(raw: any, filepath: string): WrappedDeck | null {
     if (!raw) return null;
 
-    // Handle default export if wrapped in module object
     const data = raw.default || raw;
 
-    if (data.meta && data.deckData) {
-      return data as WrappedDeck;
+    if (data && data.meta) {
+      const deckData = data.deckData || data.deck || {
+        main: data.meta.cardIds || [],
+        reserve: [],
+      };
+      return {
+        meta: data.meta,
+        deckData: deckData,
+      };
     }
 
-    if (data.name && Array.isArray(data.cardIds)) {
+    if (data && data.name && Array.isArray(data.cardIds)) {
       const meta: DeckMetadata = {
         id: data.id || `prebuilt_${Date.now()}_${Math.random()}`,
         name: data.name,

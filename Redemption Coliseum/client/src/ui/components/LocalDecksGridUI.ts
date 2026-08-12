@@ -96,7 +96,7 @@ export class LocalDecksGridUI {
 
       if (options?.isPrebuilt) {
         const categories = [
-          { id: "Starter", title: "⚔️ STARTER DECKS" },
+          { id: "Starter", title: "🔰 STARTER DECKS" },
           { id: "Contender", title: "🛡️ CONTENDER DECKS" },
           { id: "Challenger", title: "🏆 CHALLENGER DECKS" },
           { id: "Champion", title: "👑 CHAMPION DECKS" },

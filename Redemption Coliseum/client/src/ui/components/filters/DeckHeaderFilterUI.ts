@@ -833,7 +833,51 @@ export class DeckHeaderFilterUI {
     });
   }
 
+  private ensureRadioButtonTextures(): void {
+    const size = 32;
+    const radius = 11;
+
+    if (!this.scene.textures.exists("radioButtonUnchecked")) {
+      const canvas = this.scene.textures.createCanvas("radioButtonUnchecked", size, size);
+      if (canvas) {
+        const ctx = canvas.getContext();
+        ctx.fillStyle = "#111c2e";
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#ffd700";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        canvas.refresh();
+      }
+    }
+
+    if (!this.scene.textures.exists("radioButtonChecked")) {
+      const canvas = this.scene.textures.createCanvas("radioButtonChecked", size, size);
+      if (canvas) {
+        const ctx = canvas.getContext();
+        ctx.fillStyle = "#111c2e";
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#ffd700";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.fillStyle = "#ffd700";
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, radius - 5, 0, Math.PI * 2);
+        ctx.fill();
+        canvas.refresh();
+      }
+    }
+  }
+
   private createModeRadioControls(startX: number, centerY: number, scale: number): void {
+    this.ensureRadioButtonTextures();
+
     const fontKey = this.scene.cache.bitmapFont.exists("wazoo") ? "wazoo" : "fairydust";
     const fontSize = Math.max(12, Math.min(22, Math.round(20 * scale)));
 
@@ -841,9 +885,9 @@ export class DeckHeaderFilterUI {
     const r1Y = centerY - 10 * scale;
     const r2Y = centerY + 10 * scale;
 
-    this.radioLocalImg = this.scene.add.image(r1X, r1Y, "checkBoxChecked")
+    this.radioLocalImg = this.scene.add.image(r1X, r1Y, "radioButtonChecked")
       .setOrigin(0.5, 0.5)
-      .setScale(0.14 * scale)
+      .setScale(0.55 * scale)
       .setDepth(21)
       .setInteractive({ useHandCursor: true });
 
@@ -853,9 +897,9 @@ export class DeckHeaderFilterUI {
       .setDepth(21)
       .setInteractive({ useHandCursor: true });
 
-    this.radioPrebuiltImg = this.scene.add.image(r1X, r2Y, "checkBoxUnChecked")
+    this.radioPrebuiltImg = this.scene.add.image(r1X, r2Y, "radioButtonUnchecked")
       .setOrigin(0.5, 0.5)
-      .setScale(0.14 * scale)
+      .setScale(0.55 * scale)
       .setDepth(21)
       .setInteractive({ useHandCursor: true });
 
@@ -871,15 +915,15 @@ export class DeckHeaderFilterUI {
       this.scene.game.events.emit("playSound", "DECK_CHECK_SELECT");
 
       if (mode === "local") {
-        this.radioLocalImg?.setTexture("checkBoxChecked");
+        this.radioLocalImg?.setTexture("radioButtonChecked");
         this.radioLocalTxt?.setTint(0xffd700);
-        this.radioPrebuiltImg?.setTexture("checkBoxUnChecked");
+        this.radioPrebuiltImg?.setTexture("radioButtonUnchecked");
         this.radioPrebuiltTxt?.setTint(0xcccccc);
         this.setCategoryButtonsVisible(false);
       } else {
-        this.radioLocalImg?.setTexture("checkBoxUnChecked");
+        this.radioLocalImg?.setTexture("radioButtonUnchecked");
         this.radioLocalTxt?.setTint(0xcccccc);
-        this.radioPrebuiltImg?.setTexture("checkBoxChecked");
+        this.radioPrebuiltImg?.setTexture("radioButtonChecked");
         this.radioPrebuiltTxt?.setTint(0xffd700);
         this.setCategoryButtonsVisible(true);
       }
