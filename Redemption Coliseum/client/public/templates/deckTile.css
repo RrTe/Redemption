@@ -46,7 +46,31 @@
 
 .deck-tile.prebuild-deck-tile {
   border: 2px solid #b8860b !important;
-  background-image: url('/assets/backgrounds/north_studio-black-2390125_small_compressed.jpg') !important;
+}
+
+/* Starter Decks: Steintextur wie bei den Local Decks */
+.deck-tile.prebuild-cat-starter.tier-stone {
+  background-image: url('/assets/backgrounds/stocksnap-grey-2620586_640.jpg') !important;
+}
+
+/* Contender Decks: north_studio-marble-2398946_small_compressed.jpg */
+.deck-tile.prebuild-cat-contender.tier-stone {
+  background-image: url('/assets/backgrounds/north_studio-marble-2398946_small_compressed.jpg') !important;
+}
+
+/* Challenger Decks: placidplace-marble-7633494_small_compressed_lighter.jpg */
+.deck-tile.prebuild-cat-challenger.tier-stone {
+  background-image: url('/assets/backgrounds/placidplace-marble-7633494_small_compressed_lighter.jpg') !important;
+}
+
+/* Champion Decks: 108casual-kintsugi-9855018_small_compressed.jpg */
+.deck-tile.prebuild-cat-champion.tier-stone {
+  background-image: url('/assets/backgrounds/108casual-kintsugi-9855018_small_compressed.jpg') !important;
+}
+
+.deck-tile.is-read-only .deck-tile-edit-btn,
+.deck-tile.is-read-only .deck-tile-delete-btn {
+  display: none !important;
 }
 
 
@@ -83,19 +107,19 @@
 }
 
 .tier-bronze {
-  border: 2px solid #cd7f32;
-  background-image: url('/assets/backgrounds/Bronze.jpg');
+  border: 2px solid #cd7f32 !important;
+  background-image: url('/assets/backgrounds/Bronze.jpg') !important;
   box-shadow: 0 0 10px rgba(205, 127, 50, 0.3);
 }
 
 .tier-silver {
-  border: 2px solid #c0c0c0;
-  background-image: url('/assets/backgrounds/Silver.jpg');
+  border: 2px solid #c0c0c0 !important;
+  background-image: url('/assets/backgrounds/Silver.jpg') !important;
 }
 
 .tier-gold {
-  border: 2px solid #ffd700;
-  background-image: url('/assets/backgrounds/Gold.jpg');
+  border: 2px solid #ffd700 !important;
+  background-image: url('/assets/backgrounds/Gold.jpg') !important;
   transform: translateZ(0);
   will-change: opacity, box-shadow;
   animation: goldPulse 2.5s infinite ease-in-out;

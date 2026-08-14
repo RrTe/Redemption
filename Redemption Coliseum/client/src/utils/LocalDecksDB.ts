@@ -46,7 +46,7 @@ export class LocalDecksDB {
 
   // --- Directories (Desktop Mode) ---
 
-  public async getDirectoryHandle(key: "source_dir" | "target_dir"): Promise<any | null> {
+  public async getDirectoryHandle(key: "source_dir" | "target_dir" | "prebuilt_target_dir" | string): Promise<any | null> {
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction("directories", "readonly");
@@ -58,7 +58,7 @@ export class LocalDecksDB {
     });
   }
 
-  public async saveDirectoryHandle(key: "source_dir" | "target_dir", handle: any): Promise<void> {
+  public async saveDirectoryHandle(key: "source_dir" | "target_dir" | "prebuilt_target_dir" | string, handle: any): Promise<void> {
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction("directories", "readwrite");

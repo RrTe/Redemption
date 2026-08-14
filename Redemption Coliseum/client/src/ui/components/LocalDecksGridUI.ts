@@ -189,8 +189,10 @@ export class LocalDecksGridUI {
     const tile = this.templateNode ? (this.templateNode.cloneNode(true) as HTMLElement) : this.createFallbackTile();
     const totalWins = (deck.stats?.wins?.full || 0) + (deck.stats?.wins?.partial || 0);
     const tierClass = this.getTierClass(totalWins);
-    const isPrebuilt = deck.category && deck.category.toLowerCase() !== "local";
-    tile.className = `deck-tile ${tierClass} ${isPrebuilt ? "prebuild-deck-tile" : ""}`;
+    const isReadOnly = Boolean(deck.category && deck.category.toLowerCase() !== "local");
+    const catKey = (deck.category || "starter").toLowerCase();
+    const prebuiltClass = isReadOnly ? `prebuild-deck-tile prebuild-cat-${catKey} is-read-only` : "";
+    tile.className = `deck-tile ${tierClass} ${prebuiltClass}`;
 
     // 1. Header
     const titleSpan = tile.querySelector(".deck-tile-title") as HTMLElement;
@@ -199,17 +201,13 @@ export class LocalDecksGridUI {
     }
 
     const deleteBtn = tile.querySelector(".deck-tile-delete-btn") as HTMLButtonElement;
-    if (deleteBtn) {
-      if (isPrebuilt) {
-        deleteBtn.style.display = "none";
-      } else {
-        this.db.getDirectoryHandle("target_dir").then((targetDir) => {
-          const hasDiskFolder = "showDirectoryPicker" in window && !!targetDir;
-          deleteBtn.title = hasDiskFolder
-            ? "Delete Deck from Local List & Disk"
-            : "Delete Deck from Local List";
-        });
-      }
+    if (deleteBtn && !isReadOnly) {
+      this.db.getDirectoryHandle("target_dir").then((targetDir) => {
+        const hasDiskFolder = "showDirectoryPicker" in window && !!targetDir;
+        deleteBtn.title = hasDiskFolder
+          ? "Delete Deck from Local List & Disk"
+          : "Delete Deck from Local List";
+      });
 
       deleteBtn.onclick = async (e) => {
         e.stopPropagation();
@@ -248,7 +246,7 @@ export class LocalDecksGridUI {
     }
 
     const editBtn = tile.querySelector(".deck-tile-edit-btn") as HTMLButtonElement;
-    if (editBtn) {
+    if (editBtn && !isReadOnly) {
       editBtn.onclick = (e) => {
         e.stopPropagation();
         if (titleSpan) this.enableInlineRename(titleSpan, deck, callbacks);

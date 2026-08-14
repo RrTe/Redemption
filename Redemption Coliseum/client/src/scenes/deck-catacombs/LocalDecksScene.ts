@@ -14,6 +14,7 @@ import { DeckHeaderFilterUI, type DeckFilterOptions } from "../../ui/components/
 import { TROPHY_THRESHOLDS, TIER_CONFIG } from "../../config/BrigadeConfig";
 import { CardRepository } from "../../../../shared/CardRepository.js";
 import { PrebuiltDeckLoader } from "../../managers/PrebuiltDeckLoader";
+import { PrebuiltSyncManager } from "../../managers/PrebuiltSyncManager";
 
 export class LocalDecksScene extends Phaser.Scene {
   private soundManager!: SoundManager;
@@ -188,27 +189,47 @@ export class LocalDecksScene extends Phaser.Scene {
     }
     const cachedDecks = await this.db.getAllCachedMetadata();
     const cardDatabase = this.registry.get("cardDatabase")?.cards || [];
-    this.allDecks = cachedDecks;
+    this.allDecks = cachedDecks.filter((d) => !d.category || d.category.toLowerCase() === "local");
 
-    log("LocalDecksScene", `Loaded ${cachedDecks.length} decks from cache.`);
+    log("LocalDecksScene", `Loaded ${this.allDecks.length} local decks from cache.`);
 
     if (this.statusText) this.statusText.setVisible(false);
 
     if (this.headerFilterUI) this.headerFilterUI.destroy();
     this.headerFilterUI = new DeckHeaderFilterUI(
       this,
-      (opts) => {
+      async (opts) => {
         this.lastFilterOptions = opts;
-        this.applyFiltersAndSort(opts, cardDatabase);
+        await this.applyFiltersAndSort(opts, cardDatabase);
       },
       {
-        onSync: () => this.showOnboarding(),
+        onSync: async () => {
+          if (this.headerFilterUI?.deckMode === "prebuilt") {
+            await PrebuiltSyncManager.syncPrebuiltDecks(true);
+            if (this.lastFilterOptions) {
+              await this.applyFiltersAndSort(this.lastFilterOptions, cardDatabase);
+            }
+          } else {
+            this.showOnboarding();
+          }
+        },
         onReset: async () => {
-          const confirmed = window.confirm("Do you really want to reset local deck folder settings?");
-          if (confirmed) {
-            await this.db.clearAll();
-            log("LocalDecksScene", "Storage reset by user button.");
-            this.scene.restart();
+          if (this.headerFilterUI?.deckMode === "prebuilt") {
+            const confirmed = window.confirm("Do you really want to reset prebuilt deck folder settings?");
+            if (confirmed) {
+              await PrebuiltSyncManager.resetPrebuiltDirectory();
+              log("LocalDecksScene", "Prebuilt folder reset by user.");
+              if (this.lastFilterOptions) {
+                await this.applyFiltersAndSort(this.lastFilterOptions, cardDatabase);
+              }
+            }
+          } else {
+            const confirmed = window.confirm("Do you really want to reset local deck folder settings?");
+            if (confirmed) {
+              await this.db.clearAll();
+              log("LocalDecksScene", "Storage reset by user button.");
+              this.scene.restart();
+            }
           }
         },
         onOpenDeckEditor: () => {
@@ -222,15 +243,15 @@ export class LocalDecksScene extends Phaser.Scene {
       }
     );
 
-    this.headerFilterUI.createUI(this.scale.width, 0, cachedDecks.length);
+    this.headerFilterUI.createUI(this.scale.width, 0, this.allDecks.length);
 
     if (this.lastFilterOptions) {
-      this.applyFiltersAndSort(this.lastFilterOptions, cardDatabase);
+      await this.applyFiltersAndSort(this.lastFilterOptions, cardDatabase);
     } else {
-      this.renderGrid(cachedDecks, cardDatabase);
+      this.renderGrid(this.allDecks, cardDatabase);
     }
 
-    if (cachedDecks.length === 0) {
+    if (this.allDecks.length === 0) {
       const source = await this.db.getDirectoryHandle("source_dir");
       const target = await this.db.getDirectoryHandle("target_dir");
       if (!source || !target) {
@@ -241,11 +262,11 @@ export class LocalDecksScene extends Phaser.Scene {
     await this.updateStaticFooter();
   }
 
-  private applyFiltersAndSort(opts: DeckFilterOptions, cardDatabase: any[]) {
+  private async applyFiltersAndSort(opts: DeckFilterOptions, cardDatabase: any[]) {
     const isPrebuiltMode = opts.deckMode === "prebuilt";
     const sourceDecks = isPrebuiltMode
-      ? PrebuiltDeckLoader.loadAllPrebuiltDecks()
-      : this.allDecks;
+      ? await PrebuiltSyncManager.syncPrebuiltDecks()
+      : this.allDecks.filter((d) => !d.category || d.category.toLowerCase() === "local");
 
     let result = [...sourceDecks];
 
@@ -497,12 +518,20 @@ export class LocalDecksScene extends Phaser.Scene {
       document.body.appendChild(this.footerEl);
     }
 
+    const isPrebuiltMode = this.headerFilterUI?.deckMode === "prebuilt";
+
     if ("showDirectoryPicker" in window) {
-      const source = await this.db.getDirectoryHandle("source_dir");
-      const target = await this.db.getDirectoryHandle("target_dir");
-      const sourceName = source ? source.name : "Not Linked";
-      const targetName = target ? target.name : "Not Linked";
-      this.footerEl.innerHTML = `<span><strong>Source Folder:</strong> ${sourceName}</span><span>|</span><span><strong>Target Folder:</strong> ${targetName}</span>`;
+      if (isPrebuiltMode) {
+        const target = await this.db.getDirectoryHandle("prebuilt_target_dir");
+        const targetName = target ? target.name : "Not Linked";
+        this.footerEl.innerHTML = `<span><strong>Source Folder:</strong> App Assets</span><span>|</span><span><strong>Target Folder:</strong> ${targetName}</span>`;
+      } else {
+        const source = await this.db.getDirectoryHandle("source_dir");
+        const target = await this.db.getDirectoryHandle("target_dir");
+        const sourceName = source ? source.name : "Not Linked";
+        const targetName = target ? target.name : "Not Linked";
+        this.footerEl.innerHTML = `<span><strong>Source Folder:</strong> ${sourceName}</span><span>|</span><span><strong>Target Folder:</strong> ${targetName}</span>`;
+      }
     } else {
       this.footerEl.innerHTML = `<span><strong>Storage Mode:</strong> Virtual DB (PWA)</span>`;
     }
