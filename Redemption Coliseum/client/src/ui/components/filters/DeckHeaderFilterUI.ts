@@ -356,8 +356,8 @@ export class DeckHeaderFilterUI {
       .setDepth(21);
 
     // Dynamic Search Input Field (Height 32px 1:1 TextFilterView)
-    const inputX = this.countLabel.x + this.countLabel.width + 10 * scale;
-    const inputWidth = 150 * scale;
+    const inputX = padX + 260 * scale;
+    const inputWidth = 165 * scale;
     const inputHeight = 32;
 
     const style: any = {
@@ -405,11 +405,12 @@ export class DeckHeaderFilterUI {
     });
 
     // Checkboxes (Labels at centerRow2Y - 10, Checkboxes centered at centerRow2Y + 10)
-    const labelStartX = inputX + inputWidth + 6 * scale;
+    const labelStartX = inputX + inputWidth + 10 * scale;
     const textFilterFontSize = Math.max(12, Math.min(24, Math.round(24 * 0.9 * scale)));
 
-    const cb1X = labelStartX + 15 * scale;
-    const cb2X = labelStartX + 65 * scale;
+    const toggleSpacingX = 36 * scale;
+    const cb1X = labelStartX + 18 * scale;
+    const cb2X = cb1X + toggleSpacingX;
 
     // Label: Name:
     this.nameLabel = this.scene.add
@@ -443,7 +444,6 @@ export class DeckHeaderFilterUI {
     ];
 
     const toggleScale = 0.14 * scale;
-    const toggleSpacingX = 50 * scale;
     this.checkboxToggleGroup = new IconToggleGroup(
       this.scene,
       cb1X,
@@ -472,7 +472,7 @@ export class DeckHeaderFilterUI {
     });
 
     // 4b. Category Filter Buttons (Starter, Contender, Challenger, Champion)
-    const categoryStartX = cb2X + 45 * scale;
+    const categoryStartX = cb2X + 32 * scale;
     this.createCategoryFilterControls(categoryStartX, centerRow2Y, scale);
 
     // 4c. Mode Radio Controls (Local Decks vs Prebuild Decks)
@@ -705,7 +705,7 @@ export class DeckHeaderFilterUI {
 
   private emitChange(): void {
     const val = (this.textFilterElem?.node as HTMLInputElement)?.value || "";
-    
+
     // Read active brigade & tier filters
     const brigadeIds = this.brigadeToggleGroup ? this.brigadeToggleGroup.getSelectedIds() : [];
     const isAndMode = brigadeIds.includes("brigade_AndFilter");
@@ -903,7 +903,7 @@ export class DeckHeaderFilterUI {
       .setDepth(21)
       .setInteractive({ useHandCursor: true });
 
-    this.radioPrebuiltTxt = this.scene.add.bitmapText(r1X + 14 * scale, r2Y, fontKey, "Prebuild Decks", fontSize)
+    this.radioPrebuiltTxt = this.scene.add.bitmapText(r1X + 14 * scale, r2Y, fontKey, "Prebuilt Decks", fontSize)
       .setOrigin(0, 0.5)
       .setTint(0xcccccc)
       .setDepth(21)

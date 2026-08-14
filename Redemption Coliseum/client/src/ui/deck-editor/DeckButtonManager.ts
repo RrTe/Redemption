@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { editorEvents } from "./EditorEventCenter";
+import { TooltipManager } from "../managers/TooltipManager";
 
 export class DeckButtonManager {
   private scene: Phaser.Scene;
@@ -37,7 +38,9 @@ export class DeckButtonManager {
     hoverScale: number,
     eventName: string,
     sfxKey?: string,
-    scale: number = 0.17
+    scale: number = 0.17,
+    tooltipKey?: string,
+    tooltipDir: "top" | "bottom" | "auto" = "bottom"
   ): Phaser.GameObjects.Image {
     const button = this.scene.add.image(x, y, texture).setScale(scale);
     button.setDepth(970); // searchAreaDepth - 30
@@ -52,14 +55,19 @@ export class DeckButtonManager {
     button.on("pointerover", () => {
       button.setScale(scale * (1 + hoverScale));
       this.drawHoverFrame(hoverFrame, button);
+      const bounds = button.getBounds();
+      const resolvedTooltipKey = tooltipKey || `button_${key.replace(/Button$/, "").toLowerCase()}`;
+      TooltipManager.show(bounds.centerX, bounds.top, resolvedTooltipKey, tooltipDir, bounds.height);
     });
 
     button.on("pointerout", () => {
+      TooltipManager.hide();
       button.setScale(scale);
       hoverFrame.setVisible(false);
     });
 
     button.on("pointerup", () => {
+      TooltipManager.hide();
       if (sfxKey) {
         this.scene.game.events.emit("playSound", sfxKey);
       }
@@ -101,6 +109,7 @@ export class DeckButtonManager {
       button.setInteractive();
       button.setAlpha(1.0);
     } else {
+      TooltipManager.hide();
       button.disableInteractive();
       button.setAlpha(0.5);
       
@@ -116,6 +125,7 @@ export class DeckButtonManager {
   }
 
   public destroy() {
+    TooltipManager.hide();
     editorEvents.off("deck-changed", this.onDeckChanged, this);
     this.buttons.forEach((btn) => btn.destroy());
     this.hoverFrames.forEach((frame) => frame.destroy());

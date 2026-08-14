@@ -1026,6 +1026,8 @@ export class DeckEditorScene extends Phaser.Scene {
       "load-deck",
       "DECK_CTRL_CLICK",
       buttonScale,
+      "button_load",
+      "bottom",
     );
     this.buttonManager.createButton(
       "saveButton",
@@ -1036,6 +1038,8 @@ export class DeckEditorScene extends Phaser.Scene {
       "save-deck",
       "DECK_CTRL_CLICK",
       buttonScale,
+      "button_save",
+      "bottom",
     );
     this.buttonManager.createButton(
       "shareButton",
@@ -1046,6 +1050,8 @@ export class DeckEditorScene extends Phaser.Scene {
       "share-deck",
       "DECK_CTRL_CLICK",
       buttonScale,
+      "button_share",
+      "bottom",
     );
     this.buttonManager.createButton(
       "loadLackeyButton",
@@ -1056,6 +1062,8 @@ export class DeckEditorScene extends Phaser.Scene {
       "load-deck-lackey",
       "DECK_CTRL_CLICK",
       buttonScale,
+      "button_load_lackey",
+      "bottom",
     );
     this.buttonManager.createButton(
       "saveLackeyButton",
@@ -1066,6 +1074,8 @@ export class DeckEditorScene extends Phaser.Scene {
       "save-deck-lackey",
       "DECK_CTRL_CLICK",
       buttonScale,
+      "button_save_lackey",
+      "bottom",
     );
     this.buttonManager.createButton(
       "deckMetricsButton",
@@ -1076,6 +1086,8 @@ export class DeckEditorScene extends Phaser.Scene {
       "show-deck-metrics",
       "DECK_CTRL_CLICK",
       buttonScale,
+      "button_deck_metrics",
+      "bottom",
     );
     this.buttonManager.createButton(
       "clearButton",
@@ -1086,6 +1098,8 @@ export class DeckEditorScene extends Phaser.Scene {
       "clear-deck",
       "DECK_CTRL_CLICK",
       buttonScale,
+      "button_clear",
+      "bottom",
     );
     this.buttonManager.createButton(
       "battleButton",
@@ -1096,6 +1110,8 @@ export class DeckEditorScene extends Phaser.Scene {
       "battle-start",
       "MENU_SELECT",
       buttonScale,
+      "button_battle",
+      "bottom",
     );
 
     // Initialize button enabled/disabled states
@@ -1142,6 +1158,7 @@ export class DeckEditorScene extends Phaser.Scene {
         sfxChecked: "DECK_CHECK_SELECT",
         sfxUnchecked: "DECK_CHECK_DESELECT",
         initialSelectedIds: symbolFilters.filter((s) => manager.isFilterActive(s.id)).map((s) => s.id),
+        tooltipDir: "bottom",
       },
     );
     symbolGroup.setDepth(15);
@@ -1173,6 +1190,7 @@ export class DeckEditorScene extends Phaser.Scene {
         sfxChecked: "DECK_CHECK_SELECT",
         sfxUnchecked: "DECK_CHECK_DESELECT",
         initialSelectedIds: brigadeFilters.filter((b) => manager.isFilterActive(b.id)).map((b) => b.id),
+        tooltipDir: "top",
       },
     );
     brigadeGroup.setDepth(15);

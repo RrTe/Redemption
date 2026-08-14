@@ -55,6 +55,7 @@ export class SelectionDialogFilterView {
     const symbolFilters = this.filterManager.getFiltersByCategory("symbol");
     const symbolToggleItems = symbolFilters.map((s) => ({
       id: s.id,
+      label: s.label,
       texture: `${s.id}_med`,
       frame: 0,
       attribute: s.rules[0]?.field,
@@ -81,6 +82,7 @@ export class SelectionDialogFilterView {
         sfxChecked: "DECK_CHECK_SELECT",
         sfxUnchecked: "DECK_CHECK_DESELECT",
         initialSelectedIds: symbolFilters.filter((s) => this.filterManager.isFilterActive(s.id)).map((s) => s.id),
+        tooltipDir: "bottom",
       }
     );
     this.symbolGroup.setDepth(15);
@@ -89,6 +91,7 @@ export class SelectionDialogFilterView {
     const brigadeFilters = this.filterManager.getFiltersByCategory("brigade");
     const brigadeToggleItems = brigadeFilters.map((b) => ({
       id: b.id,
+      label: b.label,
       texture: `${b.id}_med`,
       frame: 0,
       attribute: b.rules[0]?.field,
@@ -115,6 +118,7 @@ export class SelectionDialogFilterView {
         sfxChecked: "DECK_CHECK_SELECT",
         sfxUnchecked: "DECK_CHECK_DESELECT",
         initialSelectedIds: brigadeFilters.filter((b) => this.filterManager.isFilterActive(b.id)).map((b) => b.id),
+        tooltipDir: "top",
       }
     );
     this.brigadeGroup.setDepth(15);

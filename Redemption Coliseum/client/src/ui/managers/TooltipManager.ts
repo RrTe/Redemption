@@ -61,10 +61,16 @@ export class TooltipManager {
     if (preferredDir === "bottom") {
       // Position below target's bottom edge
       top = topYPx + targetHeight + TOOLTIP_CONFIG.offsetY;
+      if (
+        top + rect.height > window.innerHeight - screenPadding &&
+        topYPx - rect.height - TOOLTIP_CONFIG.offsetY >= TOOLTIP_CONFIG.minTopPadding
+      ) {
+        top = topYPx - rect.height - TOOLTIP_CONFIG.offsetY;
+      }
     } else {
       // Position above target's top edge
       top = topYPx - rect.height - TOOLTIP_CONFIG.offsetY;
-      if (preferredDir === "auto" && top < TOOLTIP_CONFIG.minTopPadding) {
+      if (top < TOOLTIP_CONFIG.minTopPadding) {
         top = topYPx + targetHeight + TOOLTIP_CONFIG.offsetY;
       }
     }

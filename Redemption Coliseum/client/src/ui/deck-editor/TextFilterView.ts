@@ -128,6 +128,7 @@ export class TextFilterView {
     // 5. Generate IconToggleGroup for search field categories (acting as checkboxes)
     const toggleItems = textFilters.map((filter) => ({
       id: filter.id,
+      label: `Filter by ${filter.label}`,
       texture: "checkBoxUnChecked",
       frame: 0,
       altTexture: "checkBoxChecked",
@@ -156,6 +157,7 @@ export class TextFilterView {
         sfxHover: "DECK_CHECK_HOVER",
         sfxChecked: "DECK_CHECK_SELECT",
         sfxUnchecked: "DECK_CHECK_DESELECT",
+        tooltipDir: "top",
       },
     );
     this.toggleGroup.setDepth(35);

@@ -8,6 +8,14 @@ export const tooltipConfig: Record<string, string> = {
   button_exit: "Exit",
   button_exit_to_catacombs: "Exit to Deck Catacombs",
   button_exit_to_hub: "Exit to Main Hub",
+  button_load: "Load Deck (JSON)",
+  button_save: "Save Deck (JSON)",
+  button_share: "Share Deck (Copy Code)",
+  button_load_lackey: "Import Deck (LackeyCCG)",
+  button_save_lackey: "Export Deck (LackeyCCG)",
+  button_deck_metrics: "Deck Metrics & Statistics",
+  button_clear: "Clear Deck",
+  button_battle: "Start Battle / Enter Lobby",
   
   // Sort Buttons
   sort_name_asc: "Sort Alphabetically (A to Z)",
