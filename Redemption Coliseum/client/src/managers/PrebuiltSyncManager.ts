@@ -14,7 +14,11 @@ export class PrebuiltSyncManager {
    * @param forcePromptFolder If true, prompts native showDirectoryPicker for prebuilt_target_dir.
    * @returns Array of all local prebuilt decks after synchronization.
    */
-  public static async syncPrebuiltDecks(forcePromptFolder: boolean = false): Promise<DeckMetadata[]> {
+  public static async syncPrebuiltDecks(
+    forcePromptFolder: boolean = false,
+    onProgress?: (current: number, total: number, deckName?: string) => void,
+    onDiskProgress?: (written: number, total: number) => void
+  ): Promise<DeckMetadata[]> {
     const projectDecks = PrebuiltDeckLoader.loadAllPrebuiltDecks();
     const cachedDecks = await this.db.getAllCachedMetadata();
 
@@ -39,8 +43,19 @@ export class PrebuiltSyncManager {
 
     // 2. Process each project prebuilt deck
     let bulkAction: ConflictAction | null = null;
+    let processed = 0;
+    let writtenCount = 0;
+    const total = projectDecks.length;
+
+    const metasToSave: DeckMetadata[] = [];
+    const virtualsToSave: WrappedDeck[] = [];
 
     for (const projectDeck of projectDecks) {
+      processed++;
+      if (onProgress) {
+        onProgress(processed, total, projectDeck.name);
+      }
+
       const wrappedProject = PrebuiltDeckLoader.getWrappedDeck(projectDeck.name);
       if (!wrappedProject) continue;
 
@@ -49,10 +64,14 @@ export class PrebuiltSyncManager {
       if (!cachedCopy) {
         // Case A: New Prebuilt Deck -> Auto-insert into LocalDecksDB & Disk
         log("PrebuiltSyncManager", `Auto-inserting new prebuilt deck: "${projectDeck.name}"`);
-        await this.db.saveCachedMetadata(projectDeck);
-        await this.db.saveVirtualDeck(wrappedProject);
+        metasToSave.push(projectDeck);
+        virtualsToSave.push(wrappedProject);
         if (targetHandle) {
           await this.writeDeckToDisk(targetHandle, wrappedProject);
+          writtenCount++;
+          if (onDiskProgress) {
+            onDiskProgress(writtenCount, total);
+          }
         }
       } else {
         const projModified = projectDeck.lastModified || 0;
@@ -83,18 +102,26 @@ export class PrebuiltSyncManager {
               meta: updatedMeta,
               deckData: wrappedProject.deckData,
             };
-            await this.db.saveCachedMetadata(updatedMeta);
-            await this.db.saveVirtualDeck(updatedWrapped);
+            metasToSave.push(updatedMeta);
+            virtualsToSave.push(updatedWrapped);
             if (targetHandle) {
               await this.writeDeckToDisk(targetHandle, updatedWrapped);
+              writtenCount++;
+              if (onDiskProgress) {
+                onDiskProgress(writtenCount, total);
+              }
             }
             log("PrebuiltSyncManager", `Updated prebuilt deck "${projectDeck.name}" (stats preserved).`);
           } else if (action === "update_reset_stats" || action === "update_reset_stats_all") {
             // Overwrite cards, metadata & reset stats
-            await this.db.saveCachedMetadata(projectDeck);
-            await this.db.saveVirtualDeck(wrappedProject);
+            metasToSave.push(projectDeck);
+            virtualsToSave.push(wrappedProject);
             if (targetHandle) {
               await this.writeDeckToDisk(targetHandle, wrappedProject);
+              writtenCount++;
+              if (onDiskProgress) {
+                onDiskProgress(writtenCount, total);
+              }
             }
             log("PrebuiltSyncManager", `Updated prebuilt deck "${projectDeck.name}" (stats reset).`);
           } else {
@@ -105,7 +132,20 @@ export class PrebuiltSyncManager {
       }
     }
 
+    // Batch save all metadata and virtual decks in a single IndexedDB transaction
+    if (metasToSave.length > 0) {
+      await this.db.saveCachedMetadataBatch(metasToSave);
+      await this.db.saveVirtualDeckBatch(virtualsToSave);
+    }
+
     // 3. Return refreshed list of prebuilt decks from LocalDecksDB
+    return this.getCachedPrebuiltDecks();
+  }
+
+  /**
+   * Gets all currently cached prebuilt decks from LocalDecksDB without triggering sync.
+   */
+  public static async getCachedPrebuiltDecks(): Promise<DeckMetadata[]> {
     const allCached = await this.db.getAllCachedMetadata();
     return allCached.filter((d) => d.category && d.category.toLowerCase() !== "local");
   }

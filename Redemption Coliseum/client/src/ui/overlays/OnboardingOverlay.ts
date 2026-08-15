@@ -1,7 +1,11 @@
 export class OnboardingOverlay {
   private static overlayContainer: HTMLElement | null = null;
 
-  public static show(onConfirm: () => void, onCancel?: () => void) {
+  public static show(
+    onConfirm: () => void,
+    onCancel?: () => void,
+    mode: "local" | "prebuilt" = "local"
+  ) {
     if (this.overlayContainer) return;
 
     // Create container
@@ -81,25 +85,45 @@ export class OnboardingOverlay {
     description.style.fontSize = "16px";
     description.style.lineHeight = "1.5";
     description.style.marginBottom = "30px";
-    
-    if (isDesktop) {
-      description.innerHTML = `
-        To import your existing decks into Redemption Coliseum, we need to link two folders:<br><br>
-        <strong>1. Source Folder:</strong> Your existing LackeyCCG deck folder.<br>
-        <strong>2. Target Folder:</strong> The Coliseum folder where we will store the upgraded .json versions (including your stats!).<br><br>
-        Click the button below to select these folders and begin the initiation.
-      `;
+
+    let btnText = "Link Folders Now";
+
+    if (mode === "prebuilt") {
+      if (isDesktop) {
+        description.innerHTML = `
+          To install and synchronize prebuilt decks in Redemption Coliseum, we need to link your destination folder:<br><br>
+          <strong>Target Folder:</strong> The Coliseum folder where we will store the prebuilt .json versions (including your stats!).<br><br>
+          Click the button below to select this folder and begin the synchronization.
+        `;
+        btnText = "Link Folder Now";
+      } else {
+        description.innerHTML = `
+          You are in Mobile/PWA mode! Prebuilt decks are loaded from the application bundle into your virtual Coliseum storage.
+        `;
+        btnText = "OK";
+      }
     } else {
-      description.innerHTML = `
-        You are in Mobile/PWA mode! We use a virtual file system to store your decks securely on this device.<br><br>
-        Click the button below to upload your existing .txt or .dek files into your virtual Coliseum storage.
-      `;
+      if (isDesktop) {
+        description.innerHTML = `
+          To import your existing decks into Redemption Coliseum, we need to link two folders:<br><br>
+          <strong>1. Source Folder:</strong> Your existing LackeyCCG deck folder.<br>
+          <strong>2. Target Folder:</strong> The Coliseum folder where we will store the upgraded .json versions (including your stats!).<br><br>
+          Click the button below to select these folders and begin the initiation.
+        `;
+        btnText = "Link Folders Now";
+      } else {
+        description.innerHTML = `
+          You are in Mobile/PWA mode! We use a virtual file system to store your decks securely on this device.<br><br>
+          Click the button below to upload your existing .txt or .dek files into your virtual Coliseum storage.
+        `;
+        btnText = "Select Files";
+      }
     }
     modal.appendChild(description);
 
     // Confirm Button
     const confirmBtn = document.createElement("button");
-    confirmBtn.innerText = isDesktop ? "Link Folders Now" : "Select Files";
+    confirmBtn.innerText = btnText;
     confirmBtn.style.backgroundColor = "#b8860b";
     confirmBtn.style.color = "#ffffff";
     confirmBtn.style.border = "none";

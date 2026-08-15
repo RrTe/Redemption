@@ -70,10 +70,14 @@ export class LocalDecksDB {
     });
   }
 
+  private cleanDeckName(name: string): string {
+    return (name || "").replace(/\.(json|dek)$/i, "");
+  }
+
   // --- Deck Cache (Metadata for UI) ---
 
   public async getCachedMetadata(name: string): Promise<DeckMetadata | null> {
-    const cleanName = name.replace(/\.[^/.]+$/, "");
+    const cleanName = this.cleanDeckName(name);
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction("deck_cache", "readonly");
@@ -109,7 +113,7 @@ export class LocalDecksDB {
       const store = tx.objectStore("deck_cache");
       metas.forEach((meta) => {
         if (meta && meta.name) {
-          meta.name = meta.name.replace(/\.[^/.]+$/, "");
+          meta.name = this.cleanDeckName(meta.name);
         }
         store.put(meta);
       });
@@ -132,7 +136,7 @@ export class LocalDecksDB {
       const store = tx.objectStore("virtual_decks");
       wrappedDecks.forEach((wrappedDeck) => {
         if (wrappedDeck && wrappedDeck.meta && wrappedDeck.meta.name) {
-          wrappedDeck.meta.name = wrappedDeck.meta.name.replace(/\.[^/.]+$/, "");
+          wrappedDeck.meta.name = this.cleanDeckName(wrappedDeck.meta.name);
         }
         store.put(wrappedDeck);
       });
@@ -142,7 +146,7 @@ export class LocalDecksDB {
   }
 
   public async getVirtualDeck(name: string): Promise<WrappedDeck | null> {
-    const cleanName = name.replace(/\.[^/.]+$/, "");
+    const cleanName = this.cleanDeckName(name);
     const db = await this.initDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction("virtual_decks", "readonly");
@@ -167,7 +171,7 @@ export class LocalDecksDB {
   }
 
   public async deleteDeck(name: string): Promise<void> {
-    const cleanName = name.replace(/\.[^/.]+$/, "");
+    const cleanName = this.cleanDeckName(name);
     const db = await this.initDB();
 
     await new Promise<void>((resolve, reject) => {
@@ -191,14 +195,33 @@ export class LocalDecksDB {
 
   public async clearPrebuiltDecks(): Promise<void> {
     await this.saveDirectoryHandle("prebuilt_target_dir", null);
+    const db = await this.initDB();
 
-    const allMeta = await this.getAllCachedMetadata();
-    const prebuiltMetas = allMeta.filter((d) => d.category && d.category.toLowerCase() !== "local");
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(["deck_cache", "virtual_decks"], "readwrite");
+      const cacheStore = tx.objectStore("deck_cache");
+      const virtualStore = tx.objectStore("virtual_decks");
 
-    for (const meta of prebuiltMetas) {
-      await this.deleteDeck(meta.name);
-    }
-    log("LocalDecksDB", `Cleared ${prebuiltMetas.length} prebuilt decks from DB.`);
+      const req = cacheStore.getAll();
+      req.onsuccess = () => {
+        const items = req.result || [];
+        for (const item of items) {
+          if (item.category && item.category.toLowerCase() !== "local") {
+            cacheStore.delete(item.name);
+            virtualStore.delete(item.name);
+          }
+        }
+        // Purge residual orphaned keys with dots
+        cacheStore.delete("N.T");
+        virtualStore.delete("N.T");
+        cacheStore.delete("N");
+        virtualStore.delete("N");
+      };
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+
+    log("LocalDecksDB", "Cleared all prebuilt decks from DB.");
   }
 
   public async clearAll(): Promise<void> {

@@ -27,7 +27,7 @@ export class LocalDecksGridUI {
   private containerEl: HTMLElement | null = null;
   private db: LocalDecksDB;
   private scanner: LocalDeckScanner;
-  private templateNode: HTMLElement | null = null;
+  private static cachedTemplateNode: HTMLElement | null = null;
 
   constructor() {
     this.db = new LocalDecksDB();
@@ -36,18 +36,18 @@ export class LocalDecksGridUI {
   }
 
   private async getTemplateNode(): Promise<HTMLElement> {
-    if (this.templateNode) {
-      return this.templateNode.cloneNode(true) as HTMLElement;
+    if (LocalDecksGridUI.cachedTemplateNode) {
+      return LocalDecksGridUI.cachedTemplateNode.cloneNode(true) as HTMLElement;
     }
 
     try {
-      const resp = await fetch(`templates/deckTile.html?v=${Date.now()}`);
+      const resp = await fetch("templates/deckTile.html");
       const html = await resp.text();
       const wrapper = document.createElement("div");
       wrapper.innerHTML = html.trim();
       const tileEl = wrapper.querySelector(".deck-tile") as HTMLElement;
-      this.templateNode = tileEl || (wrapper.firstElementChild as HTMLElement);
-      return this.templateNode.cloneNode(true) as HTMLElement;
+      LocalDecksGridUI.cachedTemplateNode = tileEl || (wrapper.firstElementChild as HTMLElement);
+      return LocalDecksGridUI.cachedTemplateNode.cloneNode(true) as HTMLElement;
     } catch (err) {
       error("LocalDecksGridUI", "Failed to fetch deckTile.html template", err);
       return this.createFallbackTile();
@@ -186,7 +186,9 @@ export class LocalDecksGridUI {
     cardDatabase: any[],
     callbacks: LocalDecksGridCallbacks
   ): HTMLElement {
-    const tile = this.templateNode ? (this.templateNode.cloneNode(true) as HTMLElement) : this.createFallbackTile();
+    const tile = LocalDecksGridUI.cachedTemplateNode
+      ? (LocalDecksGridUI.cachedTemplateNode.cloneNode(true) as HTMLElement)
+      : this.createFallbackTile();
     const totalWins = (deck.stats?.wins?.full || 0) + (deck.stats?.wins?.partial || 0);
     const tierClass = this.getTierClass(totalWins);
     const isReadOnly = Boolean(deck.category && deck.category.toLowerCase() !== "local");

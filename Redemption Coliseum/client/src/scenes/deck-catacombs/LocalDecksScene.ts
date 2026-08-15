@@ -214,9 +214,12 @@ export class LocalDecksScene extends Phaser.Scene {
       {
         onSync: async () => {
           if (this.headerFilterUI?.deckMode === "prebuilt") {
-            await PrebuiltSyncManager.syncPrebuiltDecks(true);
-            if (this.lastFilterOptions) {
-              await this.applyFiltersAndSort(this.lastFilterOptions, cardDatabase);
+            const cachedPrebuilts = await PrebuiltSyncManager.getCachedPrebuiltDecks();
+            const target = await this.db.getDirectoryHandle("prebuilt_target_dir");
+            if (cachedPrebuilts.length === 0 || !target) {
+              this.showPrebuiltOnboarding();
+            } else {
+              await this.triggerPrebuiltSync();
             }
           } else {
             this.showOnboarding();
@@ -261,11 +264,18 @@ export class LocalDecksScene extends Phaser.Scene {
     this.lastFilterOptions = filterOptions;
     await this.applyFiltersAndSort(filterOptions, cardDatabase);
 
-    if (this.initialMode !== "prebuilt" && this.allDecks.length === 0) {
-      const source = await this.db.getDirectoryHandle("source_dir");
-      const target = await this.db.getDirectoryHandle("target_dir");
-      if (!source || !target) {
-        this.showOnboarding();
+    if (this.initialMode === "prebuilt") {
+      const cachedPrebuilts = await PrebuiltSyncManager.getCachedPrebuiltDecks();
+      if (cachedPrebuilts.length === 0) {
+        this.showPrebuiltOnboarding();
+      }
+    } else {
+      if (this.allDecks.length === 0) {
+        const source = await this.db.getDirectoryHandle("source_dir");
+        const target = await this.db.getDirectoryHandle("target_dir");
+        if (!source || !target) {
+          this.showOnboarding();
+        }
       }
     }
 
@@ -275,7 +285,7 @@ export class LocalDecksScene extends Phaser.Scene {
   private async applyFiltersAndSort(opts: DeckFilterOptions, cardDatabase: any[]) {
     const isPrebuiltMode = opts.deckMode === "prebuilt";
     const sourceDecks = isPrebuiltMode
-      ? await PrebuiltSyncManager.syncPrebuiltDecks()
+      ? await PrebuiltSyncManager.getCachedPrebuiltDecks()
       : this.allDecks.filter((d) => !d.category || d.category.toLowerCase() === "local");
 
     let result = [...sourceDecks];
@@ -641,8 +651,48 @@ export class LocalDecksScene extends Phaser.Scene {
       },
       () => {
         // Simple cancel: overlay hides itself, scene UI remains 100% intact
-      }
+      },
+      "local"
     );
+  }
+
+  private showPrebuiltOnboarding() {
+    OnboardingOverlay.show(
+      async () => {
+        await this.triggerPrebuiltSync();
+      },
+      () => {
+        // Simple cancel: overlay hides itself, scene UI remains 100% intact
+      },
+      "prebuilt"
+    );
+  }
+
+  private async triggerPrebuiltSync() {
+    const isDesktop = "showDirectoryPicker" in window;
+    ScanProgressOverlay.show("Synchronizing Prebuilt Decks...");
+    try {
+      const cardDatabase = this.registry.get("cardDatabase")?.cards || [];
+      await PrebuiltSyncManager.syncPrebuiltDecks(
+        isDesktop,
+        (current, total, deckName) => {
+          ScanProgressOverlay.updateProgress(current, total, deckName);
+        },
+        (written, total) => {
+          this.updateFooterDiskProgress(written, total);
+        }
+      );
+      ScanProgressOverlay.updateProgress(32, 32, "Rendering Decks...");
+      if (this.lastFilterOptions) {
+        await this.applyFiltersAndSort(this.lastFilterOptions, cardDatabase);
+      }
+    } catch (err) {
+      log("LocalDecksScene", "Prebuilt sync cancelled or failed", err);
+    } finally {
+      requestAnimationFrame(() => {
+        ScanProgressOverlay.hide();
+      });
+    }
   }
 
   private async triggerScan() {
@@ -651,8 +701,11 @@ export class LocalDecksScene extends Phaser.Scene {
     try {
       await this.scanner.scanDecks(
         async () => {
-          ScanProgressOverlay.hide();
+          ScanProgressOverlay.updateProgress(100, 100, "Rendering Decks...");
           await this.initializeDecks();
+          requestAnimationFrame(() => {
+            ScanProgressOverlay.hide();
+          });
         },
         (current, total, filename) => {
           ScanProgressOverlay.updateProgress(current, total, filename);
@@ -663,7 +716,6 @@ export class LocalDecksScene extends Phaser.Scene {
       );
     } catch (err) {
       log("LocalDecksScene", "Scan cancelled or failed", err);
-    } finally {
       ScanProgressOverlay.hide();
     }
   }
