@@ -28,15 +28,24 @@ export class LocalDecksScene extends Phaser.Scene {
   private headerFilterUI!: DeckHeaderFilterUI;
   private allDecks: DeckMetadata[] = [];
   private lastFilterOptions: DeckFilterOptions | null = null;
+  private initialMode: "local" | "prebuilt" = "local";
 
   constructor() {
     super("LocalDecksScene");
+  }
+
+  init(data?: { initialMode?: "local" | "prebuilt" }) {
+    this.initialMode = data?.initialMode || "local";
   }
 
   preload() {
     this.load.image(
       "deck_catacombs_bg",
       "assets/backgrounds/Copilot_20260517_235633_Catacombs.png"
+    );
+    this.load.image(
+      "btn_local_decks",
+      "assets/backgrounds/Copilot_20260720_233159_Chest.png"
     );
 
     // UI elements
@@ -218,10 +227,12 @@ export class LocalDecksScene extends Phaser.Scene {
             const confirmed = window.confirm("Do you really want to reset prebuilt deck folder settings?");
             if (confirmed) {
               await PrebuiltSyncManager.resetPrebuiltDirectory();
-              log("LocalDecksScene", "Prebuilt folder reset by user.");
-              if (this.lastFilterOptions) {
-                await this.applyFiltersAndSort(this.lastFilterOptions, cardDatabase);
+              log("LocalDecksScene", "Prebuilt decks and folder reset by user.");
+              this.renderGrid([], cardDatabase, { isPrebuilt: true });
+              if (this.headerFilterUI) {
+                this.headerFilterUI.updateCountText(0, 0);
               }
+              await this.updateStaticFooter();
             }
           } else {
             const confirmed = window.confirm("Do you really want to reset local deck folder settings?");
@@ -240,18 +251,17 @@ export class LocalDecksScene extends Phaser.Scene {
             backgroundKey: "btn_deck_editor",
           });
         }
-      }
+      },
+      this.initialMode
     );
 
     this.headerFilterUI.createUI(this.scale.width, 0, this.allDecks.length);
 
-    if (this.lastFilterOptions) {
-      await this.applyFiltersAndSort(this.lastFilterOptions, cardDatabase);
-    } else {
-      this.renderGrid(this.allDecks, cardDatabase);
-    }
+    const filterOptions = this.lastFilterOptions || this.headerFilterUI.getCurrentFilterOptions();
+    this.lastFilterOptions = filterOptions;
+    await this.applyFiltersAndSort(filterOptions, cardDatabase);
 
-    if (this.allDecks.length === 0) {
+    if (this.initialMode !== "prebuilt" && this.allDecks.length === 0) {
       const source = await this.db.getDirectoryHandle("source_dir");
       const target = await this.db.getDirectoryHandle("target_dir");
       if (!source || !target) {
@@ -371,6 +381,8 @@ export class LocalDecksScene extends Phaser.Scene {
     if (this.headerFilterUI) {
       this.headerFilterUI.updateCountText(result.length, sourceDecks.length);
     }
+
+    await this.updateStaticFooter();
 
     this.renderGrid(result, cardDatabase, { isPrebuilt: isPrebuiltMode });
   }

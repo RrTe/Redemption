@@ -67,11 +67,13 @@ export class DeckHeaderFilterUI {
   constructor(
     scene: Phaser.Scene,
     onFilterChange: (options: DeckFilterOptions) => void,
-    callbacks?: HeaderFilterCallbacks
+    callbacks?: HeaderFilterCallbacks,
+    initialDeckMode: "local" | "prebuilt" = "local"
   ) {
     this.scene = scene;
     this.onFilterChange = onFilterChange;
     this.callbacks = callbacks;
+    this.deckMode = initialDeckMode;
 
     const configData = scene.cache.json.get("filterConfig") || filterConfigData;
     this.filterManager = new FilterManager(configData);
@@ -343,12 +345,13 @@ export class DeckHeaderFilterUI {
 
     // Counter Label: vertically centered at centerRow2Y - 4 * scale with setOrigin(0, 0.5)
     const cardsSelectedFontSize = Math.max(16, Math.min(48, Math.round(26 * scale)));
+    const initialPrefix = this.deckMode === "prebuilt" ? "Prebuild Decks" : "Local Decks";
     this.countLabel = this.scene.add
       .bitmapText(
         padX + 25 * scale,
         centerRow2Y - 4 * scale,
         fontKey,
-        `Local Decks: ${totalDecksCount}/${totalDecksCount}`,
+        `${initialPrefix}: ${totalDecksCount}/${totalDecksCount}`,
         cardsSelectedFontSize
       )
       .setOrigin(0, 0.5)
@@ -703,7 +706,7 @@ export class DeckHeaderFilterUI {
     }
   }
 
-  private emitChange(): void {
+  public getCurrentFilterOptions(): DeckFilterOptions {
     const val = (this.textFilterElem?.node as HTMLInputElement)?.value || "";
 
     // Read active brigade & tier filters
@@ -729,7 +732,7 @@ export class DeckHeaderFilterUI {
     const searchInName = cbIds.includes("cb_name");
     const searchInCard = cbIds.includes("cb_card");
 
-    this.onFilterChange({
+    return {
       searchQuery: val.trim().toLowerCase(),
       searchInName,
       searchInCard,
@@ -740,7 +743,11 @@ export class DeckHeaderFilterUI {
       isAndMode,
       deckMode: this.deckMode,
       activeCategories: Array.from(this.activeCategoriesSet),
-    });
+    };
+  }
+
+  private emitChange(): void {
+    this.onFilterChange(this.getCurrentFilterOptions());
   }
 
   private createCategoryFilterControls(startX: number, centerY: number, scale: number): void {
@@ -820,7 +827,7 @@ export class DeckHeaderFilterUI {
       this.categoryButtonsMap.set(cat.id, { bg, txt, overlay });
     });
 
-    this.setCategoryButtonsVisible(false);
+    this.setCategoryButtonsVisible(this.deckMode === "prebuilt");
   }
 
   private setCategoryButtonsVisible(visible: boolean): void {
@@ -885,7 +892,9 @@ export class DeckHeaderFilterUI {
     const r1Y = centerY - 10 * scale;
     const r2Y = centerY + 10 * scale;
 
-    this.radioLocalImg = this.scene.add.image(r1X, r1Y, "radioButtonChecked")
+    const isLocal = this.deckMode === "local";
+
+    this.radioLocalImg = this.scene.add.image(r1X, r1Y, isLocal ? "radioButtonChecked" : "radioButtonUnchecked")
       .setOrigin(0.5, 0.5)
       .setScale(0.55 * scale)
       .setDepth(21)
@@ -893,11 +902,11 @@ export class DeckHeaderFilterUI {
 
     this.radioLocalTxt = this.scene.add.bitmapText(r1X + 14 * scale, r1Y, fontKey, "Local Decks", fontSize)
       .setOrigin(0, 0.5)
-      .setTint(0xffd700)
+      .setTint(isLocal ? 0xffd700 : 0xcccccc)
       .setDepth(21)
       .setInteractive({ useHandCursor: true });
 
-    this.radioPrebuiltImg = this.scene.add.image(r1X, r2Y, "radioButtonUnchecked")
+    this.radioPrebuiltImg = this.scene.add.image(r1X, r2Y, isLocal ? "radioButtonUnchecked" : "radioButtonChecked")
       .setOrigin(0.5, 0.5)
       .setScale(0.55 * scale)
       .setDepth(21)
@@ -905,7 +914,7 @@ export class DeckHeaderFilterUI {
 
     this.radioPrebuiltTxt = this.scene.add.bitmapText(r1X + 14 * scale, r2Y, fontKey, "Prebuilt Decks", fontSize)
       .setOrigin(0, 0.5)
-      .setTint(0xcccccc)
+      .setTint(isLocal ? 0xcccccc : 0xffd700)
       .setDepth(21)
       .setInteractive({ useHandCursor: true });
 

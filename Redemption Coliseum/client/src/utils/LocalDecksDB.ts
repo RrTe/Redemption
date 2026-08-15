@@ -189,7 +189,17 @@ export class LocalDecksDB {
     log("LocalDecksDB", `Successfully deleted deck "${cleanName}" from deck_cache and virtual_decks.`);
   }
 
-  // --- Reset / Clear ---
+  public async clearPrebuiltDecks(): Promise<void> {
+    await this.saveDirectoryHandle("prebuilt_target_dir", null);
+
+    const allMeta = await this.getAllCachedMetadata();
+    const prebuiltMetas = allMeta.filter((d) => d.category && d.category.toLowerCase() !== "local");
+
+    for (const meta of prebuiltMetas) {
+      await this.deleteDeck(meta.name);
+    }
+    log("LocalDecksDB", `Cleared ${prebuiltMetas.length} prebuilt decks from DB.`);
+  }
 
   public async clearAll(): Promise<void> {
     const db = await this.initDB();

@@ -26,16 +26,14 @@ export class PrebuiltSyncManager {
       }
     });
 
-    // 1. Directory Picker prompt for Desktop mode if requested or no target handle linked yet
+    // 1. Directory Picker prompt for Desktop mode if explicitly requested
     let targetHandle = await this.db.getDirectoryHandle("prebuilt_target_dir");
-    if ("showDirectoryPicker" in window && (forcePromptFolder || !targetHandle)) {
-      if (forcePromptFolder || !targetHandle) {
-        const picked = await DirectoryPicker.pickDirectory();
-        if (picked && picked.handle) {
-          targetHandle = picked.handle;
-          await this.db.saveDirectoryHandle("prebuilt_target_dir", targetHandle);
-          log("PrebuiltSyncManager", `Linked prebuilt_target_dir: ${picked.name}`);
-        }
+    if ("showDirectoryPicker" in window && forcePromptFolder) {
+      const picked = await DirectoryPicker.pickDirectory();
+      if (picked && picked.handle) {
+        targetHandle = picked.handle;
+        await this.db.saveDirectoryHandle("prebuilt_target_dir", targetHandle);
+        log("PrebuiltSyncManager", `Linked prebuilt_target_dir: ${picked.name}`);
       }
     }
 
@@ -113,11 +111,11 @@ export class PrebuiltSyncManager {
   }
 
   /**
-   * Resets the linked prebuilt directory handle.
+   * Resets prebuilt decks cache and directory handle.
    */
   public static async resetPrebuiltDirectory(): Promise<void> {
-    await this.db.saveDirectoryHandle("prebuilt_target_dir", null);
-    log("PrebuiltSyncManager", "Reset prebuilt_target_dir handle.");
+    await this.db.clearPrebuiltDecks();
+    log("PrebuiltSyncManager", "Reset prebuilt decks and directory handle.");
   }
 
   /**

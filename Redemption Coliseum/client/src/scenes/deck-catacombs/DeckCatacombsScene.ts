@@ -1,11 +1,10 @@
 import Phaser from "phaser";
 import { MenuTile, type MenuTileData } from "../../ui/components/MenuTile";
 import { type SoundManager } from "../../managers/SoundManager";
-import { DirectoryPicker } from "../../utils/DirectoryPicker";
 import { SidebarButton } from "../../ui/components/SidebarButton";
 import { SettingsDialogScene } from "../SettingsDialogScene";
 import { HelpOverlay } from "../../ui/overlays";
-import { log } from "../../utils/logger";
+
 export class DeckCatacombsScene extends Phaser.Scene {
   private soundManager!: SoundManager;
   private background!: Phaser.GameObjects.Image;
@@ -19,21 +18,19 @@ export class DeckCatacombsScene extends Phaser.Scene {
   }
 
   preload() {
-    // Background image
     this.load.image(
       "deck_catacombs_bg",
-      "assets/backgrounds/Copilot_20260517_235633_Catacombs.png"
-    );
-
-    // Tiles image placeholder
-    this.load.image(
-      "btn_catacombs_img",
       "assets/backgrounds/Copilot_20260517_235633_Catacombs.png"
     );
 
     this.load.image(
       "btn_local_decks",
       "assets/backgrounds/Copilot_20260720_233159_Chest.png"
+    );
+
+    this.load.image(
+      "btn_prebuilt_decks",
+      "assets/backgrounds/Copilot_20260815_001449-armory_compressed.jpg"
     );
 
     this.load.image(
@@ -88,17 +85,12 @@ export class DeckCatacombsScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
 
-    // Render background image stretch-fitted to game bounds using ENVELOP
     this.background = this.add.image(width / 2, height / 2, "deck_catacombs_bg");
     this.adjustBackgroundSize();
 
-    // Create 3 Menu Tiles
     this.createTiles(width, height);
-
-    // Create Side Buttons
     this.createSideButtons(width, height);
 
-    // Handle screen resize
     this.scale.on("resize", this.resize, this);
   }
 
@@ -111,7 +103,7 @@ export class DeckCatacombsScene extends Phaser.Scene {
       this,
       "button_settings",
       height * 0.18,
-      true, // Right side
+      true,
       () => {
         if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
         this.scene.pause();
@@ -123,7 +115,7 @@ export class DeckCatacombsScene extends Phaser.Scene {
       this,
       "button_exit",
       height * 0.18,
-      false, // Left side
+      false,
       () => {
         if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
         this.scene.start("HubScene");
@@ -135,7 +127,7 @@ export class DeckCatacombsScene extends Phaser.Scene {
       this,
       "button_help",
       height * 0.7,
-      false, // Left side
+      false,
       () => {
         if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
         HelpOverlay.toggle();
@@ -147,7 +139,6 @@ export class DeckCatacombsScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
 
-    // Scale background using ENVELOP logic (fill screen, no black borders, crop overflow)
     const scaleX = width / this.background.width;
     const scaleY = height / this.background.height;
     const scale = Math.max(scaleX, scaleY);
@@ -160,58 +151,80 @@ export class DeckCatacombsScene extends Phaser.Scene {
     this.buttons.forEach((b) => b.destroy());
     this.buttons = [];
 
-    const buttonData: MenuTileData[] = [
-      {
-        id: "local_decks",
-        imageKey: "btn_local_decks",
-        labelText: "Local Decks",
-        enabled: true,
-        comingSoon: false,
-        action: async () => {
-          if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
+    const targetWidth = Math.min(width * 0.34, height * 0.52);
+    const colLeftX = width * 0.30;
+    const colRightX = width * 0.70;
+    const rowTopY = height * 0.28;
+    const rowBottomY = height * 0.74;
 
-          this.scene.start("LocalDecksScene");
+    const tileConfigs: { data: MenuTileData; x: number; y: number }[] = [
+      {
+        data: {
+          id: "local_decks",
+          imageKey: "btn_local_decks",
+          labelText: "Local Decks",
+          enabled: true,
+          comingSoon: false,
+          action: () => {
+            if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
+            this.scene.start("LocalDecksScene", { initialMode: "local" });
+          },
         },
+        x: colLeftX,
+        y: rowTopY,
       },
       {
-        id: "community_decks",
-        imageKey: "btn_community_decks",
-        labelText: "Community Decks",
-        enabled: false,
-        comingSoon: false,
-        overlayImageKey: "chain_lock_overlay",
-        action: () => {
-          if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
+        data: {
+          id: "prebuilt_decks",
+          imageKey: "btn_prebuilt_decks",
+          labelText: "Prebuilt Decks",
+          enabled: true,
+          comingSoon: false,
+          action: () => {
+            if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
+            this.scene.start("LocalDecksScene", { initialMode: "prebuilt" });
+          },
         },
+        x: colLeftX,
+        y: rowBottomY,
       },
       {
-        id: "deck_editor",
-        imageKey: "btn_deck_editor",
-        labelText: "Deck Smith",
-        enabled: true,
-        comingSoon: false,
-        action: () => {
-          if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
-          this.scene.start("GameLoadingScene", {
-            targetScene: "DeckEditorScene",
-            backgroundKey: "btn_deck_editor",
-          });
+        data: {
+          id: "community_decks",
+          imageKey: "btn_community_decks",
+          labelText: "Community Decks",
+          enabled: false,
+          comingSoon: false,
+          overlayImageKey: "chain_lock_overlay",
+          action: () => {
+            if (this.soundManager) this.soundManager.playSound("UI_TOGGLE");
+          },
         },
+        x: colRightX,
+        y: rowTopY,
+      },
+      {
+        data: {
+          id: "deck_editor",
+          imageKey: "btn_deck_editor",
+          labelText: "Deck Smith",
+          enabled: true,
+          comingSoon: false,
+          action: () => {
+            if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
+            this.scene.start("GameLoadingScene", {
+              targetScene: "DeckEditorScene",
+              backgroundKey: "btn_deck_editor",
+            });
+          },
+        },
+        x: colRightX,
+        y: rowBottomY,
       },
     ];
 
-    // Layout settings for 3 tiles
-    const targetWidth = width * 0.25; // Slightly smaller to fit 3
-    const gap = width * 0.05;
-
-    // Calculate starting X so they are centered
-    const totalWidth = (targetWidth * 3) + (gap * 2);
-    const startX = (width - totalWidth) / 2 + targetWidth / 2;
-    const centerY = height * 0.55;
-
-    buttonData.forEach((data, index) => {
-      const posX = startX + index * (targetWidth + gap);
-      const tile = new MenuTile(this, posX, centerY, data, targetWidth);
+    tileConfigs.forEach((cfg) => {
+      const tile = new MenuTile(this, cfg.x, cfg.y, cfg.data, targetWidth);
       this.buttons.push(tile);
     });
   }
