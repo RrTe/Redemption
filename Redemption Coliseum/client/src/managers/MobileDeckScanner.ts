@@ -3,6 +3,7 @@ import { LocalDecksDB } from "../utils/LocalDecksDB";
 import { DeckUtils } from "../utils/DeckUtils";
 import { LocalDeckMetadataGenerator } from "./LocalDeckMetadataGenerator";
 import { ConflictResolutionManager, type ConflictAction } from "./ConflictResolutionManager";
+import { PrebuiltDeckLoader } from "./PrebuiltDeckLoader";
 import { log, error } from "../utils/logger";
 
 export class MobileDeckScanner {
@@ -156,9 +157,19 @@ export class MobileDeckScanner {
 
   public async updateDeckMetadataInVirtual(meta: DeckMetadata): Promise<void> {
     try {
-      const wrapped = await this.db.getVirtualDeck(meta.name);
-      if (wrapped) {
+      let wrapped = await this.db.getVirtualDeck(meta.name);
+      if (!wrapped) {
+        const projectWrapped = PrebuiltDeckLoader.getWrappedDeck(meta.name);
+        if (projectWrapped) {
+          wrapped = {
+            ...projectWrapped,
+            meta: meta,
+          };
+        }
+      } else {
         wrapped.meta = meta;
+      }
+      if (wrapped) {
         await this.db.saveVirtualDeck(wrapped);
         log("MobileDeckScanner", `Updated virtual deck metadata for ${meta.name}.`);
       }

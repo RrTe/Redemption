@@ -117,9 +117,11 @@ export class LobbyScene extends Phaser.Scene {
 
     if (this.initialDeckData) {
       this.dataManager.selectedDeck = this.initialDeckData;
-      const totalCards = this.initialDeckData.main.length + this.initialDeckData.reserve.length;
-      const deckName = this.initialDeckData.name || "Edited Deck";
-      this.uiManager.updateDeckButtonText(deckName, totalCards);
+      const mainCount = this.initialDeckData.main?.length || 0;
+      const reserveCount = this.initialDeckData.reserve?.length || 0;
+      const totalCards = mainCount + reserveCount;
+      const deckName = this.initialDeckData.name || "Selected Deck";
+      this.uiManager.updateDeckButtonText(deckName, totalCards, mainCount, reserveCount);
     }
 
     this.networkManager.connectToLobby();

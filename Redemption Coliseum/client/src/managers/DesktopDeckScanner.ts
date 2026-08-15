@@ -356,7 +356,17 @@ export class DesktopDeckScanner {
 
   public async updateDeckMetadataOnDisk(meta: DeckMetadata): Promise<void> {
     try {
-      const targetDir = await this.db.getDirectoryHandle("target_dir");
+      const isPrebuilt = Boolean(meta.category && meta.category.toLowerCase() !== "local");
+      const dirKey = isPrebuilt ? "prebuilt_target_dir" : "target_dir";
+      const targetDir = await this.db.getDirectoryHandle(dirKey);
+
+      // Always update virtual deck in IndexedDB
+      const wrapped = await this.db.getVirtualDeck(meta.name);
+      if (wrapped) {
+        wrapped.meta = meta;
+        await this.db.saveVirtualDeck(wrapped);
+      }
+
       if (!targetDir) return;
       const targetFileName = `${meta.name}.json`;
       const fileHandle = await targetDir.getFileHandle(targetFileName, { create: false });

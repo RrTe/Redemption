@@ -524,10 +524,6 @@ export class LocalDecksGridUI {
       tile.className = `deck-tile ${this.getTierClass(totalWins)}`;
 
       restoreNormalView();
-
-      if (callbacks.onDeckRenamed) {
-        callbacks.onDeckRenamed(deck, deck.name);
-      }
     };
 
     saveBtn.onclick = (e) => {

@@ -274,13 +274,19 @@ export class LobbyUIManager {
     this.updateScrollLimits(rooms.length);
   }
 
-  public updateDeckButtonText(filename: string, count: number) {
+  public updateDeckButtonText(filename: string, count: number, mainCount?: number, reserveCount?: number) {
     const textObj = this.deckSelectBtn.getByName(
       "text",
     ) as Phaser.GameObjects.BitmapText;
     const shortName =
       filename.length > 15 ? filename.substring(0, 12) + "..." : filename;
-    const newText = `Deck: ${shortName} (${count})`;
+    
+    let countLabel = `(${count})`;
+    if (mainCount !== undefined && reserveCount !== undefined && reserveCount > 0) {
+      countLabel = `(M:${mainCount} R:${reserveCount})`;
+    }
+
+    const newText = `Deck: ${shortName} ${countLabel}`;
     textObj.setText(newText);
 
     // Update eventuell vorhandenen Schatten

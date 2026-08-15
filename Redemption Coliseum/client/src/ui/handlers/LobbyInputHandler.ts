@@ -99,9 +99,12 @@ export class LobbyInputHandler {
       try {
         const deck = DeckUtils.parseDeck(content, fileName);
         this.dataManager.selectedDeck = deck;
-        const totalCards = deck.main.length + deck.reserve.length;
-        this.uiManager.updateDeckButtonText(fileName, totalCards);
-        this.dataManager.selectedDeck.name = fileName.replace(/\.[^/.]+$/, "");
+        const mainCount = deck.main.length;
+        const reserveCount = deck.reserve.length;
+        const totalCards = mainCount + reserveCount;
+        const cleanName = fileName.replace(/\.(json|dek|txt)$/i, "");
+        this.dataManager.selectedDeck.name = cleanName;
+        this.uiManager.updateDeckButtonText(cleanName, totalCards, mainCount, reserveCount);
       } catch (err: any) {
         log("Lobby", "Error parsing deck:", err);
         this.uiManager.statusText.setText(`Selection Failed: ${err?.message || "Invalid File"}`);

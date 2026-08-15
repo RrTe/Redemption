@@ -36,6 +36,7 @@ export class LocalDecksScene extends Phaser.Scene {
 
   init(data?: { initialMode?: "local" | "prebuilt" }) {
     this.initialMode = data?.initialMode || "local";
+    this.lastFilterOptions = null;
   }
 
   preload() {
@@ -190,6 +191,7 @@ export class LocalDecksScene extends Phaser.Scene {
     if (this.gridUI) this.gridUI.destroy();
     if (this.headerFilterUI) this.headerFilterUI.destroy();
     this.removeStaticFooter();
+    this.lastFilterOptions = null;
   }
 
   private async initializeDecks(skipDiskSync: boolean = false) {
@@ -260,7 +262,7 @@ export class LocalDecksScene extends Phaser.Scene {
 
     this.headerFilterUI.createUI(this.scale.width, 0, this.allDecks.length);
 
-    const filterOptions = this.lastFilterOptions || this.headerFilterUI.getCurrentFilterOptions();
+    const filterOptions = this.headerFilterUI.getCurrentFilterOptions();
     this.lastFilterOptions = filterOptions;
     await this.applyFiltersAndSort(filterOptions, cardDatabase);
 
@@ -413,10 +415,42 @@ export class LocalDecksScene extends Phaser.Scene {
           targetData: { deckName: deck.name }
         });
       },
-      onStartBattle: (deck) => {
+      onStartBattle: async (deck) => {
         if (this.soundManager) this.soundManager.playSound("MENU_SELECT");
         this.cleanup();
-        this.scene.start("LobbyScene", { selectedDeckName: deck.name });
+
+        let deckData: any = undefined;
+        try {
+          const isPrebuilt = Boolean(deck.category && deck.category.toLowerCase() !== "local");
+          let wrapped = await this.db.getVirtualDeck(deck.name);
+          if (!wrapped && isPrebuilt) {
+            wrapped = PrebuiltDeckLoader.getWrappedDeck(deck.name) || null;
+          }
+
+          if (wrapped && wrapped.deckData) {
+            const extractCardIds = (list: any[]) =>
+              (list || []).map((item) =>
+                typeof item === "object" && item !== null
+                  ? item.id || item.cardKey || item.Name || item.ImageFile
+                  : item
+              );
+            deckData = {
+              name: deck.name,
+              main: extractCardIds(wrapped.deckData.main),
+              reserve: extractCardIds(wrapped.deckData.reserve),
+            };
+          } else if (deck.cardIds && deck.cardIds.length > 0) {
+            deckData = {
+              name: deck.name,
+              main: [...deck.cardIds],
+              reserve: [],
+            };
+          }
+        } catch (err) {
+          log("LocalDecksScene", "Failed to load deck data for battle", err);
+        }
+
+        this.scene.start("LobbyScene", { deck: deckData });
       },
       onSelectChampions: (deck) => {
         this.handleSelectChampions(deck);

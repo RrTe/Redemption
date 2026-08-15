@@ -29,6 +29,10 @@ export class LocalDeckScanner {
       if (targetDir) {
         await this.desktopScanner.syncTargetJsonToCache(targetDir);
       }
+      const prebuiltDir = await this.db.getDirectoryHandle("prebuilt_target_dir");
+      if (prebuiltDir) {
+        await this.desktopScanner.syncTargetJsonToCache(prebuiltDir);
+      }
     }
     await this.mobileScanner.syncVirtualToCache();
   }
