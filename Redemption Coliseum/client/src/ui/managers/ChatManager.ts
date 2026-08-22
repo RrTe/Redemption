@@ -4,6 +4,7 @@ import { type GameNetworkManager } from "../../network/GameNetworkManager"; // �
 import { SoundManager } from "../../managers/SoundManager";
 import { type GameLayout } from "../layout"; // ✨ NEU
 import { type PreviewManager } from "./PreviewManager"; // ✨ NEU
+import { TooltipManager } from "./TooltipManager";
 
 export class ChatManager {
   private scene: Phaser.Scene;
@@ -156,9 +157,12 @@ export class ChatManager {
       .setTint(0xcccccc)
       .setDepth(9001); // Über dem Container
 
-    this.toggleButton.on("pointerdown", () => this.toggle());
+    this.toggleButton.on("pointerdown", () => {
+      TooltipManager.hide();
+      this.toggle();
+    });
 
-    // ✨ NEU: Hover-Effekt (Slide-In von links)
+    // ✨ NEU: Hover-Effekt (Slide-In von links) und Tooltip
     this.toggleButton.on("pointerover", () => {
       // ✨ FIX: Nur "Peeken", wenn geschlossen. Wenn offen, bleibt er wo er ist.
       if (!this.isOpen) {
@@ -169,6 +173,11 @@ export class ChatManager {
           ease: "Sine.easeOut",
         });
       }
+      const bounds = this.toggleButton.getBounds();
+      const visibleX = this.isOpen
+        ? this.currentLayout.visibleX
+        : this.currentLayout.hiddenX + 36;
+      TooltipManager.show(visibleX, bounds.top, "button_chat");
     });
     this.toggleButton.on("pointerout", () => {
       // Nur zurückfahren, wenn Chat geschlossen ist
@@ -180,6 +189,7 @@ export class ChatManager {
           ease: "Sine.easeOut",
         });
       }
+      TooltipManager.hide();
     });
 
     // 4. Notification Bubble (Toast)
@@ -437,6 +447,7 @@ export class ChatManager {
 
   /** ✨ NEU: Räumt alle UI-Elemente sauber auf. */
   public destroy() {
+    TooltipManager.hide();
     if (this.container) this.container.destroy();
     if (this.toggleButton) this.toggleButton.destroy();
     if (this.notificationBubble) this.notificationBubble.destroy();

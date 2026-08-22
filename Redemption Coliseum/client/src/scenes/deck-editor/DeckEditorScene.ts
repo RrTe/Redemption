@@ -1038,7 +1038,7 @@ export class DeckEditorScene extends Phaser.Scene {
       "save-deck",
       "DECK_CTRL_CLICK",
       buttonScale,
-      "button_save",
+      "button_save_deck",
       "bottom",
     );
     this.buttonManager.createButton(

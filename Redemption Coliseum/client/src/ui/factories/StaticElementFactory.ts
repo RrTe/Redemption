@@ -3,6 +3,7 @@ import { PHASES } from "../../../../shared/phases.js";
 import { type StaticElements } from "../types/ElementTypes";
 import { DEBUG } from "../../utils/logger";
 import { SidebarButton } from "../components/SidebarButton";
+import { TooltipManager } from "../managers/TooltipManager";
 
 export class StaticElementFactory {
   private scene: Phaser.Scene;
@@ -42,7 +43,8 @@ export class StaticElementFactory {
       true, // Right side
       () => {
         this.scene.events.emit("save_button_clicked");
-      }
+      },
+      "button_save_game"
     );
 
     // Help Button
@@ -132,6 +134,7 @@ export class StaticElementFactory {
     container
       .setInteractive(hitArea, Phaser.Geom.Rectangle.Contains)
       .on("pointerdown", () => {
+        TooltipManager.hide();
         const base = container.getData("baseScale") || 1.0;
         this.scene.events.emit("nextPhaseButtonClicked");
         this.scene.tweens.add({ targets: container, scale: base * 1.05, duration: 50, yoyo: true });
@@ -142,12 +145,15 @@ export class StaticElementFactory {
         this.scene.tweens.add({ targets: container, scale: base * 1.15, duration: 100, ease: "Back.easeOut" });
         if (glowFx) this.scene.tweens.add({ targets: glowFx, outerStrength: 4, duration: 100 });
         else btnImage.setTint(0xffffaa);
+        const bounds = btnImage.getBounds();
+        TooltipManager.show(bounds.centerX, bounds.top, "button_next_phase");
       })
       .on("pointerout", () => {
         const base = container.getData("baseScale") || 1.0;
         this.scene.tweens.add({ targets: container, scale: base, duration: 100 });
         if (glowFx) this.scene.tweens.add({ targets: glowFx, outerStrength: 0, duration: 100 });
         else btnImage.clearTint();
+        TooltipManager.hide();
       });
 
     if (container.input) container.input.cursor = "pointer";
@@ -179,11 +185,17 @@ export class StaticElementFactory {
       const base = container.getData("baseScale") || 1.0;
       this.scene.tweens.add({ targets: container, scale: base * 1.15, duration: 100, ease: "Back.easeOut" });
       concedeImg.setTint(0xffaaaa);
+      const bounds = concedeImg.getBounds();
+      TooltipManager.show(bounds.centerX, bounds.top, "button_concede");
     });
     container.on("pointerout", () => {
       const base = container.getData("baseScale") || 1.0;
       this.scene.tweens.add({ targets: container, scale: base, duration: 100 });
       concedeImg.clearTint();
+      TooltipManager.hide();
+    });
+    container.on("pointerdown", () => {
+      TooltipManager.hide();
     });
 
     return container;
