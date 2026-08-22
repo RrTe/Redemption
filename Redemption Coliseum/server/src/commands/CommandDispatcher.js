@@ -21,8 +21,15 @@ class CommandDispatcher {
   dispatch(type, client, message) {
     const CommandClass = this.commands.get(type);
     if (CommandClass) {
-      const cmd = new CommandClass(this.room, client);
-      cmd.execute(message);
+      try {
+        const cmd = new CommandClass(this.room, client);
+        cmd.execute(message);
+      } catch (err) {
+        logger.error(
+          `[CommandDispatcher] Error executing command '${type}' for client '${client?.sessionId}':`,
+          err,
+        );
+      }
     }
   }
 }

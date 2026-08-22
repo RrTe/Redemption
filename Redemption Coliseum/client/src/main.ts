@@ -14,6 +14,7 @@ import { DeckCatacombsScene } from "./scenes/deck-catacombs/DeckCatacombsScene";
 import { LocalDecksScene } from "./scenes/deck-catacombs/LocalDecksScene";
 import { NotificationManager } from "./ui/notifications/NotificationManager";
 import { ViewportManager } from "./ui/managers/ViewportManager"; // ✨ NEU: Responsives Layouting
+import { CardRepository } from "../../shared/CardRepository.js";
 import { cardData } from "./utils/CardService";
 // DeckMetricsDialogScene has been replaced by an HTML DOM overlay - no longer a separate scene
 
@@ -76,6 +77,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const settingsManager = new SettingsManager();
   game.registry.set('settingsManager', settingsManager);
   game.registry.set('cardDatabase', cardData);
+  CardRepository.initialize(cardData.cards);
 
   // SoundManager benötigt die 'game' Instanz, um sound-Operationen szenenübergreifend zu steuern.
   const soundManager = new SoundManager(game, settingsManager);

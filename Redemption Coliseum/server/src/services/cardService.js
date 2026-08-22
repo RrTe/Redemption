@@ -396,6 +396,12 @@ function _moveCardById(
   if (movedCard.isToken && (to === ZONES.DISCARD || to === ZONES.BANISH)) {
     const templateId = generateCardId(movedCard.ImageFile, movedCard.Set, movedCard.Name);
     cardLookup.delete(cardId);
+    if (state._clientViews) {
+      const oldView = state._clientViews.get(controllerId);
+      if (oldView) {
+        oldView.remove(splicedCard);
+      }
+    }
     return { movedCards: [movedCard], logEntry: `${actingPlayer.name} dissolves token {{${templateId}|${movedCard.Name}}}.` };
   }
 
@@ -440,10 +446,6 @@ function _moveCardById(
       }
   }
 
-
-
-  
-
   // ✨ FIX: Nutze util.inspect innerhalb eines Template-Literals, um die Ausgabe zu erzwingen
   const cardLog = util.inspect(
     {
@@ -461,7 +463,7 @@ function _moveCardById(
 
   // ✨ FIX: Update StateView AFTER the card has been added to the state array!
   if (state._clientViews) {
-    const oldView = state._clientViews.get(oldControllerId);
+    const oldView = state._clientViews.get(controllerId);
     if (oldView) {
       oldView.remove(splicedCard);
     }

@@ -132,9 +132,10 @@ export class LobbyScene extends Phaser.Scene {
 
     // ✨ NEU: Aufräumen beim Beenden der Szene
     this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.uiManager.destroy();
-      this.domManager.destroy();
-      this.inputHandler.destroy(); // ✨ NEU: InputHandler aufräumen
+      this.scale.off("resize", this.resize, this);
+      this.uiManager?.destroy();
+      this.domManager?.destroy();
+      this.inputHandler?.destroy(); // ✨ NEU: InputHandler aufräumen
     });
     this.resize({ width: this.scale.width, height: this.scale.height });
   }

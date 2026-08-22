@@ -95,7 +95,7 @@ export class LobbyInputHandler {
   }
 
   private handleDeckSelection() {
-    this.domManager.openFileSelector(".txt,.json", (content, fileName) => {
+    this.domManager.openFileSelector(".txt,.json,.dek", (content, fileName) => {
       try {
         const deck = DeckUtils.parseDeck(content, fileName);
         this.dataManager.selectedDeck = deck;

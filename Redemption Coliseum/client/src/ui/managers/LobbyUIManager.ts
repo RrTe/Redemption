@@ -164,12 +164,6 @@ export class LobbyUIManager {
       .setInteractive({ useHandCursor: true });
   }
 
-  /** ✨ FIX: Fehlende destroy-Methode für Type-Safety hinzugefügt */
-  public destroy() {
-    // Phaser GameObjects werden beim Scene-Shutdown automatisch zerstört.
-    // Diese Methode dient aktuell der Konsistenz für den Aufruf in LobbyScene.
-  }
-
   public createButtons(callbacks: {
     onCreate: () => void;
     onSelectDeck: () => void;
@@ -295,6 +289,7 @@ export class LobbyUIManager {
   }
 
   public resize(width: number, height: number) {
+    if (!this.titleText || !this.titleText.active) return;
     const uiScale = Math.max(0.75, Math.min(1, height / 800));
 
     if (this.titleText) {
@@ -302,7 +297,7 @@ export class LobbyUIManager {
       this.titleText.setPosition(width / 2, height * 0.1);
       this.titleText.setFontSize(Math.max(32, Math.min(80, height * 0.1)));
     }
-    if (this.subtitleText) {
+    if (this.subtitleText && this.subtitleText.active) {
       this.subtitleText.setPosition(width / 2, height * 0.18);
       this.subtitleText.setFontSize(Math.max(20, Math.min(40, height * 0.05)));
     }
@@ -319,25 +314,27 @@ export class LobbyUIManager {
     // Y-Position für den Start der Buttons (links und rechts)
     let buttonStartY = height * 0.35 + height * 0.11;
 
-    if (isTwoColumn) {
-        nameY = height * 0.28; // Höher, zwischen Lobby und Buttons
-        
-        // Inputfeld etwas nach oben schieben (damit es mit dem BitmapText-Label auf einer visuellen Linie liegt)
-        nameY -= 5 * uiScale;
-        
-        // Label ist mittig, direkt links neben dem Input-Feld platziert
-        // Mitte - 15px Abstand
-        this.nameLabel.setPosition(width / 2 - 15 * uiScale, nameY);
-        this.nameLabel.setOrigin(1, 0.5); // Rechtsbündig
-        
-        buttonStartY = height * 0.45; // Buttons etwas nach unten setzen
-    } else {
-        // Label ist ÜBER dem Input (für schmale Hochformat-Handys und Desktop)
-        const nameLabelOffset = height * 0.06;
-        this.nameLabel.setPosition(width / 2, nameY - nameLabelOffset);
-        this.nameLabel.setOrigin(0.5, 0.5);
+    if (this.nameLabel && this.nameLabel.active) {
+      if (isTwoColumn) {
+          nameY = height * 0.28; // Höher, zwischen Lobby und Buttons
+          
+          // Inputfeld etwas nach oben schieben (damit es mit dem BitmapText-Label auf einer visuellen Linie liegt)
+          nameY -= 5 * uiScale;
+          
+          // Label ist mittig, direkt links neben dem Input-Feld platziert
+          // Mitte - 15px Abstand
+          this.nameLabel.setPosition(width / 2 - 15 * uiScale, nameY);
+          this.nameLabel.setOrigin(1, 0.5); // Rechtsbündig
+          
+          buttonStartY = height * 0.45; // Buttons etwas nach unten setzen
+      } else {
+          // Label ist ÜBER dem Input (für schmale Hochformat-Handys und Desktop)
+          const nameLabelOffset = height * 0.06;
+          this.nameLabel.setPosition(width / 2, nameY - nameLabelOffset);
+          this.nameLabel.setOrigin(0.5, 0.5);
+      }
+      this.nameLabel.setScale(uiScale);
     }
-    this.nameLabel.setScale(uiScale);
 
     let currentY = buttonStartY;
 
@@ -530,5 +527,27 @@ export class LobbyUIManager {
       cb();
     });
     return container;
+  }
+
+  public destroy() {
+    this.listMaskGraphics?.destroy();
+    this.listContainer?.destroy();
+    this.titleText?.destroy();
+    this.subtitleText?.destroy();
+    this.statusText?.destroy();
+    this.debugText?.destroy();
+    this.nameLabel?.destroy();
+    this.createBtn?.destroy();
+    this.deckSelectBtn?.destroy();
+    this.loadGameBtn?.destroy();
+    this.reconnectBtn?.destroy();
+    this.settingsButton?.destroy();
+    this.exitButton?.destroy();
+    this.helpButton?.destroy();
+    this.legalBtn?.destroy();
+    this.privacyBtn?.destroy();
+    this.upArrow?.destroy();
+    this.downArrow?.destroy();
+    this.background?.destroy();
   }
 }

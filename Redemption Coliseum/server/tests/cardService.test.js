@@ -90,4 +90,21 @@ describe("cardService (moveCard)", () => {
     expect(player[ZONES.DECK][0].Name).toBe("Krieger"); // "Krieger" ist jetzt oben
     expect(player[ZONES.DECK][1].Name).toBe("Feuerball"); // "Feuerball" ist jetzt unten
   });
+
+  test("sollte eine Karte vom Deck in den Discard verschieben, wenn _clientViews aktiv sind", () => {
+    const mockView = {
+      add: jest.fn(),
+      remove: jest.fn(),
+    };
+    state._clientViews = new Map();
+    state._clientViews.set("p1", mockView);
+
+    moveCard(player, state, cardLookup, ZONES.DECK, ZONES.DISCARD, "c1");
+
+    expect(player[ZONES.DECK].length).toBe(1);
+    expect(player[ZONES.DISCARD].length).toBe(1);
+    expect(player[ZONES.DISCARD][0].Name).toBe("Feuerball");
+    expect(mockView.remove).toHaveBeenCalled();
+    expect(mockView.add).toHaveBeenCalled();
+  });
 });
