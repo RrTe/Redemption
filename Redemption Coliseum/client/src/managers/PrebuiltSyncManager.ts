@@ -44,11 +44,11 @@ export class PrebuiltSyncManager {
     // 2. Process each project prebuilt deck
     let bulkAction: ConflictAction | null = null;
     let processed = 0;
-    let writtenCount = 0;
     const total = projectDecks.length;
 
     const metasToSave: DeckMetadata[] = [];
     const virtualsToSave: WrappedDeck[] = [];
+    const diskWriteTasks: { fileName: string; wrapped: WrappedDeck }[] = [];
 
     for (const projectDeck of projectDecks) {
       processed++;
@@ -62,16 +62,12 @@ export class PrebuiltSyncManager {
       const cachedCopy = cachedPrebuiltMap.get(projectDeck.id) || cachedPrebuiltMap.get(projectDeck.name);
 
       if (!cachedCopy) {
-        // Case A: New Prebuilt Deck -> Auto-insert into LocalDecksDB & Disk
+        // Case A: New Prebuilt Deck -> Queue for batch insert
         log("PrebuiltSyncManager", `Auto-inserting new prebuilt deck: "${projectDeck.name}"`);
         metasToSave.push(projectDeck);
         virtualsToSave.push(wrappedProject);
         if (targetHandle) {
-          await this.writeDeckToDisk(targetHandle, wrappedProject);
-          writtenCount++;
-          if (onDiskProgress) {
-            onDiskProgress(writtenCount, total);
-          }
+          diskWriteTasks.push({ fileName: `${wrappedProject.meta.name}.json`, wrapped: wrappedProject });
         }
       } else {
         const projModified = projectDeck.lastModified || 0;
@@ -105,11 +101,7 @@ export class PrebuiltSyncManager {
             metasToSave.push(updatedMeta);
             virtualsToSave.push(updatedWrapped);
             if (targetHandle) {
-              await this.writeDeckToDisk(targetHandle, updatedWrapped);
-              writtenCount++;
-              if (onDiskProgress) {
-                onDiskProgress(writtenCount, total);
-              }
+              diskWriteTasks.push({ fileName: `${updatedWrapped.meta.name}.json`, wrapped: updatedWrapped });
             }
             log("PrebuiltSyncManager", `Updated prebuilt deck "${projectDeck.name}" (stats preserved).`);
           } else if (action === "update_reset_stats" || action === "update_reset_stats_all") {
@@ -117,11 +109,7 @@ export class PrebuiltSyncManager {
             metasToSave.push(projectDeck);
             virtualsToSave.push(wrappedProject);
             if (targetHandle) {
-              await this.writeDeckToDisk(targetHandle, wrappedProject);
-              writtenCount++;
-              if (onDiskProgress) {
-                onDiskProgress(writtenCount, total);
-              }
+              diskWriteTasks.push({ fileName: `${wrappedProject.meta.name}.json`, wrapped: wrappedProject });
             }
             log("PrebuiltSyncManager", `Updated prebuilt deck "${projectDeck.name}" (stats reset).`);
           } else {
@@ -136,6 +124,13 @@ export class PrebuiltSyncManager {
     if (metasToSave.length > 0) {
       await this.db.saveCachedMetadataBatch(metasToSave);
       await this.db.saveVirtualDeckBatch(virtualsToSave);
+    }
+
+    // Non-blocking background flush of physical files to target disk folder
+    if (diskWriteTasks.length > 0 && targetHandle) {
+      this.flushDiskFiles(targetHandle, diskWriteTasks, onDiskProgress).catch((err) => {
+        error("PrebuiltSyncManager", "Background disk write error", err);
+      });
     }
 
     // 3. Return refreshed list of prebuilt decks from LocalDecksDB
@@ -159,18 +154,39 @@ export class PrebuiltSyncManager {
   }
 
   /**
-   * Writes a WrappedDeck JSON to disk directory handle.
+   * Flushes physical files to target disk folder asynchronously in concurrent batches.
    */
-  private static async writeDeckToDisk(dirHandle: any, wrapped: WrappedDeck): Promise<void> {
-    try {
-      const fileName = `${wrapped.meta.name}.json`;
-      const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
-      const writable = await fileHandle.createWritable();
-      await writable.write(JSON.stringify(wrapped, null, 2));
-      await writable.close();
-      log("PrebuiltSyncManager", `Wrote prebuilt deck "${fileName}" to disk.`);
-    } catch (err) {
-      error("PrebuiltSyncManager", `Failed to write prebuilt deck "${wrapped.meta.name}" to disk`, err);
+  private static async flushDiskFiles(
+    dirHandle: any,
+    tasks: { fileName: string; wrapped: WrappedDeck }[],
+    onDiskProgress?: (written: number, total: number) => void
+  ): Promise<void> {
+    const total = tasks.length;
+    let written = 0;
+    const DISK_BATCH_SIZE = 20;
+
+    if (onDiskProgress) onDiskProgress(0, total);
+
+    for (let i = 0; i < tasks.length; i += DISK_BATCH_SIZE) {
+      const chunk = tasks.slice(i, i + DISK_BATCH_SIZE);
+      await Promise.all(
+        chunk.map(async (task) => {
+          try {
+            const fileHandle = await dirHandle.getFileHandle(task.fileName, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(JSON.stringify(task.wrapped, null, 2));
+            await writable.close();
+          } catch (err) {
+            error("PrebuiltSyncManager", `Failed to write prebuilt deck "${task.fileName}" to disk`, err);
+          } finally {
+            written++;
+            if (onDiskProgress) {
+              onDiskProgress(written, total);
+            }
+          }
+        })
+      );
     }
+    log("PrebuiltSyncManager", `Finished background disk flush of ${tasks.length} prebuilt decks.`);
   }
 }
