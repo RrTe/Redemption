@@ -22,40 +22,18 @@ export class StaticElementFactory {
     const nextPhaseButton = this.createNextPhaseButton();
     const concedeButton = this.createConcedeButton();
 
-    // Settings Button (Gold)
+    // Sidebar Buttons
     const settingsButton = new SidebarButton(
-      this.scene,
-      "button_settings",
-      this.scene.scale.height * 0.18,
-      true, // Right side
-      () => {
-        // Handled in StaticUIHandler usually, but we can emit an event here or leave it empty and bind later
-        // wait, SidebarButton takes onClick. We can just emit an event:
-        this.scene.events.emit("settings_button_clicked");
-      }
+      this.scene, "button_settings", this.scene.scale.height * 0.18, true,
+      () => this.scene.events.emit("settings_button_clicked")
     );
-
-    // Save Button
     const saveButton = new SidebarButton(
-      this.scene,
-      "button_save",
-      this.scene.scale.height * 0.3,
-      true, // Right side
-      () => {
-        this.scene.events.emit("save_button_clicked");
-      },
-      "button_save_game"
+      this.scene, "button_save", this.scene.scale.height * 0.3, true,
+      () => this.scene.events.emit("save_button_clicked"), "button_save_game"
     );
-
-    // Help Button
     const helpButton = new SidebarButton(
-      this.scene,
-      "button_help",
-      this.scene.scale.height * 0.7,
-      false, // Left side
-      () => {
-        this.scene.events.emit("help_button_clicked");
-      }
+      this.scene, "button_help", this.scene.scale.height * 0.7, false,
+      () => this.scene.events.emit("help_button_clicked")
     );
 
     // Phasen-Indikatoren
@@ -104,7 +82,7 @@ export class StaticElementFactory {
   }
 
   private createNextPhaseButton(): Phaser.GameObjects.Container {
-    const container = this.scene.add.container(0, 0).setVisible(false);
+    const container = this.scene.add.container(0, 0).setVisible(false).setDepth(200);
     const btnBar = this.scene.add.graphics();
     const barWidth = 80;
     const barHeight = 46;
@@ -124,12 +102,6 @@ export class StaticElementFactory {
 
     container.add([btnBar, btnImage]);
 
-    // Glow FX
-    let glowFx: any = null;
-    if ((btnImage as any).preFX) {
-      glowFx = (btnImage as any).preFX.addGlow(0xffd700, 0, 0, false);
-    }
-
     const hitArea = new Phaser.Geom.Rectangle(barX, barY, barWidth, barHeight);
     container
       .setInteractive(hitArea, Phaser.Geom.Rectangle.Contains)
@@ -138,21 +110,19 @@ export class StaticElementFactory {
         const base = container.getData("baseScale") || 1.0;
         this.scene.events.emit("nextPhaseButtonClicked");
         this.scene.tweens.add({ targets: container, scale: base * 1.05, duration: 50, yoyo: true });
-        if (glowFx) this.scene.tweens.add({ targets: glowFx, outerStrength: 6, duration: 50, yoyo: true });
+        btnImage.setTint(0xffffff);
       })
       .on("pointerover", () => {
         const base = container.getData("baseScale") || 1.0;
         this.scene.tweens.add({ targets: container, scale: base * 1.15, duration: 100, ease: "Back.easeOut" });
-        if (glowFx) this.scene.tweens.add({ targets: glowFx, outerStrength: 4, duration: 100 });
-        else btnImage.setTint(0xffffaa);
+        btnImage.setTint(0xffffaa);
         const bounds = btnImage.getBounds();
         TooltipManager.show(bounds.centerX, bounds.top, "button_next_phase");
       })
       .on("pointerout", () => {
         const base = container.getData("baseScale") || 1.0;
         this.scene.tweens.add({ targets: container, scale: base, duration: 100 });
-        if (glowFx) this.scene.tweens.add({ targets: glowFx, outerStrength: 0, duration: 100 });
-        else btnImage.clearTint();
+        btnImage.clearTint();
         TooltipManager.hide();
       });
 
@@ -161,7 +131,7 @@ export class StaticElementFactory {
   }
 
   private createConcedeButton(): Phaser.GameObjects.Container {
-    const container = this.scene.add.container(0, 0);
+    const container = this.scene.add.container(0, 0).setDepth(200);
     const concedeBar = this.scene.add.graphics();
     const cBarWidth = 80;
     const cBarHeight = 46;

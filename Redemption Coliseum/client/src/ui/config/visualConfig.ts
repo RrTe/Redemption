@@ -9,3 +9,12 @@ export const PHASE_BAR_STYLE = {
   STROKE_ALPHA: 0.8, // Randstärke
   CORNER_RADIUS: 15, // Rundung der Ecken
 };
+
+export const PHASE_INDICATOR_STYLE = {
+  ACTIVE_COLOR: 0xffd700, // Gold für aktiven Spieler
+  INACTIVE_COLOR: 0xaaaaaa, // Silber/Grau für inaktiven Spieler
+  GLOW_STEPS: 4, // Schichten für den weichen Verlauf
+  BASE_ALPHA_ACTIVE: 0.25, // Start-Transparenz (aktiv)
+  BASE_ALPHA_INACTIVE: 0.12, // Start-Transparenz (inaktiv)
+};
+

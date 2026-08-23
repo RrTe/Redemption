@@ -90,11 +90,6 @@ export class PhaseManager {
     // Wir greifen hier noch auf 'arrow' zu, um Tints zu löschen, was okay ist für State-Resets.
     if (arrow) {
       arrow.clearTint();
-      // Falls FX vorhanden sind, Glow zurücksetzen
-      if ((arrow as any).preFX && (arrow as any).preFX.list.length > 0) {
-        const glowFx = (arrow as any).preFX.list[0];
-        if (glowFx) glowFx.outerStrength = 0;
-      }
     }
 
     const isActive = state.activePlayer === this.room.sessionId;

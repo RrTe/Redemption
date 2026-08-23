@@ -6,17 +6,7 @@ import { PHASES } from "../../../../shared/phases";
 import { type RoomState, type PlayerState } from "../../../../shared/types";
 import { log, DEBUG } from "../../utils/logger";
 
-// ✨ NEU: Zentrale Konfiguration für den Phasen-Indikator (Glow)
-// (Verschoben aus GameUI.ts)
-const PHASE_INDICATOR_STYLE = {
-  ACTIVE_COLOR: 0xffd700, // Gold für aktiven Spieler
-  INACTIVE_COLOR: 0xaaaaaa, // Silber/Grau für inaktiven Spieler
-  GLOW_STEPS: 6, // Anzahl der Schichten für den weichen Verlauf
-  BASE_ALPHA_ACTIVE: 0.3, // Start-Transparenz (aktiv)
-  BASE_ALPHA_INACTIVE: 0.15, // Start-Transparenz (inaktiv)
-  CORNER_RADIUS: 10, // Eckenrundung des Glows
-  PADDING: 6, // Abstand zum Icon
-};
+import { PHASE_INDICATOR_STYLE } from "../config/visualConfig";
 
 /**
  * Manages the Heads-Up Display (HUD), including phase indicators,
@@ -100,17 +90,17 @@ export class HUDManager {
         const baseAlpha = isActive
           ? PHASE_INDICATOR_STYLE.BASE_ALPHA_ACTIVE
           : PHASE_INDICATOR_STYLE.BASE_ALPHA_INACTIVE;
-        const basePadding = PHASE_INDICATOR_STYLE.PADDING;
-        const cornerRadius = PHASE_INDICATOR_STYLE.CORNER_RADIUS;
+        const maxGlowPadding = Math.min(4, baseSize * 0.15);
+        const cornerRadius = Math.max(6, baseSize * 0.35);
 
         for (let i = 0; i < steps; i++) {
           const alpha = baseAlpha / (i + 1);
-          const expansion = i * 2;
-          const w = targetSize + basePadding + expansion * 2;
-          const h = targetSize + basePadding + expansion * 2;
+          const expansion = (i / steps) * maxGlowPadding;
+          const w = targetSize + expansion * 2;
+          const h = targetSize + expansion * 2;
 
           indicator.fillStyle(color, alpha);
-          indicator.fillRoundedRect(-w / 2, -h / 2, w, h, cornerRadius + i);
+          indicator.fillRoundedRect(-w / 2, -h / 2, w, h, cornerRadius);
         }
 
         indicator.setPosition(icon.x, icon.y);

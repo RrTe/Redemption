@@ -195,6 +195,13 @@ export class ElementManager {
       }
     });
 
+    const activeIcon = Object.values(this.staticElements.phaseIcons).find(
+      (icon) => icon.getData("scaleFactor") === 1.2,
+    );
+    if (activeIcon && this.staticElements.phaseIndicator.visible) {
+      this.staticElements.phaseIndicator.setPosition(activeIcon.x, activeIcon.y);
+    }
+
     // ✨ NEU: Zeichne die 3D-Hintergrundleiste um die Icons
     const barLayout = this.layout.phaseBar;
     const barX = barLayout.x - barLayout.width / 2;

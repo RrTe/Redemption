@@ -272,7 +272,7 @@ export function calculateLayout(
     y: 5,
   };
 
-  const buttonScale = Phaser.Math.Clamp(height / 800, 0.5, 1.0);
+  const buttonScale = Phaser.Math.Clamp(height / 800, 0.65, 1.0);
 
   const playerInfo = {
     x: EDGE_MARGIN,
