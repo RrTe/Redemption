@@ -20,7 +20,8 @@ export class CardDrawEffect {
     startRect: Phaser.Geom.Rectangle,
     endPos: { x: number; y: number; angle: number },
     delay: number,
-    onComplete: () => void
+    onComplete: () => void,
+    onCancel?: (cancelFn: () => void) => void,
   ): Phaser.Tweens.Tween | null {
     // Check: Sind Animationen aktiviert?
     if (!this.settingsManager.areAnimationsEnabled()) {
@@ -39,7 +40,7 @@ export class CardDrawEffect {
       cardToAnimate.cardData,
       cardToAnimate.width,
       cardToAnimate.height,
-      true // Starte immer als Rückseite
+      true, // Starte immer als Rückseite
     );
     animCard.setDepth(200);
     animCard.disableInteractive();
@@ -47,6 +48,22 @@ export class CardDrawEffect {
     // Wenn Delay, dann erst unsichtbar (Locking)
     if (delay > 0) {
       animCard.setLockedVisibility(true);
+    }
+
+    let isCleanedUp = false;
+    const cleanup = () => {
+      if (isCleanedUp) return;
+      isCleanedUp = true;
+      cardToAnimate.setLockedVisibility(false);
+      if (animCard && animCard.active) {
+        animCard.destroy();
+      }
+    };
+
+    if (onCancel) {
+      onCancel(() => {
+        cleanup();
+      });
     }
 
     const controlY = startRect.centerY - Phaser.Math.Between(140, 190);
@@ -64,6 +81,7 @@ export class CardDrawEffect {
         if (delay > 0) animCard.setLockedVisibility(false);
       },
       onUpdate: (tween) => {
+        if (!animCard.active) return;
         const progress = tween.progress;
 
         // ✨ DYNAMISCHE ZIELPOSITION: Nutze die aktuellen targetX/targetY der CardUI,
@@ -73,7 +91,7 @@ export class CardDrawEffect {
         // Y-Position (Bezier)
         animCard.y = Phaser.Math.Interpolation.Bezier(
           [startRect.centerY, controlY, currentTargetY],
-          progress
+          progress,
         );
 
         // Flip-Effekt
@@ -81,7 +99,7 @@ export class CardDrawEffect {
           animCard.scaleX = Phaser.Math.Linear(
             baseScaleX,
             baseScaleX * 0.05,
-            progress * 2
+            progress * 2,
           );
         } else {
           if (animCard.isCurrentlyFaceDown()) {
@@ -90,7 +108,7 @@ export class CardDrawEffect {
           animCard.scaleX = Phaser.Math.Linear(
             baseScaleX * 0.05,
             baseScaleX,
-            (progress - 0.5) * 2
+            (progress - 0.5) * 2,
           );
         }
 
@@ -105,8 +123,7 @@ export class CardDrawEffect {
         cardToAnimate.y = cardToAnimate.targetY || endPos.y;
         cardToAnimate.setAngle(cardToAnimate.targetAngle || endPos.angle);
 
-        cardToAnimate.setLockedVisibility(false);
-        animCard.destroy();
+        cleanup();
 
         // Bump-Effekt auf dem Original
         this.scene.tweens.add({

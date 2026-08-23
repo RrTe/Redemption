@@ -4,6 +4,7 @@ import { log, error } from "../utils/logger";
 import { type TypedRoom } from "../ui/gameUI";
 import { type SoundManager } from "../managers/SoundManager";
 import { type DeckData } from "../utils/DeckUtils";
+import { setClient } from "./connection";
 
 export class LobbyNetworkManager {
   private client!: Client;
@@ -53,6 +54,7 @@ export class LobbyNetworkManager {
 
     log("LobbyNetwork", "Initializing Client with endpoint:", this.endpoint);
     this.client = new Client(this.endpoint);
+    setClient(this.client);
   }
 
   public async connectToLobby() {

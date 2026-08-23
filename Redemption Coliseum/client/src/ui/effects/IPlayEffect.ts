@@ -28,6 +28,7 @@ export interface IPlayEffect {
       width: number;
       height: number;
     },
-    onComplete: () => void
+    onComplete: () => void,
+    onCancel?: (cancelFn: () => void) => void,
   ): Phaser.Tweens.Tween | null;
 }

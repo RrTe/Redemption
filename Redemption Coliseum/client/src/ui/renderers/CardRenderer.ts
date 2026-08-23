@@ -189,7 +189,7 @@ export class CardRenderer {
     const isNew = !this.cardUIs.has(cardId);
     // ✨ KORREKTUR: Prüfe, ob eine Animation im Manager für diese Karte registriert ist.
     // Das ist die einzige verlässliche Quelle, da der Tween auf einem Klon läuft.
-    const isAnimating = this.animationManager.activeDrawTweens.has(cardId);
+    let isAnimating = this.animationManager.activeDrawTweens.has(cardId);
 
     //log("Renderer", `[PROCESS_CARD] Processing cardData:`, cardData.toJSON());
     // ✨ KORREKTUR: Berücksichtige den Status der Karte (isFaceDown) vom Server.
@@ -258,16 +258,17 @@ export class CardRenderer {
       // Dies löst die "Play"-Animation aus.
       // (oldZone und newZone wurden oben definiert)
 
-      // ✨ FIX: Wenn eine Karte die Hand verlässt (egal wohin, z.B. auch Discard/Banish),
-      // müssen wir zwingend alle Hover-Effekte stoppen und die Skalierung zurücksetzen.
-      if (oldZone === ZONES.HAND && newZone !== ZONES.HAND) {
+      // ✨ FIX: Wenn eine Karte die Zone ändert (z.B. Hand -> Feld oder Feld -> Hand):
+      if (oldZone !== newZone) {
+        this.animationManager.stopActiveTween(cardId);
         this.animationManager.stopHandHoverAnimation(cardUI);
+        cardUI.setData("waiting_for_overlay", false);
+        cardUI.setLockedVisibility(false);
+        cardUI.isBeingDragged = false;
       }
 
-      // ✨ NEU: Sobald sich die Zone ändert, warten wir definitiv nicht mehr auf ein Overlay
-      if (oldZone !== newZone) {
-        cardUI.setData("waiting_for_overlay", false);
-      }
+      // Re-evaluiere isAnimating nach dem Stoppen vorheriger Tweens
+      isAnimating = this.animationManager.activeDrawTweens.has(cardId);
 
       // Wir prüfen, ob die Karte die Hand verlässt und in einen Spielbereich (Territory, LoB, Battlefield) geht.
       // Bewegungen auf Stapel (Deck, Discard, Reserve, Banish, LoR) sollen keine Play-Animation auslösen.

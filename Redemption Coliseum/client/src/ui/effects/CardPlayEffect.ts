@@ -96,6 +96,7 @@ export class CardPlayEffect {
       height: number;
     },
     onComplete: () => void,
+    onCancel?: (cancelFn: () => void) => void,
   ): Phaser.Tweens.Tween | null {
     log(
       "CardPlayEffect", `[PLAY_ANIM] Triggered for card ${cardToAnimate.cardData.id.slice(-4)}`,
@@ -137,6 +138,6 @@ export class CardPlayEffect {
 
     // 3. Führe den primären Effekt aus.
     // Dieser ist für seinen eigenen Sound und die Hauptanimation verantwortlich.
-    return primaryEffect.play(cardToAnimate, startPos, endPos, finalOnComplete);
+    return primaryEffect.play(cardToAnimate, startPos, endPos, finalOnComplete, onCancel);
   }
 }

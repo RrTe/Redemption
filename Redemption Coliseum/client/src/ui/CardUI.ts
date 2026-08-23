@@ -146,17 +146,10 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.visuals.setTint(undefined);
   }
 
-  /** ✨ NEU: Aktualisiert den Face-Down-Status und lädt das Bild bei Bedarf neu. */
+  /** ✨ NEU: Aktualisiert den Face-Down-Status und synchronisiert die Layer-Sichtbarkeit. */
   public updateFaceDownStatus(isFaceDown: boolean) {
-    // Wenn sich der Status não geändert hat, ist nichts zu tun.
-    if (this.isFaceDown === isFaceDown) {
-      return;
-    }
-
-    if (this.isFaceDown !== isFaceDown) {
-      this.isFaceDown = isFaceDown;
-      this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
-    }
+    this.isFaceDown = isFaceDown;
+    this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
 
     // ✨ FIX: Wenn die Zone vom Server bestätigt wurde, beende den "Drag-Limbo"
     if (this.currentZone !== this.cardData.zone) {

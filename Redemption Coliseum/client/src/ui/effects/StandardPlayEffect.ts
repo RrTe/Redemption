@@ -34,7 +34,8 @@ export class StandardPlayEffect implements IPlayEffect {
       width: number;
       height: number;
     },
-    onComplete: () => void
+    onComplete: () => void,
+    onCancel?: (cancelFn: () => void) => void,
   ): Phaser.Tweens.Tween | null {
     this.playAudio(cardToAnimate);
 
@@ -46,7 +47,7 @@ export class StandardPlayEffect implements IPlayEffect {
       cardToAnimate.cardData,
       startPos.width,
       startPos.height,
-      false
+      false,
     );
     animCard.setAngle(startPos.angle);
     animCard.setDepth(1000);
@@ -54,6 +55,22 @@ export class StandardPlayEffect implements IPlayEffect {
 
     // Original verstecken
     cardToAnimate.setLockedVisibility(true);
+
+    let isCleanedUp = false;
+    const cleanup = () => {
+      if (isCleanedUp) return;
+      isCleanedUp = true;
+      cardToAnimate.setLockedVisibility(false);
+      if (animCard && animCard.active) {
+        animCard.destroy();
+      }
+    };
+
+    if (onCancel) {
+      onCancel(() => {
+        cleanup();
+      });
+    }
 
     const controlY = Math.min(startPos.y, endPos.y) - 150;
     const targetScaleX = endPos.width / startPos.width;
@@ -68,14 +85,14 @@ export class StandardPlayEffect implements IPlayEffect {
       duration: 500,
       ease: "Quad.Out",
       onUpdate: (tween) => {
+        if (!animCard.active) return;
         animCard.y = Phaser.Math.Interpolation.Bezier(
           [startPos.y, controlY, endPos.y],
-          tween.progress
+          tween.progress,
         );
       },
       onComplete: () => {
-        cardToAnimate.setLockedVisibility(false);
-        animCard.destroy();
+        cleanup();
         onComplete();
       },
     });

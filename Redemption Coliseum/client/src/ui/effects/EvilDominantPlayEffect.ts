@@ -28,6 +28,7 @@ export class EvilDominantPlayEffect implements IPlayEffect {
       height: number;
     },
     onComplete: () => void,
+    onCancel?: (cancelFn: () => void) => void,
   ): Phaser.Tweens.Tween | null {
     const cx = this.scene.scale.width / 2;
     const cy = this.scene.scale.height / 2;
@@ -91,12 +92,34 @@ export class EvilDominantPlayEffect implements IPlayEffect {
     const e2 = makeEmitter("smoke2", 700, 1600, 140, 420);
     const e3 = makeEmitter("smoke3", 900, 1900, 160, 480);
 
+    let isCleanedUp = false;
+    const cleanup = () => {
+      if (isCleanedUp) return;
+      isCleanedUp = true;
+      if (e1.active) e1.destroy();
+      if (e2.active) e2.destroy();
+      if (e3.active) e3.destroy();
+      if (animCard.active) animCard.destroy();
+      cardToAnimate.setLockedVisibility(false);
+      cardToAnimate.setAlpha(1);
+    };
+
+    if (onCancel) {
+      onCancel(() => {
+        cleanup();
+      });
+    }
+
     // Animationen abspielen (Sequenz aus PoC)
 
     // Explosionen gestaffelt
     e1.explode(36, cx, cy);
-    this.scene.time.delayedCall(35, () => e2.explode(32, cx, cy));
-    this.scene.time.delayedCall(70, () => e3.explode(28, cx, cy));
+    this.scene.time.delayedCall(35, () => {
+      if (e2.active) e2.explode(32, cx, cy);
+    });
+    this.scene.time.delayedCall(70, () => {
+      if (e3.active) e3.explode(28, cx, cy);
+    });
 
     // Karte einblenden
     this.scene.tweens.add({
@@ -123,9 +146,9 @@ export class EvilDominantPlayEffect implements IPlayEffect {
       value: 1,
       duration: 2200,
       onComplete: () => {
-        e1.destroy();
-        e2.destroy();
-        e3.destroy();
+        if (e1.active) e1.destroy();
+        if (e2.active) e2.destroy();
+        if (e3.active) e3.destroy();
 
         // Finale Bewegung zur Zielposition
         this.scene.tweens.add({
@@ -138,10 +161,7 @@ export class EvilDominantPlayEffect implements IPlayEffect {
           duration: 800,
           ease: "Linear",
           onComplete: () => {
-            animCard.destroy();
-            cardToAnimate.setLockedVisibility(false);
-            // ✨ FIX: Stelle sicher, dass die Karte voll sichtbar ist.
-            cardToAnimate.setAlpha(1);
+            cleanup();
             onComplete();
           },
         });

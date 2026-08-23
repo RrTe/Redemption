@@ -82,11 +82,15 @@ class MatchService {
     logger.info(`[GAME OVER] Winner: ${winnerId}, Reason: ${reason}`);
     room.lock();
 
+    // Safety auto-cleanup after 10 minutes of inactivity if players stay on game over screen
     room.clock.setTimeout(() => {
-      room
-        .disconnect()
-        .catch((e) => logger.error("[MatchService] Disconnect error:", e));
-    }, 5000);
+      if (room.state.winnerId) {
+        logger.info(`[MatchService] Disposing ended room after safety timeout: ${room.roomId}`);
+        room
+          .disconnect()
+          .catch((e) => logger.error("[MatchService] Disconnect error:", e));
+      }
+    }, 10 * 60 * 1000);
   }
 
   /**

@@ -7,6 +7,8 @@ const { WebSocketTransport } = require("@colyseus/ws-transport");
 const { GameRoom } = require("./rooms/GameRoom");
 const { LobbyRoom } = require("./rooms/LobbyRoom"); // ✨ NEU: Hinzufügen
 
+const { NETWORK_CONFIG } = require("../../shared/networkConfig");
+
 const logger = require("./utils/logger"); // <-- Logger importieren
 
 const PORT = process.env.PORT || 2567;
@@ -19,7 +21,11 @@ app.use(express.json());
 const httpServer = http.createServer(app);
 
 const gameServer = new Server({
-  transport: new WebSocketTransport({ server: httpServer }),
+  transport: new WebSocketTransport({
+    server: httpServer,
+    pingInterval: NETWORK_CONFIG.WS_PING_INTERVAL_MS,
+    pingMaxRetries: NETWORK_CONFIG.WS_PING_MAX_RETRIES,
+  }),
 });
 // ✨ FIX: enableRealtimeListing() muss HIER aufgerufen werden, nicht im Raum selbst.
 gameServer.define("game_room", GameRoom).enableRealtimeListing();

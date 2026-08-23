@@ -1,11 +1,10 @@
 import Phaser from "phaser";
 import { CardUI } from "../CardUI.js";
 import type { IPlayEffect } from "./IPlayEffect.js";
-import { log } from "../../utils/logger"; // ✨ NEU: Import
+import { log } from "../../utils/logger";
 
 /**
  * Implementiert den visuellen Effekt für das Ausspielen einer "Good Dominant" Karte.
- * Basiert auf dem PoC mit Strahlen, Corona und Partikeln.
  */
 export class GoodDominantPlayEffect implements IPlayEffect {
   private scene: Phaser.Scene;
@@ -15,60 +14,45 @@ export class GoodDominantPlayEffect implements IPlayEffect {
   }
 
   public playAudio(card: CardUI) {
-    this.scene.game.events.emit("playSound", "GOOD_DOMINANT"); // ✨ FIX: Globaler Bus
+    this.scene.game.events.emit("playSound", "GOOD_DOMINANT");
   }
 
   public play(
     cardToAnimate: CardUI,
-    startPos: any, // Wird von diesem Effekt ignoriert, ist aber für die Schnittstelle erforderlich.
-    endPos: {
-      x: number;
-      y: number;
-      angle: number;
-      width: number;
-      height: number;
-    },
+    startPos: any,
+    endPos: { x: number; y: number; angle: number; width: number; height: number },
     onComplete: () => void,
+    onCancel?: (cancelFn: () => void) => void,
   ): Phaser.Tweens.Tween | null {
     const cx = this.scene.scale.width / 2;
     const cy = this.scene.scale.height / 2;
-    const durationMs = 2600; // Basis-Dauer aus dem PoC
+    const durationMs = 2600;
 
-    // Sound abspielen
     this.playAudio(cardToAnimate);
 
-    // ✨ NEU: Berechne Größe für die "große" Darstellung (60% der Bildschirmhöhe)
     const largeHeight = this.scene.scale.height * 0.6;
-
-    // 1. Klon der Karte erstellen (groß, in der Mitte, unsichtbar startend)
     let textureKey = "card-back";
     if (cardToAnimate.cardData.ImageFile) {
       const key = "card-" + cardToAnimate.cardData.ImageFile;
       if (this.scene.textures.exists(key)) textureKey = key;
     }
 
-    // ✨ INFO: Wir nutzen hier ein Image (visueller Klon), kein CardUI-Objekt.
     const animCard = this.scene.add.image(cx, cy, textureKey);
     animCard.displayHeight = largeHeight;
     animCard.scaleX = animCard.scaleY;
     animCard.setAlpha(0);
-    // ✨ KORREKTUR: Depth reduziert, damit Effekte (Corona, Partikel) DARÜBER liegen können.
     animCard.setDepth(2000);
 
-    // Original verstecken
     cardToAnimate.setLockedVisibility(true);
 
-    // 2. Hilfselemente erstellen (Corona, Rays, Particles)
     const corona = this.scene.add
       .image(cx, cy, "blue_corona")
       .setOrigin(0.5)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setScale(0.4)
       .setAlpha(0.95)
-      // ✨ KORREKTUR: Depth höher als die Karte (2000), damit sie sichtbar ist.
       .setDepth(2001);
 
-    // Pulsieren der Corona (Loop)
     const pulseTween = this.scene.tweens.add({
       targets: corona,
       scale: { from: 0.35, to: 0.55 },
@@ -78,7 +62,6 @@ export class GoodDominantPlayEffect implements IPlayEffect {
       repeat: -1,
     });
 
-    // Partikel-Manager
     const mainParticles = this.scene.add.particles(cx, cy, "blue_sparkle", {
       angle: { min: 0, max: 360 },
       speed: { min: 200, max: 550 },
@@ -88,7 +71,7 @@ export class GoodDominantPlayEffect implements IPlayEffect {
       blendMode: "ADD",
     });
     mainParticles.stop();
-    mainParticles.setDepth(2002); // Über Corona und Karte
+    mainParticles.setDepth(2002);
 
     const burstParticles = this.scene.add.particles(cx, cy, "blue_sparkle", {
       angle: { min: 0, max: 360 },
@@ -99,9 +82,8 @@ export class GoodDominantPlayEffect implements IPlayEffect {
       blendMode: "ADD",
     });
     burstParticles.stop();
-    burstParticles.setDepth(2003); // Ganz oben
+    burstParticles.setDepth(2003);
 
-    // Strahlen (Rays)
     this.ensureRayTexture();
     const rays: Phaser.GameObjects.Image[] = [];
     const rayCount = 60;
@@ -112,26 +94,42 @@ export class GoodDominantPlayEffect implements IPlayEffect {
         .image(cx, cy, "rayTexture")
         .setOrigin(0, 0.5)
         .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(2001); // Auf gleicher Ebene wie Corona
+        .setDepth(2001);
       ray.displayWidth = Phaser.Math.Between(W * 0.25, W * 0.9);
       ray.displayHeight = Phaser.Math.FloatBetween(1, 4) * 10;
-      ray.rotation = Phaser.Math.DegToRad(
-        (360 / rayCount) * i + Phaser.Math.Between(-6, 6),
-      );
+      ray.rotation = Phaser.Math.DegToRad((360 / rayCount) * i + Phaser.Math.Between(-6, 6));
       ray.alpha = 0;
       rays.push(ray);
     }
 
-    // 3. Animation abspielen (Sequenz 1:1 aus PoC)
+    let isCleanedUp = false;
+    const cleanup = () => {
+      if (isCleanedUp) return;
+      isCleanedUp = true;
+      pulseTween.stop();
+      if (corona.active) corona.destroy();
+      if (mainParticles.active) mainParticles.destroy();
+      if (burstParticles.active) burstParticles.destroy();
+      rays.forEach((ray) => {
+        if (ray.active) ray.destroy();
+      });
+      if (animCard.active) animCard.destroy();
+      cardToAnimate.setLockedVisibility(false);
+      cardToAnimate.setAlpha(1);
+    };
 
-    // Haupt-Explosion
+    if (onCancel) {
+      onCancel(() => {
+        cleanup();
+      });
+    }
+
     try {
       mainParticles.explode(120);
     } catch (e) {
-      log("GoodDominantPlayEffect", "WARN: Particle explode failed (main)", e); // ✨ FIX: Logger nutzen
+      log("GoodDominantPlayEffect", "WARN: Particle explode failed (main)", e);
     }
 
-    // Rays animieren
     rays.forEach((ray, idx) => {
       this.scene.tweens.add({
         targets: ray,
@@ -140,12 +138,8 @@ export class GoodDominantPlayEffect implements IPlayEffect {
         delay: idx * 4,
       });
 
-      const dx =
-        Math.cos(ray.rotation) *
-        (ray.displayWidth + Phaser.Math.Between(40, 160));
-      const dy =
-        Math.sin(ray.rotation) *
-        (ray.displayWidth + Phaser.Math.Between(40, 160));
+      const dx = Math.cos(ray.rotation) * (ray.displayWidth + Phaser.Math.Between(40, 160));
+      const dy = Math.sin(ray.rotation) * (ray.displayWidth + Phaser.Math.Between(40, 160));
 
       this.scene.tweens.add({
         targets: ray,
@@ -155,35 +149,28 @@ export class GoodDominantPlayEffect implements IPlayEffect {
         ease: "Cubic.easeOut",
         duration: durationMs,
         delay: Phaser.Math.Between(40, 160),
-        onComplete: () => ray.destroy(),
+        onComplete: () => {
+          if (ray.active) ray.destroy();
+        },
       });
     });
 
-    // Burst-Teilchen verzögert
     this.scene.time.delayedCall(Math.floor(durationMs * 0.15), () => {
       try {
-        burstParticles.explode(60);
+        if (burstParticles.active) burstParticles.explode(60);
       } catch (e) {
-        log(
-          "GoodDominantPlayEffect",
-          "WARN: Particle explode failed (burst)",
-          e,
-        ); // ✨ FIX: Logger nutzen
+        log("GoodDominantPlayEffect", "WARN: Particle explode failed (burst)", e);
       }
     });
 
-    // Karte einblenden (mit Delay wie im PoC)
     this.scene.tweens.add({
       targets: animCard,
       alpha: { from: 0, to: 1 },
       duration: Math.max(700, durationMs * 0.9),
-      delay: durationMs * 0.1, // ✨ KORREKTUR: Delay wiederhergestellt (260ms)
+      delay: durationMs * 0.1,
       ease: "Quad.easeInOut",
     });
 
-    // Corona aufblitzen / ausblenden
-    // ✨ LOGIK: Dies ist der längste Tween (durationMs * 2 = 5200ms).
-    // Wir nutzen SEIN onComplete, um den nächsten Schritt deterministisch auszulösen.
     return this.scene.tweens.add({
       targets: corona,
       scale: corona.scale * 2.4,
@@ -191,13 +178,11 @@ export class GoodDominantPlayEffect implements IPlayEffect {
       duration: durationMs * 2,
       ease: "Quad.easeOut",
       onComplete: () => {
-        // Aufräumen
         pulseTween.stop();
-        corona.destroy();
-        mainParticles.destroy();
-        burstParticles.destroy();
+        if (corona.active) corona.destroy();
+        if (mainParticles.active) mainParticles.destroy();
+        if (burstParticles.active) burstParticles.destroy();
 
-        // 4. Finale Bewegung zur Zielposition
         this.scene.tweens.add({
           targets: animCard,
           x: endPos.x,
@@ -208,10 +193,7 @@ export class GoodDominantPlayEffect implements IPlayEffect {
           duration: 800,
           ease: "Linear",
           onComplete: () => {
-            animCard.destroy();
-            cardToAnimate.setLockedVisibility(false);
-            // ✨ FIX: Stelle sicher, dass die Karte voll sichtbar ist.
-            cardToAnimate.setAlpha(1);
+            cleanup();
             onComplete();
           },
         });
@@ -221,8 +203,7 @@ export class GoodDominantPlayEffect implements IPlayEffect {
 
   private ensureRayTexture() {
     if (this.scene.textures.exists("rayTexture")) return;
-    const w = 512,
-      h = 32;
+    const w = 512, h = 32;
     const gfx = this.scene.make.graphics({ x: 0, y: 0 });
     for (let i = 0; i < w; i++) {
       const t = i / w;

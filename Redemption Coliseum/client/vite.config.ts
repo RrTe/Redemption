@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  publicDir: "public",
   server: {
     port: 5173, // Standard-Port von Vite (kannst du ändern)
     open: true, // öffnet Browser automatisch beim Start
@@ -23,6 +24,11 @@ export default defineConfig({
         display: "standalone",
         orientation: "landscape",
         icons: [
+          {
+            src: "/favicon.png",
+            sizes: "64x64 32x32 24x24 16x16",
+            type: "image/x-icon",
+          },
           {
             src: "/pwa-192x192.png",
             sizes: "192x192",

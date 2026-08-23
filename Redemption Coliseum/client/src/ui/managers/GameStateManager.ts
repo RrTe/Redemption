@@ -67,6 +67,16 @@ export class GameStateManager {
       `[WaitingStatus] Players: ${playerCount}, Started: ${gameStarted}, OpponentConn: ${opponent?.connected}`,
     );
 
+    // If game has ended, never show waiting overlay
+    if (state.winnerId) {
+      if (this.disconnectTimer) {
+        clearTimeout(this.disconnectTimer);
+        this.disconnectTimer = null;
+      }
+      this.overlayManager.hideWaitingOverlay();
+      return;
+    }
+
     // Priority 1: Disconnection – debounced to avoid false alarms on reconnect
     if (opponent && !opponent.connected) {
       if (!this.disconnectTimer) {
@@ -77,7 +87,7 @@ export class GameStateManager {
           const currentOpponent = currentOpponentId
             ? this.room.state.players.get(currentOpponentId)
             : undefined;
-          if (currentOpponent && !currentOpponent.connected) {
+          if (currentOpponent && !currentOpponent.connected && !this.room.state.winnerId) {
             log("GameState", "Showing overlay: Opponent disconnected (confirmed after debounce)");
             this.overlayManager.showWaitingOverlay(
               "Opponent disconnected. Waiting...",
@@ -97,7 +107,7 @@ export class GameStateManager {
       this.disconnectTimer = null;
     }
 
-    // Priority 2: Opponent timeout after start
+    // Priority 2: Opponent left room after start
     if (playerCount < 2 && gameStarted) {
       log("GameState", "Showing overlay: Opponent left room");
       this.overlayManager.showWaitingOverlay(
@@ -166,6 +176,8 @@ export class GameStateManager {
 
     this.scene.events.on("net:gameOver", (data: { winnerId: string }) => {
       if (!data.winnerId) return; // ✨ FIX: Verhindert "Geister"-Game-Overs
+      localStorage.removeItem("reconnectionToken");
+      localStorage.removeItem("reconnectionRoomId");
       this.overlayManager.showGameOverOverlay(
         data.winnerId === this.room.sessionId,
       );
