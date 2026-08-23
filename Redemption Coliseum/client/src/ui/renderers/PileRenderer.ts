@@ -108,8 +108,13 @@ export class PileRenderer {
       // ✨ Zufällige Rotation für Stapel (außer Deck/Reserve, aber die werden hier eh nicht gerendert)
       const shouldHaveRandomAngle =
         cardData.zone !== ZONES.RESERVE && cardData.zone !== ZONES.DECK;
+      // Deterministic angle offset based on card ID to prevent NaN on non-hex suffixes
+      let hash = 0;
+      for (let i = 0; i < cardData.id.length; i++) {
+        hash = (hash + cardData.id.charCodeAt(i)) | 0;
+      }
       const angleOffset = shouldHaveRandomAngle
-        ? (parseInt(cardData.id.slice(-2), 16) % 20) - 10
+        ? (Math.abs(hash) % 21) - 10
         : 0;
 
       const targetX = area.centerX;
