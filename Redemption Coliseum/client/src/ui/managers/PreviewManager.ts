@@ -82,8 +82,9 @@ export class PreviewManager {
 
       this.previewImage.setTexture(textureKey);
 
-      // Größe anpassen (60% der Bildschirmhöhe)
-      const targetHeight = this.scene.scale.height * 0.6;
+      // Größe anpassen (Desktop 60%, Mobile / Low-Height 92% der Bildschirmhöhe)
+      const isLowHeight = this.scene.scale.height < 600;
+      const targetHeight = this.scene.scale.height * (isLowHeight ? 0.92 : 0.6);
       this.previewImage.displayHeight = targetHeight;
       this.previewImage.scaleX = this.previewImage.scaleY; // Seitenverhältnis beibehalten
 
@@ -104,7 +105,7 @@ export class PreviewManager {
       const screenHeight = this.scene.scale.height;
       const previewWidth = this.previewImage.displayWidth;
       const previewHeight = this.previewImage.displayHeight;
-      const padding = 20;
+      const padding = isLowHeight ? 10 : 20;
 
       // ✨ FIX: Zurück zur Logik basierend auf der Bildschirmhälfte. Das ist stabiler.
       // Horizontal: Wenn Karte links ist -> Vorschau rechts, sonst links
@@ -171,11 +172,12 @@ export class PreviewManager {
 
       this.previewImage.setTexture(textureKey);
 
-      const targetHeight = this.scene.scale.height * 0.6;
+      const isLowHeight = this.scene.scale.height < 600;
+      const targetHeight = this.scene.scale.height * (isLowHeight ? 0.92 : 0.6);
       this.previewImage.displayHeight = targetHeight;
       this.previewImage.scaleX = this.previewImage.scaleY;
 
-      const padding = 20;
+      const padding = isLowHeight ? 10 : 20;
       const previewWidth = this.previewImage.displayWidth;
       
       this.previewImage.x = sourceRightX + padding + previewWidth / 2;
