@@ -5,15 +5,15 @@ export class PrebuiltDeckLoader {
   private static cachedWrapped: Map<string, WrappedDeck> = new Map();
 
   /**
-   * Loads all prebuilt decks from client/public/prebuilt-decks/ using eager globbing.
+   * Loads all prebuilt decks from client/src/data/prebuilt-decks/ using eager globbing.
    */
   public static loadAllPrebuiltDecks(): DeckMetadata[] {
     const decks: DeckMetadata[] = [];
     this.cachedWrapped.clear();
 
     try {
-      // Eagerly import all json files from /public/prebuilt-decks/
-      const modules = import.meta.glob<WrappedDeck | DeckMetadata>("/public/prebuilt-decks/*.json", { eager: true });
+      // Eagerly import all json files from /src/data/prebuilt-decks/
+      const modules = import.meta.glob<WrappedDeck | DeckMetadata>("/src/data/prebuilt-decks/*.json", { eager: true });
       
       for (const path in modules) {
         const content = modules[path] as any;
