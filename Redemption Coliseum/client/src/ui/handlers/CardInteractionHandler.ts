@@ -128,31 +128,35 @@ export class CardInteractionHandler {
       return;
     }
 
-    // Left Click Release (or Touch Release): Double Click Detection
+    // Left Click Release (or Touch Release)
     if (pointer.leftButtonReleased() || pointer.wasTouch) {
       // ✨ Mobile: If it was a long press, don't treat it as a tap
       if (pointer.wasTouch && pointer.getDuration() > 500) {
         return;
       }
 
+      // ✨ Mobile: Single Tap toggles preview (no accidental face-down flipping)
+      if (pointer.wasTouch || ViewportManager.isTouchPrimary()) {
+        if (this.currentHoveredCard === card) {
+          this.clearHover();
+        } else {
+          this.handleHoverIn(card);
+        }
+        return;
+      }
+
+      // Desktop Double Click Detection (All interactable cards including Hand)
       const now = Date.now();
       if (
         this.lastClickedCardId === card.cardData.id &&
         now - this.lastClickTime < 300
       ) {
-        if (this.isInteractable(card)) { // ✨ Nur für interaktive Karten
+        if (this.isInteractable(card)) {
           this.handleFaceDownToggle(card);
         }
         this.lastClickedCardId = null;
-        if (ViewportManager.isTouchPrimary() || pointer.wasTouch) {
-          this.clearHover();
-        }
       } else {
         this.lastClickedCardId = card.cardData.id;
-        // ✨ Mobile: Single Tap opens the preview overlay (Hover equivalent)
-        if (pointer.wasTouch) {
-          this.handleHoverIn(card); // ✨ Erlaubt Preview für JEDE Karte (auch Discard/Banish)
-        }
       }
       this.lastClickTime = now;
     }
@@ -230,6 +234,8 @@ export class CardInteractionHandler {
    * Clears the currently hovered card (useful for mobile background taps).
    */
   public clearHover() {
+    this.lastClickedCardId = null;
+    this.lastClickTime = 0;
     if (this.currentHoveredCard) {
       this.handleHoverOut(this.currentHoveredCard);
     }

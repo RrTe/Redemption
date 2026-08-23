@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { CardUI } from "../CardUI";
+import { MobileCardDetailOverlay } from "../overlays/MobileCardDetailOverlay";
 
 /**
  * Verwaltet die vergrößerte Kartenvorschau (Preview), die erscheint,
@@ -82,9 +83,17 @@ export class PreviewManager {
 
       this.previewImage.setTexture(textureKey);
 
-      // Größe anpassen (Desktop 60%, Mobile / Low-Height 92% der Bildschirmhöhe)
       const isLowHeight = this.scene.scale.height < 600;
-      const targetHeight = this.scene.scale.height * (isLowHeight ? 0.92 : 0.6);
+      if (isLowHeight) {
+        MobileCardDetailOverlay.show(card.cardData, () => {
+          this.scene.events.emit("ui:clear-hover");
+        });
+        if (this.previewImage) this.previewImage.setVisible(false);
+        return;
+      }
+
+      // Größe anpassen (Desktop 60% der Bildschirmhöhe)
+      const targetHeight = this.scene.scale.height * 0.6;
       this.previewImage.displayHeight = targetHeight;
       this.previewImage.scaleX = this.previewImage.scaleY; // Seitenverhältnis beibehalten
 
@@ -173,11 +182,19 @@ export class PreviewManager {
       this.previewImage.setTexture(textureKey);
 
       const isLowHeight = this.scene.scale.height < 600;
-      const targetHeight = this.scene.scale.height * (isLowHeight ? 0.92 : 0.6);
+      if (isLowHeight) {
+        MobileCardDetailOverlay.show(cardData, () => {
+          this.scene.events.emit("ui:clear-hover");
+        });
+        if (this.previewImage) this.previewImage.setVisible(false);
+        return;
+      }
+
+      const targetHeight = this.scene.scale.height * 0.6;
       this.previewImage.displayHeight = targetHeight;
       this.previewImage.scaleX = this.previewImage.scaleY;
 
-      const padding = isLowHeight ? 10 : 20;
+      const padding = 20;
       const previewWidth = this.previewImage.displayWidth;
       
       this.previewImage.x = sourceRightX + padding + previewWidth / 2;
@@ -211,6 +228,7 @@ export class PreviewManager {
       clearTimeout(this.showTimer);
       this.showTimer = null;
     }
+    MobileCardDetailOverlay.hide();
     // Verstecke das Bild, falls es bereits sichtbar ist.
     if (this.previewImage && this.previewImage.visible) {
       this.previewImage.setVisible(false);

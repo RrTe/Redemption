@@ -50,6 +50,7 @@ export class InteractionHandler {
     this.scene.input.on("gameobjectup", this.onGameObjectUp, this);
     // ✨ Mobile: Background tap detection to clear hovers
     this.scene.input.on("pointerdown", this.onGlobalPointerDown, this);
+    this.scene.events.on("ui:clear-hover", this.onClearHover, this);
   }
 
   public destroy() {
@@ -58,10 +59,15 @@ export class InteractionHandler {
     this.scene.input.off("gameobjectdown", this.onGameObjectDown, this);
     this.scene.input.off("gameobjectup", this.onGameObjectUp, this);
     this.scene.input.off("pointerdown", this.onGlobalPointerDown, this);
+    this.scene.events.off("ui:clear-hover", this.onClearHover, this);
     if (this.activeMenu) {
       this.activeMenu.close();
       this.activeMenu = null;
     }
+  }
+
+  private onClearHover() {
+    this.cardInteractionHandler.clearHover();
   }
 
   private onGlobalPointerDown(
