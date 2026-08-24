@@ -23,29 +23,13 @@ export class MobileCardDetailOverlay {
     this.overlayNode = document.createElement("div");
     this.overlayNode.id = "mobile-card-detail-overlay";
     Object.assign(this.overlayNode.style, {
-      position: "fixed",
-      top: "0",
-      left: "0",
-      width: "100vw",
-      height: "100vh",
-      backgroundColor: "rgba(0, 0, 0, 0.75)",
-      backdropFilter: "blur(4px)",
-      webkitBackdropFilter: "blur(4px)",
-      zIndex: "99999",
-      display: "none",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "14px",
-      padding: "12px",
-      boxSizing: "border-box",
-      userSelect: "none",
-      webkitUserSelect: "none",
+      position: "fixed", top: "0", left: "0", width: "100vw", height: "100vh",
+      backgroundColor: "rgba(0, 0, 0, 0.75)", backdropFilter: "blur(4px)", webkitBackdropFilter: "blur(4px)",
+      zIndex: "99999", display: "none", alignItems: "center", justifyContent: "center",
+      gap: "14px", padding: "12px", boxSizing: "border-box", userSelect: "none", webkitUserSelect: "none",
     });
 
-    // Tap anywhere to close
-    this.overlayNode.onclick = () => {
-      this.hide();
-    };
+    this.overlayNode.onclick = () => { this.hide(); };
 
     // Card Image
     this.imgNode = document.createElement("img");

@@ -93,6 +93,7 @@ export class DragDropHandler {
     log("Input", `dragstart on ${gameObject.cardData?.id}`);
 
     this.previewManager.hide();
+    this.scene.events.emit("ui:clear-hover");
     this.animationManager.stopHandHoverAnimation(gameObject);
 
     gameObject.setData("start_depth", gameObject.depth);
@@ -257,6 +258,8 @@ export class DragDropHandler {
     dropped: boolean,
   ) {
     this.isDragging = false;
+    this.previewManager.hide();
+    this.scene.events.emit("ui:clear-hover");
 
     if (gameObject.scene && !gameObject.getData("is_snapping_back")) {
       const startDepth =
@@ -300,6 +303,8 @@ export class DragDropHandler {
     dropZone: Phaser.GameObjects.Zone | PileUI,
   ) {
     log("Input", `Drop called with dropzone:`, dropZone);
+    this.previewManager.hide();
+    this.scene.events.emit("ui:clear-hover");
 
     const isAttached = !!gameObject.cardData.attachedTo;
     if (isAttached) {

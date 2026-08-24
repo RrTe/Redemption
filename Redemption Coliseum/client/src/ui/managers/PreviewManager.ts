@@ -42,23 +42,21 @@ export class PreviewManager {
    * Zeigt die Vorschau für eine bestimmte Karte an.
    * @param card Die anzuzeigende Karte.
    * @param currentSessionId Die ID des aktuellen Spielers.
+   * @param isInstant Wenn true, wird die Vorschau sofort ohne Verzögerung angezeigt.
    */
-  public show(card: CardUI, currentSessionId: string) {
-    // Breche einen laufenden Timer ab, falls die Maus schnell über Karten bewegt wird.
+  public show(card: CardUI, currentSessionId: string, isInstant: boolean = false) {
     if (this.showTimer) {
       clearTimeout(this.showTimer);
+      this.showTimer = null;
     }
 
-    // Starte einen neuen Timer, um die Vorschau mit Verzögerung anzuzeigen.
-    this.showTimer = window.setTimeout(() => {
-      const isControlledByMe = card.cardData.controllerId === currentSessionId;
+    const render = () => {
+      if (!card.scene || card.isBeingDragged) return;
 
-      // Zeige eine Vorschau nur, wenn die Karte offen liegt ODER ich sie kontrolliere.
-      // Verdeckte Karten des Gegners zeigen gar nichts an.
+      const isControlledByMe = card.cardData.controllerId === currentSessionId;
       const shouldShowPreview = !card.isCurrentlyFaceDown() || isControlledByMe;
 
       if (!shouldShowPreview) {
-        // Falls noch ein altes Bild sichtbar ist, verstecke es sicherheitshalber.
         if (this.previewImage && this.previewImage.visible) {
           this.previewImage.setVisible(false);
         }
@@ -68,11 +66,8 @@ export class PreviewManager {
       if (!this.previewImage) {
         this.createPreviewImage();
       }
-
       if (!this.previewImage) return;
 
-      // Textur bestimmen: Wir zeigen immer die Vorderseite, da wir oben
-      // bereits gefiltert haben (wir dürfen die Karte sehen).
       let textureKey = "card-back";
       if (card.cardData.ImageFile) {
         const key = "card-" + card.cardData.ImageFile;
@@ -92,16 +87,10 @@ export class PreviewManager {
         return;
       }
 
-      // Größe anpassen (Desktop 60% der Bildschirmhöhe)
       const targetHeight = this.scene.scale.height * 0.6;
       this.previewImage.displayHeight = targetHeight;
-      this.previewImage.scaleX = this.previewImage.scaleY; // Seitenverhältnis beibehalten
+      this.previewImage.scaleX = this.previewImage.scaleY;
 
-      // ✨ NEU: Dynamische Positionierung neben der Karte (Hearthstone-Style)
-      // ✨ FIX: Wir berechnen die Grenzen manuell basierend auf card.x/y und width/height.
-      // card.getBounds() ist unzuverlässig, da der Partikel-Emitter die BoundingBox des Containers verfälschen kann.
-
-      // ✨ FIX: Weltkoordinaten verwenden, damit es auch in Containern (z.B. SelectionDialog) funktioniert.
       const matrix = card.getWorldTransformMatrix();
       const globalX = matrix.tx;
       const globalY = matrix.ty;
@@ -116,34 +105,27 @@ export class PreviewManager {
       const previewHeight = this.previewImage.displayHeight;
       const padding = isLowHeight ? 10 : 20;
 
-      // ✨ FIX: Zurück zur Logik basierend auf der Bildschirmhälfte. Das ist stabiler.
-      // Horizontal: Wenn Karte links ist -> Vorschau rechts, sonst links
       if (globalX < screenWidth / 2) {
         this.previewImage.x = cardRight + padding + previewWidth / 2;
       } else {
         this.previewImage.x = cardLeft - padding - previewWidth / 2;
       }
 
-      // Vertikal: Zentriert zur Karte, aber im Bildschirm halten (Clamping)
       let targetY = globalY;
       const halfHeight = previewHeight / 2;
 
-      // Nicht oben rausschieben
       if (targetY - halfHeight < padding) targetY = halfHeight + padding;
-      // Nicht unten rausschieben
       if (targetY + halfHeight > screenHeight - padding)
         targetY = screenHeight - halfHeight - padding;
 
       this.previewImage.y = targetY;
 
-      // ✨ FIX: Horizontal auch im Bildschirm halten (Clamping), falls die Karte sehr weit am Rand ist.
       const halfWidth = previewWidth / 2;
       if (this.previewImage.x - halfWidth < padding)
         this.previewImage.x = halfWidth + padding;
       if (this.previewImage.x + halfWidth > screenWidth - padding)
         this.previewImage.x = screenWidth - halfWidth - padding;
 
-      // Sichtbar machen mit Fade-In
       this.previewImage.setVisible(true);
       this.previewImage.setAlpha(0);
 
@@ -153,7 +135,13 @@ export class PreviewManager {
         duration: 100,
         ease: "Sine.easeOut",
       });
-    }, this.SHOW_DELAY);
+    };
+
+    if (isInstant) {
+      render();
+    } else {
+      this.showTimer = window.setTimeout(render, this.SHOW_DELAY);
+    }
   }
 
   /**

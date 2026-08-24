@@ -40,9 +40,6 @@ export class CardInteractionHandler {
     this.previewManager = previewManager;
   }
 
-  /**
-   * Configures a card for interaction.
-   */
   public setupCardInteractivity(card: CardUI) {
     card.setInteractive({
       hitArea: new Phaser.Geom.Rectangle(0, 0, card.width, card.height),
@@ -52,22 +49,14 @@ export class CardInteractionHandler {
     });
   }
 
-  /**
-   * Updates the hit area of a card, usually after resizing.
-   */
   public updateCardHitArea(card: CardUI) {
     if (card.input && card.input.hitArea instanceof Phaser.Geom.Rectangle) {
       card.input.hitArea.setTo(0, 0, card.width, card.height);
     }
   }
 
-  public destroy() {
-    // Cleanup logic if needed
-  }
+  public destroy() {}
 
-  /**
-   * Opens the radial menu for a card in an active game zone.
-   */
   public openCardMenu(
     pointer: Phaser.Input.Pointer,
     card: CardUI,
@@ -75,30 +64,17 @@ export class CardInteractionHandler {
   ): RadialMenu {
     const menuConfigs = this.menuFactory.getActionsForCard(card);
     const isCompact = ViewportManager.isTouchPrimary() || ViewportManager.isCompactMode();
-    // In compact mode, we want a tighter radius but larger icons.
     const radius = ViewportManager.vmin(isCompact ? 16 : 8);
     const iconSize = ViewportManager.vmin(isCompact ? 12.5 : 8.3);
     const menuRadius = radius + iconSize / 2;
 
-    const cx = Phaser.Math.Clamp(
-      pointer.x,
-      menuRadius,
-      this.scene.scale.width - menuRadius,
-    );
-    const cy = Phaser.Math.Clamp(
-      pointer.y,
-      menuRadius,
-      this.scene.scale.height - menuRadius,
-    );
-
+    const cx = Phaser.Math.Clamp(pointer.x, menuRadius, this.scene.scale.width - menuRadius);
+    const cy = Phaser.Math.Clamp(pointer.y, menuRadius, this.scene.scale.height - menuRadius);
     log("Input", `Opening card menu for ${card.cardData.id}`);
 
     return new RadialMenu(this.scene, cx, cy, radius, menuConfigs, onClose);
   }
 
-  /**
-   * Handles the logic for flipping a card (Right Click Release in Hand).
-   */
   public handleFlip(card: CardUI) {
     log("Input", `Flip requested for card ${card.cardData.id}`);
     this.networkManager.sendUpdateCardState({
@@ -119,9 +95,15 @@ export class CardInteractionHandler {
   }
 
   public handlePointerUp(pointer: Phaser.Input.Pointer, card: CardUI) {
+    // Ignore tap/click if pointer moved significantly (Drag & Drop gesture) or card is being dragged
+    const TAP_MOVE_THRESHOLD = 15;
+    if (pointer.getDistance() > TAP_MOVE_THRESHOLD || card.isBeingDragged) {
+      return;
+    }
+
     // Right Click Release: Flip Hand Card
     if (pointer.rightButtonReleased()) {
-      if (!this.isInteractable(card)) return; // ✨ Nur für interaktive Karten
+      if (!this.isInteractable(card)) return;
       if (card.currentZone === ZONES.HAND) {
         this.handleFlip(card);
       }
@@ -130,12 +112,12 @@ export class CardInteractionHandler {
 
     // Left Click Release (or Touch Release)
     if (pointer.leftButtonReleased() || pointer.wasTouch) {
-      // ✨ Mobile: If it was a long press, don't treat it as a tap
+      // Mobile: If it was a long press, don't treat it as a tap
       if (pointer.wasTouch && pointer.getDuration() > 500) {
         return;
       }
 
-      // ✨ Mobile: Single Tap toggles preview (no accidental face-down flipping)
+      // Mobile: Single Tap toggles preview (no accidental face-down flipping)
       if (pointer.wasTouch || ViewportManager.isTouchPrimary()) {
         if (this.currentHoveredCard === card) {
           this.clearHover();
@@ -162,9 +144,6 @@ export class CardInteractionHandler {
     }
   }
 
-  /**
-   * Validates if a card is in a zone where it can be interacted with.
-   */
   public isInteractable(card: CardUI): boolean {
     const zone = card.currentZone;
     return (
@@ -175,18 +154,16 @@ export class CardInteractionHandler {
     );
   }
 
-  /**
-   * Handles visual hover effects for cards.
-   */
   public handleHoverIn(card: CardUI) {
-    if (card.getData("waiting_for_overlay")) return; // ✨ NEU: Ignoriere Hover für Karten, die auf Overlay warten
+    if (card.getData("waiting_for_overlay")) return;
 
     if (this.currentHoveredCard && this.currentHoveredCard !== card) {
       this.handleHoverOut(this.currentHoveredCard);
     }
     this.currentHoveredCard = card;
 
-    this.previewManager.show(card, this.room.sessionId);
+    const isTouch = ViewportManager.isTouchPrimary();
+    this.previewManager.show(card, this.room.sessionId, isTouch);
 
     const isMyHandCard =
       card.currentZone === ZONES.HAND &&
