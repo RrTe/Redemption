@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { SettingsManager } from "../managers/SettingsManager";
 import { SoundManager } from "../managers/SoundManager";
+import { TooltipManager } from "../ui/managers/TooltipManager";
 
 // ✨ NEU: Angepasste Farbpalette
 const COLOR_ACTIVE = 0xebce4c; // ✨ NEU: Satteres Gold/Gelb wie gewünscht
@@ -56,6 +57,7 @@ export class SettingsDialogScene extends Phaser.Scene {
   }
 
   create() {
+    TooltipManager.hide();
     const width = this.scale.width;
     const height = this.scale.height;
 
@@ -472,6 +474,7 @@ export class SettingsDialogScene extends Phaser.Scene {
   }
 
   private close() {
+    TooltipManager.hide();
     // Slide-Out Animation
     this.tweens.add({
       targets: this.container,
@@ -479,6 +482,7 @@ export class SettingsDialogScene extends Phaser.Scene {
       duration: 300,
       ease: "Back.In",
       onComplete: () => {
+        TooltipManager.hide();
         this.scene.resume(this.parentSceneKey); // ✨ FIX: Dynamische Elternszene fortsetzen
         this.scene.stop(); // Diese Szene beenden
       },

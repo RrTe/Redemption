@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { TooltipManager } from "../managers/TooltipManager";
+import { ViewportManager } from "../managers/ViewportManager";
 
 export class SidebarButton {
   public image: Phaser.GameObjects.Image;
@@ -7,6 +8,7 @@ export class SidebarButton {
   private isRightSide: boolean;
   private textureKey: string;
   private tooltipKey: string;
+  private onResumeHandler: () => void;
 
   constructor(
     scene: Phaser.Scene,
@@ -31,9 +33,11 @@ export class SidebarButton {
       .setAlpha(0.8)
       .setDepth(9999);
 
-    this.image.on("pointerover", () => {
-      const visibleX = this.getVisibleX(scene.scale.width);
-      scene.tweens.add({
+    this.image.on("pointerover", (pointer: Phaser.Input.Pointer) => {
+      if (ViewportManager.isTouchPrimary() || pointer?.wasTouch) return;
+      this.scene.tweens.killTweensOf(this.image);
+      const visibleX = this.getVisibleX(this.scene.scale.width);
+      this.scene.tweens.add({
         targets: this.image,
         x: visibleX,
         duration: 200,
@@ -44,19 +48,22 @@ export class SidebarButton {
     });
 
     this.image.on("pointerout", () => {
-      scene.tweens.add({
-        targets: this.image,
-        x: this.getHiddenX(scene.scale.width),
-        duration: 200,
-        ease: "Sine.easeOut",
-      });
-      TooltipManager.hide();
+      this.retract(false);
     });
 
     this.image.on("pointerdown", () => {
-      TooltipManager.hide();
+      this.retract(true);
       onClick();
     });
+
+    this.image.on("pointerup", () => {
+      this.retract(true);
+    });
+
+    this.onResumeHandler = () => {
+      this.retract(true);
+    };
+    this.scene.events.on("resume", this.onResumeHandler);
   }
 
   private getHiddenX(width: number): number {
@@ -67,12 +74,35 @@ export class SidebarButton {
     return this.isRightSide ? width - 24 : 24;
   }
 
-  public resize(width: number, y: number) {
+  /**
+   * Retracts the button into the edge and hides any associated tooltip.
+   *
+   * @param immediate Whether to immediately position the button without animation.
+   */
+  public retract(immediate = false): void {
     this.scene.tweens.killTweensOf(this.image);
-    this.image.setPosition(this.getHiddenX(width), y);
+    TooltipManager.hide();
+    const hiddenX = this.getHiddenX(this.scene.scale.width);
+    if (immediate) {
+      this.image.setX(hiddenX);
+    } else {
+      this.scene.tweens.add({
+        targets: this.image,
+        x: hiddenX,
+        duration: 200,
+        ease: "Sine.easeOut",
+      });
+    }
   }
 
-  public destroy() {
+  public resize(width: number, y: number): void {
+    this.retract(true);
+    this.image.setY(y);
+  }
+
+  public destroy(): void {
+    this.scene.events.off("resume", this.onResumeHandler);
+    this.scene.tweens.killTweensOf(this.image);
     TooltipManager.hide();
     this.image.destroy();
   }
