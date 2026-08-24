@@ -70,21 +70,27 @@ export class DragDropHandler {
   }
 
   private snapBack(gameObject: CardUI) {
+    const targetX = gameObject.targetX || gameObject.getData("start_x");
+    const targetY = gameObject.targetY || gameObject.getData("start_y");
+    const targetAngle =
+      gameObject.targetAngle !== undefined
+        ? gameObject.targetAngle
+        : gameObject.getData("start_angle");
+
     this.scene.tweens.add({
       targets: gameObject,
-      x: gameObject.getData("start_x"),
-      y: gameObject.getData("start_y"),
-      angle: gameObject.getData("start_angle"),
+      x: targetX,
+      y: targetY,
+      angle: targetAngle,
       ease: "Power1",
       duration: 200,
     });
 
     if (gameObject.scene) {
-      const startDepth = gameObject.getData("start_depth");
-      if (startDepth !== undefined) {
-        gameObject.setDepth(startDepth);
-      }
-      this.scene.children.bringToTop(gameObject);
+      const startDepth =
+        gameObject.getData("start_depth") ??
+        (gameObject.currentZone === ZONES.HAND ? 100 : 0);
+      gameObject.setDepth(startDepth);
     }
   }
 
@@ -98,9 +104,14 @@ export class DragDropHandler {
 
     gameObject.setData("start_depth", gameObject.depth);
     gameObject.setDepth(1000);
-    gameObject.setData("start_x", gameObject.x);
-    gameObject.setData("start_y", gameObject.y);
-    gameObject.setData("start_angle", gameObject.angle);
+    gameObject.setData("start_x", gameObject.targetX || gameObject.x);
+    gameObject.setData("start_y", gameObject.targetY || gameObject.y);
+    gameObject.setData(
+      "start_angle",
+      gameObject.targetAngle !== undefined
+        ? gameObject.targetAngle
+        : gameObject.angle,
+    );
     gameObject.setData("drop_action_taken", false);
 
     gameObject.dragTargetX = gameObject.x;
@@ -333,23 +344,19 @@ export class DragDropHandler {
     const targetOwnerId = dropZone.getData("ownerId");
 
     let attachTarget = this.currentDragTarget;
-    if (!attachTarget) {
-      const hitObjects = this.scene.input.hitTestPointer(pointer);
-      attachTarget =
-        (hitObjects.find(
-          (obj) =>
-            obj instanceof CardUI &&
-            obj !== gameObject &&
-            (obj as CardUI).currentZone !== ZONES.HAND &&
-            !PILE_ZONES.includes((obj as CardUI).currentZone) &&
-            (obj as CardUI).cardData.Type !== "Lost Soul",
-        ) as CardUI | undefined) || null;
-
-      if (attachTarget) {
+    if (attachTarget) {
+      const targetBounds = attachTarget.getBounds();
+      const isOverTarget = Phaser.Geom.Rectangle.Contains(
+        targetBounds,
+        pointer.x,
+        pointer.y,
+      );
+      if (!isOverTarget) {
         log(
           "Input",
-          `[DROP] Found attach target via fallback hitTest: ${attachTarget.cardData.id}`,
+          `[DROP] Attach target was active, but dropped outside bounds. Ignoring attach.`,
         );
+        attachTarget = null;
       }
     }
 
@@ -383,6 +390,13 @@ export class DragDropHandler {
 
     if (toZone === ZONES.BATTLEFIELD && gameObject.isParalyzed) {
       log("Input", `[DROP] Blocked paralyzed card from entering Battlefield.`);
+      gameObject.setData("drop_action_taken", true);
+      this.snapBack(gameObject);
+      return;
+    }
+
+    if (fromZone === ZONES.HAND && toZone === ZONES.HAND) {
+      log("Input", `[DROP] Hand-to-hand drop. Snapping back to fan position.`);
       gameObject.setData("drop_action_taken", true);
       this.snapBack(gameObject);
       return;

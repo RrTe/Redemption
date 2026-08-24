@@ -60,6 +60,7 @@ export class CardHoverEffect {
     if (!this.settingsManager.areAnimationsEnabled()) {
       if (card.getData("originalScaleX") !== undefined) {
         card.scale = card.getData("originalScaleX");
+        card.x = card.targetX;
         card.y = card.targetY;
         card.angle = card.targetAngle;
       }
@@ -68,6 +69,7 @@ export class CardHoverEffect {
 
     const returnTween = this.scene.tweens.add({
       targets: card,
+      x: card.targetX,
       y: card.targetY,
       angle: card.targetAngle,
       scale: card.getData("originalScaleX") ?? card.scaleX,
