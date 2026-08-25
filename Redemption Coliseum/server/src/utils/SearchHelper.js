@@ -91,8 +91,20 @@ class SearchHelper {
 
   /**
    * Generates possible target zones for the SelectionDialog.
+   * In round 1, no target actions are allowed when taking cards out of the reserve.
    */
-  static getPossibleActions(fromZone) {
+  static getPossibleActions(fromZone, roomState = null) {
+    if (fromZone === ZONES.RESERVE && roomState) {
+      const isFirstRound =
+        roomState.round !== undefined && roomState.round !== null
+          ? roomState.round <= 1
+          : Array.from(roomState.players?.values() || []).every((p) => p.turn <= 1);
+
+      if (isFirstRound) {
+        return [];
+      }
+    }
+
     const targetZones = [
       { label: "To Hand", toZone: ZONES.HAND },
       { label: "To Deck", toZone: ZONES.DECK },

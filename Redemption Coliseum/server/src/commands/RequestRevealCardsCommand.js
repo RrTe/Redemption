@@ -56,7 +56,7 @@ class RequestRevealCardsCommand extends BaseCommand {
       zone: zone,
       actionType: "reveal",
       position: position,
-      possibleActions: SearchHelper.getPossibleActions(zone),
+      possibleActions: SearchHelper.getPossibleActions(zone, this.state),
     });
 
   }

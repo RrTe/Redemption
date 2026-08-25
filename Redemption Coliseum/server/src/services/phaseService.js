@@ -99,12 +99,44 @@ function handleEndTurn(state, clients, cardLookup) {
   state.activePlayer = nextPlayerClient.sessionId;
   nextPlayerState.turn++;
   state.currentPhase = PHASES.DRAW;
+
+  // Increment round when the cycle returns to the starting player
+  const isRoundStart = state.startingPlayerId
+    ? nextPlayerClient.sessionId === state.startingPlayerId
+    : nextPlayerIndex === 0;
+
+  if (isRoundStart) {
+    state.round = (state.round || 1) + 1;
+  }
+
   logger.info(
-    `Turn ended. New active player is ${state.activePlayer}. Turn: ${nextPlayerState.turn}`
+    `Turn ended. New active player is ${state.activePlayer}. Turn: ${nextPlayerState.turn}, Round: ${state.round}`
   );
 
   // ✨ FINALE KORREKTUR: Gib die gezogenen Karten zurück, damit der GameRoom eine Nachricht senden kann.
   return handleDrawPhaseStart(state, cardLookup);
 }
 
-module.exports = { advancePhase, handleDrawPhaseStart, handleEndTurn };
+/**
+ * Checks if the game is currently in its first round.
+ * @param {RoomState} state - The global room state.
+ * @returns {boolean} True if round is 1 or all players are on turn <= 1.
+ */
+function isFirstRound(state) {
+  if (!state) return true;
+  if (typeof state.round === "number") {
+    return state.round <= 1;
+  }
+  if (!state.players || state.players.size === 0) return true;
+  for (const player of state.players.values()) {
+    if (player.turn > 1) return false;
+  }
+  return true;
+}
+
+module.exports = {
+  advancePhase,
+  handleDrawPhaseStart,
+  handleEndTurn,
+  isFirstRound,
+};

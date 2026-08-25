@@ -130,6 +130,21 @@ function _validateMove(
     return false;
   }
 
+  // ✨ Regel: In der 1. Runde dürfen keine Karten aus der Reserve entnommen werden.
+  if (fromZone === ZONES.RESERVE && toZone !== ZONES.RESERVE) {
+    const isFirstRound =
+      state?.round !== undefined && state?.round !== null
+        ? state.round <= 1
+        : Array.from(state?.players?.values() || []).every((p) => p.turn <= 1);
+
+    if (isFirstRound) {
+      logger.warn(
+        `Ungültiger Zug: In der ersten Runde dürfen keine Karten aus der Reserve entnommen werden.`,
+      );
+      return false;
+    }
+  }
+
   // ✨ Regel 4: Karten mit dem Type EVIL_CHARACTERS dürfen nicht ins eigene Territory gespielt werden.
   // if (card.Type === CARD_TYPES.EVIL_CHARACTERS && targetPlayerId === cardOwnerId && toZone === ZONES.TERRITORY) {
   //   logger.warn("Ungültige Bewegung: Evil Characters dürfen nicht ins eigene Territory gespielt werden.");

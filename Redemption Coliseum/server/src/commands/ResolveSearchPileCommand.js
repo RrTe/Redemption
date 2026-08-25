@@ -44,6 +44,7 @@ class ResolveSearchPileCommand extends BaseCommand {
 
     // Perform moves via cardService
     const cardsMovedToHand = [];
+    const successfullyMovedCards = [];
 
     const traceId = Math.random().toString(36).substring(7);
     logger.debug(`[TRACE][${traceId}][S1] ResolveSearchPile START. Selected: ${validSelectedCards.length}`);
@@ -64,6 +65,10 @@ class ResolveSearchPileCommand extends BaseCommand {
         const cardInstance = this.room.cardLookup.get(selection.id);
         const success = result.movedCards.length > 0;
 
+        if (success) {
+            successfullyMovedCards.push(selection);
+        }
+
         // ✨ FIX: Remove from searchContext immediately to prevent double-referencing
         const ctxIdx = context.cards.findIndex(c => c.id === selection.id);
         if (ctxIdx !== -1) context.cards.splice(ctxIdx, 1);
@@ -76,8 +81,8 @@ class ResolveSearchPileCommand extends BaseCommand {
     });
 
     // Log für Auswahl aus Dialog (Zuerst anzeigen)
-    if (validSelectedCards && validSelectedCards.length > 0) {
-      const cardNames = validSelectedCards.map((s) => {
+    if (successfullyMovedCards.length > 0) {
+      const cardNames = successfullyMovedCards.map((s) => {
         const c = this.room.cardLookup.get(s.id);
         return c ? c.Name : "Unknown";
       });

@@ -107,4 +107,74 @@ describe("cardService (moveCard)", () => {
     expect(mockView.remove).toHaveBeenCalled();
     expect(mockView.add).toHaveBeenCalled();
   });
+
+  describe("Reserve-Regeln (Runde 1)", () => {
+    let r1;
+
+    beforeEach(() => {
+      state.round = 1;
+      player.turn = 1;
+
+      r1 = new Card();
+      r1.id = "r1";
+      r1.Name = "ReserveCard";
+      r1.controllerId = "p1";
+      r1.originalOwnerId = "p1";
+      r1.zone = ZONES.RESERVE;
+
+      player[ZONES.RESERVE].push(r1);
+      cardLookup.set(r1.id, r1);
+    });
+
+    test("sollte in Runde 1 das Entnehmen einer Karte aus der Reserve blockieren", () => {
+      const result = moveCard(
+        player,
+        state,
+        cardLookup,
+        ZONES.RESERVE,
+        ZONES.HAND,
+        "r1"
+      );
+
+      expect(result.movedCards.length).toBe(0);
+      expect(player[ZONES.RESERVE].length).toBe(1);
+      expect(player[ZONES.HAND].length).toBe(0);
+      expect(r1.zone).toBe(ZONES.RESERVE);
+    });
+
+    test("sollte in Runde 1 das Ablegen einer Karte IN die Reserve erlauben", () => {
+      // Karte c1 ist im Deck -> in Reserve verschieben
+      const result = moveCard(
+        player,
+        state,
+        cardLookup,
+        ZONES.DECK,
+        ZONES.RESERVE,
+        "c1"
+      );
+
+      expect(result.movedCards.length).toBe(1);
+      expect(player[ZONES.RESERVE].length).toBe(2);
+      expect(player[ZONES.DECK].length).toBe(1);
+    });
+
+    test("sollte ab Runde 2 das Entnehmen einer Karte aus der Reserve erlauben", () => {
+      state.round = 2;
+      player.turn = 2;
+
+      const result = moveCard(
+        player,
+        state,
+        cardLookup,
+        ZONES.RESERVE,
+        ZONES.HAND,
+        "r1"
+      );
+
+      expect(result.movedCards.length).toBe(1);
+      expect(player[ZONES.RESERVE].length).toBe(0);
+      expect(player[ZONES.HAND].length).toBe(1);
+      expect(player[ZONES.HAND][0].Name).toBe("ReserveCard");
+    });
+  });
 });

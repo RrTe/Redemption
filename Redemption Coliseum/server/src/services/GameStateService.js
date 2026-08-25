@@ -48,6 +48,8 @@ class GameStateService {
     }
 
     room.state.currentPhase = savedData.currentPhase;
+    room.state.round = savedData.round || 1;
+    room.state.startingPlayerId = savedData.startingPlayerId || "";
 
     const restoreCard = (cardData) => {
       const card = new Card();

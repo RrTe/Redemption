@@ -63,7 +63,7 @@ class RequestSearchPileCommand extends BaseCommand {
       cards: Array.from(pileToSearch).map((c) => c.toJSON()),
       zone: zone,
       actionType: "search",
-      possibleActions: SearchHelper.getPossibleActions(zone),
+      possibleActions: SearchHelper.getPossibleActions(zone, this.state),
     });
   }
 }

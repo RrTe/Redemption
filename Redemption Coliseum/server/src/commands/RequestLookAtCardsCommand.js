@@ -56,7 +56,7 @@ class RequestLookAtCardsCommand extends BaseCommand {
       zone: zone,
       actionType: "look",
       position: position,
-      possibleActions: SearchHelper.getPossibleActions(zone),
+      possibleActions: SearchHelper.getPossibleActions(zone, this.state),
     });
   }
 }

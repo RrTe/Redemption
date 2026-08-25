@@ -31,7 +31,9 @@ class MatchService {
       this._drawStartingHand(room, player, sessionId);
     });
 
-    // Set initial turn and phase
+    // Set initial turn, round, starting player, and phase
+    room.state.startingPlayerId = startingClientId;
+    room.state.round = 1;
     const firstPlayer = room.state.players.get(room.state.activePlayer);
     if (firstPlayer) {
       firstPlayer.turn = 1;
@@ -39,7 +41,7 @@ class MatchService {
     room.state.currentPhase = PHASES.DRAW;
 
     logger.info(
-      `[MatchService] Initialization complete. Phase set to ${room.state.currentPhase}`,
+      `[MatchService] Initialization complete. Starting player: ${startingClientId}, Round: 1, Phase: ${room.state.currentPhase}`,
     );
   }
 

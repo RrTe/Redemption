@@ -23,6 +23,8 @@ class RoomState extends Schema {
     // ✨ REFACTOR: Map für aktive Stapel-Sperren (pileId -> sessionId)
     this.activeActionPiles = new MapSchema(); 
     this.battlefield = new ArraySchema();
+    this.round = 1;
+    this.startingPlayerId = "";
     // ✨ NEU: Game Over Status
     this.winnerId = "";
     this.gameOverReason = "";
@@ -35,6 +37,8 @@ type({ map: PlayerState })(RoomState.prototype, "players");
 // Aktiver Spieler und Phase
 type("string")(RoomState.prototype, "activePlayer");
 type("string")(RoomState.prototype, "currentPhase");
+type("number")(RoomState.prototype, "round");
+type("string")(RoomState.prototype, "startingPlayerId");
 
 // Aufgedeckte Karten (Array von Card)
 type([Card])(RoomState.prototype, "revealedCards");
