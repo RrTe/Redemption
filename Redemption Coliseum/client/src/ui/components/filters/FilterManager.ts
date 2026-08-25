@@ -173,15 +173,20 @@ export class FilterManager {
 
   /**
    * Evaluates a single filter rule.
+   * @param card The card object to inspect.
+   * @param rule The rule definition to match.
+   * @param query Optional search query text.
+   * @returns True if the rule conditions are met, false otherwise.
    */
   private evaluateRule(card: any, rule: FilterRule, query?: string): boolean {
     const rawVal = card[rule.field];
-    const cardValues = Array.isArray(rawVal) ? rawVal : [rawVal];
 
     switch (rule.operator) {
       case "equals":
-      case "includes_any":
-        return rule.values?.some((val) => cardValues.some((cv) => String(cv) === val)) ?? false;
+      case "includes_any": {
+        const cardValues = this.extractNormalizedValues(rawVal);
+        return rule.values?.some((val) => cardValues.some((cv) => cv === val)) ?? false;
+      }
 
       case "contains_text": {
         if (!query) return false;
@@ -192,5 +197,31 @@ export class FilterManager {
       default:
         return false;
     }
+  }
+
+  /**
+   * Extracts normalized value tokens from a card property value.
+   * Handles pre-split arrays as well as strings delimited by '/', ',', parentheses, or 'and'.
+   * @param rawVal The raw property value.
+   * @returns An array of trimmed, non-empty string tokens.
+   */
+  private extractNormalizedValues(rawVal: any): string[] {
+    if (rawVal == null) return [];
+    const arr = Array.isArray(rawVal) ? rawVal : [rawVal];
+    const result: string[] = [];
+
+    for (const item of arr) {
+      if (typeof item === "string") {
+        item
+          .split(/[\/,\(\)]|\s+and\s+/i)
+          .map((s) => s.trim())
+          .filter((s) => s !== "")
+          .forEach((s) => result.push(s));
+      } else if (item != null) {
+        result.push(String(item));
+      }
+    }
+
+    return result;
   }
 }
