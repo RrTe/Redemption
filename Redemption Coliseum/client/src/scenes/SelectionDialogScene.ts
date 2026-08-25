@@ -93,6 +93,10 @@ export class SelectionDialogScene extends Phaser.Scene {
       data.preSelectedCardIds.forEach((id) => {
         if (id) this.selectedCards.add(id);
       });
+    } else if (!data.isMyAction && this.room?.state?.revealedSelectedCardIds) {
+      for (const id of this.room.state.revealedSelectedCardIds) {
+        if (id) this.selectedCards.add(id);
+      }
     }
 
     this.filterView = new SelectionDialogFilterView(this, () => this.onFilterChanged());
@@ -373,6 +377,16 @@ export class SelectionDialogScene extends Phaser.Scene {
       this.dialogData.selectionRules,
       this.dialogData.possibleActions,
     );
+
+    if (
+      this.dialogData.isMyAction &&
+      this.dialogData.actionType === "reveal" &&
+      this.room
+    ) {
+      this.room.send("updateRevealSelection", {
+        selectedCardIds: Array.from(this.selectedCards),
+      });
+    }
   }
 
   private logCardState(card: CardUI, action: string) {
@@ -400,6 +414,30 @@ export class SelectionDialogScene extends Phaser.Scene {
     if (!silent && this.dialogData?.onCancel) {
       this.dialogData.onCancel(remaining);
     }
+  }
+
+  public syncPassiveSelection(selectedIds: string[]) {
+    this.selectedCards.clear();
+    selectedIds.forEach((id) => this.selectedCards.add(id));
+
+    this.uiManager.cardUIs.forEach((cUI) => {
+      const cId = cUI.cardData.id;
+      if (this.selectedCards.has(cId)) {
+        cUI.setTint(0x00ff00);
+      } else {
+        cUI.clearTint();
+      }
+    });
+
+    const selectedStates = this.paginationManager.getCardsFromIds(
+      this.selectedCards,
+    );
+
+    this.uiManager.updateSelectedCardsDisplay(
+      selectedStates,
+      this.room?.sessionId || "",
+      this.previewManager,
+    );
   }
 
   public get isMyAction(): boolean {

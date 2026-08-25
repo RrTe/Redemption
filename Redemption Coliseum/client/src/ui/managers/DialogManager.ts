@@ -38,6 +38,17 @@ export class DialogManager {
     this.scene.events.on("net:revealedCardsRemoved", () =>
       this.closeOpponentRevealDialog(),
     );
+    this.scene.events.on(
+      "net:revealedSelectionChanged",
+      (data: { selectedIds: string[] }) => {
+        const dialog = this.scene.scene.get("SelectionDialogScene") as
+          | SelectionDialogScene
+          | undefined;
+        if (dialog && !dialog.isMyAction) {
+          dialog.syncPassiveSelection(data.selectedIds);
+        }
+      },
+    );
     this.scene.events.on("net:gameError", (data: { message: string }) =>
       this.showErrorDialog(data.message),
     );

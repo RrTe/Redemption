@@ -183,6 +183,7 @@ class ResolveSearchPileCommand extends BaseCommand {
 
       SearchHelper.resetContext(player, this.state);
       this.state.revealedCards.clear();
+      this.state.revealedSelectedCardIds.clear();
       this.room.broadcast("revealedCardsCleared", {});
     }
   }

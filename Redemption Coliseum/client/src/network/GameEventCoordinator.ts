@@ -98,6 +98,22 @@ export class GameEventCoordinator {
     );
 
     this.stateListeners.push(
+      this.$(this.room.state).revealedSelectedCardIds.onAdd(() =>
+        this.scene.events.emit(GameEvents.NET_REVEALED_SELECTION_CHANGED, {
+          selectedIds: [...this.room.state.revealedSelectedCardIds],
+        }),
+      ),
+    );
+
+    this.stateListeners.push(
+      this.$(this.room.state).revealedSelectedCardIds.onRemove(() =>
+        this.scene.events.emit(GameEvents.NET_REVEALED_SELECTION_CHANGED, {
+          selectedIds: [...this.room.state.revealedSelectedCardIds],
+        }),
+      ),
+    );
+
+    this.stateListeners.push(
       this.$(this.room.state).listen("actionTakerId", (actionTakerId) => {
         if (!actionTakerId) {
           this.scene.events.emit(GameEvents.NET_REVEALED_CARDS_REMOVED);

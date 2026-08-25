@@ -18,6 +18,7 @@ class RoomState extends Schema {
     // ✨ NEU: Eine öffentliche "Bühne" für aufgedeckte Karten.
     // Änderungen hieran werden automatisch an alle Clients synchronisiert.
     this.revealedCards = new ArraySchema();
+    this.revealedSelectedCardIds = new ArraySchema();
     // ✨ NEU: ID des Spielers, der eine öffentliche Aktion (Reveal, Search) auslöst.
     this.actionTakerId = "";
     // ✨ REFACTOR: Map für aktive Stapel-Sperren (pileId -> sessionId)
@@ -42,6 +43,7 @@ type("string")(RoomState.prototype, "startingPlayerId");
 
 // Aufgedeckte Karten (Array von Card)
 type([Card])(RoomState.prototype, "revealedCards");
+type(["string"])(RoomState.prototype, "revealedSelectedCardIds");
 type("string")(RoomState.prototype, "actionTakerId");
 type({ map: "string" })(RoomState.prototype, "activeActionPiles"); // ✨ REFACTOR
 

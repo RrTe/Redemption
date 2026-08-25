@@ -26,6 +26,9 @@ const { ShufflePileCommand } = require("../commands/ShufflePileCommand");
 const {
   DiscardFromDeckCommand,
 } = require("../commands/DiscardFromDeckCommand");
+const {
+  UpdateRevealSelectionCommand,
+} = require("../commands/UpdateRevealSelectionCommand");
 
 class CommandService {
   /**
@@ -45,6 +48,7 @@ class CommandService {
     room.dispatcher.register("requestLookAtCards", RequestLookAtCardsCommand);
     room.dispatcher.register("requestRevealCards", RequestRevealCardsCommand);
     room.dispatcher.register("resolveReveal", ResolveRevealCommand);
+    room.dispatcher.register("updateRevealSelection", UpdateRevealSelectionCommand);
     room.dispatcher.register("shufflePile", ShufflePileCommand);
     room.dispatcher.register("discardFromDeck", DiscardFromDeckCommand);
   }

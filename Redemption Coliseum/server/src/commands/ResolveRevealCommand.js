@@ -96,6 +96,7 @@ class ResolveRevealCommand extends BaseCommand {
   _cleanup(player) {
     // Clear the public revealed-cards array.
     this.state.revealedCards.clear();
+    this.state.revealedSelectedCardIds.clear();
 
     // Remove pile lock for this player.
     for (const [pileKey, sessionId] of this.state.activeActionPiles.entries()) {

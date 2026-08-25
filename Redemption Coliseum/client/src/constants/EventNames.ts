@@ -15,6 +15,7 @@ export const GameEvents = {
   NET_PLAYER_STATE_CHANGED: "net:playerStateChanged",
   NET_REVEALED_CARDS_ADDED: "net:revealedCardsAdded",
   NET_REVEALED_CARDS_REMOVED: "net:revealedCardsRemoved",
+  NET_REVEALED_SELECTION_CHANGED: "net:revealedSelectionChanged",
   NET_OFFLINE: "net:offline",
   NET_ONLINE: "net:online",
   NET_RECONNECTING: "net:reconnecting",

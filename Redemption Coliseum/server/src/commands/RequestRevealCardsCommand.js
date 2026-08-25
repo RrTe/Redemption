@@ -42,6 +42,7 @@ class RequestRevealCardsCommand extends BaseCommand {
 
     // 1. Public Reveal
     this.state.revealedCards.clear();
+    this.state.revealedSelectedCardIds.clear();
     cardsToReveal.forEach((card) =>
       this.state.revealedCards.push(card.clone()),
     );
