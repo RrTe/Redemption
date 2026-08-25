@@ -78,22 +78,36 @@ export class GameEventCoordinator {
       ),
     );
 
+    this.roomListeners.push(
+      this.room.onMessage("revealedCardsCleared", () =>
+        this.scene.events.emit(GameEvents.NET_REVEALED_CARDS_REMOVED),
+      ),
+    );
+
     // --- State Mapping ---
     this.stateListeners.push(
       this.$(this.room.state).revealedCards.onAdd((card, index) =>
-        this.scene.events.emit("net:revealedCardsAdded", { card, index }),
+        this.scene.events.emit(GameEvents.NET_REVEALED_CARDS_ADDED, { card, index }),
       ),
     );
 
     this.stateListeners.push(
       this.$(this.room.state).revealedCards.onRemove(() =>
-        this.scene.events.emit("net:revealedCardsRemoved"),
+        this.scene.events.emit(GameEvents.NET_REVEALED_CARDS_REMOVED),
       ),
     );
 
     this.stateListeners.push(
+      this.$(this.room.state).listen("actionTakerId", (actionTakerId) => {
+        if (!actionTakerId) {
+          this.scene.events.emit(GameEvents.NET_REVEALED_CARDS_REMOVED);
+        }
+      }),
+    );
+
+    this.stateListeners.push(
       this.$(this.room.state).onChange(() =>
-        this.scene.events.emit("net:stateChanged"),
+        this.scene.events.emit(GameEvents.NET_STATE_CHANGED),
       ),
     );
 

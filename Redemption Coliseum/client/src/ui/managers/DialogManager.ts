@@ -36,7 +36,7 @@ export class DialogManager {
       this.showRevealDialog(),
     );
     this.scene.events.on("net:revealedCardsRemoved", () =>
-      this.closeSelectionDialog(),
+      this.closeOpponentRevealDialog(),
     );
     this.scene.events.on("net:gameError", (data: { message: string }) =>
       this.showErrorDialog(data.message),
@@ -142,12 +142,16 @@ export class DialogManager {
       return;
     }
 
+    if (this.scene.scene.isActive("SelectionDialogScene")) {
+      return;
+    }
+
     this.scene.scene.pause("CardGame");
     this.scene.scene.launch("SelectionDialogScene", {
       title: "Opponent's Revealed Cards",
       cards: [...this.room.state.revealedCards],
       room: this.room,
-      showCloseButton: false, // Der Gegner kann den Dialog nicht selbst schließen
+      showCloseButton: false, // Der Gegner hat kein Schließen-Symbol, Dialog schließt automatisch mit Aktionsende
       isMyAction: false,
       fromZone: ZONES.DECK,
       isInteractive: false,
@@ -178,11 +182,11 @@ export class DialogManager {
     });
   }
 
-  public closeSelectionDialog() {
-    const dialog = this.scene.scene.get("SelectionDialogScene");
-    if (dialog && dialog.scene.isActive()) {
-      // silent=true: the server already handled the action, no need to fire onCancel.
-      (dialog as SelectionDialogScene).closeDialog(true);
+  public closeOpponentRevealDialog() {
+    const dialog = this.scene.scene.get("SelectionDialogScene") as SelectionDialogScene | undefined;
+    if (dialog && !dialog.isMyAction) {
+      log("DialogManager", "Closing opponent's passive reveal dialog automatically.");
+      dialog.closeDialog(true);
     }
   }
 

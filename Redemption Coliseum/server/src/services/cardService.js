@@ -480,13 +480,21 @@ function _moveCardById(
   if (state._clientViews) {
     const oldView = state._clientViews.get(controllerId);
     if (oldView) {
-      oldView.remove(splicedCard);
+      try {
+        oldView.remove(splicedCard);
+      } catch (e) {
+        logger.debug(`[MOVE_BY_ID] oldView.remove skipped: ${e.message}`);
+      }
     }
     
     const newView = state._clientViews.get(movedCard.controllerId);
     if (newView) {
-      newView.add(movedCard);
-      logger.debug(`[MOVE_BY_ID] Added cloned card ${movedCard.Name} to StateView of ${movedCard.controllerId}`);
+      try {
+        newView.add(movedCard);
+        logger.debug(`[MOVE_BY_ID] Added cloned card ${movedCard.Name} to StateView of ${movedCard.controllerId}`);
+      } catch (e) {
+        logger.debug(`[MOVE_BY_ID] newView.add skipped: ${e.message}`);
+      }
     } else {
       logger.warn(`[MOVE_BY_ID] StateView for controller ${movedCard.controllerId} NOT FOUND!`);
     }

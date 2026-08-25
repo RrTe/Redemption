@@ -108,6 +108,7 @@ class ResolveRevealCommand extends BaseCommand {
 
     // Reset the search context so the player is no longer "searching".
     SearchHelper.resetContext(player, this.state);
+    this.room.broadcast("revealedCardsCleared", {});
   }
 }
 

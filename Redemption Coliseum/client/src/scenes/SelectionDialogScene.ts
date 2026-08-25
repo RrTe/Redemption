@@ -99,6 +99,12 @@ export class SelectionDialogScene extends Phaser.Scene {
   }
 
   create() {
+    // If this is a passive reveal dialog and the room state shows no cards are currently revealed or no action taker, close immediately
+    if (!this.dialogData.isMyAction && this.room && (this.room.state.revealedCards.length === 0 || !this.room.state.actionTakerId)) {
+      this.closeDialog(true);
+      return;
+    }
+
     this.scene.bringToTop();
 
     this.add
@@ -378,10 +384,12 @@ export class SelectionDialogScene extends Phaser.Scene {
 
 
   public closeDialog(silent = false) {
-    const remaining = this.paginationManager.getRemainingCardPositions(
-      this.selectedCards,
-      this.cardPositions,
-    );
+    const remaining = this.paginationManager
+      ? this.paginationManager.getRemainingCardPositions(
+          this.selectedCards,
+          this.cardPositions,
+        )
+      : undefined;
     this.selectedCards.clear();
     this.cardPositions.clear();
     if (this.filterView) {
@@ -389,7 +397,19 @@ export class SelectionDialogScene extends Phaser.Scene {
     }
     this.scene.resume("CardGame");
     this.scene.stop();
-    if (!silent) this.dialogData.onCancel(remaining);
+    if (!silent && this.dialogData?.onCancel) {
+      this.dialogData.onCancel(remaining);
+    }
+  }
+
+  public get isMyAction(): boolean {
+    return this.dialogData?.isMyAction ?? true;
+  }
+
+  update() {
+    if (!this.dialogData?.isMyAction && this.room && (this.room.state.revealedCards.length === 0 || !this.room.state.actionTakerId)) {
+      this.closeDialog(true);
+    }
   }
 
   private onFilterChanged() {
