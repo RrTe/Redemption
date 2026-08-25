@@ -8,6 +8,8 @@ export interface TypeSelectionOption {
   iconKey: string;
   label: string;
   isAlignment?: boolean; // Whether this represents an alignment choice rather than a Type
+  inGameType?: string;
+  inGameAlignment?: string;
 }
 
 export class TypeSelectionOverlay {
@@ -16,7 +18,7 @@ export class TypeSelectionOverlay {
   private container!: Phaser.GameObjects.Container;
   private blocker!: Phaser.GameObjects.Rectangle;
   private options: TypeSelectionOption[];
-  private onSelect: (selectedId: string) => void;
+  private onSelect: (selectedOption: TypeSelectionOption) => void;
   private onCancel: () => void;
   private cardData: CardData;
   private pulseControls: { stop: () => void }[] = [];
@@ -26,7 +28,7 @@ export class TypeSelectionOverlay {
     animationManager: AnimationManager,
     cardData: CardData,
     options: TypeSelectionOption[],
-    onSelect: (selectedId: string) => void,
+    onSelect: (selectedOption: TypeSelectionOption) => void,
     onCancel: () => void
   ) {
     this.scene = scene;
@@ -165,7 +167,7 @@ export class TypeSelectionOverlay {
 
       iconContainer.on("pointerdown", () => {
         this.scene.game.events.emit("playSound", "MENU_SELECT");
-        this.select(opt.id);
+        this.select(opt);
       });
 
       // Label below icon
@@ -232,9 +234,9 @@ export class TypeSelectionOverlay {
     });
   }
 
-  private select(id: string) {
+  private select(option: TypeSelectionOption) {
     this.close();
-    this.onSelect(id);
+    this.onSelect(option);
   }
 
   private cancel() {

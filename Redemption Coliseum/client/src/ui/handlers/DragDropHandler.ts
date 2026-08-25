@@ -443,7 +443,7 @@ export class DragDropHandler {
         coords,
       };
 
-      // ✨ NEU: Intercept if it's a Dual Card being played to the field
+      // Intercept if it's a Dual Card being played to the field
       const isFieldMove = [ZONES.BATTLEFIELD, ZONES.TERRITORY, ZONES.LAND_OF_BONDAGE, ZONES.SET_ASIDE].includes(toZone);
       
       const staticData = staticCardData.cards.find((c: any) => 
@@ -457,17 +457,36 @@ export class DragDropHandler {
         gameObject.setData("drop_action_taken", true);
         gameObject.setData("waiting_for_overlay", true);
 
-        // Baue Optionen auf Basis der sides (ohne Duplikate!)
+        // Build options based on card sides without duplicates
         const options: TypeSelectionOption[] = [];
         const sides = staticData.sides;
         
         sides.forEach((side: any, index: number) => {
-          const id = side.Type || side.Alignment || `side${index}`;
-          if (!options.some(opt => opt.id === id)) {
+          const type = side.Type || "";
+          const alignment = side.Alignment || "";
+          const typeUpper = type.toUpperCase();
+
+          let inGameType = type;
+          let inGameAlignment = alignment;
+          let iconKey = this.getIconForType(type || alignment);
+          let label = type || alignment || `Option ${index + 1}`;
+          let id = type || alignment || `side${index}`;
+
+          // Special case: Covenants & Curses played as Artifacts (show Trophy / Art icon)
+          if (typeUpper === "COVENANT" || typeUpper === "CURSE") {
+            inGameType = "Artifact";
+            iconKey = "Art";
+            label = "Artifact";
+            id = "Artifact";
+          }
+
+          if (!options.some(opt => opt.inGameType === inGameType && opt.inGameAlignment === inGameAlignment)) {
             options.push({
-              id: id,
-              iconKey: this.getIconForType(side.Type || side.Alignment),
-              label: side.Type || side.Alignment || `Option ${index + 1}`
+              id,
+              iconKey,
+              label,
+              inGameType,
+              inGameAlignment,
             });
           }
         });
@@ -482,17 +501,16 @@ export class DragDropHandler {
             this.animationManager,
             staticData,
             options,
-            (selectedId: string) => {
-              // Callback: Option wurde gewählt
-              log("Input", `[MOVE] Dual Card option selected: ${selectedId}`);
+            (selectedOption: TypeSelectionOption) => {
+              log("Input", `[MOVE] Dual Card option selected:`, selectedOption);
               gameObject.setData("waiting_for_overlay", false);
               
-              message.inGameType = selectedId;
+              message.inGameType = selectedOption.inGameType;
+              message.inGameAlignment = selectedOption.inGameAlignment;
               
               this.networkManager.sendMoveCard(message);
             },
             () => {
-              // Cancelled
               log("Input", `[MOVE] Dual Card selection cancelled.`);
               gameObject.setData("waiting_for_overlay", false);
               this.snapBack(gameObject);
@@ -501,8 +519,9 @@ export class DragDropHandler {
           overlay.show();
           return;
         } else if (options.length === 1) {
-          // Beide Seiten haben exakt denselben Typ! Kein Overlay nötig.
-          message.inGameType = options[0].id;
+          // Exactly one unique type/alignment configuration; no overlay needed.
+          message.inGameType = options[0].inGameType;
+          message.inGameAlignment = options[0].inGameAlignment;
         }
       }
 
