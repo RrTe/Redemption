@@ -3,8 +3,10 @@ export class ScanProgressOverlay {
   private static barElement: HTMLElement | null = null;
   private static waitTextElement: HTMLElement | null = null;
   private static activeAnimation: Animation | null = null;
+  private static lastTotal: number = 0;
 
   public static show(initialText: string = "Searching the Catacombs...") {
+    this.lastTotal = 0;
     if (this.overlayContainer) return;
 
     // Create container
@@ -81,6 +83,8 @@ export class ScanProgressOverlay {
   public static updateProgress(current: number, total: number, filename?: string) {
     if (!this.overlayContainer || !this.barElement || !this.waitTextElement) return;
 
+    this.lastTotal = total;
+
     // Stop indeterminate animation once explicit progress is reported
     if (this.activeAnimation) {
       this.activeAnimation.cancel();
@@ -95,7 +99,25 @@ export class ScanProgressOverlay {
     this.waitTextElement.innerText = `Loading Deck ${current} of ${total}${fileLabel} - ${percentage}%`;
   }
 
+  public static setStatusText(text: string) {
+    if (!this.overlayContainer || !this.waitTextElement) return;
+    if (this.activeAnimation) {
+      this.activeAnimation.cancel();
+      this.activeAnimation = null;
+    }
+    if (this.barElement) {
+      this.barElement.style.left = "0";
+      this.barElement.style.width = "100%";
+    }
+    if (this.lastTotal > 0) {
+      this.waitTextElement.innerText = `Loading Deck ${this.lastTotal} of ${this.lastTotal} (${text}) - 100%`;
+    } else {
+      this.waitTextElement.innerText = text;
+    }
+  }
+
   public static hide() {
+    this.lastTotal = 0;
     if (this.activeAnimation) {
       this.activeAnimation.cancel();
       this.activeAnimation = null;

@@ -716,7 +716,7 @@ export class LocalDecksScene extends Phaser.Scene {
           this.updateFooterDiskProgress(written, total);
         }
       );
-      ScanProgressOverlay.updateProgress(32, 32, "Rendering Decks...");
+      ScanProgressOverlay.setStatusText("Rendering Decks...");
       if (this.lastFilterOptions) {
         await this.applyFiltersAndSort(this.lastFilterOptions, cardDatabase);
       }
@@ -735,7 +735,7 @@ export class LocalDecksScene extends Phaser.Scene {
     try {
       await this.scanner.scanDecks(
         async () => {
-          ScanProgressOverlay.updateProgress(100, 100, "Rendering Decks...");
+          ScanProgressOverlay.setStatusText("Rendering Decks...");
           await this.initializeDecks();
           requestAnimationFrame(() => {
             ScanProgressOverlay.hide();
