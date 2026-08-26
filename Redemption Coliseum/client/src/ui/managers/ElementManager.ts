@@ -166,6 +166,22 @@ export class ElementManager {
     updatePileSize(this.zoneElements.playerBanishPile);
     updatePileSize(this.zoneElements.opponentBanishPile);
 
+    // ✨ NEU: Hand-Zähler neu positionieren und skalieren
+    if (this.zoneElements.playerHandCounter) {
+      this.zoneElements.playerHandCounter.setPosition(
+        this.layout.GAME_WIDTH / 2,
+        this.layout.GAME_HEIGHT - 18,
+      );
+      this.zoneElements.playerHandCounter.updateScale(this.layout.buttonScale ?? 1.0);
+    }
+    if (this.zoneElements.opponentHandCounter) {
+      this.zoneElements.opponentHandCounter.setPosition(
+        this.layout.GAME_WIDTH / 2,
+        18,
+      );
+      this.zoneElements.opponentHandCounter.updateScale(this.layout.buttonScale ?? 1.0);
+    }
+
     // Texte neu positionieren
     this.staticElements.nextPhaseButton.setPosition(
       this.layout.nextPhaseButton.x,

@@ -8,6 +8,7 @@ import {
 } from "../../scenes/SelectionDialogScene";
 import { ZONES, PILE_ZONES } from "../../../../shared/zones";
 import type { MoveCardMessage } from "../../../../shared/messages";
+import { ToastManager, type ToastType } from "./ToastManager";
 import { log } from "../../utils/logger";
 
 /**
@@ -51,6 +52,9 @@ export class DialogManager {
     );
     this.scene.events.on("net:gameError", (data: { message: string }) =>
       this.showErrorDialog(data.message),
+    );
+    this.scene.events.on("net:gameToast", (data: { message: string; type?: ToastType }) =>
+      ToastManager.show(data.message, data.type || "warning"),
     );
   }
 

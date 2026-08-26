@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { PileUI } from "../PileUI";
 import { StackedPileUI } from "../StackedPileUI";
 import { SidebarButton } from "../components/SidebarButton";
+import { HandCounterUI } from "../components/HandCounterUI";
 
 export type StaticElements = {
   boardText: Phaser.GameObjects.Text;
@@ -27,6 +28,8 @@ export type ZoneElements = {
   opponentTerritoryZone: Phaser.GameObjects.Zone;
   playerHandZone: Phaser.GameObjects.Zone;
   opponentHandZone: Phaser.GameObjects.Zone;
+  playerHandCounter: HandCounterUI;
+  opponentHandCounter: HandCounterUI;
   battlefieldZone: Phaser.GameObjects.Zone;
   playerDeckPile: StackedPileUI;
   playerDiscardPile: PileUI;

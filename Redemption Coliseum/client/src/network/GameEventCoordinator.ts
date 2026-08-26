@@ -84,6 +84,12 @@ export class GameEventCoordinator {
       ),
     );
 
+    this.roomListeners.push(
+      this.room.onMessage("gameToast", (msg: { message: string; type?: "info" | "warning" | "error" }) =>
+        this.scene.events.emit("net:gameToast", msg),
+      ),
+    );
+
     // --- State Mapping ---
     this.stateListeners.push(
       this.$(this.room.state).revealedCards.onAdd((card, index) =>

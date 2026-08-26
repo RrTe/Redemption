@@ -40,3 +40,10 @@ export const MANAGED_TERRITORY_TYPES = [
   CARD_TYPES.EC,
   CARD_TYPES.ARTIFACT,
 ];
+
+/**
+ * Maximal erlaubte Anzahl an Handkarten.
+ * @readonly
+ */
+export const MAX_HAND_SIZE = 16;
+

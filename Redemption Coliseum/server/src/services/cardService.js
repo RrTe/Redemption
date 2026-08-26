@@ -4,6 +4,7 @@ const { ZONES, ALL_ZONES, PILE_ZONES } = require("../../../shared/zones");
 const {
   CARD_TYPES,
   MANAGED_TERRITORY_TYPES,
+  MAX_HAND_SIZE,
 } = require("../../../shared/card-constants");
 const { ArraySchema } = require("@colyseus/schema");
 const { PlayerState } = require("../state/PlayerState");
@@ -145,11 +146,16 @@ function _validateMove(
     }
   }
 
-  // ✨ Regel 4: Karten mit dem Type EVIL_CHARACTERS dürfen nicht ins eigene Territory gespielt werden.
-  // if (card.Type === CARD_TYPES.EVIL_CHARACTERS && targetPlayerId === cardOwnerId && toZone === ZONES.TERRITORY) {
-  //   logger.warn("Ungültige Bewegung: Evil Characters dürfen nicht ins eigene Territory gespielt werden.");
-  //   return false;
-  // }
+  // ✨ Regel: Maximales Handlimit prüfen (keine Karten mehr in die Hand, wenn Maximum erreicht ist)
+  if (toZone === ZONES.HAND) {
+    const targetPlayer = state.players.get(targetPlayerId);
+    if (targetPlayer && targetPlayer[ZONES.HAND]?.length >= MAX_HAND_SIZE) {
+      logger.warn(
+        `Ungültiger Zug: Handlimit erreicht für Spieler '${targetPlayerId}' (${targetPlayer[ZONES.HAND].length}/${MAX_HAND_SIZE}).`,
+      );
+      return false;
+    }
+  }
 
   return true;
 }
@@ -521,10 +527,27 @@ function _drawCardsFromDeck(
   count,
   coords = null,
 ) {
+  // ✨ NEU: Handlimit für das Ziehen vom Deck berücksichtigen
+  let effectiveCount = count;
+  if (to === ZONES.HAND) {
+    const currentHandSize = player[ZONES.HAND]?.length || 0;
+    const capacity = Math.max(0, MAX_HAND_SIZE - currentHandSize);
+    effectiveCount = Math.min(count, capacity);
+    if (effectiveCount <= 0) {
+      logger.warn(
+        `[DRAW_FROM_DECK] Handlimit (${MAX_HAND_SIZE}/${MAX_HAND_SIZE}) für Spieler '${player.name}' erreicht. Ziehen abgebrochen.`,
+      );
+      return {
+        movedCards: [],
+        logEntry: `${player.name} cannot draw: Hand is full (${MAX_HAND_SIZE}/${MAX_HAND_SIZE}).`,
+      };
+    }
+  }
+
   logger.debug(
-    `[DRAW_FROM_DECK] Player '${player.sessionId}' drawing ${count} cards to '${to}'.`,
+    `[DRAW_FROM_DECK] Player '${player.sessionId}' drawing ${effectiveCount} cards to '${to}'.`,
   );
-  const validCards = _drawCardsWithLostSoulRule(player, state, count, cardLookup);
+  const validCards = _drawCardsWithLostSoulRule(player, state, effectiveCount, cardLookup);
 
   if (validCards.length > 0) {
     const toArr = getZoneCollection(player, state, to);
@@ -558,7 +581,10 @@ function _drawCardsFromDeck(
     );
   }
 
-  const logEntry = `${player.name} draws ${validCards.length} card(s) from ${getZoneDisplayName(ZONES.DECK)}.`;
+  let logEntry = `${player.name} draws ${validCards.length} card(s) from ${getZoneDisplayName(ZONES.DECK)}.`;
+  if (to === ZONES.HAND && validCards.length < count) {
+    logEntry += ` (Hand limit reached: ${player[ZONES.HAND]?.length}/${MAX_HAND_SIZE})`;
+  }
   return { movedCards: validCards, logEntry: logEntry };
 }
 

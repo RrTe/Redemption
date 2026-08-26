@@ -181,5 +181,13 @@ export class HUDManager {
       this.elementManager.zoneElements.opponentBanishPile,
       opponent?.banish.length ?? 0,
     );
+    update(
+      this.elementManager.zoneElements.playerHandCounter,
+      player?.hand.length ?? 0,
+    );
+    update(
+      this.elementManager.zoneElements.opponentHandCounter,
+      opponent?.hand.length ?? 0,
+    );
   }
 }

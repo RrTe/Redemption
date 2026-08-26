@@ -12,6 +12,8 @@ import { SelectionDialogTransitionHandler } from "../ui/handlers/SelectionDialog
 import { log } from "../utils/logger";
 import { SelectionDialogFilterView } from "../ui/components/filters/SelectionDialogFilterView";
 import { filterConfigData } from "../ui/config/filter_config";
+import { MAX_HAND_SIZE } from "../../../shared/card-constants";
+import { ToastManager } from "../ui/managers/ToastManager";
 
 // CARDS_PER_PAGE is now calculated dynamically based on screen height
 export interface SelectionAction {
@@ -195,8 +197,28 @@ export class SelectionDialogScene extends Phaser.Scene {
         this.selectedCards.size,
         this.dialogData.selectionRules,
         this.dialogData.possibleActions,
+        this.getHandLimits(),
       );
     }
+  }
+
+  private getHandLimits(): { myFreeSlots: number; opponentFreeSlots: number } {
+    const me = this.room?.state?.players?.get(this.room.sessionId);
+    let opponent: any = null;
+    if (this.room?.state?.players) {
+      for (const [id, p] of this.room.state.players.entries()) {
+        if (id !== this.room.sessionId) {
+          opponent = p;
+          break;
+        }
+      }
+    }
+    const myHandSize = me?.hand?.length ?? 0;
+    const opponentHandSize = opponent?.hand?.length ?? 0;
+    return {
+      myFreeSlots: Math.max(0, MAX_HAND_SIZE - myHandSize),
+      opponentFreeSlots: Math.max(0, MAX_HAND_SIZE - opponentHandSize),
+    };
   }
 
   private handleZoneButtonClick(
@@ -372,10 +394,21 @@ export class SelectionDialogScene extends Phaser.Scene {
       this.previewManager,
     );
 
+    const handLimits = this.getHandLimits();
+    if (this.selectedCards.has(id)) {
+      if (this.selectedCards.size === handLimits.myFreeSlots && handLimits.myFreeSlots > 0) {
+        ToastManager.show(
+          `Hand capacity reached (${handLimits.myFreeSlots}/${handLimits.myFreeSlots} max for hand)!`,
+          "info",
+        );
+      }
+    }
+
     this.uiManager.updateConfirmButtonState(
       this.selectedCards.size,
       this.dialogData.selectionRules,
       this.dialogData.possibleActions,
+      handLimits,
     );
 
     if (

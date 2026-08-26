@@ -13,3 +13,5 @@ export type CardType = (typeof CARD_TYPES)[keyof typeof CARD_TYPES];
 export const ALIGNMENTS: typeof AlignmentsJS;
 
 export const MANAGED_TERRITORY_TYPES: typeof ManagedTerritoryTypesJs;
+export const MAX_HAND_SIZE: number;
+

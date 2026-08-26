@@ -5,6 +5,7 @@ import { type TypedRoom } from "../gameUI";
 import { type GameNetworkManager } from "../../network/GameNetworkManager";
 import { PileUI } from "../PileUI";
 import { StackedPileUI } from "../StackedPileUI";
+import { HandCounterUI } from "../components/HandCounterUI";
 import { type ZoneElements } from "../types/ElementTypes";
 
 export class ZoneFactory {
@@ -188,11 +189,28 @@ export class ZoneFactory {
     );
     opponentBanishPile.setData("ownerId", undefined);
 
+    // === HAND COUNTERS ===
+    const playerHandCounter = new HandCounterUI(
+      this.scene,
+      layout.GAME_WIDTH / 2,
+      layout.GAME_HEIGHT - 18,
+      false,
+    );
+
+    const opponentHandCounter = new HandCounterUI(
+      this.scene,
+      layout.GAME_WIDTH / 2,
+      18,
+      true,
+    );
+
     return {
       playerTerritoryZone,
       opponentTerritoryZone,
       playerHandZone,
       opponentHandZone,
+      playerHandCounter,
+      opponentHandCounter,
       battlefieldZone,
       playerLandOfBondageZone,
       opponentLandOfBondageZone,

@@ -1,6 +1,7 @@
 const { BaseCommand } = require("./BaseCommand");
 const { moveCard, getZoneDisplayName } = require("../services/cardService");
 const { ZONES } = require("../../../shared/zones");
+const { MAX_HAND_SIZE } = require("../../../shared/card-constants");
 const logger = require("../utils/logger");
 
 class MoveCardCommand extends BaseCommand {
@@ -77,6 +78,13 @@ class MoveCardCommand extends BaseCommand {
       }
 
       // Events & Logging
+      if (message.to === ZONES.HAND && movedCards.length === 0) {
+        this.client.send("gameToast", {
+          message: `Hand limit reached (max ${MAX_HAND_SIZE} cards)!`,
+          type: "warning",
+        });
+      }
+
       // ✨ FIX: Only trigger draw animation when source is DECK
       if (message.from === ZONES.DECK && movedCards.length > 0) {
         this.client.send("cardsDrawn", {

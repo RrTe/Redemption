@@ -2,6 +2,8 @@ import Phaser from "phaser";
 import { type TypedRoom } from "./gameUI";
 import { type GameNetworkManager } from "../network/GameNetworkManager"; // ✨ NEU
 import { ZONES, type Zone } from "../../../shared/zones";
+import { MAX_HAND_SIZE } from "../../../shared/card-constants";
+import { ToastManager } from "./managers/ToastManager";
 
 const INITIAL_POOL_SIZE = 15; // Startgröße des Pools für die Grafiken
 const CARDS_PER_IMAGE = 5; // ✨ DEIN WUNSCH: Zeige eine neue Grafik für je 5 Karten
@@ -155,6 +157,12 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
         !this.isOpponent &&
         pointer.leftButtonReleased()
       ) {
+        const myPlayer = room.state.players.get(room.sessionId);
+        if (myPlayer && myPlayer.hand && myPlayer.hand.length >= MAX_HAND_SIZE) {
+          ToastManager.show(`Hand is full (${MAX_HAND_SIZE}/${MAX_HAND_SIZE} cards)!`, "warning");
+          return;
+        }
+
         networkManager.sendMoveCard({
           from: ZONES.DECK,
           to: ZONES.HAND,

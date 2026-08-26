@@ -229,20 +229,32 @@ export class SelectionDialogUIManager {
     selectedCardsCount: number,
     selectionRules: { min: number; max: number } | undefined,
     possibleActions: SelectionAction[] | undefined,
+    handLimits?: { myFreeSlots: number; opponentFreeSlots: number },
   ) {
     const rules = selectionRules || { min: 0, max: 1 };
     const valid = selectedCardsCount >= rules.min;
     this.actionButtons.forEach((btn) => {
+      const zone = btn.getData("zone");
+      const target = btn.getData("target");
+
+      let capacityOk = true;
+      if (zone === "hand" && handLimits) {
+        const isOpponent = target === "opponent";
+        const freeSlots = isOpponent ? handLimits.opponentFreeSlots : handLimits.myFreeSlots;
+        capacityOk = selectedCardsCount > 0 ? selectedCardsCount <= freeSlots : freeSlots > 0;
+      }
+
       const allowed =
         !possibleActions ||
         possibleActions.some(
           (a) =>
-            a.toZone === btn.getData("zone") &&
-            (a.target === btn.getData("target") ||
-              (!a.target && btn.getData("target") === "me")),
+            a.toZone === zone &&
+            (a.target === target ||
+              (!a.target && target === "me")),
         );
-      btn.setAlpha(valid && allowed ? 1 : 0.75); // Increased alpha for better readability
-      btn.input!.enabled = valid && allowed;
+      const enabled = valid && allowed && capacityOk;
+      btn.setAlpha(enabled ? 1 : 0.35);
+      btn.input!.enabled = enabled;
     });
   }
 

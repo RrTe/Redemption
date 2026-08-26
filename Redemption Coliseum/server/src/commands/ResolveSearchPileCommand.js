@@ -1,5 +1,6 @@
 const { BaseCommand } = require("./BaseCommand");
 const { ZONES } = require("../../../shared/zones");
+const { MAX_HAND_SIZE } = require("../../../shared/card-constants");
 const {
   getZoneCollection,
   moveCard,
@@ -84,6 +85,13 @@ class ResolveSearchPileCommand extends BaseCommand {
               cardsMovedToHand.push(...result.movedCards);
           }
       });
+
+      if (toZone === ZONES.HAND && validSelectedCards.length > successfullyMovedCards.length) {
+        this.client.send("gameToast", {
+          message: `Hand limit reached (max ${MAX_HAND_SIZE} cards)!`,
+          type: "warning",
+        });
+      }
 
       // Log für Auswahl aus Dialog (Zuerst anzeigen)
       if (successfullyMovedCards.length > 0) {

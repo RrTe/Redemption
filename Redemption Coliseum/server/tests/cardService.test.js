@@ -177,4 +177,71 @@ describe("cardService (moveCard)", () => {
       expect(player[ZONES.HAND][0].Name).toBe("ReserveCard");
     });
   });
+
+  describe("Handlimit (MAX_HAND_SIZE = 16)", () => {
+    test("sollte Kartenbewegungen in die Hand blockieren, wenn bereits 16 Karten auf der Hand liegen", () => {
+      // 16 Dummy-Karten auf die Hand legen
+      for (let i = 0; i < 16; i++) {
+        const dummy = new Card();
+        dummy.id = `h_${i}`;
+        dummy.controllerId = "p1";
+        dummy.originalOwnerId = "p1";
+        dummy.zone = ZONES.HAND;
+        player[ZONES.HAND].push(dummy);
+        cardLookup.set(dummy.id, dummy);
+      }
+      expect(player[ZONES.HAND].length).toBe(16);
+
+      // Versuch, c1 vom Deck auf die Hand zu ziehen per moveCard (ID-basiert)
+      const result = moveCard(player, state, cardLookup, ZONES.DECK, ZONES.HAND, "c1");
+      expect(result.movedCards.length).toBe(0);
+      expect(player[ZONES.HAND].length).toBe(16);
+      expect(c1.zone).toBe(ZONES.DECK);
+    });
+
+    test("sollte beim Ziehen vom Deck bei 15 Karten nur 1 Karte ziehen (Multi-Draw Cap)", () => {
+      // 15 Dummy-Karten auf die Hand
+      for (let i = 0; i < 15; i++) {
+        const dummy = new Card();
+        dummy.id = `h_${i}`;
+        dummy.controllerId = "p1";
+        dummy.originalOwnerId = "p1";
+        dummy.zone = ZONES.HAND;
+        player[ZONES.HAND].push(dummy);
+        cardLookup.set(dummy.id, dummy);
+      }
+      // 3 Karten im Deck
+      const c3 = new Card();
+      c3.id = "c3";
+      c3.Name = "Schild";
+      c3.controllerId = "p1";
+      c3.originalOwnerId = "p1";
+      c3.zone = ZONES.DECK;
+      player[ZONES.DECK].push(c3);
+      cardLookup.set(c3.id, c3);
+
+      // Versuche 3 Karten vom Deck zu ziehen
+      const result = moveCard(player, state, cardLookup, ZONES.DECK, ZONES.HAND, 0, 3);
+      expect(result.movedCards.length).toBe(1);
+      expect(player[ZONES.HAND].length).toBe(16);
+      expect(player[ZONES.DECK].length).toBe(2); // 2 Karten verbleiben im Deck
+    });
+
+    test("sollte das Ziehen komplett verweigern, wenn bereits 16 Karten auf der Hand sind", () => {
+      for (let i = 0; i < 16; i++) {
+        const dummy = new Card();
+        dummy.id = `h_${i}`;
+        dummy.controllerId = "p1";
+        dummy.originalOwnerId = "p1";
+        dummy.zone = ZONES.HAND;
+        player[ZONES.HAND].push(dummy);
+        cardLookup.set(dummy.id, dummy);
+      }
+
+      const result = moveCard(player, state, cardLookup, ZONES.DECK, ZONES.HAND, 0, 1);
+      expect(result.movedCards.length).toBe(0);
+      expect(player[ZONES.HAND].length).toBe(16);
+    });
+  });
 });
+
