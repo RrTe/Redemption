@@ -11,30 +11,33 @@ interface ToastStyleConfig {
   shadowColor: string;
 }
 
+/** Gold color value matching the Deck Synchronization dialogs */
+const GOLD_COLOR = "#ffd700";
+
 const TOAST_THEMES: Record<ToastType, ToastStyleConfig> = {
   info: {
-    borderColor: "#b8860b",
-    textColor: "#ffd700",
-    shadowColor: "rgba(184, 134, 11, 0.4)",
+    borderColor: GOLD_COLOR,
+    textColor: GOLD_COLOR,
+    shadowColor: "rgba(255, 215, 0, 0.45)",
   },
   warning: {
-    borderColor: "#e67e22",
-    textColor: "#f39c12",
-    shadowColor: "rgba(230, 126, 34, 0.45)",
+    borderColor: GOLD_COLOR,
+    textColor: GOLD_COLOR,
+    shadowColor: "rgba(255, 215, 0, 0.45)",
   },
   error: {
-    borderColor: "#e74c3c",
-    textColor: "#ff6b6b",
-    shadowColor: "rgba(231, 76, 60, 0.5)",
+    borderColor: "#ff4d4d",
+    textColor: "#ff4d4d",
+    shadowColor: "rgba(255, 77, 77, 0.5)",
   },
 };
 
 /**
- * Manages display of floating toast notification pills across scenes and dialogs.
+ * Manages display of floating toast notification pills that rise above the hand cards.
  */
 export class ToastManager {
   private static toastElement: HTMLElement | null = null;
-  private static dismissTimer: any = null;
+  private static activeAnimation: Animation | null = null;
 
   /**
    * Initializes or returns the singleton DOM toast element.
@@ -47,23 +50,23 @@ export class ToastManager {
       this.toastElement.id = "game-toast-container";
       Object.assign(this.toastElement.style, {
         position: "fixed",
-        top: "70px",
+        bottom: "clamp(130px, 23vh, 220px)",
         left: "50%",
-        transform: "translateX(-50%) translateY(-20px)",
+        transform: "translateX(-50%)",
         pointerEvents: "none",
         zIndex: "200000",
         display: "none",
-        padding: "8px 18px",
-        background: "rgba(10, 14, 24, 0.94)",
+        padding: "8px 22px",
+        background: "rgba(10, 10, 10, 0.92)",
         borderRadius: "20px",
-        fontFamily: '"Arial Black", Arial, sans-serif',
+        fontFamily: 'Arial, "Arial Black", sans-serif',
         fontSize: "14px",
         fontWeight: "bold",
+        letterSpacing: "1px",
         textAlign: "center",
         whiteSpace: "nowrap",
         opacity: "0",
-        transition: "opacity 0.2s ease, transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-        backdropFilter: "blur(4px)",
+        backdropFilter: "blur(6px)",
       });
       document.body.appendChild(this.toastElement);
     }
@@ -71,55 +74,62 @@ export class ToastManager {
   }
 
   /**
-   * Displays a toast notification with the given message and styling.
+   * Displays a toast notification that rises slowly above the player's hand cards and fades out.
    *
    * @param {string} message - The text message to display.
    * @param {ToastType} [type="warning"] - The visual style type of the toast.
-   * @param {number} [durationMs=2500] - Duration in milliseconds before auto-dismissal.
+   * @param {number} [durationMs=4000] - Duration in milliseconds for the rise and fade animation.
    */
   public static show(
     message: string,
     type: ToastType = "warning",
-    durationMs: number = 2500,
+    durationMs: number = 4000,
   ): void {
     const el = this.getOrCreateElement();
     const theme = TOAST_THEMES[type] || TOAST_THEMES.warning;
 
+    if (this.activeAnimation) {
+      this.activeAnimation.cancel();
+      this.activeAnimation = null;
+    }
+
     el.innerText = message;
     el.style.border = `1.5px solid ${theme.borderColor}`;
     el.style.color = theme.textColor;
-    el.style.boxShadow = `0 4px 16px ${theme.shadowColor}, 0 2px 6px rgba(0, 0, 0, 0.8)`;
+    el.style.boxShadow = `0 4px 20px ${theme.shadowColor}, 0 2px 8px rgba(0, 0, 0, 0.9)`;
     el.style.display = "block";
 
-    if (this.dismissTimer) {
-      clearTimeout(this.dismissTimer);
-      this.dismissTimer = null;
-    }
+    // Slowly ascend upwards above the hand fan and fade out
+    this.activeAnimation = el.animate(
+      [
+        { transform: "translateX(-50%) translateY(0px)", opacity: 0, offset: 0 },
+        { transform: "translateX(-50%) translateY(-10px)", opacity: 1, offset: 0.12 },
+        { transform: "translateX(-50%) translateY(-35px)", opacity: 1, offset: 0.65 },
+        { transform: "translateX(-50%) translateY(-65px)", opacity: 0, offset: 1.0 },
+      ],
+      {
+        duration: durationMs,
+        easing: "cubic-bezier(0.25, 1, 0.5, 1)",
+        fill: "forwards",
+      },
+    );
 
-    requestAnimationFrame(() => {
-      if (el) {
-        el.style.opacity = "1";
-        el.style.transform = "translateX(-50%) translateY(0)";
-      }
-    });
-
-    this.dismissTimer = setTimeout(() => {
-      this.hide();
-    }, durationMs);
+    this.activeAnimation.onfinish = () => {
+      if (el) el.style.display = "none";
+      this.activeAnimation = null;
+    };
   }
 
   /**
    * Hides the active toast notification immediately.
    */
   public static hide(): void {
+    if (this.activeAnimation) {
+      this.activeAnimation.cancel();
+      this.activeAnimation = null;
+    }
     if (this.toastElement) {
-      this.toastElement.style.opacity = "0";
-      this.toastElement.style.transform = "translateX(-50%) translateY(-20px)";
-      setTimeout(() => {
-        if (this.toastElement && this.toastElement.style.opacity === "0") {
-          this.toastElement.style.display = "none";
-        }
-      }, 250);
+      this.toastElement.style.display = "none";
     }
   }
 }

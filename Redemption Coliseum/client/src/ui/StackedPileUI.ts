@@ -159,7 +159,7 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
       ) {
         const myPlayer = room.state.players.get(room.sessionId);
         if (myPlayer && myPlayer.hand && myPlayer.hand.length >= MAX_HAND_SIZE) {
-          ToastManager.show(`Hand is full (${MAX_HAND_SIZE}/${MAX_HAND_SIZE} cards)!`, "warning");
+          ToastManager.show(`Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!`, "warning");
           return;
         }
 

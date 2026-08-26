@@ -539,7 +539,7 @@ function _drawCardsFromDeck(
       );
       return {
         movedCards: [],
-        logEntry: `${player.name} cannot draw: Hand is full (${MAX_HAND_SIZE}/${MAX_HAND_SIZE}).`,
+        logEntry: `${player.name} cannot draw: Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE}).`,
       };
     }
   }

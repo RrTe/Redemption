@@ -398,7 +398,7 @@ export class SelectionDialogScene extends Phaser.Scene {
     if (this.selectedCards.has(id)) {
       if (this.selectedCards.size === handLimits.myFreeSlots && handLimits.myFreeSlots > 0) {
         ToastManager.show(
-          `Hand capacity reached (${handLimits.myFreeSlots}/${handLimits.myFreeSlots} max for hand)!`,
+          `Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!`,
           "info",
         );
       }
