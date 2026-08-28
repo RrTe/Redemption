@@ -241,7 +241,64 @@ describe("cardService (moveCard)", () => {
       const result = moveCard(player, state, cardLookup, ZONES.DECK, ZONES.HAND, 0, 1);
       expect(result.movedCards.length).toBe(0);
       expect(player[ZONES.HAND].length).toBe(16);
+      expect(result.error).toBe("Hand limit reached (16/16)!");
+    });
+  });
+
+  describe("Lost Soul und Zonen-Validierungsregeln", () => {
+    test("sollte Lost Souls nur in erlaubte Zonen (Bondage, eigenes Deck, eigener Discard, gegnerisches Redemption) erlauben", () => {
+      const ls = new Card();
+      ls.id = "ls_1";
+      ls.Name = "Lost Soul (Hopper)";
+      ls.Type = "Lost Soul";
+      ls.controllerId = "p1";
+      ls.originalOwnerId = "p1";
+      ls.zone = ZONES.HAND;
+      player[ZONES.HAND].push(ls);
+      cardLookup.set(ls.id, ls);
+
+      // Versuch 1: Lost Soul ins eigene Territorium -> ungültig
+      const resTerritory = moveCard(player, state, cardLookup, ZONES.HAND, ZONES.TERRITORY, "ls_1");
+      expect(resTerritory.movedCards.length).toBe(0);
+      expect(resTerritory.error).toBe("Invalid move for Lost Soul!");
+
+      // Versuch 2: Lost Soul in eigenes Land of Bondage -> gültig
+      const resBondage = moveCard(player, state, cardLookup, ZONES.HAND, ZONES.LAND_OF_BONDAGE, "ls_1");
+      expect(resBondage.movedCards.length).toBe(1);
+      expect(player[ZONES.LAND_OF_BONDAGE].length).toBe(1);
+
+      // Versuch 3: Lost Soul aus Land of Bondage in eigenen Discard-Stapel -> gültig
+      const resDiscard = moveCard(player, state, cardLookup, ZONES.LAND_OF_BONDAGE, ZONES.DISCARD, "ls_1");
+      expect(resDiscard.movedCards.length).toBe(1);
+      expect(player[ZONES.DISCARD].length).toBe(1);
+    });
+
+    test("sollte Kartenbewegungen auf gegnerische Pile-Zonen blockieren", () => {
+      const opponent = new PlayerState();
+      opponent.sessionId = "p2";
+      state.players.set("p2", opponent);
+
+      // Versuch, c1 (Besitzer p1) in gegnerisches Deck zu legen
+      const res = moveCard(player, state, cardLookup, ZONES.DECK, ZONES.DECK, "c1", 1, { targetPlayerId: "p2" });
+      expect(res.movedCards.length).toBe(0);
+      expect(res.error).toBe("Cannot move cards to opponent's pile!");
+    });
+
+    test("sollte das Bewegen von Karten aus dem Land of Redemption blockieren", () => {
+      const redCard = new Card();
+      redCard.id = "red_1";
+      redCard.Name = "Redeemed Soul";
+      redCard.controllerId = "p1";
+      redCard.originalOwnerId = "p1";
+      redCard.zone = ZONES.LAND_OF_REDEMPTION;
+      player[ZONES.LAND_OF_REDEMPTION].push(redCard);
+      cardLookup.set(redCard.id, redCard);
+
+      const res = moveCard(player, state, cardLookup, ZONES.LAND_OF_REDEMPTION, ZONES.HAND, "red_1");
+      expect(res.movedCards.length).toBe(0);
+      expect(res.error).toBe("Cards in Land of Redemption are permanent!");
     });
   });
 });
+
 

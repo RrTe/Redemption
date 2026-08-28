@@ -158,6 +158,10 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
         pointer.leftButtonReleased()
       ) {
         const myPlayer = room.state.players.get(room.sessionId);
+        if (myPlayer && myPlayer.deck && myPlayer.deck.length === 0) {
+          ToastManager.show("Deck is empty!", "warning");
+          return;
+        }
         if (myPlayer && myPlayer.hand && myPlayer.hand.length >= MAX_HAND_SIZE) {
           ToastManager.show(`Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!`, "warning");
           return;

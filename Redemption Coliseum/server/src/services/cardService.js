@@ -91,17 +91,22 @@ function _validateMove(
     logger.warn(
       `Ungültiger Zug: Versuch, eine Karte aus dem '${ZONES.LAND_OF_REDEMPTION}' zu bewegen.`,
     );
-    return false;
+    return { valid: false, error: "Cards in Land of Redemption are permanent!" };
   }
 
   // ✨ Kompakte und vollständige Regelprüfung für Lost Souls.
   if (card.Type === CARD_TYPES.LOST_SOUL) {
-    // Definiere alle erlaubten Züge für eine Lost Soul.
+    // Erlaubt für Lost Souls:
+    // 1. Eigenes oder gegnerisches Land of Bondage
+    // 2. Eigenes Deck
+    // 3. Eigener Discard-Stapel
+    // 4. Gegnerisches Land of Redemption (nur aus eigenem Land of Bondage)
     const canMoveToAnyBondage = toZone === ZONES.LAND_OF_BONDAGE;
     const canMoveToOwnDeck =
       toZone === ZONES.DECK && targetPlayerId === card.originalOwnerId;
+    const canMoveToOwnDiscard =
+      toZone === ZONES.DISCARD && targetPlayerId === card.originalOwnerId;
 
-    // Sonderregel: Ins gegnerische Land of Redemption nur aus dem eigenen Land of Bondage.
     const canMoveToOpponentRedemption =
       toZone === ZONES.LAND_OF_REDEMPTION &&
       targetPlayerId !== card.originalOwnerId &&
@@ -111,24 +116,25 @@ function _validateMove(
     if (
       canMoveToAnyBondage ||
       canMoveToOwnDeck ||
+      canMoveToOwnDiscard ||
       canMoveToOpponentRedemption
     ) {
-      return true; // Der Zug ist gültig.
+      return { valid: true }; // Der Zug ist gültig.
     }
 
     // Wenn keine der obigen Regeln zutrifft, ist der Zug für eine Lost Soul ungültig.
     logger.warn(
       `Ungültiger Zug für Lost Soul von '${fromZone}' nach '${toZone}'.`,
     );
-    return false;
+    return { valid: false, error: "Invalid move for Lost Soul!" };
   }
 
-  // ✨ Regel: Karten dürfen nicht in die Pile-Zonen (Deck, Discard) eines anderen Spielers gelegt werden.
+  // ✨ Regel: Karten dürfen nicht in die Pile-Zonen (Deck, Discard, Reserve, Banish) eines anderen Spielers gelegt werden.
   if (PILE_ZONES.includes(toZone) && card.originalOwnerId !== targetPlayerId) {
     logger.warn(
       `Ungültiger Zug: Versuch, eine Karte in die Zone '${toZone}' eines anderen Spielers zu legen. Aktion wird abgebrochen.`,
     );
-    return false;
+    return { valid: false, error: "Cannot move cards to opponent's pile!" };
   }
 
   // ✨ Regel: In der 1. Runde dürfen keine Karten aus der Reserve entnommen werden.
@@ -142,7 +148,7 @@ function _validateMove(
       logger.warn(
         `Ungültiger Zug: In der ersten Runde dürfen keine Karten aus der Reserve entnommen werden.`,
       );
-      return false;
+      return { valid: false, error: "Cannot take cards from Reserve in Round 1!" };
     }
   }
 
@@ -153,11 +159,11 @@ function _validateMove(
       logger.warn(
         `Ungültiger Zug: Handlimit erreicht für Spieler '${targetPlayerId}' (${targetPlayer[ZONES.HAND].length}/${MAX_HAND_SIZE}).`,
       );
-      return false;
+      return { valid: false, error: `Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!` };
     }
   }
 
-  return true;
+  return { valid: true };
 }
 
 /**
@@ -301,20 +307,6 @@ function _moveCardById(
     `[MOVE_BY_ID] Attempting to move card '${cardId}' from '${from}' to '${to}' by player '${actingPlayer.name}'.`,
   );
 
-  // Lost Soul redirection logic - this needs to be here as it's specific to the card being moved
-  const cardForCheck = cardLookup.get(cardId);
-  if (cardForCheck && cardForCheck.Type === CARD_TYPES.LOST_SOUL) {
-    if (to === ZONES.TERRITORY || to === ZONES.HAND) {
-      const owner = state.players.get(cardForCheck.originalOwnerId);
-      if (owner) {
-        logger.debug(
-          `[MOVE_REDIRECT] Lost Soul '${cardForCheck.Name}' will be redirected from '${to}' to '${ZONES.LAND_OF_BONDAGE}'.`,
-        );
-        to = ZONES.LAND_OF_BONDAGE;
-        coords = { ...coords, targetPlayerId: owner.sessionId };
-      }
-    }
-  }
 
   const findResult = _findCardAndOwner(cardLookup, state, cardId, from);
   if (!findResult) {
@@ -360,14 +352,20 @@ function _moveCardById(
   }
 
   logger.debug(`[MOVE_BY_ID] moveCard determined targetPlayer: ${targetPlayer.sessionId}`);
-  if (
-    !_validateMove(card, state, controllerId, targetPlayer.sessionId, from, to)
-  ) {
+  const validation = _validateMove(
+    card,
+    state,
+    controllerId,
+    targetPlayer.sessionId,
+    from,
+    to,
+  );
+  if (!validation.valid) {
     card.lastMoved = Date.now(); // Update timestamp to trigger client snap-back
     logger.warn(
-      `[MOVE_BY_ID_FAIL] Move validation failed for card '${cardId}' from ${from} to ${to}.`,
+      `[MOVE_BY_ID_FAIL] Move validation failed for card '${cardId}' from ${from} to ${to}. Reason: ${validation.error}`,
     );
-    return { movedCards: [], logEntry: "" };
+    return { movedCards: [], logEntry: "", error: validation.error };
   }
 
   const pileController = state.players.get(controllerId);
@@ -448,8 +446,8 @@ function _moveCardById(
   let logEntry = "";
   const templateId = generateCardId(movedCard.ImageFile, movedCard.Set, movedCard.Name);
   
-  // Special logging for Lost Souls being redirected
-  if (cardForCheck && cardForCheck.Type === CARD_TYPES.LOST_SOUL && (to === ZONES.LAND_OF_BONDAGE || to === ZONES.TERRITORY)) {
+  // Special logging for Lost Souls being moved to Land of Bondage
+  if (movedCard && movedCard.Type === CARD_TYPES.LOST_SOUL && to === ZONES.LAND_OF_BONDAGE) {
       logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} to ${getZoneDisplayName(to, false)}. (Lost Soul rule)`;
   } else {
       const isFromOpponent = controllerId !== actingPlayer.sessionId;
@@ -530,6 +528,16 @@ function _drawCardsFromDeck(
   // ✨ NEU: Handlimit für das Ziehen vom Deck berücksichtigen
   let effectiveCount = count;
   if (to === ZONES.HAND) {
+    if (!player[ZONES.DECK] || player[ZONES.DECK].length === 0) {
+      logger.warn(
+        `[DRAW_FROM_DECK] Deck of player '${player.sessionId}' is empty.`,
+      );
+      return {
+        movedCards: [],
+        logEntry: `${player.name} cannot draw: Deck is empty.`,
+        error: "Deck is empty!",
+      };
+    }
     const currentHandSize = player[ZONES.HAND]?.length || 0;
     const capacity = Math.max(0, MAX_HAND_SIZE - currentHandSize);
     effectiveCount = Math.min(count, capacity);
@@ -540,6 +548,7 @@ function _drawCardsFromDeck(
       return {
         movedCards: [],
         logEntry: `${player.name} cannot draw: Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE}).`,
+        error: `Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!`,
       };
     }
   }

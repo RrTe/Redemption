@@ -5,6 +5,7 @@ import { type SettingsManager } from "../../managers/SettingsManager";
 import { type RoomState } from "../../../../shared/types";
 import { log } from "../../utils/logger";
 import { GameEvents } from "../../constants/EventNames";
+import { ToastManager } from "./ToastManager";
 
 /**
  * Manages high-level game state synchronization, player connections,
@@ -164,8 +165,10 @@ export class GameStateManager {
     );
 
     // 2.1 Listen for network events from GameEventCoordinator
-    this.scene.events.on("net:pileShuffled", () => {
+    this.scene.events.on("net:pileShuffled", (msg?: { zone?: string; playerId?: string }) => {
       this.scene.game.events.emit("playSound", "CARD_SHUFFLE");
+      const zoneName = msg?.zone === "reserve" ? "Reserve" : "Deck";
+      ToastManager.show(`${zoneName} shuffled.`, "info");
     });
 
     // 2.2 Re-check waiting status on every state change

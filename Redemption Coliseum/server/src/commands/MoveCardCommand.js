@@ -78,9 +78,9 @@ class MoveCardCommand extends BaseCommand {
       }
 
       // Events & Logging
-      if (message.to === ZONES.HAND && movedCards.length === 0) {
+      if (result.error) {
         this.client.send("gameToast", {
-          message: `Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!`,
+          message: result.error,
           type: "warning",
         });
       }
