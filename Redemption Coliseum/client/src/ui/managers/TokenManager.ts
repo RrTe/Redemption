@@ -37,14 +37,21 @@ export class TokenManager {
       return;
     }
 
-    const allTokens = cardData.cards.filter(
-      (c: any) => c.Type && c.Type.includes("Token"),
-    );
+    const allTokens = cardData.cards.filter((c: any) => {
+      if (c.IsToken || c.isToken || c.Rarity === "Token") return true;
+      if (Array.isArray(c.Type)) {
+        return c.Type.some((t: string) => t && t.toLowerCase().includes("token"));
+      }
+      if (typeof c.Type === "string") {
+        return c.Type.toLowerCase().includes("token");
+      }
+      return false;
+    });
 
     const tokenPreviews = allTokens.map((tokenDef: any, index: number) => {
       return {
         id: `token_preview_${index}`,
-        cardId: tokenDef.Name,
+        cardId: tokenDef.id || tokenDef.Name,
         Name: tokenDef.Name,
         Type: tokenDef.Type,
         ImageFile: tokenDef.ImageFile,
@@ -96,6 +103,7 @@ export class TokenManager {
       room: this.room,
       showCloseButton: true,
       isInteractive: true,
+      isMyAction: true,
       selectionRules: { min: 1, max: 99 },
       possibleActions: possibleActions,
       onComplete: (result: any) => {
@@ -169,7 +177,7 @@ export class TokenManager {
         if (targetOwnerId) {
           for (let i = 0; i < count; i++) {
             this.networkManager.sendCreateToken({
-              cardId: selectedToken.Name,
+              cardId: selectedToken.cardId || selectedToken.Name,
               zone: selectionResult.toZone,
               ownerId: targetOwnerId,
             });

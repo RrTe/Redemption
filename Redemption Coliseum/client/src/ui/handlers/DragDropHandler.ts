@@ -377,8 +377,7 @@ export class DragDropHandler {
       return;
     }
 
-    const isToken =
-      gameObject.cardData.Type && gameObject.cardData.Type.includes("Token");
+    const isToken = Boolean(gameObject.cardData.isToken);
     const forbiddenTokenZones = [ZONES.HAND, ZONES.DECK, ZONES.RESERVE];
 
     if (isToken && forbiddenTokenZones.includes(toZone)) {

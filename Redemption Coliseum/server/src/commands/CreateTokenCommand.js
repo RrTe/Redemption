@@ -23,7 +23,7 @@ class CreateTokenCommand extends BaseCommand {
     }
 
     const tokenId = `${this.client.sessionId}-token-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const card = CardFactory.createCard(cardDef, targetPlayerId, tokenId, zone || ZONES.TERRITORY, this.client.sessionId);
+    const card = CardFactory.createCard(cardDef, targetPlayerId, tokenId, zone || ZONES.TERRITORY, targetPlayerId);
     card.isToken = true; // ✨ Kennzeichnet die Karte als Token für die Auflösungs-Logik
 
     player[card.zone].push(card);

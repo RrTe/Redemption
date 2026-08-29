@@ -204,8 +204,25 @@ function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
 
   // ✨ FIX: Use the actual current zone of the card if it doesn't match 'fromZone'
   const actualZone = card.zone || fromZone || "unknown";
-  const fromArr = getZoneCollection(controller, state, actualZone);
-  const cardIndex = fromArr.findIndex((c) => c.id === cardId);
+  let fromArr = getZoneCollection(controller, state, actualZone);
+  let cardIndex = fromArr.findIndex((c) => c.id === cardId);
+
+  if (cardIndex === -1 && state.players) {
+    for (const [pId, p] of state.players.entries()) {
+      if (pId === card.controllerId) continue;
+      const candidateArr = getZoneCollection(p, state, actualZone);
+      const idx = candidateArr.findIndex((c) => c.id === cardId);
+      if (idx !== -1) {
+        logger.warn(
+          `[FIND_CARD_RECOVER] Card '${cardId}' was registered to controller '${card.controllerId}', but found in player '${pId}' ${actualZone}. Auto-correcting controller.`,
+        );
+        card.controllerId = pId;
+        fromArr = candidateArr;
+        cardIndex = idx;
+        break;
+      }
+    }
+  }
 
   if (cardIndex === -1) {
     logger.warn(

@@ -11,6 +11,7 @@ import { log } from "../../utils/logger.js";
 import { DragDropHandler } from "./DragDropHandler.js";
 import { type CardInteractionHandler } from "./CardInteractionHandler.js";
 import { type PileInteractionHandler } from "./PileInteractionHandler.js";
+import { type TokenManager } from "../managers/TokenManager.js";
 import { ViewportManager } from "../managers/ViewportManager.js";
 
 /**
@@ -23,9 +24,11 @@ export class InteractionHandler {
   private pileInteractionHandler: PileInteractionHandler;
   private dragDropHandler: DragDropHandler;
   private elementManager: ElementManager;
+  private tokenManager: TokenManager;
 
   private activeMenu: RadialMenu | null = null;
   private longPressTimer: Phaser.Time.TimerEvent | null = null;
+  private boardLongPressTimer: Phaser.Time.TimerEvent | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -34,6 +37,7 @@ export class InteractionHandler {
     pileInteractionHandler: PileInteractionHandler,
     dragDropHandler: DragDropHandler,
     elementManager: ElementManager,
+    tokenManager: TokenManager,
   ) {
     this.scene = scene;
     this.room = room;
@@ -41,6 +45,7 @@ export class InteractionHandler {
     this.pileInteractionHandler = pileInteractionHandler;
     this.dragDropHandler = dragDropHandler;
     this.elementManager = elementManager;
+    this.tokenManager = tokenManager;
   }
 
   public registerHandlers() {
@@ -48,8 +53,9 @@ export class InteractionHandler {
     this.scene.input.on("gameobjectout", this.onPointerOut, this);
     this.scene.input.on("gameobjectdown", this.onGameObjectDown, this);
     this.scene.input.on("gameobjectup", this.onGameObjectUp, this);
-    // ✨ Mobile: Background tap detection to clear hovers
+    // ✨ Mobile & Global: Tap detection to clear hovers and empty board interactions
     this.scene.input.on("pointerdown", this.onGlobalPointerDown, this);
+    this.scene.input.on("pointerup", this.onGlobalPointerUp, this);
     this.scene.events.on("ui:clear-hover", this.onClearHover, this);
   }
 
@@ -59,7 +65,16 @@ export class InteractionHandler {
     this.scene.input.off("gameobjectdown", this.onGameObjectDown, this);
     this.scene.input.off("gameobjectup", this.onGameObjectUp, this);
     this.scene.input.off("pointerdown", this.onGlobalPointerDown, this);
+    this.scene.input.off("pointerup", this.onGlobalPointerUp, this);
     this.scene.events.off("ui:clear-hover", this.onClearHover, this);
+    if (this.longPressTimer) {
+      this.longPressTimer.remove();
+      this.longPressTimer = null;
+    }
+    if (this.boardLongPressTimer) {
+      this.boardLongPressTimer.remove();
+      this.boardLongPressTimer = null;
+    }
     if (this.activeMenu) {
       this.activeMenu.close();
       this.activeMenu = null;
@@ -74,11 +89,40 @@ export class InteractionHandler {
     pointer: Phaser.Input.Pointer,
     gameObjects: Phaser.GameObjects.GameObject[],
   ) {
+    if (this.boardLongPressTimer) {
+      this.boardLongPressTimer.remove();
+      this.boardLongPressTimer = null;
+    }
+
+    const hasCardOrPile = gameObjects.some(
+      (go) => go instanceof CardUI || go instanceof PileUI || go instanceof StackedPileUI,
+    );
+
     if (ViewportManager.isTouchPrimary() || pointer.wasTouch) {
-      const clickedCard = gameObjects.find(go => go instanceof CardUI);
-      if (!clickedCard) {
+      if (!hasCardOrPile) {
         this.cardInteractionHandler.clearHover();
       }
+    }
+
+    // ✨ Empty board interaction (Tokens)
+    if (!hasCardOrPile && !this.dragDropHandler.isDragging) {
+      if (pointer.rightButtonDown()) {
+        this.tokenManager.startTokenCreationProcess();
+      } else if (pointer.wasTouch || ViewportManager.isTouchPrimary()) {
+        const startPos = pointer.position.clone();
+        this.boardLongPressTimer = this.scene.time.delayedCall(500, () => {
+          if (pointer.isDown && pointer.position.distance(startPos) < 15 && !this.dragDropHandler.isDragging) {
+            this.tokenManager.startTokenCreationProcess();
+          }
+        });
+      }
+    }
+  }
+
+  private onGlobalPointerUp() {
+    if (this.boardLongPressTimer) {
+      this.boardLongPressTimer.remove();
+      this.boardLongPressTimer = null;
     }
   }
 

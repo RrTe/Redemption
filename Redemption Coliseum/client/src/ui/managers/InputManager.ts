@@ -93,6 +93,7 @@ export class InputManager {
       this.pileInteractionHandler,
       this.dragDropHandler,
       elementManager,
+      tokenManager,
     );
 
     // ✨ REFACTOR: Create handler for keyboard inputs.
