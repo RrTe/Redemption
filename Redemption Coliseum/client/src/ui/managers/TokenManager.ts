@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI";
 import { type GameNetworkManager } from "../../network/GameNetworkManager";
 import { type CardState } from "../../../../shared/types";
-import { ZONES } from "../../../../shared/zones";
+import { ZONES, type Zone } from "../../../../shared/zones";
 import {
   type SelectionDialogData,
   type SelectionAction,
@@ -10,6 +10,11 @@ import {
 import type { QuantitySelectionDialogData } from "../../scenes/QuantitySelectionDialogScene";
 import { MapSchema } from "@colyseus/schema";
 import { log } from "../../utils/logger";
+
+export interface TokenCreationContext {
+  zone?: Zone;
+  target?: "me" | "opponent";
+}
 
 /**
  * Manages the process of creating tokens, from selection to creation.
@@ -29,8 +34,8 @@ export class TokenManager {
     this.networkManager = networkManager;
   }
 
-  public startTokenCreationProcess() {
-    log("Input", "Token creation process started via TokenManager.");
+  public startTokenCreationProcess(context?: TokenCreationContext) {
+    log("Input", `Token creation process started via TokenManager (Context: ${JSON.stringify(context)}).`);
     const cardData = this.scene.cache.json.get("carddata");
     if (!cardData || !cardData.cards) {
       log("TokenManager", "WARN: Card data 'carddata' not found in cache.");
@@ -48,7 +53,28 @@ export class TokenManager {
       return false;
     });
 
-    const tokenPreviews = allTokens.map((tokenDef: any, index: number) => {
+    const isLostSoulToken = (c: any) => {
+      const name = String(c.Name || "").toLowerCase();
+      const type = Array.isArray(c.Type)
+        ? c.Type.join(" ").toLowerCase()
+        : String(c.Type || "").toLowerCase();
+      const image = String(c.ImageFile || "").toLowerCase();
+      return (
+        name.includes("lost soul") ||
+        type.includes("lost soul") ||
+        image.includes("lost-soul") ||
+        image.includes("lostsouls")
+      );
+    };
+
+    let filteredTokens = allTokens;
+    if (context?.zone === ZONES.LAND_OF_BONDAGE) {
+      filteredTokens = allTokens.filter(isLostSoulToken);
+    } else if (context?.zone === ZONES.TERRITORY) {
+      filteredTokens = allTokens.filter((c: any) => !isLostSoulToken(c));
+    }
+
+    const tokenPreviews = filteredTokens.map((tokenDef: any, index: number) => {
       return {
         id: `token_preview_${index}`,
         cardId: tokenDef.id || tokenDef.Name,
@@ -68,6 +94,16 @@ export class TokenManager {
         attachedTo: null,
       } as unknown as CardState;
     });
+
+    this.scene.scene.pause("CardGame");
+
+    const hasContext = Boolean(context?.zone && context?.target);
+    const isOpponent = context?.target === "opponent";
+    const zoneLabel =
+      context?.zone === ZONES.LAND_OF_BONDAGE ? "Land of Bondage" : "Territory";
+    const title = hasContext
+      ? `Select ${isOpponent ? "Opponent" : "My"} ${zoneLabel} Token`
+      : "Select a Token";
 
     const possibleActions: SelectionAction[] = [
       {
@@ -96,32 +132,30 @@ export class TokenManager {
       },
     ];
 
-    this.scene.scene.pause("CardGame");
     this.scene.scene.launch("SelectionDialogScene", {
-      title: "Select a Token",
+      title,
       cards: tokenPreviews,
       room: this.room,
       showCloseButton: true,
       isInteractive: true,
       isMyAction: true,
       selectionRules: { min: 1, max: 99 },
-      possibleActions: possibleActions,
+      confirmButtonLabel: hasContext ? "Create" : undefined,
+      possibleActions: hasContext ? undefined : possibleActions,
       onComplete: (result: any) => {
         this.scene.scene.stop("SelectionDialogScene");
-
-        // Enrich result with action data (toZone, target)
         const action = possibleActions.find(
           (a) => a.actionId === result.actionId,
         );
         const enrichedResult = {
           ...result,
-          toZone: result.toZone || action?.toZone,
-          target: result.target || action?.target,
+          toZone: context?.zone || result.toZone || action?.toZone,
+          target: context?.target || result.target || action?.target,
         };
 
         if (
-          enrichedResult.selectedCards.length > 0 &&
-          enrichedResult.actionId
+          enrichedResult.selectedCards?.length > 0 &&
+          (hasContext || enrichedResult.actionId)
         ) {
           this.launchQuantityDialog(enrichedResult, tokenPreviews);
         } else {
@@ -177,7 +211,7 @@ export class TokenManager {
         if (targetOwnerId) {
           for (let i = 0; i < count; i++) {
             this.networkManager.sendCreateToken({
-              cardId: selectedToken.cardId || selectedToken.Name,
+              cardId: selectedToken.Name,
               zone: selectionResult.toZone,
               ownerId: targetOwnerId,
             });

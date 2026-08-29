@@ -106,13 +106,35 @@ export class InteractionHandler {
 
     // ✨ Empty board interaction (Tokens)
     if (!hasCardOrPile && !this.dragDropHandler.isDragging) {
+      const hitZone = gameObjects.find(
+        (go) =>
+          go instanceof Phaser.GameObjects.Zone &&
+          (go.name === ZONES.TERRITORY || go.name === ZONES.LAND_OF_BONDAGE),
+      ) as Phaser.GameObjects.Zone | undefined;
+
+      let tokenContext: { zone: Zone; target: "me" | "opponent" } | undefined = undefined;
+      const targetZoneObj =
+        hitZone ||
+        (this.scene.input.hitTestPointer(pointer).find(
+          (go) =>
+            go instanceof Phaser.GameObjects.Zone &&
+            (go.name === ZONES.TERRITORY || go.name === ZONES.LAND_OF_BONDAGE),
+        ) as Phaser.GameObjects.Zone | undefined);
+
+      if (targetZoneObj) {
+        const zoneName = targetZoneObj.name as Zone;
+        const ownerId = targetZoneObj.getData("ownerId");
+        const target = ownerId && ownerId !== this.room.sessionId ? "opponent" : "me";
+        tokenContext = { zone: zoneName, target };
+      }
+
       if (pointer.rightButtonDown()) {
-        this.tokenManager.startTokenCreationProcess();
+        this.tokenManager.startTokenCreationProcess(tokenContext);
       } else if (pointer.wasTouch || ViewportManager.isTouchPrimary()) {
         const startPos = pointer.position.clone();
         this.boardLongPressTimer = this.scene.time.delayedCall(500, () => {
           if (pointer.isDown && pointer.position.distance(startPos) < 15 && !this.dragDropHandler.isDragging) {
-            this.tokenManager.startTokenCreationProcess();
+            this.tokenManager.startTokenCreationProcess(tokenContext);
           }
         });
       }
