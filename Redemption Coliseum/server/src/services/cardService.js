@@ -86,13 +86,6 @@ function _validateMove(
   fromZone,
   toZone,
 ) {
-  // ✨ PHASE 1: Karten im Land of Redemption sind permanent aus dem Spiel.
-  if (fromZone === ZONES.LAND_OF_REDEMPTION) {
-    logger.warn(
-      `Ungültiger Zug: Versuch, eine Karte aus dem '${ZONES.LAND_OF_REDEMPTION}' zu bewegen.`,
-    );
-    return { valid: false, error: "Cards in Land of Redemption are permanent!" };
-  }
 
   // ✨ Kompakte und vollständige Regelprüfung für Lost Souls.
   if (card.Type === CARD_TYPES.LOST_SOUL) {

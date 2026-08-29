@@ -284,10 +284,10 @@ describe("cardService (moveCard)", () => {
       expect(res.error).toBe("Cannot move cards to opponent's pile!");
     });
 
-    test("sollte das Bewegen von Karten aus dem Land of Redemption blockieren", () => {
+    test("sollte das Bewegen von Karten aus dem Land of Redemption erlauben", () => {
       const redCard = new Card();
       redCard.id = "red_1";
-      redCard.Name = "Redeemed Soul";
+      redCard.Name = "Redeemed Hero";
       redCard.controllerId = "p1";
       redCard.originalOwnerId = "p1";
       redCard.zone = ZONES.LAND_OF_REDEMPTION;
@@ -295,8 +295,9 @@ describe("cardService (moveCard)", () => {
       cardLookup.set(redCard.id, redCard);
 
       const res = moveCard(player, state, cardLookup, ZONES.LAND_OF_REDEMPTION, ZONES.HAND, "red_1");
-      expect(res.movedCards.length).toBe(0);
-      expect(res.error).toBe("Cards in Land of Redemption are permanent!");
+      expect(res.movedCards.length).toBe(1);
+      expect(player[ZONES.HAND].length).toBe(1);
+      expect(player[ZONES.LAND_OF_REDEMPTION].length).toBe(0);
     });
   });
 });
