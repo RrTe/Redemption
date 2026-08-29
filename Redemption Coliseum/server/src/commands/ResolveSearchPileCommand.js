@@ -1,6 +1,6 @@
 const { BaseCommand } = require("./BaseCommand");
 const { ZONES } = require("../../../shared/zones");
-const { MAX_HAND_SIZE } = require("../../../shared/card-constants");
+const { MAX_HAND_SIZE, CARD_TYPES } = require("../../../shared/card-constants");
 const {
   getZoneCollection,
   moveCard,
@@ -56,37 +56,57 @@ class ResolveSearchPileCommand extends BaseCommand {
       logger.debug(`[TRACE][${traceId}][S1] ResolveSearchPile START. Selected: ${validSelectedCards.length}`);
 
       validSelectedCards.forEach((selection, index) => {
-          logger.debug(`[TRACE][${traceId}][S2] Moving selected card ${selection.id} to ${toZone}`);
+          const cardInstance = this.room.cardLookup.get(selection.id);
+          const isLostSoul = cardInstance && cardInstance.Type === CARD_TYPES.LOST_SOUL;
+
+          let targetZone = toZone;
+          let targetPlayerId = coords?.targetPlayerId || player.sessionId;
+
+          // Rule: If it is a Lost Soul and Land of Bondage button was NOT specifically chosen,
+          // it automatically goes to the Land of Bondage of the pile's owner (originalOwnerId).
+          if (isLostSoul) {
+            targetZone = ZONES.LAND_OF_BONDAGE;
+            if (toZone !== ZONES.LAND_OF_BONDAGE) {
+              targetPlayerId = originalOwnerId;
+            }
+          }
+
+          logger.debug(`[TRACE][${traceId}][S2] Moving selected card ${selection.id} to ${targetZone} (targetPlayer: ${targetPlayerId})`);
           const result = moveCard(
               player,
               this.state,
               this.room.cardLookup,
               fromZone,
-              toZone,
+              targetZone,
               selection.id,
               1,
-              { ...coords, position: selection.position },
+              { ...coords, targetPlayerId, position: selection.position },
           );
 
-          const cardInstance = this.room.cardLookup.get(selection.id);
           const success = result.movedCards.length > 0;
 
           if (success) {
-              successfullyMovedCards.push(selection);
+              successfullyMovedCards.push({ ...selection, effectiveZone: targetZone, effectivePlayerId: targetPlayerId });
           }
 
-          // ✨ FIX: Remove from searchContext immediately to prevent double-referencing
+          // Remove from searchContext immediately to prevent double-referencing
           const ctxIdx = context.cards.findIndex(c => c.id === selection.id);
           if (ctxIdx !== -1) context.cards.splice(ctxIdx, 1);
 
           logger.debug(`[TRACE][${traceId}][S3] Card ${selection.id} result: Success=${success}, Zone=${cardInstance?.zone}`);
 
-          if (toZone === ZONES.HAND && success) {
+          if (targetZone === ZONES.HAND && success) {
               cardsMovedToHand.push(...result.movedCards);
           }
       });
 
-      if (toZone === ZONES.HAND && validSelectedCards.length > successfullyMovedCards.length) {
+      const attemptedHandMoves = validSelectedCards.filter((s) => {
+        const c = this.room.cardLookup.get(s.id);
+        return toZone === ZONES.HAND && (!c || c.Type !== CARD_TYPES.LOST_SOUL);
+      });
+      const successfulHandMoves = successfullyMovedCards.filter((s) => s.effectiveZone === ZONES.HAND);
+
+      if (toZone === ZONES.HAND && attemptedHandMoves.length > successfulHandMoves.length) {
         this.client.send("gameToast", {
           message: `Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!`,
           type: "warning",

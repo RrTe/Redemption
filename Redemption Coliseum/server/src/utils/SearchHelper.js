@@ -107,26 +107,27 @@ class SearchHelper {
 
     const targetZones = [
       { label: "To Hand", toZone: ZONES.HAND },
+      { label: "To Territory", toZone: ZONES.TERRITORY },
+      { label: "To Land of Bondage", toZone: ZONES.LAND_OF_BONDAGE },
       { label: "To Deck", toZone: ZONES.DECK },
       { label: "To Reserve", toZone: ZONES.RESERVE },
       { label: "To Discard", toZone: ZONES.DISCARD },
       { label: "To Banish", toZone: ZONES.BANISH },
-      { label: "To Territory", toZone: ZONES.TERRITORY },
-      {
-        label: "To Opp. Territory",
-        toZone: ZONES.TERRITORY,
-        target: "opponent",
-      },
+      { label: "To Opp. Hand", toZone: ZONES.HAND, target: "opponent" },
+      { label: "To Opp. Territory", toZone: ZONES.TERRITORY, target: "opponent" },
+      { label: "To Opp. Land of Bondage", toZone: ZONES.LAND_OF_BONDAGE, target: "opponent" },
+      { label: "To Opp. Deck", toZone: ZONES.DECK, target: "opponent" },
+      { label: "To Opp. Reserve", toZone: ZONES.RESERVE, target: "opponent" },
+      { label: "To Opp. Discard", toZone: ZONES.DISCARD, target: "opponent" },
+      { label: "To Opp. Banish", toZone: ZONES.BANISH, target: "opponent" },
     ];
 
-    return targetZones
-      .filter((a) => a.toZone !== fromZone)
-      .map((a) => ({
-        label: a.label,
-        actionId: `MOVE_TO_${a.toZone.toUpperCase()}${a.target ? "_OPPONENT" : ""}`,
-        toZone: a.toZone,
-        target: a.target,
-      }));
+    return targetZones.map((a) => ({
+      label: a.label,
+      actionId: `MOVE_TO_${a.toZone.toUpperCase()}${a.target ? "_OPPONENT" : ""}`,
+      toZone: a.toZone,
+      target: a.target,
+    }));
   }
 }
 

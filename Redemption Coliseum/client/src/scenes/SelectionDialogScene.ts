@@ -193,11 +193,18 @@ export class SelectionDialogScene extends Phaser.Scene {
         (zone, target, isOpponent) =>
           this.handleZoneButtonClick(zone, target, isOpponent),
       );
+      const selectedStates = this.paginationManager.getCardsFromIds(
+        this.selectedCards,
+      );
+      const nonLostSoulHandCount = selectedStates.filter(
+        (c: any) => !this.isLostSoul(c),
+      ).length;
       this.uiManager.updateConfirmButtonState(
         this.selectedCards.size,
         this.dialogData.selectionRules,
         this.dialogData.possibleActions,
         this.getHandLimits(),
+        nonLostSoulHandCount,
       );
     }
   }
@@ -395,8 +402,13 @@ export class SelectionDialogScene extends Phaser.Scene {
     );
 
     const handLimits = this.getHandLimits();
+    const nonLostSoulHandCount = selectedStates.filter(
+      (c: any) => !this.isLostSoul(c),
+    ).length;
+
     if (this.selectedCards.has(id)) {
-      if (this.selectedCards.size === handLimits.myFreeSlots && handLimits.myFreeSlots > 0) {
+      const card = selectedStates.find((c: any) => c.id === id);
+      if (!this.isLostSoul(card) && nonLostSoulHandCount === handLimits.myFreeSlots && handLimits.myFreeSlots > 0) {
         ToastManager.show(
           `Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!`,
           "info",
@@ -409,6 +421,7 @@ export class SelectionDialogScene extends Phaser.Scene {
       this.dialogData.selectionRules,
       this.dialogData.possibleActions,
       handLimits,
+      nonLostSoulHandCount,
     );
 
     if (
@@ -420,6 +433,22 @@ export class SelectionDialogScene extends Phaser.Scene {
         selectedCardIds: Array.from(this.selectedCards),
       });
     }
+  }
+
+  private isLostSoul(card: any): boolean {
+    if (!card) return false;
+    if (Array.isArray(card.Type)) {
+      return card.Type.some(
+        (t: string) => typeof t === "string" && t.toLowerCase().includes("lost soul"),
+      );
+    }
+    if (typeof card.Type === "string") {
+      return card.Type.toLowerCase().includes("lost soul");
+    }
+    if (typeof card.Name === "string") {
+      return card.Name.toLowerCase().startsWith("lost soul");
+    }
+    return false;
   }
 
   private logCardState(card: CardUI, action: string) {

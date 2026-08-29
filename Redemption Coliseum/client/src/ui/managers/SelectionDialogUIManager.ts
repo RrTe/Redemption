@@ -149,19 +149,21 @@ export class SelectionDialogUIManager {
     const zones = [
       { label: "Hand", zone: "hand" as Zone },
       { label: "Territory", zone: "territory" as Zone },
+      { label: "Land of Bondage", zone: "land_of_bondage" as Zone },
       { label: "Deck", zone: "deck" as Zone },
       { label: "Reserve", zone: "reserve" as Zone },
       { label: "Discard", zone: "discard" as Zone },
       { label: "Banish", zone: "banish" as Zone },
     ];
 
-    // Base scaling on cardWidth to keep proportions identical to desktop
+    // Proportional layout for 7 buttons across the viewport
     const isShort = ViewportManager.isLowHeightProfile();
-    const cardWidth = this.scene.scale.width / (isShort ? 15.5 : 16);
-    const bWidth = Math.min(140, cardWidth * 1.6); // Increased for readability on mobile
-    const bHeight = Math.min(50, 50 * (bWidth / 140));
-    const textSize = Math.max(16, Math.min(26, 26 * (bWidth / 140))); // Minimum 16px, increased base by 2
-    const titleSize = Math.max(20, Math.min(40, 40 * (bWidth / 140))); // Minimum 20px
+    const maxRowWidth = this.scene.scale.width - 30;
+    const spacing = 8;
+    const bWidth = Math.min(130, Math.max(75, (maxRowWidth - (zones.length - 1) * spacing) / zones.length));
+    const bHeight = Math.min(48, Math.max(32, 48 * (bWidth / 130)));
+    const baseTextSize = Math.max(13, Math.min(22, 22 * (bWidth / 130)));
+    const titleSize = Math.max(18, Math.min(36, 36 * (bWidth / 130)));
 
     ["me", "opponent"].forEach((targetPlayer) => {
       const isOpponent = targetPlayer === "opponent";
@@ -186,7 +188,7 @@ export class SelectionDialogUIManager {
       }
 
       let startX =
-        (this.scene.scale.width - zones.length * (bWidth + 10)) / 2 +
+        (this.scene.scale.width - (zones.length * bWidth + (zones.length - 1) * spacing)) / 2 +
         bWidth / 2;
 
       zones.forEach((z) => {
@@ -194,8 +196,10 @@ export class SelectionDialogUIManager {
         const bg = this.scene.add
           .image(0, 0, "button_parchment")
           .setDisplaySize(bWidth, bHeight);
+        
+        const labelSize = z.label.length > 10 ? Math.round(baseTextSize * 0.7) : baseTextSize;
         const txt = this.scene.add
-          .bitmapText(0, -3, "fairydust", z.label, textSize)
+          .bitmapText(0, -3, "fairydust", z.label, labelSize)
           .setOrigin(0.5)
           .setTint(0xfff580) // Brighter gold for better contrast
           .setDropShadow(3, 3, 0x000000, 1.0); // Deeper shadow for readability
@@ -210,7 +214,7 @@ export class SelectionDialogUIManager {
           onButtonClick(z.zone, targetPlayer as "me" | "opponent", isOpponent); // Call the provided callback
         });
         this.actionButtons.push(btn);
-        startX += bWidth + 10;
+        startX += bWidth + spacing;
       });
     });
   }
@@ -230,6 +234,7 @@ export class SelectionDialogUIManager {
     selectionRules: { min: number; max: number } | undefined,
     possibleActions: SelectionAction[] | undefined,
     handLimits?: { myFreeSlots: number; opponentFreeSlots: number },
+    nonLostSoulHandCount: number = selectedCardsCount,
   ) {
     const rules = selectionRules || { min: 0, max: 1 };
     const valid = selectedCardsCount >= rules.min;
@@ -241,7 +246,7 @@ export class SelectionDialogUIManager {
       if (zone === "hand" && handLimits) {
         const isOpponent = target === "opponent";
         const freeSlots = isOpponent ? handLimits.opponentFreeSlots : handLimits.myFreeSlots;
-        capacityOk = selectedCardsCount > 0 ? selectedCardsCount <= freeSlots : freeSlots > 0;
+        capacityOk = nonLostSoulHandCount > 0 ? nonLostSoulHandCount <= freeSlots : freeSlots > 0;
       }
 
       const allowed =
