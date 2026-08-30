@@ -1,50 +1,45 @@
 import Phaser from "phaser";
 import { CardUI } from "../CardUI";
-import { MobileCardDetailOverlay } from "../overlays/MobileCardDetailOverlay";
+import { CardDetailOverlay } from "../overlays/CardDetailOverlay";
+import { ViewportManager } from "./ViewportManager";
 
 /**
- * Verwaltet die vergrößerte Kartenvorschau (Preview), die erscheint,
- * wenn man mit der Maus über eine Karte fährt.
+ * Manages the enlarged card preview and detail overlay shown on hover or touch.
  */
 export class PreviewManager {
   private scene: Phaser.Scene;
-  private previewImage: Phaser.GameObjects.Image | null = null;
-  private readonly PREVIEW_DEPTH = 3000; // Höher als alles andere (Effekte sind ~2000)
-  private showTimer: number | null = null; // Timer für die verzögerte Anzeige
-  private readonly SHOW_DELAY = 450; // 350ms Verzögerung für ruhigeres Verhalten
+  private showTimer: number | null = null;
+  private isPreviewActive: boolean = false;
+  private readonly SHOW_DELAY = 250;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
 
   /**
-   * Erstellt das Preview-Bild einmalig.
+   * Resolves the loaded texture source image from Phaser texture cache if available.
    */
-  private createPreviewImage() {
-    // Die X-Position wird dynamisch in `show()` berechnet.
-    const y = this.scene.scale.height / 2; // Vertikal zentriert
-
-    this.previewImage = this.scene.add.image(0, y, "card-back");
-    this.previewImage.setOrigin(0.5);
-    this.previewImage.setDepth(this.PREVIEW_DEPTH);
-    this.previewImage.setVisible(false);
-    this.previewImage.setScrollFactor(0); // Bleibt fix, falls sich die Kamera bewegt
-    // Mache das Bild interaktiv, damit es Klicks "abfängt" und nicht durchlässt.
-    this.previewImage.setInteractive();
-
-    // ✨ Mobile: Schließe das Preview, wenn man direkt darauf tippt
-    this.previewImage.on("pointerdown", () => {
-      this.hide();
-    });
+  private resolveTextureSrc(cardData: any): string | undefined {
+    const imageFile = cardData.ImageFile || cardData.cardId;
+    if (!imageFile) return undefined;
+    const key = `card-${imageFile}`;
+    if (this.scene.textures.exists(key)) {
+      const tex = this.scene.textures.get(key);
+      const srcImg = tex?.getSourceImage() as HTMLImageElement;
+      if (srcImg?.src) {
+        return srcImg.src;
+      }
+    }
+    return `/assets/cards/${imageFile}.jpg`;
   }
 
   /**
-   * Zeigt die Vorschau für eine bestimmte Karte an.
-   * @param card Die anzuzeigende Karte.
-   * @param currentSessionId Die ID des aktuellen Spielers.
-   * @param isInstant Wenn true, wird die Vorschau sofort ohne Verzögerung angezeigt.
+   * Shows the preview overlay for a given card.
+   * @param card Target CardUI instance
+   * @param currentSessionId ID of the local player
+   * @param isInstant If true, preview is rendered without delay
    */
-  public show(card: CardUI, currentSessionId: string, isInstant: boolean = false) {
+  public show(card: CardUI, currentSessionId: string, isInstant: boolean = false): void {
     if (this.showTimer) {
       clearTimeout(this.showTimer);
       this.showTimer = null;
@@ -55,89 +50,35 @@ export class PreviewManager {
 
       const isControlledByMe = card.cardData.controllerId === currentSessionId;
       const shouldShowPreview = !card.isCurrentlyFaceDown() || isControlledByMe;
+      if (!shouldShowPreview) return;
 
-      if (!shouldShowPreview) {
-        if (this.previewImage && this.previewImage.visible) {
-          this.previewImage.setVisible(false);
-        }
-        return;
-      }
-
-      if (!this.previewImage) {
-        this.createPreviewImage();
-      }
-      if (!this.previewImage) return;
-
-      let textureKey = "card-back";
-      if (card.cardData.ImageFile) {
-        const key = "card-" + card.cardData.ImageFile;
-        if (this.scene.textures.exists(key)) {
-          textureKey = key;
-        }
-      }
-
-      this.previewImage.setTexture(textureKey);
-
-      const isLowHeight = this.scene.scale.height < 600;
-      if (isLowHeight) {
-        MobileCardDetailOverlay.show(card.cardData, () => {
-          this.scene.events.emit("ui:clear-hover");
-        });
-        if (this.previewImage) this.previewImage.setVisible(false);
-        return;
-      }
-
-      const targetHeight = this.scene.scale.height * 0.6;
-      this.previewImage.displayHeight = targetHeight;
-      this.previewImage.scaleX = this.previewImage.scaleY;
-
+      const isTouch = ViewportManager.isTouchPrimary() || this.scene.scale.height < 600;
       const matrix = card.getWorldTransformMatrix();
       const globalX = matrix.tx;
       const globalY = matrix.ty;
+      const cardWidth = card.width * card.scaleX;
+      const cardHeight = card.height * card.scaleY;
+      const imageSrc = this.resolveTextureSrc(card.cardData);
 
-      const cardHalfWidth = (card.width * card.scaleX) / 2;
-      const cardRight = globalX + cardHalfWidth;
-      const cardLeft = globalX - cardHalfWidth;
-
-      const screenWidth = this.scene.scale.width;
-      const screenHeight = this.scene.scale.height;
-      const previewWidth = this.previewImage.displayWidth;
-      const previewHeight = this.previewImage.displayHeight;
-      const padding = isLowHeight ? 10 : 20;
-
-      if (globalX < screenWidth / 2) {
-        this.previewImage.x = cardRight + padding + previewWidth / 2;
-      } else {
-        this.previewImage.x = cardLeft - padding - previewWidth / 2;
-      }
-
-      let targetY = globalY;
-      const halfHeight = previewHeight / 2;
-
-      if (targetY - halfHeight < padding) targetY = halfHeight + padding;
-      if (targetY + halfHeight > screenHeight - padding)
-        targetY = screenHeight - halfHeight - padding;
-
-      this.previewImage.y = targetY;
-
-      const halfWidth = previewWidth / 2;
-      if (this.previewImage.x - halfWidth < padding)
-        this.previewImage.x = halfWidth + padding;
-      if (this.previewImage.x + halfWidth > screenWidth - padding)
-        this.previewImage.x = screenWidth - halfWidth - padding;
-
-      this.previewImage.setVisible(true);
-      this.previewImage.setAlpha(0);
-
-      this.scene.tweens.add({
-        targets: this.previewImage,
-        alpha: 1,
-        duration: 100,
-        ease: "Sine.easeOut",
-      });
+      this.isPreviewActive = true;
+      CardDetailOverlay.show(
+        card.cardData,
+        {
+          globalX,
+          globalY,
+          cardWidth,
+          cardHeight,
+          isModal: isTouch,
+          imageSrc,
+        },
+        () => {
+          this.isPreviewActive = false;
+          this.scene.events.emit("ui:clear-hover");
+        }
+      );
     };
 
-    if (isInstant) {
+    if (isInstant || this.isPreviewActive) {
       render();
     } else {
       this.showTimer = window.setTimeout(render, this.SHOW_DELAY);
@@ -145,81 +86,54 @@ export class PreviewManager {
   }
 
   /**
-   * ✨ NEU: Zeigt die Vorschau basierend auf Rohdaten an (z.B. aus dem Chat).
+   * Shows the preview overlay from raw card data (e.g. from chat links).
+   * @param cardData Raw card data object
+   * @param sourceRightX Source X anchor position
+   * @param sourceY Source Y anchor position
    */
-  public showFromData(cardData: any, sourceRightX: number, sourceY: number) {
-    if (this.showTimer) {
-      clearTimeout(this.showTimer);
-    }
-
-    this.showTimer = window.setTimeout(() => {
-      if (!this.previewImage) {
-        this.createPreviewImage();
-      }
-
-      if (!this.previewImage) return;
-
-      let textureKey = "card-back";
-      if (cardData.ImageFile) {
-        const key = "card-" + cardData.ImageFile;
-        if (this.scene.textures.exists(key)) {
-          textureKey = key;
-        }
-      }
-
-      this.previewImage.setTexture(textureKey);
-
-      const isLowHeight = this.scene.scale.height < 600;
-      if (isLowHeight) {
-        MobileCardDetailOverlay.show(cardData, () => {
-          this.scene.events.emit("ui:clear-hover");
-        });
-        if (this.previewImage) this.previewImage.setVisible(false);
-        return;
-      }
-
-      const targetHeight = this.scene.scale.height * 0.6;
-      this.previewImage.displayHeight = targetHeight;
-      this.previewImage.scaleX = this.previewImage.scaleY;
-
-      const padding = 20;
-      const previewWidth = this.previewImage.displayWidth;
-      
-      this.previewImage.x = sourceRightX + padding + previewWidth / 2;
-      this.previewImage.y = sourceY;
-
-      const screenHeight = this.scene.scale.height;
-      const halfHeight = this.previewImage.displayHeight / 2;
-
-      if (this.previewImage.y - halfHeight < padding) this.previewImage.y = halfHeight + padding;
-      if (this.previewImage.y + halfHeight > screenHeight - padding)
-        this.previewImage.y = screenHeight - halfHeight - padding;
-
-      this.previewImage.setVisible(true);
-      this.previewImage.setAlpha(0);
-
-      this.scene.tweens.add({
-        targets: this.previewImage,
-        alpha: 1,
-        duration: 100,
-        ease: "Sine.easeOut",
-      });
-    }, this.SHOW_DELAY);
-  }
-
-  /**
-   * Versteckt die Vorschau.
-   */
-  public hide() {
-    // Breche einen laufenden Timer zum Anzeigen ab.
+  public showFromData(cardData: any, sourceRightX: number, sourceY: number): void {
     if (this.showTimer) {
       clearTimeout(this.showTimer);
       this.showTimer = null;
     }
-    MobileCardDetailOverlay.hide();
-    // Verstecke das Bild, falls es bereits sichtbar ist.
-    if (this.previewImage && this.previewImage.visible) {
-      this.previewImage.setVisible(false);
+
+    const render = () => {
+      const isTouch = ViewportManager.isTouchPrimary() || this.scene.scale.height < 600;
+      const imageSrc = this.resolveTextureSrc(cardData);
+      this.isPreviewActive = true;
+      CardDetailOverlay.show(
+        cardData,
+        {
+          globalX: sourceRightX,
+          globalY: sourceY,
+          cardWidth: 0,
+          cardHeight: 0,
+          isModal: isTouch,
+          imageSrc,
+        },
+        () => {
+          this.isPreviewActive = false;
+          this.scene.events.emit("ui:clear-hover");
+        }
+      );
+    };
+
+    if (this.isPreviewActive) {
+      render();
+    } else {
+      this.showTimer = window.setTimeout(render, this.SHOW_DELAY);
     }
+  }
+
+  /**
+   * Hides the preview overlay and clears pending timers.
+   */
+  public hide(): void {
+    if (this.showTimer) {
+      clearTimeout(this.showTimer);
+      this.showTimer = null;
+    }
+    this.isPreviewActive = false;
+    CardDetailOverlay.hide();
   }
 }
