@@ -80,8 +80,8 @@ export class CardDetailOverlay {
     const metaParts = [typeStr, brigadeStr, alignStr].filter(Boolean);
     b.metaNode.textContent = metaParts.join(" • ") || "Card";
 
-    const ability = card.SpecialAbility || card.sides?.[0]?.SpecialAbility || "No special ability.";
-    b.abilityNode.textContent = ability;
+    b.abilityNode.textContent = this.formatAbilityText(card);
+
 
     if (card.Reference) {
       b.referenceNode.textContent = card.Reference;
@@ -90,6 +90,60 @@ export class CardDetailOverlay {
       b.referenceNode.style.display = "none";
     }
   }
+
+  /**
+   * Formats ability text by separating multiple modes (top/bottom, sides, or generic TAG:/slash prefixes)
+   * into clean paragraphs with empty lines in between, while normalizing artifact tags to "ART:".
+   */
+  private static formatAbilityText(card: any): string {
+    // 1. Check if separate side abilities exist (Extended data structure)
+    const topAbility = card.CardSides?.top?.SpecialAbility;
+    const bottomAbility = card.CardSides?.bottom?.SpecialAbility;
+    if (topAbility && bottomAbility) {
+      return [this.cleanAbilityString(topAbility), this.cleanAbilityString(bottomAbility)]
+        .filter(Boolean)
+        .join("\n\n");
+    }
+
+    if (Array.isArray(card.sides) && card.sides.length > 1) {
+      const sideAbilities = card.sides.map((s: any) => s?.SpecialAbility).filter(Boolean);
+      if (sideAbilities.length > 1) {
+        return sideAbilities.map((ab: string) => this.cleanAbilityString(ab)).join("\n\n");
+      }
+    }
+
+    // 2. Extract shared or legacy string
+    const rawAbility =
+      card.SpecialAbility ||
+      card.CardSides?.shared?.SpecialAbility ||
+      card.sides?.[0]?.SpecialAbility ||
+      "";
+
+    if (!rawAbility) {
+      return "No special ability.";
+    }
+
+    return this.cleanAbilityString(rawAbility);
+  }
+
+  /**
+   * Normalizes tags (e.g. A: -> ART:) and splits generic TAG: boundaries or slashes into paragraphs.
+   */
+  private static cleanAbilityString(raw: string): string {
+    if (!raw) return "";
+
+    // Normalize "A:" at line starts, after slashes, or after sentence ends to "ART:"
+    const normalized = raw.replace(/(^|\s*[\/\n]\s*|(?<=[.!?])\s+)A:\s+/g, "$1ART: ");
+
+    // Split on slashes (" / "), existing newlines, or uppercase tag boundaries after sentence ends (. TAG:)
+    const parts = normalized
+      .split(/\s*\/\s*|\r?\n\r?\n|\r?\n|(?<=[.!?])\s+(?=[A-Z0-9/]{1,8}:\s)/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    return parts.join("\n\n") || "No special ability.";
+  }
+
 
   private static applyFloatingLayout(options: CardDetailPositionOptions): void {
     const screenW = window.innerWidth;
