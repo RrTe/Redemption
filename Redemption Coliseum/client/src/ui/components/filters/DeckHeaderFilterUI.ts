@@ -44,7 +44,6 @@ export class DeckHeaderFilterUI {
   public countLabel!: Phaser.GameObjects.BitmapText;
   public textFilterElem!: Phaser.GameObjects.DOMElement;
   public textFilterInput!: Phaser.GameObjects.Graphics;
-  public textFilterInputTxt!: Phaser.GameObjects.BitmapText;
   private nameLabel?: Phaser.GameObjects.BitmapText;
   private cardLabel?: Phaser.GameObjects.BitmapText;
 
@@ -363,17 +362,19 @@ export class DeckHeaderFilterUI {
     const inputWidth = 165 * scale;
     const inputHeight = 32;
 
+    const fontSize = Math.max(12, Math.min(24, Math.round(19 * scale)));
     const style: any = {
       height: "32px",
       position: "absolute",
       "caret-color": "#e9cd45",
-      color: "transparent",
-      "font-size": `${Math.max(12, Math.min(24, Math.round(19 * scale)))}px`,
-      "font-family": "Arial, Helvetica, sans-serif",
-      padding: "0 0 0 6px",
+      color: "#e9cd45",
+      "font-size": `${fontSize}px`,
+      "font-family": "Wazoo, Arial, sans-serif",
+      padding: "0 8px",
       outline: "none",
       border: "none",
       background: "transparent",
+      cursor: "text",
       "box-sizing": "border-box",
     };
 
@@ -386,24 +387,8 @@ export class DeckHeaderFilterUI {
     this.textFilterInput.lineStyle(1, 0xe4ae4a, 0.4);
     this.textFilterInput.strokeRoundedRect(inputX, centerRow2Y - 16, inputWidth, inputHeight, 6);
 
-    const wazooFont = this.scene.cache.bitmapFont.exists("wazoo") ? "wazoo" : fontKey;
-    const statsFontSize = Math.max(18, Math.min(36, Math.round(27 * scale)));
-    this.textFilterInputTxt = this.scene.add
-      .bitmapText(inputX + 5, centerRow2Y, wazooFont, "", statsFontSize)
-      .setOrigin(0, 0.5)
-      .setDepth(21);
-
-    const textMaskGfx = this.scene.make.graphics({});
-    textMaskGfx.fillStyle(0xffffff);
-    textMaskGfx.beginPath();
-    textMaskGfx.fillRoundedRect(inputX + 4, centerRow2Y - 14, inputWidth - 8, 28, 4);
-    const textMask = textMaskGfx.createGeometryMask();
-    this.textFilterInputTxt.setMask(textMask);
-
     this.textFilterElem.addListener("input");
     this.textFilterElem.on("input", () => {
-      const query = (this.textFilterElem.node as HTMLInputElement).value;
-      this.textFilterInputTxt.setText(query);
       this.emitChange();
     });
 
@@ -960,7 +945,6 @@ export class DeckHeaderFilterUI {
     if (this.bottomRightBg) this.bottomRightBg.destroy();
     if (this.textFilterElem) this.textFilterElem.destroy();
     if (this.textFilterInput) this.textFilterInput.destroy();
-    if (this.textFilterInputTxt) this.textFilterInputTxt.destroy();
     if (this.nameLabel) this.nameLabel.destroy();
     if (this.cardLabel) this.cardLabel.destroy();
     if (this.countLabel) this.countLabel.destroy();

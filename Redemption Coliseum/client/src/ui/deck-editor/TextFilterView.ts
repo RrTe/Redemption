@@ -15,7 +15,6 @@ export class TextFilterView {
 
   public textFilterElem!: Phaser.GameObjects.DOMElement;
   public textFilterInput!: Phaser.GameObjects.Graphics;
-  public textFilterInputTxt!: Phaser.GameObjects.BitmapText;
   public toggleGroup!: IconToggleGroup;
 
   constructor(
@@ -39,22 +38,19 @@ export class TextFilterView {
   } {
     this.scale = scale;
     const inputWidth = 220 * scale;
+    const fontSize = Math.max(12, Math.min(24, Math.round(19 * scale)));
 
     const style: any = {
       height: "32px",
       position: "absolute",
       "caret-color": "#e9cd45",
-      color: "transparent",
-      "font-size": Math.max(12, Math.min(24, Math.round(19 * scale))) + "px",
-      "font-family": "Arial, Helvetica, sans-serif",
-      padding: "0 0 0 6px",
+      color: "#e9cd45",
+      "font-size": `${fontSize}px`,
+      "font-family": "Wazoo, Arial, sans-serif",
+      padding: "0 8px",
       outline: "none",
       border: "none",
       background: "transparent",
-      "-moz-user-select": "none",
-      "-webkit-user-select": "none",
-      "-ms-user-select": "none",
-      "user-select": "none",
       cursor: "text",
       "box-sizing": "border-box",
     };
@@ -89,27 +85,9 @@ export class TextFilterView {
       6,
     );
 
-    // 3. Render bitmap text overlaying the transparent input element
-    const statsFontSize = Math.max(
-      18,
-      Math.min(36, Math.round(EDITOR_LAYOUT.statsFontSize * scale)),
-    );
-    this.textFilterInputTxt = this.scene.add
-      .bitmapText(inputX + 5, textY, "wazoo", "", statsFontSize)
-      .setOrigin(0, 0.5)
-      .setDepth(21);
-
-    // Geometry mask to clip text overflowing search box boundaries
-    const textMaskGfx = this.scene.make.graphics({});
-    textMaskGfx.fillStyle(0xffffff);
-    textMaskGfx.beginPath();
-    textMaskGfx.fillRoundedRect(inputX + 4, textY - 14, inputWidth - 8, 28, 4);
-    const textMask = textMaskGfx.createGeometryMask();
-    this.textFilterInputTxt.setMask(textMask);
-
     const textFilters = filterManager.getFiltersByCategory("text");
 
-    // 4. Draw labels for search targets (e.g. Name, special ability, etc.)
+    // 3. Draw labels for search targets (e.g. Name, special ability, etc.)
     const labelStartX = inputX + inputWidth + 10 * scale;
     const labelDistances = [20, 75, 140, 215, 280].map((val) => val * scale);
     const textFilterFontSize = Math.max(
@@ -125,7 +103,7 @@ export class TextFilterView {
         .setDepth(21);
     });
 
-    // 5. Generate IconToggleGroup for search field categories (acting as checkboxes)
+    // 4. Generate IconToggleGroup for search field categories (acting as checkboxes)
     const toggleItems = textFilters.map((filter) => ({
       id: filter.id,
       label: `Filter by ${filter.label}`,
@@ -167,7 +145,7 @@ export class TextFilterView {
     this.toggleGroup.list.forEach((child) => {
       if (child instanceof Phaser.GameObjects.Sprite) {
         const xOffsets = [20, 75, 140, 215, 280].map((val) => val * scale);
-        child.x = xOffsets[spriteIndex] ?? spriteIndex * 65 * scale; // offset relative to parent container
+        child.x = xOffsets[spriteIndex] ?? spriteIndex * 65 * scale;
         child.y = 0;
         spriteIndex++;
       }
@@ -203,32 +181,10 @@ export class TextFilterView {
     );
   }
 
-  /**
-   * Updates text visual overlay and handles leftwards scroll when text overflows.
-   */
-  public updateInputTextAndScroll(value: string) {
-    this.textFilterInputTxt.setText(value);
-
-    const inputX = this.textFilterElem.x;
-    const inputWidth = 220 * this.scale;
-    const paddingLeft = 5;
-    const paddingRight = 10;
-    const maxVisibleWidth = inputWidth - paddingLeft - paddingRight;
-
-    const textWidth = this.textFilterInputTxt.displayWidth;
-
-    if (textWidth > maxVisibleWidth) {
-      this.textFilterInputTxt.x =
-        inputX + paddingLeft - (textWidth - maxVisibleWidth);
-    } else {
-      this.textFilterInputTxt.x = inputX + paddingLeft;
-    }
-  }
-
   public destroy() {
     this.textFilterElem.destroy();
     this.textFilterInput.destroy();
-    this.textFilterInputTxt.destroy();
     this.toggleGroup.destroy();
   }
 }
+

@@ -1,24 +1,19 @@
 import Phaser from "phaser";
 import { FilterManager } from "./FilterManager";
-import { IconToggleGroup } from "../IconToggleGroup";
+import { SelectionFilterGroups } from "./SelectionFilterGroups";
 import type { CardState } from "../../../../../shared/types";
-
 import { filterConfigData } from "../../config/filter_config";
 
 export class SelectionDialogFilterView {
   private scene: Phaser.Scene;
   private onFilterChanged: () => void;
   public filterManager!: FilterManager;
+  private filterGroups: SelectionFilterGroups;
 
-  private symbolGroup!: IconToggleGroup;
-  private brigadeGroup!: IconToggleGroup;
-  private toggleGroup!: IconToggleGroup; // Checkboxes
   private bgGfx!: Phaser.GameObjects.Graphics;
-
   public cardsSelectedText!: Phaser.GameObjects.BitmapText;
   public textFilterElem!: Phaser.GameObjects.DOMElement;
   public textFilterInput!: Phaser.GameObjects.Graphics;
-  public textFilterInputTxt!: Phaser.GameObjects.BitmapText;
 
   constructor(scene: Phaser.Scene, onFilterChanged: () => void) {
     this.scene = scene;
@@ -26,14 +21,14 @@ export class SelectionDialogFilterView {
 
     const configData = scene.cache.json.get("filterConfig") || filterConfigData;
     this.filterManager = new FilterManager(configData);
+    this.filterGroups = new SelectionFilterGroups(scene, this.filterManager);
   }
 
-  public createFiltersUI(x: number, y: number, width: number, cards?: CardState[]) {
+  public createFiltersUI(x: number, y: number, _width: number, cards?: CardState[]) {
     const rawScale = this.scene.scale.width / 1920;
-    const scale = this.scene.scale.height < 600 ? rawScale * 1.4 : rawScale; 
+    const scale = this.scene.scale.height < 600 ? rawScale * 1.4 : rawScale;
     y += 2 * scale;
 
-    // Draw background bar behind all filters (similar style to DeckEditor)
     const bgWidth = 880 * scale;
     const bgHeight = 115 * scale;
     const bgX = x - bgWidth / 2;
@@ -47,86 +42,15 @@ export class SelectionDialogFilterView {
     this.bgGfx.strokeRoundedRect(bgX, bgY, bgWidth, bgHeight, borderRadius);
     this.bgGfx.setDepth(8);
 
-    // Spacing and scaling for medium symbols and brigades
     const spacingX = 46 * scale;
     const unifiedScale = 0.72 * scale;
 
-    // 1. Symbol Filters
-    const symbolFilters = this.filterManager.getFiltersByCategory("symbol");
-    const symbolToggleItems = symbolFilters.map((s) => ({
-      id: s.id,
-      label: s.label,
-      texture: `${s.id}_med`,
-      frame: 0,
-      attribute: s.rules[0]?.field,
-      values: s.rules[0]?.values || null,
-      alignments: s.rules.find((r) => r.field === "Alignment")?.values || null,
-    }));
-
-    const symbolTotalWidth = (symbolFilters.length - 1) * spacingX;
-    const symbolStartX = x - symbolTotalWidth / 2;
-
-    this.symbolGroup = new IconToggleGroup(
-      this.scene,
-      symbolStartX,
-      y,
-      symbolToggleItems,
-      {
-        scale: unifiedScale,
-        spacingX: spacingX,
-        spacingY: 0,
-        columns: symbolFilters.length,
-        multiSelect: true,
-        selectedOverlayTexture: "filterSelected_med",
-        sfxHover: "DECK_CHECK_HOVER",
-        sfxChecked: "DECK_CHECK_SELECT",
-        sfxUnchecked: "DECK_CHECK_DESELECT",
-        initialSelectedIds: symbolFilters.filter((s) => this.filterManager.isFilterActive(s.id)).map((s) => s.id),
-        tooltipDir: "bottom",
-      }
-    );
-    this.symbolGroup.setDepth(15);
-
-    // 2. Brigade Filters
-    const brigadeFilters = this.filterManager.getFiltersByCategory("brigade");
-    const brigadeToggleItems = brigadeFilters.map((b) => ({
-      id: b.id,
-      label: b.label,
-      texture: `${b.id}_med`,
-      frame: 0,
-      attribute: b.rules[0]?.field,
-      values: b.rules[0]?.values || null,
-      alignments: b.rules.find((r) => r.field === "Alignment")?.values || null,
-    }));
-
-    const brigadeTotalWidth = (brigadeFilters.length - 1) * spacingX;
-    const brigadeStartX = x - brigadeTotalWidth / 2;
-
-    this.brigadeGroup = new IconToggleGroup(
-      this.scene,
-      brigadeStartX,
-      y + 36 * scale,
-      brigadeToggleItems,
-      {
-        scale: unifiedScale,
-        spacingX: spacingX,
-        spacingY: 0,
-        columns: brigadeFilters.length,
-        multiSelect: true,
-        selectedOverlayTexture: "filterSelected_med",
-        sfxHover: "DECK_CHECK_HOVER",
-        sfxChecked: "DECK_CHECK_SELECT",
-        sfxUnchecked: "DECK_CHECK_DESELECT",
-        initialSelectedIds: brigadeFilters.filter((b) => this.filterManager.isFilterActive(b.id)).map((b) => b.id),
-        tooltipDir: "top",
-      }
-    );
-    this.brigadeGroup.setDepth(15);
+    // 1. Symbol & 2. Brigade Filters
+    this.filterGroups.createSymbolGroup(x, y, spacingX, unifiedScale);
+    this.filterGroups.createBrigadeGroup(x, y + 36 * scale, spacingX, unifiedScale);
 
     // 3. Text Search & Checkboxes Row
     const row3Y = y + 70 * scale;
-
-    // Cards Selected label (prominent font size 32px)
     const fontKey = this.scene.cache.bitmapFont.exists("wazoo") ? "wazoo" : "fairydust";
 
     this.cardsSelectedText = this.scene.add
@@ -134,181 +58,83 @@ export class SelectionDialogFilterView {
       .setOrigin(0, 0.5)
       .setDepth(21);
 
-    // Text Input DOM element
     const inputWidth = 220 * scale;
     const inputX = x - 170 * scale;
     const inputHeight = Math.round(30 * scale);
+    const fontSize = Math.max(12, Math.min(24, Math.round(20 * scale)));
 
-    const style: any = {
-      height: `${inputHeight}px`,
-      position: "absolute",
-      "caret-color": "#e9cd45",
-      color: "transparent",
-      background: "transparent",
-      border: "none",
-      outline: "none",
-      width: `${inputWidth}px`,
-      font: `${26 * scale}px sans-serif`,
-      left: "0px",
-      top: "0px",
-      "z-index": "25",
-    };
-
-    const textFilterElem = this.scene.add
-      .dom(inputX, row3Y - inputHeight / 2)
-      .createFromHTML(
-        `<input type="text" id="selection-dialog-filter-input" style="${Object.entries(style)
-          .map(([k, v]) => `${k}:${v}`)
-          .join(";")}">`
-      )
-      .setOrigin(0, 0)
-      .setDepth(25);
-    
-    this.textFilterElem = textFilterElem;
-
-    const inputElem = textFilterElem.getChildByID(
-      "selection-dialog-filter-input"
-    ) as HTMLInputElement;
-
-    if (inputElem) {
-      inputElem.value = this.filterManager.getFilterText();
-
-      inputElem.addEventListener("input", () => {
-        const query = inputElem.value;
-        this.filterManager.setFilterText(query);
-        if (this.textFilterInputTxt) {
-          this.textFilterInputTxt.setText(query);
-        }
-        this.onFilterChanged();
-      });
-    }
-
-    // Border graphics for search field
+    // Search input background border
     this.textFilterInput = this.scene.add.graphics().setDepth(20);
     this.textFilterInput.fillStyle(0x778899, 0.3);
     this.textFilterInput.fillRoundedRect(inputX, row3Y - inputHeight / 2, inputWidth, inputHeight, 6 * scale);
     this.textFilterInput.lineStyle(1, 0xe4ae4a, 0.4);
     this.textFilterInput.strokeRoundedRect(inputX, row3Y - inputHeight / 2, inputWidth, inputHeight, 6 * scale);
 
-    // Search overlay text
-    this.textFilterInputTxt = this.scene.add
-      .bitmapText(inputX + 6, row3Y, fontKey, "", 26 * scale)
-      .setOrigin(0, 0.5)
-      .setDepth(21);
+    const style: any = {
+      height: `${inputHeight}px`,
+      width: `${inputWidth}px`,
+      "caret-color": "#e9cd45",
+      color: "#e9cd45",
+      background: "transparent",
+      border: "none",
+      outline: "none",
+      "font-family": "Wazoo, Arial, sans-serif",
+      "font-size": `${fontSize}px`,
+      "padding-left": "8px",
+      "padding-right": "8px",
+      "box-sizing": "border-box",
+      cursor: "text",
+      "z-index": "25",
+    };
 
-    // Text clipping mask
-    const textMaskGfx = this.scene.make.graphics({});
-    textMaskGfx.fillStyle(0xffffff);
-    textMaskGfx.beginPath();
-    textMaskGfx.fillRoundedRect(inputX + 4, row3Y - inputHeight / 2 + 2, inputWidth - 8, inputHeight - 4, 4);
-    const textMask = textMaskGfx.createGeometryMask();
-    this.textFilterInputTxt.setMask(textMask);
+    this.textFilterElem = this.scene.add.dom(inputX, row3Y, "input", style).setOrigin(0, 0.5).setDepth(25);
+
+    const inputElem = this.textFilterElem.node as HTMLInputElement;
+    inputElem.type = "text";
+    inputElem.id = "selection-dialog-filter-input";
+    inputElem.value = this.filterManager.getFilterText();
+
+    inputElem.addEventListener("focus", () => {
+      this.resetTextFilterInput(true);
+      if (this.scene.input.keyboard) this.scene.input.keyboard.enabled = false;
+    });
+    inputElem.addEventListener("blur", () => {
+      this.resetTextFilterInput(false);
+      if (this.scene.input.keyboard) this.scene.input.keyboard.enabled = true;
+    });
+    inputElem.addEventListener("input", () => {
+      this.filterManager.setFilterText(inputElem.value);
+      this.onFilterChanged();
+    });
+    inputElem.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.keyCode === 13) {
+        inputElem.blur();
+      }
+    });
 
     const textFilters = this.filterManager.getFiltersByCategory("text");
-
-    // Checkbox Labels & Toggles
     const labelStartX = inputX + inputWidth + 20 * scale;
     const labelDistances = [20, 90, 170, 260, 340].map((val) => val * scale);
-    const textFilterFontSize = 24 * scale;
 
     textFilters.forEach((filter, i) => {
       const xPos = labelStartX + (labelDistances[i] ?? i * 80 * scale);
       this.scene.add
-        .bitmapText(xPos, row3Y - 21 * scale, fontKey, `${filter.label}:`, textFilterFontSize)
+        .bitmapText(xPos, row3Y - 21 * scale, fontKey, `${filter.label}:`, 24 * scale)
         .setOrigin(0.5, 0)
         .setDepth(21);
     });
 
-    const toggleItems = textFilters.map((filter) => ({
-      id: filter.id,
-      texture: "checkBoxUnChecked",
-      frame: 0,
-      altTexture: "checkBoxChecked",
-      altFrame: 0,
-    }));
+    this.filterGroups.createToggleGroup(labelStartX, row3Y, labelDistances, scale);
 
-    const toggleScale = 0.22 * scale;
-    this.toggleGroup = new IconToggleGroup(
-      this.scene,
-      labelStartX,
-      row3Y + 10 * scale,
-      toggleItems,
-      {
-        scale: toggleScale,
-        spacingX: 80 * scale,
-        spacingY: 0,
-        columns: textFilters.length,
-        multiSelect: true,
-        initialSelectedIds: textFilters.filter((f) => this.filterManager.isFilterActive(f.id)).map((f) => f.id),
-        sfxHover: "DECK_CHECK_HOVER",
-        sfxChecked: "DECK_CHECK_SELECT",
-        sfxUnchecked: "DECK_CHECK_DESELECT",
-      }
-    );
-    this.toggleGroup.setDepth(35);
-
-    let spriteIndex = 0;
-    this.toggleGroup.list.forEach((child) => {
-      if (child instanceof Phaser.GameObjects.Sprite) {
-        const xOffsets = [20, 90, 170, 260, 340].map((val) => val * scale);
-        child.x = xOffsets[spriteIndex] ?? spriteIndex * 80 * scale;
-        child.y = 0;
-        spriteIndex++;
-      }
-    });
-
-    // Listen to input events
-    const textInputNode = this.textFilterElem.node as HTMLInputElement;
-    textInputNode.addEventListener("focus", () => {
-      this.resetTextFilterInput(true);
-      if (this.scene.input.keyboard) this.scene.input.keyboard.enabled = false;
-    });
-    textInputNode.addEventListener("blur", () => {
-      this.resetTextFilterInput(false);
-      if (this.scene.input.keyboard) this.scene.input.keyboard.enabled = true;
-    });
-
-    this.textFilterElem.addListener("input");
-    this.textFilterElem.on("input", () => {
-      const query = textInputNode.value;
-      this.updateInputTextAndScroll(query);
-      this.filterManager.setFilterText(query);
-      this.onFilterChanged();
-    });
-
-    this.textFilterElem.addListener("keydown");
-    this.textFilterElem.on("keydown", (e: KeyboardEvent) => {
-      if (e.key === "Enter" || e.keyCode === 13) {
-        textInputNode.blur();
-      }
-    });
-
-    // Listen for toggle changes on the scene
     this.scene.events.on("ui:toggle-changed", this.handleToggleChanged, this);
 
     if (cards) {
-      this.updateDisabledFilters(cards);
+      this.filterGroups.updateDisabledFilters(cards);
     }
   }
 
   public updateDisabledFilters(cards: CardState[]) {
-    if (!this.filterManager || !cards || cards.length === 0) return;
-
-    const symbolFilters = this.filterManager.getFiltersByCategory("symbol");
-    const disabledSymbols = symbolFilters
-      .filter((f) => !cards.some((c) => this.filterManager.evaluateFilter(c, f)))
-      .map((f) => f.id);
-    if (this.symbolGroup) {
-      this.symbolGroup.setDisabledIds(disabledSymbols);
-    }
-
-    const brigadeFilters = this.filterManager.getFiltersByCategory("brigade");
-    const disabledBrigades = brigadeFilters
-      .filter((f) => !cards.some((c) => this.filterManager.evaluateFilter(c, f)))
-      .map((f) => f.id);
-    if (this.brigadeGroup) {
-      this.brigadeGroup.setDisabledIds(disabledBrigades);
-    }
+    this.filterGroups.updateDisabledFilters(cards);
   }
 
   private handleToggleChanged(data: any) {
@@ -320,7 +146,7 @@ export class SelectionDialogFilterView {
 
   public resetTextFilterInput(active: boolean) {
     const rawScale = this.scene.scale.width / 1920;
-    const scale = this.scene.scale.height < 600 ? rawScale * 1.4 : rawScale; 
+    const scale = this.scene.scale.height < 600 ? rawScale * 1.4 : rawScale;
     const inputX = this.textFilterElem.x;
     const row3Y = this.textFilterElem.y;
     const inputWidth = 220 * scale;
@@ -333,25 +159,6 @@ export class SelectionDialogFilterView {
     this.textFilterInput.strokeRoundedRect(inputX, row3Y - inputHeight / 2, inputWidth, inputHeight, 6 * scale);
   }
 
-  public updateInputTextAndScroll(value: string) {
-    this.textFilterInputTxt.setText(value);
-
-    const scale = this.scene.scale.width / 1920;
-    const inputX = this.textFilterElem.x;
-    const inputWidth = 220 * scale;
-    const paddingLeft = 6;
-    const paddingRight = 10;
-    const maxVisibleWidth = inputWidth - paddingLeft - paddingRight;
-
-    const textWidth = this.textFilterInputTxt.displayWidth;
-
-    if (textWidth > maxVisibleWidth) {
-      this.textFilterInputTxt.x = inputX + paddingLeft - (textWidth - maxVisibleWidth);
-    } else {
-      this.textFilterInputTxt.x = inputX + paddingLeft;
-    }
-  }
-
   public updateSelectedText(matchingCount: number, totalCount: number) {
     if (this.cardsSelectedText) {
       this.cardsSelectedText.setText(`Cards selected: ${matchingCount}/${totalCount}`);
@@ -361,12 +168,11 @@ export class SelectionDialogFilterView {
   public destroy() {
     this.scene.events.off("ui:toggle-changed", this.handleToggleChanged, this);
     if (this.bgGfx) this.bgGfx.destroy();
-    if (this.symbolGroup) this.symbolGroup.destroy();
-    if (this.brigadeGroup) this.brigadeGroup.destroy();
-    if (this.toggleGroup) this.toggleGroup.destroy();
+    this.filterGroups.destroy();
     if (this.cardsSelectedText) this.cardsSelectedText.destroy();
     if (this.textFilterElem) this.textFilterElem.destroy();
     if (this.textFilterInput) this.textFilterInput.destroy();
-    if (this.textFilterInputTxt) this.textFilterInputTxt.destroy();
   }
 }
+
+

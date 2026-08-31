@@ -768,7 +768,6 @@ export class DeckEditorScene extends Phaser.Scene {
     this.textFilterView.textFilterElem.addListener("input");
     this.textFilterView.textFilterElem.on("input", () => {
       const query = textInputNode.value;
-      this.textFilterView.updateInputTextAndScroll(query);
       this.cardListModel.setFilterText(query);
       this.applyFilterChangesToViews();
     });
