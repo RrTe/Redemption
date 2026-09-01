@@ -12,6 +12,7 @@ import { log } from "../../utils/logger.js";
 import { ElementManager } from "../managers/ElementManager";
 import { TypeSelectionOverlay, type TypeSelectionOption } from "../components/TypeSelectionOverlay";
 import { cardData as staticCardData } from "../../utils/CardService";
+import { ToastManager } from "../managers/ToastManager";
 
 const ATTACH_HOVER_DELAY = 700;
 
@@ -389,6 +390,15 @@ export class DragDropHandler {
 
     if (toZone === ZONES.BATTLEFIELD && gameObject.isParalyzed) {
       log("Input", `[DROP] Blocked paralyzed card from entering Battlefield.`);
+      ToastManager.show("Paralyzed cards cannot enter the Field of Battle!", "warning");
+      gameObject.setData("drop_action_taken", true);
+      this.snapBack(gameObject);
+      return;
+    }
+
+    if (toZone === ZONES.BATTLEFIELD && gameObject.isSetAside) {
+      log("Input", `[DROP] Blocked set-aside card from entering Battlefield.`);
+      ToastManager.show("Cards in Set Aside cannot enter the Field of Battle!", "warning");
       gameObject.setData("drop_action_taken", true);
       this.snapBack(gameObject);
       return;

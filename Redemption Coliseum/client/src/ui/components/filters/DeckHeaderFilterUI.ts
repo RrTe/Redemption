@@ -402,13 +402,13 @@ export class DeckHeaderFilterUI {
 
     // Label: Name:
     this.nameLabel = this.scene.add
-      .bitmapText(cb1X, centerRow2Y - 10, wazooFont, "Name:", textFilterFontSize)
+      .bitmapText(cb1X, centerRow2Y - 10, "wazoo", "Name:", textFilterFontSize)
       .setOrigin(0.5, 0.5)
       .setDepth(21);
 
     // Label: Card:
     this.cardLabel = this.scene.add
-      .bitmapText(cb2X, centerRow2Y - 10, wazooFont, "Card:", textFilterFontSize)
+      .bitmapText(cb2X, centerRow2Y - 10, "wazoo", "Card:", textFilterFontSize)
       .setOrigin(0.5, 0.5)
       .setDepth(21);
 

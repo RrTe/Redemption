@@ -67,6 +67,7 @@ export class CardCounterVisuals {
     }
 
     this.visuals.updateParalyzeEffect(paralyzeValue > 0);
+    this.visuals.updateSetAsideEffect(setasideValue > 0);
   }
 
   public getCounter(key: string): number {

@@ -5,6 +5,8 @@ import type { CardUI } from "../CardUI";
 import { PILE_ZONES } from "../../../../shared/zones";
 import { SHADOW_CONFIG } from "./CardPhysicsEffects";
 import { AssetManager } from "../managers/AssetManager";
+import { CardSetAsideEffect } from "./CardSetAsideEffect";
+import { LiquidDistortionPipeline } from "./LiquidDistortionPipeline";
 
 const IMAGE_BASE_URL = "/assets/cards/";
 
@@ -55,9 +57,13 @@ export class CardVisuals {
   private starIcon: Phaser.GameObjects.Image | null = null;
   private starPulseControl: { stop: () => void } | null = null;
 
+  // Set Aside Effect
+  private setAsideEffect: CardSetAsideEffect;
+
   constructor(scene: Phaser.Scene, cardUI: CardUI) {
     this.scene = scene;
     this.cardUI = cardUI;
+    this.setAsideEffect = new CardSetAsideEffect(scene, cardUI, this);
 
     // 1. Schatten (NineSlice) - Ganz nach hinten
     this.shadow = scene.add.nineslice(
@@ -136,7 +142,7 @@ export class CardVisuals {
   }
 
   /** Prüft globale Einstellungen. */
-  private areEffectsEnabled(): boolean {
+  public areEffectsEnabled(): boolean {
     const settings = this.scene.registry.get(
       "settingsManager",
     ) as SettingsManager;
@@ -187,6 +193,9 @@ export class CardVisuals {
     );
     this.onUpdateSize();
     this.updateBadge();
+    if (this.cardUI.isSetAside) {
+      this.applyLiquidShader(true);
+    }
   }
 
   /** Setzt das Vorderseiten-Bild nach dem Laden. */
@@ -231,6 +240,33 @@ export class CardVisuals {
 
     this.cardUI.setVisible(shouldBeVisible);
     this.updateBadge();
+  }
+
+  /** Setzt die Transparenz für Kartenvorder- und Rückseite. */
+  public setFrontBackAlpha(alpha: number) {
+    this.cardFrontImage?.setAlpha(alpha);
+    this.cardBackImage?.setAlpha(alpha);
+  }
+
+  /** Wendet den GLSL-Flüssigkeits-Shader auf die Karten-Texturen an oder entfernt ihn. */
+  public applyLiquidShader(active: boolean) {
+    if (this.scene.renderer.type !== Phaser.WEBGL) return;
+    const renderer = this.scene.renderer as Phaser.Renderer.WebGL.WebGLRenderer;
+    if (renderer.pipelines && !renderer.pipelines.has("LiquidDistortionPipeline")) {
+      renderer.pipelines.addPostPipeline("LiquidDistortionPipeline", LiquidDistortionPipeline);
+    }
+
+    if (active && this.areEffectsEnabled()) {
+      if (this.cardFrontImage && !this.cardFrontImage.postPipelines.some((p) => p.name === "LiquidDistortionPipeline")) {
+        this.cardFrontImage.setPostPipeline("LiquidDistortionPipeline");
+      }
+      if (this.cardBackImage && !this.cardBackImage.postPipelines.some((p) => p.name === "LiquidDistortionPipeline")) {
+        this.cardBackImage.setPostPipeline("LiquidDistortionPipeline");
+      }
+    } else {
+      this.cardFrontImage?.removePostPipeline("LiquidDistortionPipeline");
+      this.cardBackImage?.removePostPipeline("LiquidDistortionPipeline");
+    }
   }
 
   /** Wendet Tint auf die Bilder an. */
@@ -448,6 +484,11 @@ export class CardVisuals {
     }
   }
 
+  /** Aktiviert oder deaktiviert den Set-Aside-Effekt. */
+  public updateSetAsideEffect(active: boolean) {
+    this.setAsideEffect.update(active);
+  }
+
   /** Wird bei Größenänderung der Karte aufgerufen. */
   public onUpdateSize() {
     const { width, height } = this.cardUI;
@@ -462,12 +503,14 @@ export class CardVisuals {
 
     this.updateGlowZone();
     this.updateParalyzeZone();
+    this.setAsideEffect.onUpdateSize();
     this.syncMaskState();
   }
 
   /** Wird jeden Frame aufgerufen (für Animationen). */
   public onUpdate() {
     this.syncMaskState();
+    this.setAsideEffect.onUpdate();
 
     // Noise-Effekt Update
     if (this.noiseGraphics && this.areEffectsEnabled()) {
@@ -683,6 +726,7 @@ export class CardVisuals {
 
   public destroy() {
     this.removeParalyzeEmitters();
+    this.setAsideEffect.destroy();
     if (this.glowEmitter) this.glowEmitter.destroy();
     if (this.noiseGraphics) this.noiseGraphics.destroy();
     if (this.debugGraphics) this.debugGraphics.destroy();
