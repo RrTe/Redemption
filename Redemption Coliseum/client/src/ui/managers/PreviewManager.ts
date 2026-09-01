@@ -46,7 +46,7 @@ export class PreviewManager {
     }
 
     const render = () => {
-      if (!card.scene || card.isBeingDragged) return;
+      if (!card.scene || card.isBeingDragged || !this.scene.scene.isActive("CardGame")) return;
 
       const isControlledByMe = card.cardData.controllerId === currentSessionId;
       const shouldShowPreview = !card.isCurrentlyFaceDown() || isControlledByMe;
@@ -98,6 +98,7 @@ export class PreviewManager {
     }
 
     const render = () => {
+      if (!this.scene.scene.isActive("CardGame")) return;
       const isTouch = ViewportManager.isTouchPrimary() || this.scene.scale.height < 600;
       const imageSrc = this.resolveTextureSrc(cardData);
       this.isPreviewActive = true;

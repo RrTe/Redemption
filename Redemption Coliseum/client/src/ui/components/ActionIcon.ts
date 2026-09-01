@@ -50,8 +50,8 @@ export class ActionIcon extends Phaser.GameObjects.Image {
 
     this.on("pointerdown", () => {
       scene.game.events.emit("playSound", "MENU_SELECT"); // ✨ FIX: Globaler Event-Bus
-      config.callback();
       this.menu?.close();
+      config.callback();
     });
   }
 

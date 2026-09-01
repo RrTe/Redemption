@@ -116,6 +116,7 @@ export class RadialMenu {
     this.blocker.destroy();
 
     this.icons.forEach((icon, index) => {
+      icon.disableInteractive();
       this.scene.tweens.add({
         targets: icon,
         x: this.centerX,
@@ -125,7 +126,6 @@ export class RadialMenu {
         duration: 300,
         delay: index * 30,
         onComplete: () => {
-          icon.disableInteractive();
           icon.setVisible(false);
           icon.destroy(); // ✨ WICHTIG: Aufräumen
         },

@@ -8,6 +8,7 @@ import {
   type SelectionAction,
 } from "../../scenes/SelectionDialogScene";
 import type { QuantitySelectionDialogData } from "../../scenes/QuantitySelectionDialogScene";
+import { CardDetailOverlay } from "../overlays/CardDetailOverlay";
 import { MapSchema } from "@colyseus/schema";
 import { log } from "../../utils/logger";
 
@@ -95,6 +96,7 @@ export class TokenManager {
       } as unknown as CardState;
     });
 
+    CardDetailOverlay.hide();
     this.scene.scene.pause("CardGame");
 
     const hasContext = Boolean(context?.zone && context?.target);
@@ -173,6 +175,7 @@ export class TokenManager {
     selectionResult: any,
     tokenPreviews: CardState[],
   ) {
+    CardDetailOverlay.hide();
     this.scene.scene.pause("CardGame");
     this.scene.scene.launch("QuantitySelectionDialogScene", {
       title: "How many Tokens?",

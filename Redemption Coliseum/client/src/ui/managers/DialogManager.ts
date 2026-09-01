@@ -9,6 +9,7 @@ import {
 import { ZONES, PILE_ZONES } from "../../../../shared/zones";
 import type { MoveCardMessage } from "../../../../shared/messages";
 import { ToastManager, type ToastType } from "./ToastManager";
+import { CardDetailOverlay } from "../overlays/CardDetailOverlay";
 import { log } from "../../utils/logger";
 
 /**
@@ -74,6 +75,7 @@ export class DialogManager {
     const isInteractive =
       message.possibleActions && message.possibleActions.length > 0;
 
+    CardDetailOverlay.hide();
     this.scene.scene.pause("CardGame");
     this.scene.scene.launch("SelectionDialogScene", {
       title: isInteractive ? "Select Cards" : "View Cards",
@@ -161,6 +163,7 @@ export class DialogManager {
       return;
     }
 
+    CardDetailOverlay.hide();
     this.scene.scene.pause("CardGame");
     this.scene.scene.launch("SelectionDialogScene", {
       title: "Opponent's Revealed Cards",
@@ -188,6 +191,7 @@ export class DialogManager {
       return; // Ensure only one error dialog is open at a time
     }
 
+    CardDetailOverlay.hide();
     this.scene.scene.launch("ErrorDialogScene", {
       message: message,
       onOk: () => {

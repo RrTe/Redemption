@@ -62,6 +62,7 @@ export class CardInteractionHandler {
     card: CardUI,
     onClose: () => void,
   ): RadialMenu {
+    this.clearHover();
     const menuConfigs = this.menuFactory.getActionsForCard(card);
     const isCompact = ViewportManager.isTouchPrimary() || ViewportManager.isCompactMode();
     const radius = ViewportManager.vmin(isCompact ? 16 : 8);

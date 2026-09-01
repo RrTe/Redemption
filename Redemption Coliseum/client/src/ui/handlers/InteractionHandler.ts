@@ -27,6 +27,8 @@ export class InteractionHandler {
   private tokenManager: TokenManager;
 
   private activeMenu: RadialMenu | null = null;
+  private menuOpenedThisPointerDown: boolean = false;
+  private menuClosedThisPointerDown: boolean = false;
   private longPressTimer: Phaser.Time.TimerEvent | null = null;
   private boardLongPressTimer: Phaser.Time.TimerEvent | null = null;
 
@@ -67,18 +69,12 @@ export class InteractionHandler {
     this.scene.input.off("pointerdown", this.onGlobalPointerDown, this);
     this.scene.input.off("pointerup", this.onGlobalPointerUp, this);
     this.scene.events.off("ui:clear-hover", this.onClearHover, this);
-    if (this.longPressTimer) {
-      this.longPressTimer.remove();
-      this.longPressTimer = null;
-    }
-    if (this.boardLongPressTimer) {
-      this.boardLongPressTimer.remove();
-      this.boardLongPressTimer = null;
-    }
-    if (this.activeMenu) {
-      this.activeMenu.close();
-      this.activeMenu = null;
-    }
+    if (this.longPressTimer) this.longPressTimer.remove();
+    if (this.boardLongPressTimer) this.boardLongPressTimer.remove();
+    if (this.activeMenu) this.activeMenu.close();
+    this.longPressTimer = null;
+    this.boardLongPressTimer = null;
+    this.activeMenu = null;
   }
 
   private onClearHover() {
@@ -94,38 +90,46 @@ export class InteractionHandler {
       this.boardLongPressTimer = null;
     }
 
+    if (this.menuOpenedThisPointerDown) {
+      this.menuOpenedThisPointerDown = false;
+      return;
+    }
+
+    if (this.activeMenu) {
+      this.menuClosedThisPointerDown = true;
+      this.activeMenu.close();
+      this.activeMenu = null;
+      return;
+    }
+
+    if (this.menuClosedThisPointerDown) {
+      return;
+    }
+
     const hasCardOrPile = gameObjects.some(
       (go) => go instanceof CardUI || go instanceof PileUI || go instanceof StackedPileUI,
     );
 
     if (ViewportManager.isTouchPrimary() || pointer.wasTouch) {
-      if (!hasCardOrPile) {
-        this.cardInteractionHandler.clearHover();
-      }
+      if (!hasCardOrPile) this.cardInteractionHandler.clearHover();
     }
 
     // ✨ Empty board interaction (Tokens)
     if (!hasCardOrPile && !this.dragDropHandler.isDragging) {
-      const hitZone = gameObjects.find(
-        (go) =>
-          go instanceof Phaser.GameObjects.Zone &&
-          (go.name === ZONES.TERRITORY || go.name === ZONES.LAND_OF_BONDAGE),
-      ) as Phaser.GameObjects.Zone | undefined;
+      const isTargetZone = (go: any) =>
+        go instanceof Phaser.GameObjects.Zone &&
+        (go.name === ZONES.TERRITORY || go.name === ZONES.LAND_OF_BONDAGE);
+
+      const targetZoneObj = (gameObjects.find(isTargetZone) ||
+        this.scene.input.hitTestPointer(pointer).find(isTargetZone)) as Phaser.GameObjects.Zone | undefined;
 
       let tokenContext: { zone: Zone; target: "me" | "opponent" } | undefined = undefined;
-      const targetZoneObj =
-        hitZone ||
-        (this.scene.input.hitTestPointer(pointer).find(
-          (go) =>
-            go instanceof Phaser.GameObjects.Zone &&
-            (go.name === ZONES.TERRITORY || go.name === ZONES.LAND_OF_BONDAGE),
-        ) as Phaser.GameObjects.Zone | undefined);
-
       if (targetZoneObj) {
-        const zoneName = targetZoneObj.name as Zone;
         const ownerId = targetZoneObj.getData("ownerId");
-        const target = ownerId && ownerId !== this.room.sessionId ? "opponent" : "me";
-        tokenContext = { zone: zoneName, target };
+        tokenContext = {
+          zone: targetZoneObj.name as Zone,
+          target: ownerId && ownerId !== this.room.sessionId ? "opponent" : "me",
+        };
       }
 
       if (pointer.rightButtonDown()) {
@@ -142,6 +146,8 @@ export class InteractionHandler {
   }
 
   private onGlobalPointerUp() {
+    this.menuOpenedThisPointerDown = false;
+    this.menuClosedThisPointerDown = false;
     if (this.boardLongPressTimer) {
       this.boardLongPressTimer.remove();
       this.boardLongPressTimer = null;
@@ -152,7 +158,7 @@ export class InteractionHandler {
     pointer: Phaser.Input.Pointer,
     gameObject: Phaser.GameObjects.GameObject,
   ) {
-    if (this.dragDropHandler.isDragging) return;
+    if (this.activeMenu || this.dragDropHandler.isDragging) return;
     if (!(gameObject instanceof CardUI)) return;
     if (ViewportManager.isTouchPrimary() || pointer.wasTouch) return; // ✨ Mobile: Disable hover, use Single Tap instead
     this.cardInteractionHandler.handleHoverIn(gameObject);
@@ -171,6 +177,8 @@ export class InteractionHandler {
     pointer: Phaser.Input.Pointer,
     gameObject: Phaser.GameObjects.GameObject,
   ) {
+    if (this.activeMenu || this.menuClosedThisPointerDown) return;
+
     if (pointer.rightButtonDown()) {
       this.openContextMenu(pointer, gameObject);
     } else if (pointer.wasTouch) {
@@ -188,6 +196,7 @@ export class InteractionHandler {
     pointer: Phaser.Input.Pointer,
     gameObject: Phaser.GameObjects.GameObject,
   ) {
+    this.cardInteractionHandler.clearHover();
     // ✨ Delegation an PileInteractionHandler
     const pileData = this.pileInteractionHandler.getPileDetails(gameObject);
     if (pileData) {
@@ -196,9 +205,11 @@ export class InteractionHandler {
         pileData.zone,
         pileData.targetId,
         () => {
+          this.menuClosedThisPointerDown = true;
           this.activeMenu = null;
         },
       );
+      if (this.activeMenu) this.menuOpenedThisPointerDown = true;
     }
     // ✨ Delegation an CardInteractionHandler
     else if (
@@ -209,9 +220,11 @@ export class InteractionHandler {
         pointer,
         gameObject,
         () => {
+          this.menuClosedThisPointerDown = true;
           this.activeMenu = null;
         },
       );
+      if (this.activeMenu) this.menuOpenedThisPointerDown = true;
     }
   }
 
@@ -223,7 +236,7 @@ export class InteractionHandler {
       this.longPressTimer.remove();
       this.longPressTimer = null;
     }
-    if (!(gameObject instanceof CardUI)) return;
+    if (this.menuClosedThisPointerDown || !(gameObject instanceof CardUI)) return;
     this.cardInteractionHandler.handlePointerUp(pointer, gameObject);
   }
 }

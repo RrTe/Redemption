@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI.js";
 import { type ElementManager } from "../managers/ElementManager.js";
 import { type DomUIManager } from "../managers/GameDomManager.js"; // ✨ NEU
+import { CardDetailOverlay } from "../overlays/CardDetailOverlay.js";
 import { log } from "../../utils/logger.js";
 
 /**
@@ -30,6 +31,7 @@ export class StaticUIHandler {
 
     this.scene.events.on("settings_button_clicked", () => {
       this.playClick();
+      CardDetailOverlay.hide();
       this.scene.scene.pause("CardGame");
       this.scene.scene.launch("SettingsDialogScene", {
         parentScene: "CardGame",

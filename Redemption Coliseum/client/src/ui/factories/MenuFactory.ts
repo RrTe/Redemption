@@ -3,6 +3,7 @@ import { type TypedRoom } from "../gameUI.js";
 import { type GameNetworkManager } from "../../network/GameNetworkManager.js";
 import type { ActionIconConfig } from "../types/types.js";
 import { CardUI } from "../CardUI.js";
+import { CardDetailOverlay } from "../overlays/CardDetailOverlay.js";
 import { ZONES, type Zone } from "../../../../shared/zones.js";
 import type { QuantitySelectionDialogData } from "../../scenes/QuantitySelectionDialogScene.js";
 import { log } from "../../utils/logger";
@@ -204,6 +205,7 @@ export class MenuFactory {
     maxCount: number,
     onConfirm: (count: number, position: "top" | "bottom") => void,
   ) {
+    CardDetailOverlay.hide();
     this.scene.scene.pause("CardGame");
     this.scene.scene.launch("QuantitySelectionDialogScene", {
       title: title,
@@ -218,6 +220,7 @@ export class MenuFactory {
   }
 
   private openCounterDialog(card: CardUI, counterKey: string, title: string) {
+    CardDetailOverlay.hide();
     this.scene.scene.pause("CardGame");
     this.scene.scene.launch("QuantitySelectionDialogScene", {
       title: title,
