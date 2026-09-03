@@ -8,6 +8,7 @@ export type StaticElements = {
   boardText: Phaser.GameObjects.Text;
   phaseIcons: { [key: string]: Phaser.GameObjects.Image };
   nextPhaseButton: Phaser.GameObjects.Container;
+  undoButton: Phaser.GameObjects.Container;
   concedeButton: Phaser.GameObjects.Container;
   settingsButton: SidebarButton;
   saveButton: SidebarButton;

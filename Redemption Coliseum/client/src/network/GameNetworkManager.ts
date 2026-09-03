@@ -173,6 +173,8 @@ export class GameNetworkManager {
   public sendResolveReveal(pos: SelectedCardInfo[] = []) { this.sender.sendResolveReveal(pos); }
   public sendNextPhase() { this.sender.sendNextPhase(); }
   public sendPlayerReady() { this.sender.sendPlayerReady(); }
+  public sendRequestUndo(count: number = 1) { this.sender.sendRequestUndo(count); }
+  public sendResolveUndo(accepted: boolean, count: number) { this.sender.sendResolveUndo(accepted, count); }
 
   public destroy(): void {
     log("Network", `[NetworkManager ${this.instanceId}] Destroying...`);

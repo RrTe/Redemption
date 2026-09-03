@@ -24,6 +24,17 @@ export interface ResolveSearchPileMessage {
   coords?: MoveCardMessage["coords"];
 }
 
+export interface RequestUndoMessage {
+  count: number;
+}
+
+export interface ResolveUndoMessage {
+  accepted: boolean;
+  count: number;
+}
+
 export interface GameRoomMessages {
   moveCard: MoveCardMessage;
+  requestUndo: RequestUndoMessage;
+  resolveUndo: ResolveUndoMessage;
 }

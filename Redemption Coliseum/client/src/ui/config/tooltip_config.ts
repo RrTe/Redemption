@@ -22,6 +22,7 @@ export const tooltipConfig: Record<string, string> = {
   button_log: "Chat & Log",
   button_concede: "Concede Match",
   button_next_phase: "Next Phase",
+  button_undo: "Undo Action (Long-press or Ctrl+Shift+Z for multiple)",
   
   // Sort Buttons
   sort_name_asc: "Sort Alphabetically (A to Z)",

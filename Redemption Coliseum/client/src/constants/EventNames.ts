@@ -20,10 +20,13 @@ export const GameEvents = {
   NET_ONLINE: "net:online",
   NET_RECONNECTING: "net:reconnecting",
   NET_DISCONNECTED: "net:disconnected",
+  NET_UNDO_CONFIRMATION_PROMPT: "net:undoConfirmationPrompt",
+  NET_UNDO_RESOLVED: "net:undoResolved",
 
   // UI & Logic Events
   UI_REQUEST_CARD_ACTION: "request-card-action",
   UI_NEXT_PHASE_CLICKED: "nextPhaseButtonClicked",
+  UI_UNDO_CLICKED: "undoButtonClicked",
 
   // Global System Events
   SYSTEM_PLAY_SOUND: "playSound",

@@ -4,6 +4,7 @@ import { type StaticElements } from "../types/ElementTypes";
 import { DEBUG } from "../../utils/logger";
 import { SidebarButton } from "../components/SidebarButton";
 import { TooltipManager } from "../managers/TooltipManager";
+import { createHighlightOverlay } from "./HighlightOverlayFactory";
 
 export class StaticElementFactory {
   private scene: Phaser.Scene;
@@ -20,6 +21,7 @@ export class StaticElementFactory {
     boardText.setVisible(DEBUG);
 
     const nextPhaseButton = this.createNextPhaseButton();
+    const undoButton = this.createUndoButton();
     const concedeButton = this.createConcedeButton();
 
     // Sidebar Buttons
@@ -47,26 +49,20 @@ export class StaticElementFactory {
     const phaseIcons = this.createPhaseIcons();
 
     // Spieler-Infos
-    const playerInfoText = this.scene.add
-      .bitmapText(0, 0, "wazoo", "", 22)
-      .setOrigin(0, 0)
-      .setTint(0xffd700)
-      .setDropShadow(2, 2, 0x000000, 0.8);
+    const playerInfoText = this.scene.add.bitmapText(0, 0, "wazoo", "", 22)
+      .setOrigin(0, 0).setTint(0xffd700).setDropShadow(2, 2, 0x000000, 0.8);
 
-    const opponentInfoText = this.scene.add
-      .bitmapText(0, 0, "wazoo", "Waiting...", 22)
-      .setOrigin(1, 0)
-      .setRightAlign()
-      .setTint(0xffd700)
-      .setDropShadow(2, 2, 0x000000, 0.8);
+    const opponentInfoText = this.scene.add.bitmapText(0, 0, "wazoo", "Waiting...", 22)
+      .setOrigin(1, 0).setRightAlign().setTint(0xffd700).setDropShadow(2, 2, 0x000000, 0.8);
 
     // Highlight Overlay
-    const highlightOverlay = this.createHighlightOverlay();
+    const highlightOverlay = createHighlightOverlay(this.scene);
 
     return {
       boardText,
       phaseIcons,
       nextPhaseButton,
+      undoButton,
       concedeButton,
       settingsButton,
       saveButton,
@@ -81,20 +77,22 @@ export class StaticElementFactory {
     };
   }
 
+  private createBarGraphics(width: number, height: number, radius = 12): Phaser.GameObjects.Graphics {
+    const bar = this.scene.add.graphics();
+    const barX = -width / 2;
+    const barY = -height / 2;
+    bar.fillStyle(0x000000, 0.5).fillRoundedRect(barX + 3, barY + 3, width, height, radius);
+    bar.fillStyle(0x1a1a2e, 0.9).fillRoundedRect(barX, barY, width, height, radius);
+    bar.fillStyle(0xffffff, 0.05).fillRoundedRect(barX, barY, width, height / 2, { tl: radius, tr: radius, bl: 0, br: 0 });
+    bar.lineStyle(2, 0x444466, 0.8).strokeRoundedRect(barX, barY, width, height, radius);
+    return bar;
+  }
+
   private createNextPhaseButton(): Phaser.GameObjects.Container {
     const container = this.scene.add.container(0, 0).setVisible(false).setDepth(200);
-    const btnBar = this.scene.add.graphics();
     const barWidth = 80;
     const barHeight = 46;
-    const radius = 12;
-    const barX = -barWidth / 2;
-    const barY = -barHeight / 2;
-
-    // Design
-    btnBar.fillStyle(0x000000, 0.5).fillRoundedRect(barX + 3, barY + 3, barWidth, barHeight, radius);
-    btnBar.fillStyle(0x1a1a2e, 0.9).fillRoundedRect(barX, barY, barWidth, barHeight, radius);
-    btnBar.fillStyle(0xffffff, 0.05).fillRoundedRect(barX, barY, barWidth, barHeight / 2, { tl: radius, tr: radius, bl: 0, br: 0 });
-    btnBar.lineStyle(2, 0x444466, 0.8).strokeRoundedRect(barX, barY, barWidth, barHeight, radius);
+    const btnBar = this.createBarGraphics(barWidth, barHeight, 12);
 
     const btnImage = this.scene.add.image(0, 0, "button_next_phase");
     btnImage.setDisplaySize(60, 30);
@@ -102,7 +100,7 @@ export class StaticElementFactory {
 
     container.add([btnBar, btnImage]);
 
-    const hitArea = new Phaser.Geom.Rectangle(barX, barY, barWidth, barHeight);
+    const hitArea = new Phaser.Geom.Rectangle(-barWidth / 2, -barHeight / 2, barWidth, barHeight);
     container
       .setInteractive(hitArea, Phaser.Geom.Rectangle.Contains)
       .on("pointerdown", () => {
@@ -130,25 +128,84 @@ export class StaticElementFactory {
     return container;
   }
 
+  private createUndoButton(): Phaser.GameObjects.Container {
+    const container = this.scene.add.container(0, 0).setDepth(200);
+    const barWidth = 46;
+    const barHeight = 46;
+    const btnBar = this.createBarGraphics(barWidth, barHeight, 12);
+
+    const btnImage = this.scene.add.image(0, 0, "button_undo");
+    btnImage.setDisplaySize(30, 31.3);
+    btnImage.setName("arrow");
+
+    container.add([btnBar, btnImage]);
+
+    let longPressTimer: any = null;
+    let didLongPress = false;
+
+    const hitArea = new Phaser.Geom.Rectangle(-barWidth / 2, -barHeight / 2, barWidth, barHeight);
+    container
+      .setInteractive(hitArea, Phaser.Geom.Rectangle.Contains)
+      .on("pointerdown", () => {
+        didLongPress = false;
+        longPressTimer = setTimeout(() => {
+          didLongPress = true;
+          this.scene.events.emit("undoButtonClicked", { isLongPress: true });
+        }, 500);
+
+        const base = container.getData("baseScale") || 1.0;
+        this.scene.tweens.add({ targets: container, scale: base * 1.05, duration: 50, yoyo: true });
+      })
+      .on("pointerup", () => {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        if (!didLongPress) {
+          this.scene.events.emit("undoButtonClicked", { isLongPress: false });
+        }
+      })
+      .on("pointerover", () => {
+        const base = container.getData("baseScale") || 1.0;
+        this.scene.tweens.add({ targets: container, scale: base * 1.15, duration: 100, ease: "Back.easeOut" });
+        btnImage.setTint(0xffffaa);
+        const bounds = btnImage.getBounds();
+        TooltipManager.show(bounds.centerX, bounds.top, "button_undo");
+      })
+      .on("pointerout", () => {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        const base = container.getData("baseScale") || 1.0;
+        this.scene.tweens.add({ targets: container, scale: base, duration: 100 });
+        btnImage.clearTint();
+        TooltipManager.hide();
+      });
+
+    // Initial disabled state
+    if (container.input) {
+      container.input.cursor = "pointer";
+      container.input.enabled = false;
+    }
+    container.setAlpha(0.4);
+    btnImage.setTint(0x777777);
+
+    return container;
+  }
+
   private createConcedeButton(): Phaser.GameObjects.Container {
     const container = this.scene.add.container(0, 0).setDepth(200);
-    const concedeBar = this.scene.add.graphics();
     const cBarWidth = 80;
     const cBarHeight = 46;
-    const cRadius = 12;
-    const cBarX = -cBarWidth / 2;
-    const cBarY = -cBarHeight / 2;
-
-    concedeBar.fillStyle(0x000000, 0.5).fillRoundedRect(cBarX + 3, cBarY + 3, cBarWidth, cBarHeight, cRadius);
-    concedeBar.fillStyle(0x1a1a2e, 0.9).fillRoundedRect(cBarX, cBarY, cBarWidth, cBarHeight, cRadius);
-    concedeBar.fillStyle(0xffffff, 0.05).fillRoundedRect(cBarX, cBarY, cBarWidth, cBarHeight / 2, { tl: cRadius, tr: cRadius, bl: 0, br: 0 });
-    concedeBar.lineStyle(2, 0x444466, 0.8).strokeRoundedRect(cBarX, cBarY, cBarWidth, cBarHeight, cRadius);
+    const concedeBar = this.createBarGraphics(cBarWidth, cBarHeight, 12);
 
     const concedeImg = this.scene.add.image(0, 0, "button_concede");
     concedeImg.setDisplaySize(36, 36);
     container.add([concedeBar, concedeImg]);
 
-    container.setInteractive(new Phaser.Geom.Rectangle(cBarX, cBarY, cBarWidth, cBarHeight), Phaser.Geom.Rectangle.Contains);
+    const hitArea = new Phaser.Geom.Rectangle(-cBarWidth / 2, -cBarHeight / 2, cBarWidth, cBarHeight);
+    container.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
     if (container.input) container.input.cursor = "pointer";
 
     container.on("pointerover", () => {
@@ -186,29 +243,5 @@ export class StaticElementFactory {
       phaseIcons[phase] = icon;
     });
     return phaseIcons;
-  }
-
-  private createHighlightOverlay() {
-    const container = this.scene.add.container(0, 0).setDepth(2000).setVisible(false);
-    const graphics = this.scene.add.graphics();
-    const text = this.scene.add.bitmapText(0, 0, "fairydust", "", 48)
-      .setOrigin(0.5)
-      .setAlpha(0.5)
-      .setTint(0xffffff)
-      .setDropShadow(2, 2, 0x000000, 0.5);
-
-    container.add([graphics, text]);
-
-    this.scene.tweens.add({
-      targets: text,
-      alpha: { from: 0.8, to: 1.0 },
-      scale: { from: 0.95, to: 1.05 },
-      duration: 1000,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    });
-
-    return { container, graphics, text };
   }
 }

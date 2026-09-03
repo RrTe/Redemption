@@ -267,6 +267,10 @@ export class GameLoadingScene extends BaseLoadingScene {
       "assets/ui/buttons/arrow-7722394_smaller.png",
     );
     this.load.image(
+      "button_undo",
+      "assets/ui/buttons/clker-free-vector-images-arrow-23284_small_compressed.png",
+    );
+    this.load.image(
       "button_settings",
       "assets/ui/buttons/button-gold-7850928_1920.png",
     );

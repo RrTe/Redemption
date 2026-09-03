@@ -7,11 +7,18 @@ class BaseCommand {
     this.room = room;
     this.client = client;
     this.state = room.state;
+    this.canUndo = false;
   }
 
   execute(message) {
     throw new Error(
       "Command execution logic must be implemented in subclasses.",
+    );
+  }
+
+  undo() {
+    throw new Error(
+      "Command undo logic must be implemented in subclasses.",
     );
   }
 }

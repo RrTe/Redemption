@@ -24,6 +24,12 @@ class CommandDispatcher {
       try {
         const cmd = new CommandClass(this.room, client);
         cmd.execute(message);
+        if (cmd.canUndo && this.room.undoManager) {
+          this.room.undoManager.push(cmd);
+          logger.info(`[CommandDispatcher] Command '${type}' pushed to undoManager.`);
+        } else {
+          logger.debug(`[CommandDispatcher] Command '${type}' executed with canUndo=${cmd?.canUndo}`);
+        }
       } catch (err) {
         logger.error(
           `[CommandDispatcher] Error executing command '${type}' for client '${client?.sessionId}':`,

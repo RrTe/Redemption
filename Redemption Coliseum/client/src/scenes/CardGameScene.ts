@@ -9,6 +9,8 @@ import {
   type SelectionDialogData,
 } from "./SelectionDialogScene"; // ✨ NEU
 import { ErrorDialogScene } from "./ErrorDialogScene";
+import { ConfirmationDialogScene } from "./ConfirmationDialogScene";
+import { WaitingDialogScene } from "./WaitingDialogScene";
 import { SettingsDialogScene } from "./SettingsDialogScene"; // ✨ NEU
 import type { GameBackground } from "../ui/backgrounds/GameBackground";
 import { TempleBackground } from "../ui/backgrounds/TempleBackground";
@@ -61,6 +63,14 @@ export default class CardGameScene extends Phaser.Scene {
       
       if (!this.scene.get("ErrorDialogScene")) {
         this.scene.add("ErrorDialogScene", ErrorDialogScene, false);
+      }
+
+      if (!this.scene.get("ConfirmationDialogScene")) {
+        this.scene.add("ConfirmationDialogScene", ConfirmationDialogScene, false);
+      }
+
+      if (!this.scene.get("WaitingDialogScene")) {
+        this.scene.add("WaitingDialogScene", WaitingDialogScene, false);
       }
 
       // SelectionDialogScene ist bereits global in main.ts registriert.

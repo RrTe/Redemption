@@ -29,6 +29,8 @@ const {
 const {
   UpdateRevealSelectionCommand,
 } = require("../commands/UpdateRevealSelectionCommand");
+const { RequestUndoCommand } = require("../commands/RequestUndoCommand");
+const { ResolveUndoCommand } = require("../commands/ResolveUndoCommand");
 
 class CommandService {
   /**
@@ -51,6 +53,8 @@ class CommandService {
     room.dispatcher.register("updateRevealSelection", UpdateRevealSelectionCommand);
     room.dispatcher.register("shufflePile", ShufflePileCommand);
     room.dispatcher.register("discardFromDeck", DiscardFromDeckCommand);
+    room.dispatcher.register("requestUndo", RequestUndoCommand);
+    room.dispatcher.register("resolveUndo", ResolveUndoCommand);
   }
 }
 

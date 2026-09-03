@@ -114,4 +114,14 @@ export class GameMessageSender {
   public sendPlayerReady(): void {
     this.room.send("playerReady");
   }
+
+  public sendRequestUndo(count: number = 1): void {
+    log("Network", `Sending 'requestUndo' for ${count} action(s).`);
+    this.room.send("requestUndo", { count });
+  }
+
+  public sendResolveUndo(accepted: boolean, count: number): void {
+    log("Network", `Sending 'resolveUndo' accepted=${accepted} for ${count} action(s).`);
+    this.room.send("resolveUndo", { accepted, count });
+  }
 }

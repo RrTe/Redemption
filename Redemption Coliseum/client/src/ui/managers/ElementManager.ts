@@ -188,6 +188,12 @@ export class ElementManager {
       this.layout.nextPhaseButton.y,
     ).setScale(this.layout.buttonScale ?? 1.0)
      .setData("baseScale", this.layout.buttonScale ?? 1.0);
+    // Undo Button positionieren
+    this.staticElements.undoButton.setPosition(
+      this.layout.undoButton.x,
+      this.layout.undoButton.y,
+    ).setScale(this.layout.buttonScale ?? 1.0)
+     .setData("baseScale", this.layout.buttonScale ?? 1.0);
     // ✨ NEU: Concede Button positionieren
     this.staticElements.concedeButton.setPosition(
       this.layout.concedeButton.x,
@@ -298,6 +304,7 @@ export class ElementManager {
     // Zerstöre alle statischen Elemente
     this.staticElements.boardText.destroy();
     this.staticElements.nextPhaseButton.destroy();
+    this.staticElements.undoButton.destroy();
     this.staticElements.concedeButton.destroy(); // ✨ NEU
     // nextPhaseText wird automatisch zerstört, da es Teil des Containers ist
     this.staticElements.settingsButton.destroy();

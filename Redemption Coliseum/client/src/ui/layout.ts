@@ -48,6 +48,7 @@ export interface GameLayout {
     radius: number;
   };
   nextPhaseButton: { x: number; y: number };
+  undoButton: { x: number; y: number };
   concedeButton: { x: number; y: number };
   settingsButton: { visibleX: number; hiddenX: number; y: number };
   saveButton: { visibleX: number; hiddenX: number; y: number };
@@ -327,6 +328,13 @@ export function calculateLayout(
     y: height - EDGE_MARGIN - 23 * buttonScale,
   };
 
+  const undoButtonWidth = 46 * buttonScale;
+  const undoButtonGap = 10 * buttonScale;
+  const undoButton = {
+    x: nextPhaseButton.x - (nextPhaseButtonWidth / 2) - (undoButtonWidth / 2) - undoButtonGap,
+    y: nextPhaseButton.y,
+  };
+
   const concedeButtonWidth = 80 * buttonScale;
   const concedeButton = {
     x: EDGE_MARGIN + concedeButtonWidth / 2,
@@ -424,6 +432,7 @@ export function calculateLayout(
     phaseIcons,
     phaseBar,
     nextPhaseButton,
+    undoButton,
     concedeButton,
     settingsButton,
     saveButton,

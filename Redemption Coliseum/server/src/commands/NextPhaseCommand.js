@@ -39,6 +39,11 @@ class NextPhaseCommand extends BaseCommand {
         this.room.cardLookup,
       );
 
+      // Clear undo stack on phase change
+      if (this.room.undoManager) {
+        this.room.undoManager.clear();
+      }
+
       // Auto-reduce counters during UPKEEP
       if (this.state.currentPhase === PHASES.UPKEEP) {
         MatchService.handleUpkeepPhase(this.room);

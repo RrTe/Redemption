@@ -386,8 +386,19 @@ export class ChatManager {
   private formatMessage(text: string): string {
     let formatted = this.escapeHtml(text);
     const placeholders: string[] = [];
-    
-    // Neues Format vom Server: {{ID|Name}}
+
+    // 0. Generische System-Tags am Anfang der Nachricht (z. B. [UNDO], [SYSTEM], [TRIGGER])
+    // Werden als statisches, unterstrichenes Label gerendert (ohne Kartenlink, normaler Cursor)
+    formatted = formatted.replace(
+      /^\[([A-Z_]+)\]:?\s*/,
+      (match, tag) => {
+        const html = `<span style="font-weight: bold; text-decoration: underline; cursor: default; margin-right: 4px;">${tag}:</span>`;
+        placeholders.push(html);
+        return `__TAG_PLACEHOLDER_${placeholders.length - 1}__`;
+      },
+    );
+
+    // 1. Neues Format vom Server: {{ID|Name}}
     // Da escapeHtml angewendet wurde, bleiben die geschweiften Klammern erhalten.
     formatted = formatted.replace(
       /\{\{([^|]+)\|(.+?)\}\}/g,
@@ -398,10 +409,10 @@ export class ChatManager {
         const html = `<span class="chat-card-link" data-cardid="${cardId}" style="font-weight: bold; text-decoration: underline; cursor: pointer; padding-right: 2px;">${trimmedName}</span>${trailingSpace}`;
         placeholders.push(html);
         return `__CARD_LINK_${placeholders.length - 1}__`;
-      }
+      },
     );
 
-    // Fallback/Abwärtskompatibilität für alte Logs: [Name]
+    // 2. Fallback/Abwärtskompatibilität für alte Logs: [Name]
     // Oder von Spielern manuell eingetippte [Kartenname]
     formatted = formatted.replace(
       /\[([^\]]+)\]/g,
@@ -409,11 +420,12 @@ export class ChatManager {
         const trimmedName = cardName.trim();
         const trailingSpace = cardName.length > trimmedName.length ? " " : "";
         return `<span class="chat-card-link" data-cardname="${trimmedName}" style="font-weight: bold; text-decoration: underline; cursor: pointer; padding-right: 2px;">${trimmedName}</span>${trailingSpace}`;
-      }
+      },
     );
 
     // Placeholders zurücksetzen
     placeholders.forEach((html, index) => {
+      formatted = formatted.replace(`__TAG_PLACEHOLDER_${index}__`, html);
       formatted = formatted.replace(`__CARD_LINK_${index}__`, html);
     });
 

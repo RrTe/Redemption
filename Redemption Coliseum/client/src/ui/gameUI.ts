@@ -31,6 +31,7 @@ import { ChatManager } from "./managers/ChatManager"; // ✨ NEU
 import { HUDManager } from "./managers/HUDManager"; // ✨ REFACTOR
 import { TokenManager } from "./managers/TokenManager.js"; // ✨ FIX: Import hinzufügen
 import { AssetManager } from "./managers/AssetManager"; // ✨ NEU
+import { UndoManager } from "./managers/UndoManager";
 import { StaticUIHandler } from "./handlers/StaticUIHandler"; // Fix: was never imported
 import type {
   GameRoomMessages,
@@ -85,6 +86,7 @@ export class GameUI {
   private assetManager: AssetManager; // ✨ NEU
   private hudManager: HUDManager; // ✨ REFACTOR
   private tokenManager: TokenManager; // ✨ FIX: Property hinzufügen
+  private undoManager: UndoManager;
   private staticUIHandler: StaticUIHandler; // Fix: handles Help/Settings/Save/Concede buttons
 
   constructor(
@@ -253,6 +255,14 @@ export class GameUI {
       this.elementManager,
       this.domUIManager,
     );
+
+    this.undoManager = new UndoManager(
+      this.scene,
+      this.room,
+      this.networkManager,
+      this.elementManager,
+    );
+    this.undoManager.registerHandlers();
   }
 
   // ✨ KORREKTUR: Die Initialisierung der Handler wird jetzt von der Scene gesteuert.

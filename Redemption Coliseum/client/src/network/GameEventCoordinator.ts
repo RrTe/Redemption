@@ -90,6 +90,26 @@ export class GameEventCoordinator {
       ),
     );
 
+    this.roomListeners.push(
+      this.room.onMessage("undoConfirmationPrompt", (msg: { requestingPlayerId: string; requestingPlayerName: string; count: number }) =>
+        this.scene.events.emit("net:undoConfirmationPrompt", msg),
+      ),
+    );
+
+    this.roomListeners.push(
+      this.room.onMessage("undoStateChanged", (msg: { availableCount: number }) => {
+        log("GameEventCoordinator", `[NET] undoStateChanged received: availableCount=${msg.availableCount}`);
+        this.scene.events.emit("net:undoStateChanged", msg);
+      }),
+    );
+
+    this.roomListeners.push(
+      this.room.onMessage("undoResolved", (msg: { accepted: boolean; count: number }) => {
+        log("GameEventCoordinator", `[NET] undoResolved received: accepted=${msg.accepted}, count=${msg.count}`);
+        this.scene.events.emit(GameEvents.NET_UNDO_RESOLVED, msg);
+      }),
+    );
+
     // --- State Mapping ---
     this.stateListeners.push(
       this.$(this.room.state).revealedCards.onAdd((card, index) =>

@@ -85,7 +85,12 @@ function _validateMove(
   targetPlayerId,
   fromZone,
   toZone,
+  options = {},
 ) {
+  // If this is an undo operation, bypass game rules restrictions (e.g. Reserve in Round 1, Hand limit, etc.)
+  if (options && options.isUndo) {
+    return { valid: true };
+  }
 
   // ✨ Kompakte und vollständige Regelprüfung für Lost Souls.
   if (card.Type === CARD_TYPES.LOST_SOUL) {
@@ -310,7 +315,8 @@ function _moveCardById(
   cardId,
   coords = null,
   inGameType = "",
-  inGameAlignment = ""
+  inGameAlignment = "",
+  options = {},
 ) {
   logger.debug(
     `[MOVE_BY_ID] Attempting to move card '${cardId}' from '${from}' to '${to}' by player '${actingPlayer.sessionId}'.`,
@@ -369,6 +375,7 @@ function _moveCardById(
     targetPlayer.sessionId,
     from,
     to,
+    options,
   );
   if (!validation.valid) {
     card.lastMoved = Date.now(); // Update timestamp to trigger client snap-back
@@ -442,7 +449,26 @@ function _moveCardById(
   const toArr = getZoneCollection(targetPlayer, state, to);
   const position = coords?.position;
 
-  if (to === ZONES.DECK && position === "bottom") {
+  if (options?.targetIndex !== undefined && options.targetIndex !== null && typeof options.targetIndex === "number") {
+    const safeIdx = Math.max(0, Math.min(options.targetIndex, toArr.length));
+    logger.debug(`[MOVE_BY_ID] Inserting into target index ${safeIdx} of ${to}. Current length: ${toArr.length}`);
+    if (safeIdx <= 0) {
+      toArr.unshift(movedCard);
+    } else if (safeIdx >= toArr.length) {
+      toArr.push(movedCard);
+    } else if (typeof toArr.move === "function") {
+      toArr.push(movedCard);
+      toArr.move((items) => {
+        const item = items[items.length - 1];
+        for (let i = items.length - 1; i > safeIdx; i--) {
+          items[i] = items[i - 1];
+        }
+        items[safeIdx] = item;
+      });
+    } else {
+      toArr.splice(safeIdx, 0, movedCard);
+    }
+  } else if (to === ZONES.DECK && position === "bottom") {
     logger.debug(`[MOVE_BY_ID] PUSHING to bottom of ${to}.`);
     toArr.push(movedCard);
   } else if (to === ZONES.DECK) {
@@ -451,6 +477,26 @@ function _moveCardById(
   } else {
     logger.debug(`[MOVE_BY_ID] PUSHING to ${to}. New length: ${toArr.length + 1}`);
     toArr.push(movedCard);
+  }
+
+  // Restore snapshot properties if undoing
+  if (options?.snapshot) {
+    const snap = options.snapshot;
+    if (snap.isFaceUp !== undefined) movedCard.isFaceUp = snap.isFaceUp;
+    if (snap.rotation !== undefined) movedCard.rotation = snap.rotation;
+    if (snap.isParalyzed !== undefined) movedCard.isParalyzed = snap.isParalyzed;
+    if (snap.paralyzeRounds !== undefined) movedCard.paralyzeRounds = snap.paralyzeRounds;
+    if (snap.isSetAside !== undefined) movedCard.isSetAside = snap.isSetAside;
+    if (snap.setAsideRounds !== undefined) movedCard.setAsideRounds = snap.setAsideRounds;
+    if (snap.attachedTo !== undefined) movedCard.attachedTo = snap.attachedTo;
+    if (snap.inGameType !== undefined) movedCard.inGameType = snap.inGameType;
+    if (snap.inGameAlignment !== undefined) movedCard.inGameAlignment = snap.inGameAlignment;
+    if (snap.counters && typeof snap.counters === "object") {
+      movedCard.counters.clear();
+      for (const [k, v] of Object.entries(snap.counters)) {
+        movedCard.counters.set(k, v);
+      }
+    }
   }
 
   let logEntry = "";
@@ -629,7 +675,8 @@ function moveCard(
   count = 1,
   coords = {}, // ✨ FIX: Standardwert von null auf {} geändert, damit coords?.position funktioniert
   inGameType = "",
-  inGameAlignment = ""
+  inGameAlignment = "",
+  options = {},
 ) {
   logger.debug(
     `[moveCard_DISPATCHER] Entered moveCard for player ${player?.sessionId}, from ${from} to ${to}, cardIdOrIndex ${cardIdOrIndex}, count ${count}, coords `,
@@ -648,7 +695,7 @@ function moveCard(
   }
   // Moving a specific card by its ID
   else if (typeof cardIdOrIndex === "string") {
-    return _moveCardById(player, state, cardLookup, from, to, cardIdOrIndex, coords, inGameType, inGameAlignment);
+    return _moveCardById(player, state, cardLookup, from, to, cardIdOrIndex, coords, inGameType, inGameAlignment, options);
   } else {
     logger.error(
       `[moveCard_DISPATCHER_ERROR] Invalid moveCard call. 'from' zone is not DECK and 'cardIdOrIndex' is not a string ID. from=${from}, cardIdOrIndex=${cardIdOrIndex}`,
