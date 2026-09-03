@@ -29,14 +29,6 @@ class MoveCardCommand extends BaseCommand {
           let owner =
             this.state.players.get(targetCard.controllerId) || player;
           const zoneName = targetCard.zone || message.from;
-          let sourceIndex = -1;
-
-          try {
-            const sourceColl = getZoneCollection(owner, this.state, zoneName);
-            sourceIndex = sourceColl
-              ? sourceColl.findIndex((c) => c.id === targetCard.id)
-              : -1;
-          } catch (e) {}
 
           this.preMoveSnapshot = {
             cardId: targetCard.id,
@@ -44,7 +36,6 @@ class MoveCardCommand extends BaseCommand {
             imageFile: targetCard.ImageFile,
             set: targetCard.Set,
             fromZone: zoneName,
-            fromIndex: sourceIndex,
             fromCoords: { x: targetCard.x, y: targetCard.y },
             controllerId: targetCard.controllerId || owner?.sessionId || player.sessionId,
             originalOwnerId: targetCard.originalOwnerId || player.sessionId,
@@ -192,7 +183,7 @@ class MoveCardCommand extends BaseCommand {
 
     const currentZone = card.zone;
 
-    // Reverse movement back to original zone, index, and coordinates
+    // Reverse movement back to original zone and coordinates
     moveCard(
       player,
       this.state,
@@ -210,13 +201,13 @@ class MoveCardCommand extends BaseCommand {
       snap.inGameAlignment,
       {
         isUndo: true,
-        targetIndex: snap.fromIndex >= 0 ? snap.fromIndex : undefined,
         snapshot: snap,
       },
     );
 
-    if (snap.attachedTo) {
-      card.attachedTo = snap.attachedTo;
+    const updatedCard = this.room.cardLookup.get(snap.cardId);
+    if (updatedCard && snap.attachedTo) {
+      updatedCard.attachedTo = snap.attachedTo;
     }
 
     // Broadcast mandatory human-readable undo log

@@ -212,6 +212,17 @@ export class CardRenderer {
 
     let cardUI = this.cardUIs.get(cardData.id);
 
+    // ✨ Duplikat-Schutz: Verhindert doppelte Verarbeitung derselben Karte im selben Render-Durchlauf
+    if (renderedCardIds.has(cardData.id)) {
+      log(
+        "Renderer",
+        `[PROCESS_CARD_WARN] Duplicate card '${cardId.slice(
+          -4,
+        )}' already processed in this render cycle. Skipping.`,
+      );
+      return cardUI || this.cardUIs.get(cardData.id)!;
+    }
+
     const oldZone = cardUI ? cardUI.currentZone : cardData.zone;
     const newZone = cardData.zone;
 
@@ -235,6 +246,7 @@ export class CardRenderer {
       this.cardUIs.set(cardData.id, cardUI);
       // Setze den Winkel nur bei der Erstellung, um Konflikte mit Tweens zu vermeiden.
       cardUI.setAngle(normalizedTargetAngle);
+      cardUI.currentZone = cardData.zone;
     } else {
       // ✨ DEIN PLAN: Logge die Wiederverwendung und den Zustand des bestehenden Objekts
       log(
@@ -278,25 +290,22 @@ export class CardRenderer {
           newZone === ZONES.LAND_OF_BONDAGE ||
           newZone === ZONES.BATTLEFIELD);
 
+      // ✨ FIX: Wir müssen die cardData jetzt schon aktualisieren, damit 
+      // sekundäre Effekte (wie SymbolZoom) Zugriff auf das aktuelle inGameType haben!
+      const hasMoved = cardData.lastMoved > cardUI.cardData.lastMoved;
+      cardUI.cardData = cardData;
+
       // ✨ DEBUG: Logge die Entscheidungsgrundlage für die Play-Animation
       if (oldZone === ZONES.HAND && newZone !== ZONES.HAND) {
         log(
           "Renderer",
           `[PLAY_ANIM_CHECK] Card ${cardId.slice(
             -4,
-          )}: OldZone=${oldZone}, NewZone=${newZone} -> isPlayMove=${isPlayMove}`,
+          )}: OldZone=${oldZone}, NewZone=${newZone}, hasMoved=${hasMoved}, isAnimating=${isAnimating} -> trigger=${isPlayMove && !isAnimating && (hasMoved || cardUI.cardData.lastMoved === 0)}`,
         );
       }
 
-      // Prüfe auch, ob bereits eine Animation läuft, um Doppelungen zu vermeiden.
-      // ✨ KORREKTUR: Die Variable isAnimating haben wir bereits oben definiert.
-
-      // ✨ FIX: Wir müssen die cardData jetzt schon aktualisieren, damit 
-      // sekundäre Effekte (wie SymbolZoom) Zugriff auf das aktuelle inGameType haben!
-      const hasMoved = cardData.lastMoved > cardUI.cardData.lastMoved;
-      cardUI.cardData = cardData;
-
-      if (isPlayMove && !isAnimating) {
+      if (isPlayMove && !isAnimating && (hasMoved || cardUI.cardData.lastMoved === 0)) {
         // Starte die Animation von der AKTUELLEN Position (Drop-Position) zum neuen Ziel.
         this.animationManager.playCardPlayAnimation(
           cardUI,

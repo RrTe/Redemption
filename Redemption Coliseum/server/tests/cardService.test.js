@@ -299,6 +299,32 @@ describe("cardService (moveCard)", () => {
       expect(player[ZONES.HAND].length).toBe(1);
       expect(player[ZONES.LAND_OF_REDEMPTION].length).toBe(0);
     });
+
+    test("sollte Undo einer gespielten Karte ohne Schema-Duplikate oder Korruption ausführen", () => {
+      // 1. Karte in die Hand
+      player[ZONES.HAND].push(c2);
+      c2.zone = ZONES.HAND;
+
+      // 2. Ausspielen: Hand -> Territory
+      moveCard(player, state, cardLookup, ZONES.HAND, ZONES.TERRITORY, "c2");
+      expect(player[ZONES.HAND].length).toBe(0);
+      expect(player[ZONES.TERRITORY].length).toBe(1);
+
+      // 3. Undo: Territory -> Hand
+      const undoRes = moveCard(player, state, cardLookup, ZONES.TERRITORY, ZONES.HAND, "c2", 1, null, "", "", { isUndo: true });
+      expect(undoRes.movedCards.length).toBe(1);
+      expect(player[ZONES.TERRITORY].length).toBe(0);
+      expect(player[ZONES.HAND].length).toBe(1);
+      expect(player[ZONES.HAND][0].id).toBe("c2");
+      expect(player[ZONES.HAND][0].zone).toBe(ZONES.HAND);
+
+      // 4. Erneut ausspielen: Hand -> Territory
+      const replayRes = moveCard(player, state, cardLookup, ZONES.HAND, ZONES.TERRITORY, "c2");
+      expect(replayRes.movedCards.length).toBe(1);
+      expect(player[ZONES.HAND].length).toBe(0);
+      expect(player[ZONES.TERRITORY].length).toBe(1);
+      expect(player[ZONES.TERRITORY][0].id).toBe("c2");
+    });
   });
 });
 

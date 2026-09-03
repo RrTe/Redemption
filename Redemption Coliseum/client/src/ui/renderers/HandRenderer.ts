@@ -4,6 +4,7 @@ import { type ElementManager } from "../managers/ElementManager";
 import { type AnimationManager } from "../managers/AnimationManager";
 import { type CardUI } from "../CardUI";
 import { type PlayerState, type CardState } from "../../../../shared/types";
+import { ZONES } from "../../../../shared/zones";
 import { log } from "../../utils/logger";
 
 /** Konfiguration für den Kartenfächer */
@@ -66,6 +67,12 @@ export class HandRenderer {
     }[] = [];
 
     player.hand.forEach((cardData, index) => {
+      // Validate zone to prevent rendering phantom cards that left hand
+      if (cardData.zone && cardData.zone !== ZONES.HAND) {
+        log("HandRenderer", `[WARN] Skipping card ${cardData.id} in player.hand with mismatching zone: ${cardData.zone}`);
+        return;
+      }
+
       const { x, y, angle } = this.getHandCardTargetPosition(index, handSize);
 
       const cardUI = this.processCard(
@@ -109,6 +116,12 @@ export class HandRenderer {
     if (handSize === 0) return;
 
     opponent.hand.forEach((cardData, index) => {
+      // Validate zone to prevent rendering phantom cards that left opponent hand
+      if (cardData.zone && cardData.zone !== ZONES.HAND) {
+        log("HandRenderer", `[WARN] Skipping card ${cardData.id} in opponent.hand with mismatching zone: ${cardData.zone}`);
+        return;
+      }
+
       const { x, y, angle } = this.getHandCardTargetPosition(
         index,
         handSize,

@@ -449,26 +449,7 @@ function _moveCardById(
   const toArr = getZoneCollection(targetPlayer, state, to);
   const position = coords?.position;
 
-  if (options?.targetIndex !== undefined && options.targetIndex !== null && typeof options.targetIndex === "number") {
-    const safeIdx = Math.max(0, Math.min(options.targetIndex, toArr.length));
-    logger.debug(`[MOVE_BY_ID] Inserting into target index ${safeIdx} of ${to}. Current length: ${toArr.length}`);
-    if (safeIdx <= 0) {
-      toArr.unshift(movedCard);
-    } else if (safeIdx >= toArr.length) {
-      toArr.push(movedCard);
-    } else if (typeof toArr.move === "function") {
-      toArr.push(movedCard);
-      toArr.move((items) => {
-        const item = items[items.length - 1];
-        for (let i = items.length - 1; i > safeIdx; i--) {
-          items[i] = items[i - 1];
-        }
-        items[safeIdx] = item;
-      });
-    } else {
-      toArr.splice(safeIdx, 0, movedCard);
-    }
-  } else if (to === ZONES.DECK && position === "bottom") {
+  if (to === ZONES.DECK && position === "bottom") {
     logger.debug(`[MOVE_BY_ID] PUSHING to bottom of ${to}.`);
     toArr.push(movedCard);
   } else if (to === ZONES.DECK) {
