@@ -36,18 +36,18 @@ export class WaitingDialogScene extends Phaser.Scene {
 
     // Dimmed background overlay that absorbs all pointer input to block the scene
     this.add
-      .rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.65)
+      .rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.6)
       .setOrigin(0, 0)
       .setInteractive();
 
-    // Dialog background panel
+    // Dialog background panel (exact match to ConfirmationDialogScene)
     this.add
-      .rectangle(cx, cy, width, height, 0x1f1f2e)
-      .setStrokeStyle(2, 0x555577);
+      .rectangle(cx, cy, width, height, 0x222222)
+      .setStrokeStyle(2, 0x888888);
 
     // Title text
     this.add
-      .text(cx, cy - height / 2 + 35, this.dialogData.title || "Undo Request", {
+      .text(cx, cy - height / 2 + 32, this.dialogData.title || "Undo Request", {
         fontSize: "24px",
         color: "#ffd700",
         fontStyle: "bold",
@@ -58,10 +58,10 @@ export class WaitingDialogScene extends Phaser.Scene {
     const messageText = this.add
       .text(
         cx,
-        cy + 18,
+        cy + 15,
         this.dialogData.message || "Waiting for opponent to respond...",
         {
-          fontSize: "18px",
+          fontSize: "19px",
           color: "#ffffff",
           align: "center",
           wordWrap: { width: width - 40 },
