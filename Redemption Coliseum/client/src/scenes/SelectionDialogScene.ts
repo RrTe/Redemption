@@ -460,6 +460,7 @@ export class SelectionDialogScene extends Phaser.Scene {
 
 
   public closeDialog(silent = false) {
+    this.previewManager?.hide();
     const remaining = this.paginationManager
       ? this.paginationManager.getRemainingCardPositions(
           this.selectedCards,
