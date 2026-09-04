@@ -150,6 +150,7 @@ export class StaticElementFactory {
         didLongPress = false;
         longPressTimer = setTimeout(() => {
           didLongPress = true;
+          TooltipManager.hide();
           this.scene.events.emit("undoButtonClicked", { isLongPress: true });
         }, 500);
 
@@ -157,10 +158,8 @@ export class StaticElementFactory {
         this.scene.tweens.add({ targets: container, scale: base * 1.05, duration: 50, yoyo: true });
       })
       .on("pointerup", () => {
-        if (longPressTimer) {
-          clearTimeout(longPressTimer);
-          longPressTimer = null;
-        }
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        TooltipManager.hide();
         if (!didLongPress) {
           this.scene.events.emit("undoButtonClicked", { isLongPress: false });
         }

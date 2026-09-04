@@ -5,6 +5,7 @@ import { type ElementManager } from "./ElementManager";
 import { GameEvents } from "../../constants/EventNames";
 import { CardDetailOverlay } from "../overlays/CardDetailOverlay";
 import { ToastManager } from "./ToastManager";
+import { TooltipManager } from "./TooltipManager";
 import { log } from "../../utils/logger";
 import type { QuantitySelectionDialogData } from "../../scenes/QuantitySelectionDialogScene";
 import type { ConfirmationDialogData } from "../../scenes/ConfirmationDialogScene";
@@ -102,6 +103,7 @@ export class UndoManager {
       if (undoButton.input) undoButton.input.enabled = false;
       undoButton.setAlpha(0.4);
       arrow?.setTint(0x777777);
+      TooltipManager.hide();
       log("UndoManager", "[UndoManager] undoButton DISABLED (alpha: 0.4)");
     }
   }
@@ -122,6 +124,7 @@ export class UndoManager {
     }
 
     CardDetailOverlay.hide();
+    TooltipManager.hide();
     this.scene.scene.pause("CardGame");
     this.scene.scene.launch("QuantitySelectionDialogScene", {
       title: "Undo Actions",
@@ -144,6 +147,7 @@ export class UndoManager {
       return;
     }
     CardDetailOverlay.hide();
+    TooltipManager.hide();
     this.scene.scene.launch("WaitingDialogScene", {
       title: "Undo Request",
       message: "Waiting for opponent to respond...",
@@ -164,6 +168,7 @@ export class UndoManager {
       return;
     }
     CardDetailOverlay.hide();
+    TooltipManager.hide();
     this.scene.scene.launch("ConfirmationDialogScene", {
       title: "Undo Request",
       message: `${requestingPlayerName} wants to undo ${count} action(s).\nDo you accept?`,
