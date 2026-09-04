@@ -30,7 +30,7 @@ export class PreviewManager {
         return srcImg.src;
       }
     }
-    return `/assets/cards/${imageFile}.jpg`;
+    return new URL(`/assets/cards/${imageFile}.jpg`, window.location.href).href;
   }
 
   /**
