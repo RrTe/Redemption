@@ -255,6 +255,7 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
   const deck = getZoneCollection(player, state, ZONES.DECK);
   const landOfBondage = getZoneCollection(player, state, ZONES.LAND_OF_BONDAGE);
   const validCards = [];
+  const divertedCards = [];
   let drawnCount = 0;
 
   while (drawnCount < count && deck.length > 0) {
@@ -272,6 +273,7 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
       card.lastMoved = Date.now();
       card.counters.clear();
       landOfBondage.push(card);
+      divertedCards.push(card);
 
       // ✨ FIX: StateView update for Lost Soul
       if (state._clientViews) {
@@ -292,7 +294,7 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
     }
   }
 
-  return validCards;
+  return { validCards, divertedCards };
 }
 
 /**
@@ -593,7 +595,7 @@ function _drawCardsFromDeck(
   logger.debug(
     `[DRAW_FROM_DECK] Player '${player.sessionId}' drawing ${effectiveCount} cards to '${to}'.`,
   );
-  const validCards = _drawCardsWithLostSoulRule(player, state, effectiveCount, cardLookup);
+  const { validCards, divertedCards } = _drawCardsWithLostSoulRule(player, state, effectiveCount, cardLookup);
 
   if (validCards.length > 0) {
     const toArr = getZoneCollection(player, state, to);
@@ -631,7 +633,7 @@ function _drawCardsFromDeck(
   if (to === ZONES.HAND && validCards.length < count) {
     logEntry += ` (Hand limit reached: ${player[ZONES.HAND]?.length}/${MAX_HAND_SIZE})`;
   }
-  return { movedCards: validCards, logEntry: logEntry };
+  return { movedCards: validCards, divertedCards: divertedCards || [], logEntry: logEntry };
 }
 
 /**

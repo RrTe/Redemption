@@ -9,6 +9,12 @@ const { generateCardId } = require("../../../shared/utils");
 const logger = require("../utils/logger");
 
 class MoveCardCommand extends BaseCommand {
+  constructor(room, client) {
+    super(room, client);
+    this.preMoveSnapshot = null;
+    this.divertedSnapshots = [];
+  }
+
   execute(message) {
     const player = this.state.players.get(this.client.sessionId);
     if (!player) {
@@ -26,32 +32,8 @@ class MoveCardCommand extends BaseCommand {
       if (targetCardId) {
         const targetCard = this.room.cardLookup.get(targetCardId);
         if (targetCard) {
-          let owner =
-            this.state.players.get(targetCard.controllerId) || player;
           const zoneName = targetCard.zone || message.from;
-
-          this.preMoveSnapshot = {
-            cardId: targetCard.id,
-            cardName: targetCard.Name,
-            imageFile: targetCard.ImageFile,
-            set: targetCard.Set,
-            fromZone: zoneName,
-            fromCoords: { x: targetCard.x, y: targetCard.y },
-            controllerId: targetCard.controllerId || owner?.sessionId || player.sessionId,
-            originalOwnerId: targetCard.originalOwnerId || player.sessionId,
-            isFaceUp: targetCard.isFaceUp,
-            rotation: targetCard.rotation,
-            isParalyzed: targetCard.isParalyzed,
-            paralyzeRounds: targetCard.paralyzeRounds,
-            isSetAside: targetCard.isSetAside,
-            setAsideRounds: targetCard.setAsideRounds,
-            attachedTo: targetCard.attachedTo,
-            inGameType: targetCard.inGameType,
-            inGameAlignment: targetCard.inGameAlignment,
-            counters: targetCard.counters
-              ? Object.fromEntries(targetCard.counters.entries())
-              : {},
-          };
+          this.preMoveSnapshot = this._createSnapshot(targetCard, zoneName, player);
         }
       }
 
@@ -69,6 +51,7 @@ class MoveCardCommand extends BaseCommand {
       );
 
       const movedCards = result.movedCards || [];
+      const divertedCards = result.divertedCards || [];
       const movedCardId = message.cardId ?? (movedCards[0]?.id || null);
 
       if (movedCardId) {
@@ -124,34 +107,18 @@ class MoveCardCommand extends BaseCommand {
           type: "warning",
         });
         this.canUndo = false;
-      } else if (movedCards.length > 0) {
+      } else if (movedCards.length > 0 || divertedCards.length > 0) {
         if (!this.preMoveSnapshot && movedCards[0]) {
-          const firstCard = movedCards[0];
-          this.preMoveSnapshot = {
-            cardId: firstCard.id,
-            cardName: firstCard.Name,
-            imageFile: firstCard.ImageFile,
-            set: firstCard.Set,
-            fromZone: message.from,
-            fromIndex: -1,
-            fromCoords: { x: firstCard.x, y: firstCard.y },
-            controllerId: firstCard.controllerId || player.sessionId,
-            originalOwnerId: firstCard.originalOwnerId || player.sessionId,
-            isFaceUp: firstCard.isFaceUp,
-            rotation: firstCard.rotation,
-            isParalyzed: firstCard.isParalyzed,
-            paralyzeRounds: firstCard.paralyzeRounds,
-            isSetAside: firstCard.isSetAside,
-            setAsideRounds: firstCard.setAsideRounds,
-            attachedTo: firstCard.attachedTo,
-            inGameType: firstCard.inGameType,
-            inGameAlignment: firstCard.inGameAlignment,
-            counters: firstCard.counters ? Object.fromEntries(firstCard.counters.entries()) : {},
-          };
+          this.preMoveSnapshot = this._createSnapshot(movedCards[0], message.from, player);
+        }
+        if (divertedCards.length > 0) {
+          this.divertedSnapshots = divertedCards.map((card) =>
+            this._createDeckSnapshot(card, player)
+          );
         }
         this.canUndo = true;
         logger.info(
-          `[MoveCardCommand] Move succeeded for '${this.preMoveSnapshot?.cardName}'. canUndo set to TRUE.`,
+          `[MoveCardCommand] Move succeeded (moved: ${movedCards.length}, diverted: ${divertedCards.length}). canUndo set to TRUE.`,
         );
       }
 
@@ -172,12 +139,53 @@ class MoveCardCommand extends BaseCommand {
     }
   }
 
-  undo() {
-    if (!this.preMoveSnapshot) return;
-    const snap = this.preMoveSnapshot;
-    const player = this.state.players.get(this.client.sessionId);
-    if (!player) return;
+  _createSnapshot(card, fromZone, player) {
+    return {
+      cardId: card.id,
+      cardName: card.Name,
+      imageFile: card.ImageFile,
+      set: card.Set,
+      fromZone: fromZone || card.zone,
+      fromCoords: { x: card.x, y: card.y },
+      controllerId: card.controllerId || player?.sessionId,
+      originalOwnerId: card.originalOwnerId || player?.sessionId,
+      isFaceUp: card.isFaceUp,
+      rotation: card.rotation,
+      isParalyzed: card.isParalyzed,
+      paralyzeRounds: card.paralyzeRounds,
+      isSetAside: card.isSetAside,
+      setAsideRounds: card.setAsideRounds,
+      attachedTo: card.attachedTo,
+      inGameType: card.inGameType,
+      inGameAlignment: card.inGameAlignment,
+      counters: card.counters ? Object.fromEntries(card.counters.entries()) : {},
+    };
+  }
 
+  _createDeckSnapshot(card, player) {
+    return {
+      cardId: card.id,
+      cardName: card.Name,
+      imageFile: card.ImageFile,
+      set: card.Set,
+      fromZone: ZONES.DECK,
+      fromCoords: { x: 0, y: 0 },
+      controllerId: card.controllerId || player?.sessionId,
+      originalOwnerId: card.originalOwnerId || player?.sessionId,
+      isFaceUp: false,
+      rotation: 0,
+      isParalyzed: false,
+      paralyzeRounds: 0,
+      isSetAside: false,
+      setAsideRounds: 0,
+      attachedTo: null,
+      inGameType: "",
+      inGameAlignment: "",
+      counters: {},
+    };
+  }
+
+  _undoSingleCard(snap, player) {
     const card = this.room.cardLookup.get(snap.cardId);
     if (!card) return;
 
@@ -216,6 +224,21 @@ class MoveCardCommand extends BaseCommand {
     const templateId = generateCardId(snap.imageFile, snap.set, snap.cardName);
     const logMsg = `[UNDO] ${player.name} returned {{${templateId}|${snap.cardName}}} from ${toDisplay} to ${fromDisplay}.`;
     this.room.broadcastGameLog(logMsg);
+  }
+
+  undo() {
+    const player = this.state.players.get(this.client.sessionId);
+    if (!player) return;
+
+    if (this.preMoveSnapshot) {
+      this._undoSingleCard(this.preMoveSnapshot, player);
+    }
+
+    if (this.divertedSnapshots && this.divertedSnapshots.length > 0) {
+      for (let i = this.divertedSnapshots.length - 1; i >= 0; i--) {
+        this._undoSingleCard(this.divertedSnapshots[i], player);
+      }
+    }
   }
 }
 
