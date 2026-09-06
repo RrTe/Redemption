@@ -41,3 +41,26 @@ TYPES_WITH_STATS = {
     "Covenant",
     "Curse"
 }
+
+# Standard card type and side concept aliases used in Special Ability text
+CARD_TYPE_ABILITY_ALIASES = {
+    "Hero": ["HERO", "H", "HERO CHARACTER"],
+    "Evil Character": ["EC", "EVIL CHARACTER", "EVIL CHAR"],
+    "GE": ["GE", "GOOD ENHANCEMENT"],
+    "EE": ["EE", "EVIL ENHANCEMENT"],
+    "Artifact": ["ARTIFACT", "ART", "A"],
+    "Covenant": ["COVENANT", "COV"],
+    "Curse": ["CURSE"],
+    "Fortress": ["FORTRESS", "FORT", "F"],
+    "Site": ["SITE"],
+    "City": ["CITY"],
+    "Dominant": ["DOMINANT", "DOM"],
+    "Lost Soul": ["LOST SOUL", "LS"],
+    "Good": ["GOOD"],
+    "Evil": ["EVIL"],
+    "Neutral": ["NEUTRAL"],
+    "top": ["TOP"],
+    "bottom": ["BOTTOM"],
+    "STAR": ["STAR"]
+}
+

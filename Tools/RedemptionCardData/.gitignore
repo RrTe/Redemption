@@ -16,6 +16,8 @@ log.txt
 *.code-workspace
 Prompts
 Prompts/
+scratch/
+
 
 # Local Environment Secrets (NIE einchecken!)
 .env

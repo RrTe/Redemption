@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parent))
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import json
@@ -8,9 +9,10 @@ from datetime import datetime
 from models.card import Card
 from models.card_side import CardSide
 from utils.extend_types import expand_and_inherit_types
+from utils.ability_splitter import split_card_abilities
 from models.enums.brigade import ALL_BRIGADES
 from models.enums.alignment import Alignment
-from models.enums.card_type import CardType
+from models.enums.card_type import CardType, TYPE_GROUPS
 from mappings.card_type_metadata import TYPE_ALIGNMENT_MAP, TYPES_WITH_BRIGADES, TYPES_WITH_STATS
 from mappings.ordir_map import ORDIR_MAP
 
@@ -200,17 +202,7 @@ def parse_classes(value: str) -> list[str]:
         return []
     return [c.strip() for c in value.split(",") if c.strip()]
 
-def extract_side_ability(text: str, side: str) -> str:
-    marker = "TOP:" if side == "top" else "BOTTOM:"
-    if marker in text:
-        return text.split(marker, 1)[-1].split("BOTTOM:" if side == "top" else "TOP:", 1)[0].strip()
-    return text.strip()
 
-def extract_type_ability(text: str, card_type: str) -> str:
-    marker = card_type.upper() + ":"
-    if marker in text:
-        return text.split(marker, 1)[-1].split(":", 1)[0].strip()
-    return text.strip()
 
 def _extract_shared_fields(sides: dict) -> dict:
     """Extracts fields that are identical across all real sides into a shared block.
@@ -274,15 +266,27 @@ def build_card_sides(raw: dict, types: list[str]) -> dict:
     )
 
     is_multi_type = len(types) > 1
-
     flip_types = parse_flip_types(raw.get("Type", ""))
+    star_ability = None
 
     if has_bottom:
+        concrete_types = [ct for ct in types if ct not in TYPE_GROUPS] or types
+        sides_info = []
         for side in ["top", "bottom"]:
             t = flip_types.get(side)
             if not t:
-                t = types[0] if len(types) == 1 else (types[0] if side == "top" else types[-1])
-            alignment = TYPE_ALIGNMENT_MAP.get(t)
+                t = concrete_types[0] if len(concrete_types) == 1 else (concrete_types[0] if side == "top" else concrete_types[-1])
+            align_val = alignments.get(side) if alignments.get(side) is not None else TYPE_ALIGNMENT_MAP.get(t)
+            align_str = align_val.value if hasattr(align_val, "value") else str(align_val) if align_val else None
+            sides_info.append({"key": side, "type": t, "alignment": align_str})
+
+        side_abilities, star_ability = split_card_abilities(abilities, sides_info)
+
+        for side in ["top", "bottom"]:
+            t = flip_types.get(side)
+            if not t:
+                t = concrete_types[0] if len(concrete_types) == 1 else (concrete_types[0] if side == "top" else concrete_types[-1])
+            alignment = alignments.get(side) if alignments.get(side) is not None else TYPE_ALIGNMENT_MAP.get(t)
             brigade = brigades.get(side, []) if t in TYPES_WITH_BRIGADES else []
             strength = strengths.get(side) if t in TYPES_WITH_STATS else None
             toughness = toughnesses.get(side) if t in TYPES_WITH_STATS else None
@@ -290,14 +294,24 @@ def build_card_sides(raw: dict, types: list[str]) -> dict:
             sides[side] = CardSide(
                 Name=name,
                 Type=t,
-                Alignment=alignment if alignment is not None else alignments.get(side),
+                Alignment=alignment,
                 Brigades=brigade,
                 Strength=strength,
                 Toughness=toughness,
                 Classes=classes,
-                SpecialAbility=extract_side_ability(abilities, side)
+                SpecialAbility=side_abilities.get(side)
             ).to_dict()
     elif is_multi_type:
+        sides_info = []
+        for t in types:
+            align_val = TYPE_ALIGNMENT_MAP.get(t)
+            if align_val is None and alignments.get("top"):
+                align_val = alignments.get("top")
+            align_str = align_val.value if hasattr(align_val, "value") else str(align_val) if align_val else None
+            sides_info.append({"key": t, "type": t, "alignment": align_str})
+
+        side_abilities, star_ability = split_card_abilities(abilities, sides_info)
+
         for t in types:
             alignment = TYPE_ALIGNMENT_MAP.get(t)
             brigade = brigades.get(t) or brigades.get("top", []) if t in TYPES_WITH_BRIGADES else []
@@ -312,7 +326,7 @@ def build_card_sides(raw: dict, types: list[str]) -> dict:
                 Strength=strength,
                 Toughness=toughness,
                 Classes=classes,
-                SpecialAbility=extract_type_ability(abilities, t)
+                SpecialAbility=side_abilities.get(t)
             ).to_dict()
     else:
         t = types[0]
@@ -332,36 +346,47 @@ def build_card_sides(raw: dict, types: list[str]) -> dict:
             SpecialAbility=abilities.strip()
         ).to_dict()
 
-    return _extract_shared_fields(sides)
+    extracted = _extract_shared_fields(sides)
+    if star_ability:
+        if "shared" not in extracted:
+            extracted["shared"] = {}
+        extracted["shared"]["SpecialAbility"] = star_ability
+    return extracted
 
-with open(INPUT_FILE, "r", encoding="utf-8") as f:
-    raw_cards = json.load(f)["cards"]
+def main():
+    with open(INPUT_FILE, "r", encoding="utf-8") as f:
+        raw_cards = json.load(f)["cards"]
 
-extended_cards = []
-for i, raw in enumerate(raw_cards):
-    try:
-        raw_types_raw = [t.strip() for t in raw.get("Type", "").split("/")]
-        raw_types = expand_and_inherit_types(raw_types_raw)
+    extended_cards = []
+    for i, raw in enumerate(raw_cards):
+        try:
+            raw_types_raw = [t.strip() for t in raw.get("Type", "").split("/")]
+            raw_types = expand_and_inherit_types(raw_types_raw)
 
-        raw["IsToken"] = any("Token" in t for t in raw_types)
-        raw["CardSides"] = build_card_sides(raw, raw_types)
+            raw["IsToken"] = any("Token" in t for t in raw_types)
+            raw["CardSides"] = build_card_sides(raw, raw_types)
 
-        raw["Meta"] = {
-            "Created": datetime.now().strftime("%Y-%m-%d"),
-            "LastModified": datetime.now().strftime("%Y-%m-%d")
-        }
+            raw["Meta"] = {
+                "Created": datetime.now().strftime("%Y-%m-%d"),
+                "LastModified": datetime.now().strftime("%Y-%m-%d")
+            }
 
-        card = Card(raw)
-        extended_cards.append(card.to_dict())
-    except Exception as e:
-        print(f"[ERROR] Fehler bei Karte {i}: {raw.get('Name')} -> {type(e).__name__}: {e}")
+            card = Card(raw)
+            extended_cards.append(card.to_dict())
+        except Exception as e:
+            print(f"[ERROR] Fehler bei Karte {i}: {raw.get('Name')} -> {type(e).__name__}: {e}")
 
-with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-    json.dump({"cards": extended_cards}, f, indent=2, ensure_ascii=False)
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        json.dump({"cards": extended_cards}, f, indent=2, ensure_ascii=False)
 
-with open(OUTPUT_FILE_MIN, "w", encoding="utf-8") as f:
-    json.dump({"cards": extended_cards}, f, separators=(",", ":"), ensure_ascii=False)
+    with open(OUTPUT_FILE_MIN, "w", encoding="utf-8") as f:
+        json.dump({"cards": extended_cards}, f, separators=(",", ":"), ensure_ascii=False)
 
-print(f"{len(extended_cards)} cards written to:")
-print(f"  {OUTPUT_FILE}")
-print(f"  {OUTPUT_FILE_MIN}")
+    print(f"{len(extended_cards)} cards written to:")
+    print(f"  {OUTPUT_FILE}")
+    print(f"  {OUTPUT_FILE_MIN}")
+
+
+if __name__ == "__main__":
+    main()
+

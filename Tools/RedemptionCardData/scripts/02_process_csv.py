@@ -53,50 +53,68 @@ def determine_testament(reference: str) -> str:
     return "UNKNOWN"
 
 def determine_alignment(card_type: str, original_alignment: str) -> str:
-    """Determines the alignment based on the card type and original alignment."""
+    """Determines the alignment based on the card type and original alignment.
+
+    Args:
+        card_type: The raw or cleaned card type string (e.g. 'Dominant', 'Hero/EE').
+        original_alignment: The raw alignment string from source data.
+
+    Returns:
+        The normalized alignment string (e.g. 'Good', 'Evil', 'Good/Evil', 'Neutral').
+    """
+    card_type = (card_type or "").strip()
+    norm_orig_alignment = (original_alignment or "").strip()
+
     # Split types for multi-type cards
-    types = [t.strip() for t in card_type.split("/")]
-    
+    types = [t.strip() for t in card_type.split("/") if t.strip()]
+
     # Check for DA types
     if any(da in card_type for da in DA_TYPES) or "DA-Dominant" in card_type:
         return "Good/Evil"
-    
+
     # Gather alignments for all types
     alignments = []
-    
+
     for t in types:
         base = BASE_ALIGNMENT_MAP.get(t)
         if base:
             alignments.append(base)
-        elif t == "Dominant" or t == "Fortress":
-            # Use original alignment as fallback for these types
-            if original_alignment:
-                alignments.append(original_alignment)
+        elif t == "Dominant":
+            # In Redemption CCG, Dominants are strictly Good, strictly Evil, or Dual (Good/Evil).
+            # Any Dominant without a strictly Good or strictly Evil source alignment is Dual.
+            if norm_orig_alignment in ["Good", "Evil"]:
+                alignments.append(norm_orig_alignment)
+            else:
+                alignments.append("Good/Evil")
+        elif t == "Fortress":
+            # Use original alignment as fallback for Fortress
+            if norm_orig_alignment:
+                alignments.append(norm_orig_alignment)
         elif "City" in t:
-             alignments.append("Neutral") # Base for City
-    
+            alignments.append("Neutral")  # Base for City
+
     # special case for combinations like Site/Hero
     if "Site" in types and "Hero" in types:
         return "Neutral/Good"
 
     # Add original alignment if we have nothing or for safety
-    if not alignments and original_alignment:
-        alignments.append(original_alignment)
-    
+    if not alignments and norm_orig_alignment:
+        alignments.append(norm_orig_alignment)
+
     # Deduplicate and format
     unique_alignments = []
     # Preserve order: Neutral, Good, Evil (common convention)
     for a in ["Neutral", "Good", "Evil"]:
         if any(a in item for item in alignments):
             unique_alignments.append(a)
-    
+
     # Special concatenation if multiple unique ones found
     if len(unique_alignments) > 1:
         return "/".join(unique_alignments)
     elif unique_alignments:
         return unique_alignments[0]
-    
-    return original_alignment
+
+    return norm_orig_alignment
 
 def process_csv():
     """Processes the input CSV and creates the extended JSON."""
@@ -108,31 +126,31 @@ def process_csv():
     unmapped_types = set()
 
     print(f"Processing {INPUT_FILE}...")
-    
+
     with open(INPUT_FILE, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f, delimiter="\t")
-        
+
         for row in reader:
             # 1. Clean basic fields
             name = clean_text(row.get("Name", ""))
-            card_type = row.get("Type", "")
-            original_alignment = row.get("Alignment", "")
+            card_type = clean_text(row.get("Type", ""))
+            original_alignment = clean_text(row.get("Alignment", ""))
             reference = clean_text(row.get("Reference", ""))
-            
+
             # 2. Cleanup image name
             image_file = clean_image_name(row.get("ImageFile", ""))
-            
+
             # 3. Determine new properties
             is_character = any(keyword in card_type for keyword in ["Hero", "Evil Character", "DAC"])
             is_enhancement = any(keyword in card_type for keyword in ["GE", "EE", "DAE", "Covenant", "Curse"])
             is_gospel = any(book.lower() in reference.lower() for book in GOSPEL_BOOKS)
             testament = determine_testament(reference)
-            
+
             # 4. Alignment specialized logic
             alignment = determine_alignment(card_type, original_alignment)
-            
+
             # Log unknown types for the report
-            types = [t.strip() for t in card_type.split("/")]
+            types = [t.strip() for t in card_type.split("/") if t.strip()]
             for t in types:
                 if t not in BASE_ALIGNMENT_MAP and t not in ["Dominant", "Fortress", "City"]:
                     unmapped_types.add(t)
@@ -140,21 +158,21 @@ def process_csv():
             # 5. Build the object
             card = {
                 "Name": name,
-                "Set": row.get("Set", ""),
+                "Set": clean_text(row.get("Set", "")),
                 "ImageFile": image_file,
-                "OfficialSet": row.get("OfficialSet", ""),
+                "OfficialSet": clean_text(row.get("OfficialSet", "")),
                 "Type": card_type,
-                "Brigade": row.get("Brigade", ""),
-                "Strength": row.get("Strength", ""),
-                "Toughness": row.get("Toughness", ""),
-                "Class": row.get("Class", ""),
-                "Identifier": row.get("Identifier", ""),
+                "Brigade": clean_text(row.get("Brigade", "")),
+                "Strength": clean_text(row.get("Strength", "")),
+                "Toughness": clean_text(row.get("Toughness", "")),
+                "Class": clean_text(row.get("Class", "")),
+                "Identifier": clean_text(row.get("Identifier", "")),
                 "SpecialAbility": clean_text(row.get("SpecialAbility", "")),
-                "Rarity": row.get("Rarity", ""),
+                "Rarity": clean_text(row.get("Rarity", "")),
                 "Reference": reference,
-                "Sound": row.get("Sound", ""),
+                "Sound": clean_text(row.get("Sound", "")),
                 "Alignment": alignment,
-                "Legality": row.get("Legality", ""),
+                "Legality": clean_text(row.get("Legality", "")),
                 "IsCharacter": is_character,
                 "IsEnhancement": is_enhancement,
                 "IsGospel": is_gospel,
