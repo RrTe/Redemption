@@ -121,6 +121,8 @@ def verify():
 
             # 5. Star card check
             if cat_lower == "star card":
+                if not c.get("IsStarCard", False):
+                    suspicious.append(f"IsStarCard Flag Missing: '{name}' in Star category but IsStarCard is False")
                 card_class_list = get_side_field(c, "top", "Classes", default=[])
                 card_class = ", ".join(card_class_list) if isinstance(card_class_list, list) else str(card_class_list)
                 if "star" not in card_class.lower():

@@ -14,6 +14,8 @@ Usage pattern for the primary card name (convenience wrapper):
 
 from __future__ import annotations
 
+import re
+
 
 def get_side_field(card: dict, side_key: str, field: str, default=None):
     """Returns a side-specific field, with fallback to the 'shared' block.
@@ -70,3 +72,56 @@ def get_all_types(card: dict) -> list[str]:
             if t and t not in types:
                 types.append(t)
     return types
+
+
+def check_is_star_card(card: dict) -> bool:
+    """Determines whether a card qualifies as a Star card based on Option 3 criteria.
+
+    A card is recognized as a Star card if any of the following conditions hold:
+    1. 'Class' or side 'Classes' contains 'star' (case-insensitive).
+    2. Any 'SpecialAbility' contains a 'STAR:' tag or entry trigger.
+    3. 'Star Card' is present in 'ORDIR' categories.
+
+    Args:
+        card: Full card dictionary from the database.
+
+    Returns:
+        bool: True if any Star card criterion is fulfilled, False otherwise.
+    """
+    if card.get("IsStarCard") is True:
+        return True
+
+    # 1. Check Class / Classes
+    raw_class = card.get("Class", "")
+    if "star" in str(raw_class).lower():
+        return True
+
+    sides = card.get("CardSides", {})
+    for side_key, side_val in sides.items():
+        if isinstance(side_val, dict):
+            cls = side_val.get("Classes", [])
+            if isinstance(cls, list) and any("star" in str(c).lower() for c in cls):
+                return True
+            if isinstance(cls, str) and "star" in cls.lower():
+                return True
+            if "star" in str(side_val.get("Class", "")).lower():
+                return True
+
+    # 2. Check SpecialAbility for STAR: tag
+    star_regex = re.compile(r"(?:^|[\s/])STAR:\s*", re.IGNORECASE)
+    raw_ability = card.get("SpecialAbility", "")
+    if star_regex.search(str(raw_ability)):
+        return True
+
+    for side_key, side_val in sides.items():
+        if isinstance(side_val, dict):
+            ab = side_val.get("SpecialAbility", "")
+            if ab and star_regex.search(str(ab)):
+                return True
+
+    # 3. Check ORDIR categories
+    ordir = card.get("ORDIR", [])
+    if any(str(cat).lower() == "star card" for cat in ordir):
+        return True
+
+    return False

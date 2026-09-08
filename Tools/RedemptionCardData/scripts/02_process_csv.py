@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -155,6 +156,12 @@ def process_csv():
                 if t not in BASE_ALIGNMENT_MAP and t not in ["Dominant", "Fortress", "City"]:
                     unmapped_types.add(t)
 
+            card_class = clean_text(row.get("Class", ""))
+            special_ability = clean_text(row.get("SpecialAbility", ""))
+            is_star_card = "star" in card_class.lower() or bool(
+                re.search(r"(?:^|[\s/])STAR:\s*", special_ability, re.IGNORECASE)
+            )
+
             # 5. Build the object
             card = {
                 "Name": name,
@@ -165,9 +172,9 @@ def process_csv():
                 "Brigade": clean_text(row.get("Brigade", "")),
                 "Strength": clean_text(row.get("Strength", "")),
                 "Toughness": clean_text(row.get("Toughness", "")),
-                "Class": clean_text(row.get("Class", "")),
+                "Class": card_class,
                 "Identifier": clean_text(row.get("Identifier", "")),
-                "SpecialAbility": clean_text(row.get("SpecialAbility", "")),
+                "SpecialAbility": special_ability,
                 "Rarity": clean_text(row.get("Rarity", "")),
                 "Reference": reference,
                 "Sound": clean_text(row.get("Sound", "")),
@@ -176,6 +183,7 @@ def process_csv():
                 "IsCharacter": is_character,
                 "IsEnhancement": is_enhancement,
                 "IsGospel": is_gospel,
+                "IsStarCard": is_star_card,
                 "Testament": testament
             }
             cards.append(card)

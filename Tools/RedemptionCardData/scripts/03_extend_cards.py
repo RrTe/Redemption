@@ -10,6 +10,7 @@ from models.card import Card
 from models.card_side import CardSide
 from utils.extend_types import expand_and_inherit_types
 from utils.ability_splitter import split_card_abilities
+from utils.card_helpers import check_is_star_card
 from models.enums.brigade import ALL_BRIGADES
 from models.enums.alignment import Alignment
 from models.enums.card_type import CardType, TYPE_GROUPS
@@ -365,6 +366,7 @@ def main():
 
             raw["IsToken"] = any("Token" in t for t in raw_types)
             raw["CardSides"] = build_card_sides(raw, raw_types)
+            raw["IsStarCard"] = check_is_star_card(raw)
 
             raw["Meta"] = {
                 "Created": datetime.now().strftime("%Y-%m-%d"),

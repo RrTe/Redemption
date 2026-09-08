@@ -47,7 +47,7 @@ from mappings.alias_engine import (
 )
 from mappings.ordir_name_errata import GLOBAL_EXCEPTIONS
 from mappings.special_ordir_overrides import SPECIAL_ORDIR_OVERRIDES
-from utils.card_helpers import get_card_name
+from utils.card_helpers import get_card_name, check_is_star_card
 
 
 def load_data() -> tuple[list[dict], list[dict]]:
@@ -326,9 +326,10 @@ def map_ordir_to_cards():
                 "categories": list(categories)
             })
 
-    # Convert sets to sorted lists for JSON serialization
+    # Convert sets to sorted lists for JSON serialization and finalize IsStarCard
     for c in cards_data:
         c["ORDIR"] = sorted(list(c["ORDIR"]))
+        c["IsStarCard"] = check_is_star_card(c)
 
     print(f"\nSuccessfully mapped {mapped_count} out of {total_refs} unique ORDIR entities.")
     print(f"Writing updated card data to {OUT_FILE}...")
