@@ -26,7 +26,7 @@ class RAGEngine:
         self.hf_model = "intfloat/multilingual-e5-large"
         self.hf_api_url = f"https://router.huggingface.co/hf-inference/models/{self.hf_model}"
         
-        self.llm_model = "llama-3.3-70b-versatile"
+        self.llm_model = "qwen/qwen3.6-27b"
         self.reviewer_model = "openai/gpt-oss-120b"
         
         # Load System Prompt (Drafter)
@@ -253,7 +253,7 @@ class RAGEngine:
 
         # 3. STAGE 1: LIBRARIAN RULE SELECTION (V5.8.5)
         # Upgrade to 70B for expert selection
-        self.librarian_model = "llama-3.3-70b-versatile"
+        self.librarian_model = "qwen/qwen3.6-27b"
 
         # Build a search base that includes the question, card types, AND Special Ability texts
         # This restores the logic the user correctly pointed out.
