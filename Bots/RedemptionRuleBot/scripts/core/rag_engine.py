@@ -26,7 +26,7 @@ class RAGEngine:
         self.hf_model = "intfloat/multilingual-e5-large"
         self.hf_api_url = f"https://router.huggingface.co/hf-inference/models/{self.hf_model}"
         
-        self.llm_model = "qwen/qwen3.6-27b"
+        self.llm_model = "openai/gpt-oss-120b"
         self.reviewer_model = "openai/gpt-oss-120b"
         
         # Load System Prompt (Drafter)
@@ -63,7 +63,7 @@ class RAGEngine:
             self.selector_prompt = None
 
         # Librarian instructions (V5.8)
-        self.librarian_model = "llama-3.1-8b-instant"
+        self.librarian_model = "openai/gpt-oss-20b"
         librarian_path = os.path.join("scripts", "prompts", "librarian_prompt.txt")
         if os.path.exists(librarian_path):
             with open(librarian_path, "r", encoding="utf-8") as f:
@@ -204,7 +204,7 @@ class RAGEngine:
         
         try:
             # Use a fast model for selection
-            completion = self.groq_client.chat.completions.create(model="llama-3.1-8b-instant", messages=messages, temperature=0.0)
+            completion = self.groq_client.chat.completions.create(model="openai/gpt-oss-20b", messages=messages, temperature=0.0)
             choice = completion.choices[0].message.content.strip()
             
             print(f"[ENGINE] Selector chose: {choice}", flush=True)
@@ -253,7 +253,7 @@ class RAGEngine:
 
         # 3. STAGE 1: LIBRARIAN RULE SELECTION (V5.8.5)
         # Upgrade to 70B for expert selection
-        self.librarian_model = "qwen/qwen3.6-27b"
+        self.librarian_model = "openai/gpt-oss-120b"
 
         # Build a search base that includes the question, card types, AND Special Ability texts
         # This restores the logic the user correctly pointed out.
