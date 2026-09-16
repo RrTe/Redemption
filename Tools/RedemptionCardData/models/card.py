@@ -19,6 +19,7 @@ _SUPPRESS_IF_EMPTY = {"ORDIR", "Tags", "PlayablePhases", "Sound"}
 class Card:
     def __init__(self, data: dict):
         # --- Card-level (non-side-specific) fields ---
+        self.Id = data.get("Id", "")
         self.Set = data.get("Set", "")
         self.ImageFile = data.get("ImageFile", "")
         self.OfficialSet = data.get("OfficialSet", "")

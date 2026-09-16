@@ -9,5 +9,9 @@
     "cards_extended_with_ordir_fuzzy": "data/cards_extended_with_ordir_fuzzy.json",
     "cards_extended_with_ordir_fuzzy_min": "data/cards_extended_with_ordir_fuzzy.min.json",
     "unmatched_ordir_entries_log": "data/unmatched_ordir_entries.log",
-    "verification_report_log": "data/verification_report.log"
+    "verification_report_log": "data/verification_report.log",
+    "card_abilities_raw": "data/card_abilities_raw.json",
+    "cards_logic_json": "data/dist/cards_logic.json",
+    "unparsed_abilities_log": "data/unparsed_abilities.log",
+    "logic_verification_report": "data/logic_verification_report.log"
 }

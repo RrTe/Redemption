@@ -15,6 +15,40 @@ Usage pattern for the primary card name (convenience wrapper):
 from __future__ import annotations
 
 import re
+import unicodedata
+
+
+def js_hash(s: str) -> int:
+    """Computes a 32-bit signed integer hash matching the Coliseum JS implementation.
+
+    Args:
+        s: Input string to hash.
+
+    Returns:
+        Signed 32-bit integer (-2^31 to 2^31 - 1).
+    """
+    s_norm = unicodedata.normalize("NFC", s)
+    h = 0
+    for char in s_norm:
+        h = (h * 31 + ord(char)) & 0xFFFFFFFF
+    if h >= 0x80000000:
+        h -= 0x100000000
+    return h
+
+
+def generate_card_id(image_file: str | None, card_set: str | None, name: str | None) -> str:
+    """Generates a canonical card ID string identical to Coliseum client/server.
+
+    Args:
+        image_file: Card ImageFile attribute.
+        card_set: Card Set attribute.
+        name: Card Name attribute.
+
+    Returns:
+        String representation of the signed 32-bit integer ID.
+    """
+    key = (image_file or "") + (card_set or "") + (name or "")
+    return str(js_hash(key))
 
 
 def get_side_field(card: dict, side_key: str, field: str, default=None):
