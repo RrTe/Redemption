@@ -111,6 +111,8 @@ def decompile_effect(effect: ActionEffect) -> str:
         act = "underdeck" if pos == "bottom" else "topdeck"
     elif "place" in act and "reserve" in dest:
         act = "reserve"
+    elif "choose" in act:
+        act = "choose"
 
     tgt = decompile_target(effect.target)
 
@@ -122,6 +124,8 @@ def decompile_effect(effect: ActionEffect) -> str:
             clause = f"{tgt} is worth {s}/{t}" if (effect.strength_mod or 0) >= 0 and (effect.toughness_mod or 0) >= 0 else f"decrease {tgt} by {abs(effect.strength_mod or 0)}/{abs(effect.toughness_mod or 0)}"
         else:
             clause = f"{act} {tgt} {s}/{t}"
+    elif act == "choose":
+        clause = f"choose {tgt} to block" if "evil" in tgt.lower() else f"choose {tgt}"
     else:
         clause = f"{act} {tgt}"
 

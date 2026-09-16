@@ -75,3 +75,21 @@ class ActionEffect(BaseModel):
             if clean in ("until_end_of_battle", "end_of_battle", "battle"):
                 return Duration.UNTIL_END_OF_BATTLE
         return v
+
+    @field_validator("action", mode="before")
+    @classmethod
+    def normalize_action(cls, v: Any) -> Any:
+        """Normalizes action verb synonyms such as 'choose' to canonical REG actions."""
+        if isinstance(v, str):
+            clean = v.strip().lower().replace("-", " ").replace("_", " ")
+            if clean in ("choose", "choose opponent", "choose blocker", "choose rescuer", "choose the blocker"):
+                return ActionVerb.CHOOSE_OPPONENT
+            if clean in ("create a token", "create token", "make a token", "spawn a token"):
+                return ActionVerb.CREATE_TOKEN
+            if clean in ("change hand size", "reduce hand size", "increase hand size", "set hand size"):
+                return ActionVerb.CHANGE_HAND_SIZE
+            if clean in ("cannot be ignored", "cannot ignore"):
+                return ActionVerb.CANNOT_BE_IGNORED
+            if clean in ("play an enhancement", "play enhancement", "play"):
+                return ActionVerb.PLAY
+        return v

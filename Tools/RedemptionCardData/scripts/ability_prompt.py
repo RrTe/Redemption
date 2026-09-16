@@ -38,7 +38,7 @@ SLIM_SCHEMA_TEMPLATE = """{
       "effects": [
         {
           "step": 1,
-          "action": "<verb: band|draw|discard|negate|prevent|modify_stats|search|shuffle|convert|protect|heal|banish|topdeck|ignore|decrease|reveal|exchange>",
+          "action": "<verb: band|draw|discard|negate|prevent|modify_stats|search|shuffle|convert|protect|heal|banish|topdeck|ignore|decrease|reveal|exchange|choose_opponent|create_token|change_hand_size>",
           "effect_type": "instant" | "ongoing",
           "duration": "instant" | "this_turn" | "until_end_of_phase" | "while_condition" | "permanent",
           "target": {

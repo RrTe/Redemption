@@ -6,6 +6,7 @@ class ModifierType(str, Enum):
     CANNOT_BE_NEGATED = "cannot_be_negated"
     CANNOT_BE_INTERRUPTED = "cannot_be_interrupted"
     CANNOT_BE_PREVENTED = "cannot_be_prevented"
+    CANNOT_BE_IGNORED = "cannot_be_ignored"
     INSTEAD = "instead"
     LIMIT = "limit"
     REGARDLESS = "regardless"
