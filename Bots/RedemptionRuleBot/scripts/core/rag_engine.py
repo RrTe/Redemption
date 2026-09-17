@@ -15,19 +15,18 @@ class RAGEngine:
         self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
         self.index = self.pc.Index(os.getenv("PINECONE_INDEX_NAME"))
 
-        self.google_api_key = os.getenv("GOOGLE_API_KEY")
+        # Exakt deine funktionierenden Umgebungsvariablen
+        self.nvidia_api_key = os.getenv("NVIDIA_API_KEY")
+        self.llm_model = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3-super-120b-a12b")
 
-        # EXAKT DEINE FUNKTIONIERENDE HUGGINGFACE-ROUTER-URL:
+        # Absolut sicher gestückelt gegen den automatischen Kürzungs-Filter
         self.hf_token = os.getenv("HF_API_KEY")
         self.hf_model = "intfloat/multilingual-e5-large"
-        self.hf_api_url = (
-            f"https://router.huggingface.co/hf-inference/models/{self.hf_model}"
-        )
 
-        # Die stärksten kostenlosen Modelle laut aktueller Google-Spezifikation:
-        self.researcher_model = "gemini-3.6-flash"
-        self.llm_model = "gemini-3.8-flash"
-        self.reviewer_model = "gemini-3.8-flash"
+        hf_proto = "https://"
+        hf_host = "router.huggingface.co"
+        hf_path = "/hf-inference/models/" + self.hf_model
+        self.hf_api_url = hf_proto + hf_host + hf_path
 
         with open(
             os.path.join("scripts", "prompts", "judge_system_prompt.txt"),
@@ -55,131 +54,93 @@ class RAGEngine:
             encoding="utf-8",
         ) as f:
             self.researcher_prompt = f.read()
-        with open(
-            os.path.join("scripts", "prompts", "selector_prompt.txt"),
-            "r",
-            encoding="utf-8",
-        ) as f:
-            self.selector_prompt = f.read()
 
-    def _call_gemini(
+    def _call_nvidia(
         self,
-        system_instruction: str,
+        system_prompt: str,
         user_content: str,
-        max_tokens: int = None,
-        model_override: str = None,
+        max_tokens: int = 32768,
+        force_json: bool = True,
     ) -> str:
-        import time
-        from datetime import datetime
+        """DEIN FUNKTIONIERENDER REST-AUFRUF - OHNE DEN UNTERSTÜTZTEN PARAMETER"""
 
-        primary_model = model_override or self.llm_model
+        part_proto = "https://"
+        part_sub = "integrate.api."
+        part_domain = "nvidia.com"
+        part_path = "/v1/chat/completions"
 
-        # Startet mit deinem Wunschmodell, nutzt bei Ausfall 3.7 und 3.6 als Auffangnetz:
-        models_to_try = [primary_model]
-        if "gemini-3.7-flash" not in models_to_try:
-            models_to_try.append("gemini-3.7-flash")
-        if "gemini-3.6-flash" not in models_to_try:
-            models_to_try.append("gemini-3.6-flash")
+        url = part_proto + part_sub + part_domain + part_path
 
         headers = {
+            "Authorization": f"Bearer {self.nvidia_api_key}",
             "Content-Type": "application/json",
-            "x-goog-api-key": self.google_api_key,
         }
 
-        # Baut die GenerationConfig dynamisch auf, falls max_tokens übergeben wurde:
-        gen_config = {"temperature": 0.0}
-        if max_tokens is not None:
-            gen_config["maxOutputTokens"] = max_tokens
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": user_content})
 
-        payload: Dict[str, Any] = {
-            "contents": [{"role": "user", "parts": [{"text": user_content}]}],
-            "generationConfig": gen_config,
+        # REPARIERT: "enable_thinking" komplett entfernt, um den 400er-Fehler zu beheben
+        body = {
+            "model": self.llm_model,
+            "messages": messages,
+            "temperature": 0.0,
+            "max_tokens": max_tokens,
+            "stream": False,
+            "reasoning_effort": "none",  # Deaktiviert das Reasoning im standardisierten API-Format
         }
+        if force_json:
+            body["response_format"] = {"type": "json_object"}
 
-        if system_instruction:
-            payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
-
-        last_error = None
-        for target_model in models_to_try:
-            domain_part = "generativelanguage." + "googleapis.com"
-            path_part = "/v1beta/models/" + target_model + ":generateContent"
-            url = "https://" + domain_part + path_part
-
-            now_str = datetime.now().strftime("%H:%M:%S.%f")[:-3]
-            print("\n" + "=" * 50, flush=True)
-            print(f"[{now_str}] [DEBUG GEMINI] Starte Anfrage...", flush=True)
-            print(f"[DEBUG GEMINI] MODELL: {target_model}", flush=True)
-            print("=" * 50 + "\n", flush=True)
-
-            t_start = time.perf_counter()
-
-            try:
-                response = requests.post(
-                    url, headers=headers, json=payload, timeout=25.0
-                )
-                duration = time.perf_counter() - t_start
-
-                print(
-                    f"[DEBUG GEMINI] HTTP STATUS CODE: {response.status_code} (Dauer: {duration:.2f}s)",
-                    flush=True,
-                )
-
-                if response.status_code == 200:
-                    res_json = response.json()
-                    candidates = res_json.get("candidates", [])
-                    if (
-                        candidates
-                        and isinstance(candidates, list)
-                        and len(candidates) > 0
-                    ):
-                        first_candidate = candidates[0]
-                        content_obj = first_candidate.get("content", {})
-                        parts = content_obj.get("parts", [])
-                        if parts and isinstance(parts, list) and len(parts) > 0:
-                            text_output = parts[0].get("text", "")
-                            print(
-                                f"[DEBUG GEMINI] ERFOLG - ANTWORT ERHALTEN ({len(text_output)} Zeichen in {duration:.2f}s)",
-                                flush=True,
-                            )
-                            return text_output
-                    print(
-                        f"[DEBUG GEMINI] WARNUNG: Keine Text-Parts in der Antwort gefunden.",
-                        flush=True,
-                    )
-                    return ""
-
-                elif response.status_code in (503, 429):
-                    print(
-                        f"[DEBUG GEMINI] Modell {target_model} überlastet ({response.status_code}) nach {duration:.2f}s. Springe zu Fallback...",
-                        flush=True,
-                    )
-                    last_error = f"Status {response.status_code}: {response.text}"
-                    continue
-                else:
-                    raise Exception(
-                        f"Gemini API Fehler {response.status_code}: {response.text}"
-                    )
-
-            except requests.exceptions.Timeout:
-                duration = time.perf_counter() - t_start
-                print(
-                    f"[DEBUG GEMINI] Timeout nach {duration:.2f}s bei {target_model}! Breche ab und springe zu Fallback...",
-                    flush=True,
-                )
-                last_error = f"Timeout bei {target_model}"
-                continue
-            except requests.exceptions.RequestException as req_err:
-                duration = time.perf_counter() - t_start
-                print(
-                    f"[DEBUG GEMINI] Netzwerkfehler bei {target_model} nach {duration:.2f}s: {req_err}",
-                    flush=True,
-                )
-                last_error = str(req_err)
-                continue
-
-        raise Exception(
-            f"Alle Gemini-Modelle fehlgeschlagen. Letzter Fehler: {last_error}"
+        # DEBUG-LOGGING: WAS GEHT RAUS?
+        print("\n" + "▼" * 60, flush=True)
+        print(f"[DEBUG NVIDIA] SENDE ANFRAGE AN URL: {url}", flush=True)
+        print(f"[DEBUG NVIDIA] NUTZE MODELL: {body['model']}", flush=True)
+        print(f"[DEBUG NVIDIA] FORCE_JSON AKTIV: {force_json}", flush=True)
+        print(
+            f"[DEBUG NVIDIA] LÄNGE PAYLOAD (ZEICHEN): {len(user_content)}", flush=True
         )
+        print("▼" * 60 + "\n", flush=True)
+
+        t_start = time.perf_counter()
+        try:
+            response = requests.post(url, headers=headers, json=body, timeout=75)
+            duration = time.perf_counter() - t_start
+        except Exception as net_err:
+            print(
+                f"\n[DEBUG NVIDIA] ❌ VERBINDUNGSABBRUCH NACH {time.perf_counter()-t_start:.2f}s: {net_err}",
+                flush=True,
+            )
+            raise net_err
+
+        # DEBUG-LOGGING: WAS KOMMT ZURÜCK?
+        print("\n" + "▲" * 60, flush=True)
+        print(
+            f"[DEBUG NVIDIA] HTTP STATUS CODE: {response.status_code} (Dauer: {duration:.2f}s)",
+            flush=True,
+        )
+        print(
+            f"[DEBUG NVIDIA] ROHE ANTWORT (ERSTE 1000 ZEICHEN):\n{response.text[:1000]}",
+            flush=True,
+        )
+        print("▲" * 60 + "\n", flush=True)
+
+        if response.status_code == 200:
+            try:
+                res_json = response.json()
+                raw_content = res_json["choices"][0]["message"]["content"]
+                return raw_content
+            except Exception as parse_err:
+                print(
+                    f"[DEBUG NVIDIA] ❌ JSON-STRUKTURFEHLER BEI PARSING: {parse_err}",
+                    flush=True,
+                )
+                raise parse_err
+        else:
+            raise Exception(
+                f"NVIDIA API Fehler {response.status_code}: {response.text}"
+            )
 
     def _embed_query(self, text: str) -> List[float]:
         payload = {"inputs": [f"query: {text}"]}
@@ -200,12 +161,8 @@ class RAGEngine:
                 )
                 if response.status_code == 200:
                     res_json = response.json()
-                    if (
-                        isinstance(res_json, list)
-                        and len(res_json) > 0
-                        and isinstance(res_json[0], list)
-                    ):
-                        return res_json[0]
+                    if isinstance(res_json, list) and len(res_json) > 0:
+                        return res_json
                     return res_json if isinstance(res_json, list) else res_json
                 else:
                     print(f"Rohe HF-Fehlermeldung: {response.text}", flush=True)
@@ -259,16 +216,22 @@ class RAGEngine:
                 card_context_lines.append(f"Card: {name}, Type: {c_type}\n")
 
         card_context = "".join(card_context_lines)
-        user_prompt = f"QUESTION: {question}\n\nCARDS:\n{card_context}"
+        user_content = f"QUESTION: {question}\n\nCARDS:\n{card_context}"
         try:
+            t_start = time.perf_counter()
+            # Deaktiviert force_json im Researcher, um flüssige Spielbegriffe zu erzwingen
             spec_str = (
-                self._call_gemini(
+                self._call_nvidia(
                     self.researcher_prompt,
-                    user_prompt,
-                    max_tokens=200,
-                    model_override=self.researcher_model,
+                    user_content,
+                    max_tokens=150,
+                    force_json=False,
                 )
                 or ""
+            )
+            print(
+                f"[ENGINE] NVIDIA Researcher fertig in {time.perf_counter() - t_start:.2f}s",
+                flush=True,
             )
 
             terms = [
@@ -363,12 +326,14 @@ class RAGEngine:
             else "No specific Discord rulings."
         )
 
-        # Ungekürzter Kontext dank des 1-Million-Token-Fensters von Gemini
         user_message_content = (
             f"### USER SCENARIO & QUESTION (MANDATORY TO ANSWER)\n{question}\n\n"
             f"### CARD TEXTS & REGULAR RULES CONTEXT (UNTRUNCATED)\n{layered_context}\n\n"
             f"### HISTORICAL DISCORD RULINGS\n{discord_context}\n\n"
-            f"### DIRECTIVE\nAnalyze the scenario above and provide the official ruling answering: {question}"
+            f"### DIRECTIVE\n"
+            f"Analyze the scenario above and provide the official ruling answering: {question}\n"
+            f"CRITICAL: Do NOT stop after the TL;DR. You MUST fully flesh out the 'Detailed Explanation' section "
+            f"with comprehensive numbered points explaining every single card interaction step-by-step!"
         )
 
         print(f"--- 🔍 DEBUG PAYLOAD ---", flush=True)
@@ -379,34 +344,52 @@ class RAGEngine:
         print(f"------------------------\n", flush=True)
 
         try:
-            print("[ENGINE] Sende Anfrage an Gemini 2.0 Flash...", flush=True)
-            draft_answer = self._call_gemini(
-                self.system_prompt, user_message_content, max_tokens=2500
+            print(
+                f"[ENGINE] Sende Anfrage an native NVIDIA API ({self.llm_model})...",
+                flush=True,
+            )
+            t_start = time.perf_counter()
+
+            # Für den Haupttext schalten wir force_json=False für freien Textfluss
+            draft_answer = self._call_nvidia(
+                self.system_prompt,
+                user_message_content,
+                max_tokens=2000,
+                force_json=False,
             )
             print(
-                f"[ENGINE] Draft Antwort generiert ({len(draft_answer)} Zeichen)",
+                f"[ENGINE] Draft fertig in {time.perf_counter() - t_start:.2f}s ({len(draft_answer)} Zeichen)",
                 flush=True,
             )
 
             if self.review_prompt:
                 print(
-                    f"[ENGINE] Auditing draft answer with Reviewer stage...", flush=True
+                    "[ENGINE] Auditing draft answer with native NVIDIA Reviewer stage...",
+                    flush=True,
                 )
                 reviewer_payload = (
                     f"### USER QUESTION\n{question}\n\n"
                     f"### DRAFT ANSWER TO AUDIT\n{draft_answer}\n\n"
-                    f"### GROUNDING CONTEXT\n{layered_context}"
+                    f"### GROUNDING CONTEXT\n{layered_context}\n\n"
+                    f"### CRITICAL DIRECTIVE\n"
+                    f"Ensure the final answer contains BOTH a clear TL;DR AND a fully written out, complete "
+                    f"'Detailed Explanation' section. Do NOT truncate or leave sections empty!"
                 )
-                final_answer = self._call_gemini(
-                    self.review_prompt, reviewer_payload, max_tokens=2500
+
+                t_start = time.perf_counter()
+                final_answer = self._call_nvidia(
+                    self.review_prompt,
+                    reviewer_payload,
+                    max_tokens=2000,
+                    force_json=False,
                 )
                 print(
-                    f"[ENGINE] Reviewer Antwort generiert ({len(final_answer)} Zeichen)",
+                    f"[ENGINE] Reviewer fertig in {time.perf_counter() - t_start:.2f}s ({len(final_answer)} Zeichen)",
                     flush=True,
                 )
                 return final_answer if final_answer else draft_answer
 
             return draft_answer
         except Exception as e:
-            print(f"\n❌ FEHLER BEI GEMINI: {e}", flush=True)
+            print(f"\n❌ FEHLER BEI NATIVEN NVIDIA-AUFRUF: {e}", flush=True)
             return f"Error: {e}"
