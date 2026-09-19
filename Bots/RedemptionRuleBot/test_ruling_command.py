@@ -34,6 +34,7 @@ async def test_ruling_flow():
 
     # --- HIER DEINE TEST-FRAGE EINTRAGEN ---
     test_question = (
+        "Situation:"
         "Hero rescues --> Antiochus' Army blocks and activated Abom --> "
         "Hero plays teaching in parables to negate Abom --> In regular inish, "
         "Antiochus' Army plays Allowed to be trampled. Does Abom reactivate. "

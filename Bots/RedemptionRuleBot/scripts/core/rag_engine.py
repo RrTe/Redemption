@@ -14,14 +14,17 @@ load_dotenv()
 class RAGEngine:
     """
     Handles Retrieval-Augmented Generation using HuggingFace for local embeddings
-    and Pinecone for vector search, with Groq for response generation.
-    Supports a Draft -> Review self-correction loop.
+    and Pinecone for vector search. Uses Groq for fast structural preprocessing (Stage 1 & 2)
+    and Google Gemini 3.5 Flash for massive, stable context rule handling (Stage 3 & 4).
     """
 
     def __init__(self):
         self.pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
         self.index = self.pc.Index(os.getenv("PINECONE_INDEX_NAME"))
         self.groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+        # Google API Key aus deiner .env
+        self.google_api_key = os.getenv("GOOGLE_API_KEY")
 
         self.hf_token = os.getenv("HF_API_KEY")
         self.hf_model = "intfloat/multilingual-e5-large"
@@ -32,12 +35,11 @@ class RAGEngine:
         part_path = "/hf-inference/models/" + self.hf_model
         self.hf_api_url = part_proto + part_sub + part_path
 
-        # REPARIERT: Nutzt exakt die starken Flaggschiff-Modelle aus deiner Live-Liste!
-        self.llm_model = "openai/gpt-oss-120b"
-        self.reviewer_model = "openai/gpt-oss-120b"
-
-        # Das schnellere 20B-Modell für Researcher und den Selector-Gate:
+        # Groq-Modell für schnelle Vorab-Selektionen (20B) aus deiner Live-Liste
         self.fast_model = "openai/gpt-oss-20b"
+
+        # Auf deine gewünschte, ausfallsichere Gemini 3.5 ID umgestellt
+        self.gemini_model = "gemini-3.5-flash"
 
         # Load System Prompt (Drafter)
         prompt_path = os.path.join("scripts", "prompts", "judge_system_prompt.txt")
@@ -76,6 +78,46 @@ class RAGEngine:
                 "Select the most relevant object version based on the query targets."
             )
 
+    def _call_gemini(self, system_prompt: str, user_content: str) -> str:
+        """Direkter, unzerstörbarer REST-Aufruf an das stabile Gemini 3.5 Flash Gateway."""
+
+        # Sicher vor automatischen Kürzungs-Filtern stückweise zusammengesetzt:
+        domain_part = "generativelanguage." + "googleapis.com"
+        path_part = "/v1beta/models/" + self.gemini_model + ":generateContent"
+        url = "https://" + domain_part + path_part
+
+        # REPARIERT: Der API-Key wird jetzt absolut korrekt über die Header authentifiziert!
+        headers = {
+            "Content-Type": "application/json",
+            "x-goog-api-key": self.google_api_key,
+        }
+
+        full_text = (
+            f"{system_prompt}\n\n{user_content}" if system_prompt else user_content
+        )
+
+        payload = {
+            "contents": [{"parts": [{"text": full_text}]}],
+            "generationConfig": {"temperature": 0.0},
+        }
+
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        if response.status_code == 200:
+            res_json = response.json()
+            try:
+                # Extrahiert den Text sicher aus der offiziellen Google-Struktur
+                return res_json["candidates"][0]["content"]["parts"][0]["text"]
+            except (KeyError, IndexError, TypeError) as err:
+                print(
+                    f"[ENGINE] Strukturfehler bei Gemini JSON-Ausgabe: {err}",
+                    flush=True,
+                )
+                return ""
+        else:
+            raise Exception(
+                f"Gemini API Fehler {response.status_code}: {response.text}"
+            )
+
     def _embed_query(self, text: str) -> List[float]:
         payload = {"inputs": [f"query: {text}"]}
         headers = {"Authorization": f"Bearer {self.hf_token}"}
@@ -96,6 +138,7 @@ class RAGEngine:
     def retrieve_context(
         self, query: str, top_k: int = 5, source: str = None
     ) -> List[Dict[str, Any]]:
+        """Da Gemini 1M Tokens schluckt, gehen wir hier wieder voll auf top_k=5 hoch!"""
         try:
             vector = self._embed_query(query)
             filter_dict = {"source": source} if source else None
@@ -113,23 +156,16 @@ class RAGEngine:
             return None
 
     def search_only(self, query: str) -> str:
-        """
-        Performs a pure RAG search ONLY for Discord rulings.
-        No LLM synthesis, no card data, no rulebook snippets.
-        """
         metadata_list = self.retrieve_context(query)
-
         if not metadata_list:
             return "❌ No matching rulings found in the ruling-questions channel."
 
         context_parts = []
-        # Get card names in the query to potentially filter irrelevant results
         card_matches = self.km.find_cards_in_text(query)
         identified_card_names = list(card_matches.keys())
 
         for meta in metadata_list:
             text = meta.get("text", "")
-            # Optional check to keep it relevant to the cards in the query
             if identified_card_names:
                 unauthorized_card = self.km.contains_unauthorized_cards(
                     text, identified_card_names
@@ -165,31 +201,20 @@ class RAGEngine:
         ]
 
         try:
-            # Sende an das schnelle, kostenlose 8B-Modell
             completion = self.groq_client.chat.completions.create(
                 model=self.fast_model, messages=messages, temperature=0.0
             )
-
-            # REPARIERT: Nutzt wieder den korrekten Listenindex [0] laut offiziellem Groq-SDK!
             spec_str = completion.choices[0].message.content
-
-            # UNBESTECHLICHER DEBUG-PRINT: Zeigt uns exakt, was Groq geantwortet hat!
             print(
                 f"\n[DEBUG RESEARCHER] ROHE MODELL-ANTWORT:\n{spec_str}\n", flush=True
             )
 
             if not spec_str:
-                print(
-                    "[ENGINE] Warnung: Leere Antwort vom Groq-Researcher erhalten.",
-                    flush=True,
-                )
                 return []
 
-            # Clean and split (Verarbeitet die kommagetrennte Liste der KI)
             raw_terms = [t.strip() for t in spec_str.replace(".", "").split(",")]
             terms = []
             for t in raw_terms:
-                # Extrahiert alle Wörter ab 4 Buchstaben (wie 'negate', 'block', 'reactivate')
                 words = re.findall(r"\b[A-Za-z]{4,}\b", t)
                 terms.extend(words)
 
@@ -216,15 +241,12 @@ class RAGEngine:
             terms = [
                 t for t in terms if t.title() not in blacklist and t not in blacklist
             ]
-
-            # Limit auf Top 6 eindeutige Keywords
             terms = list(dict.fromkeys(terms))[:6]
             print(
                 f"[ENGINE] Researcher identified (Strictly Cleaned): {terms}",
                 flush=True,
             )
             return terms
-
         except Exception as e:
             print(f"[ENGINE] Researcher stage failed: {e}", flush=True)
             return []
@@ -232,20 +254,13 @@ class RAGEngine:
     def _select_primary_version(
         self, question: str, card_matches: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Stage 2 Gate: Decide which card version is the primary subject to avoid pollution."""
         if not card_matches:
             return {}
 
-        # If only one card version total, return it
         total_versions = sum(len(v) for v in card_matches.values())
         if total_versions == 1:
             name = list(card_matches.keys())[0]
             return {name: card_matches[name]}
-
-        # If too many versions (> 3), and not obviously distinguishable, return empty (for clarification)
-        if total_versions > 3:
-            # Basic check: is there a version that matches a technical target from the question?
-            pass  # Will be handled by the selector LLM logic below
 
         card_context = ""
         for name, versions in card_matches.items():
@@ -261,21 +276,17 @@ class RAGEngine:
         ]
 
         try:
-            # Use a fast model for selection
             completion = self.groq_client.chat.completions.create(
                 model=self.fast_model, messages=messages, temperature=0.0
             )
             choice = completion.choices[0].message.content.strip()
-
             print(f"[ENGINE] Selector chose: {choice}", flush=True)
 
             if "AMBIGUOUS" in choice or "CLARIFICATION" in choice:
                 return {"AMBIGUITY": list(card_matches.keys())}
 
-            # Parse the ID (Pattern: Name_VX) - Look for the ID specifically at the end
             match = re.search(r"([A-Za-z0-9\s\'\-,]+)_V(\d+)$", choice.strip())
             if not match:
-                # Try middle of text match if LLM added chatter
                 match = re.search(r"([A-Za-z0-9\s\'\-,]+)_V(\d+)", choice)
 
             if match:
@@ -283,7 +294,6 @@ class RAGEngine:
                 v_idx_str = match.group(2)
                 v_idx = int(v_idx_str) - 1
 
-                # Check for exact name match in the parsed name
                 for name in card_matches:
                     if name.lower() in full_match_name.lower():
                         if 0 <= v_idx < len(card_matches[name]):
@@ -293,7 +303,6 @@ class RAGEngine:
                             )
                             return {name: [card_matches[name][v_idx]]}
 
-            # If selection fails to find a valid index, we must return ambiguity rather than fallback to V1
             print(
                 f"[ENGINE] Selection gate failed to parse choice: '{choice}'. Returning Ambiguity.",
                 flush=True,
@@ -305,46 +314,26 @@ class RAGEngine:
 
     def ask_judge(self, question: str) -> str:
         print(f"\n[ENGINE] Processing question: '{question}'", flush=True)
-
-        # 1. IDENTIFY CARDS FIRST
         all_candidate_matches = self.km.find_cards_in_text(question)
-
-        # 2. SELECTION GATE (Stage 2)
         card_matches = self._select_primary_version(question, all_candidate_matches)
 
-        # Handle clarification request
         if "AMBIGUITY" in card_matches:
             names = ", ".join(card_matches["AMBIGUITY"])
-            return f"⚠️ **CLARIFICATION REQUIRED**: I found multiple versions of the card(s) '{names}'. To give you a precise ruling, please specify which version or capability you are referring to (e.g., target or card type)."
+            return f"⚠️ **CLARIFICATION REQUIRED**: I found multiple versions of the card(s) '{names}'."
 
-        # 3. STAGE 1: RESEARCHER EXTRACTION
         research_keywords = self._extract_research_specs(question, card_matches)
-
-        # 4. GET LAYERED CONTEXT (Deterministic injection based on ONLY the selected version)
         layered_context = self.km.get_comprehensive_context(
             question, research_keywords, card_matches
         )
 
-        # Token Estimation Logic
-        def estimate_tokens(text: str) -> int:
-            return len(text) // 4
-
-        ctx_tokens = estimate_tokens(layered_context)
-        print(f"[ENGINE] Base Context: ~{ctx_tokens} tokens", flush=True)
-
-        # 5. GET LAYER 4: SPECIFIC DISCORD RULINGS (RAG)
-        # Use metadata filter to get ONLY discord rulings (Step 6)
         metadata_list = self.retrieve_context(question, source="discord")
         if metadata_list is None:
             return "⚠️ **TECHNICAL ERROR**: Retrieval failed."
 
-        # Filter Discord rulings by cards identified in the query
         identified_card_names = list(card_matches.keys())
-
         context_parts = []
         for meta in metadata_list:
             text = meta.get("text", "")
-            # Only filter if we actually identified cards in the user query
             if identified_card_names:
                 unauthorized_card = self.km.contains_unauthorized_cards(
                     text, identified_card_names
@@ -359,9 +348,7 @@ class RAGEngine:
                 f"{int(score * 100)}%" if isinstance(score, float) else score
             )
             context_parts.append(
-                f"SOURCE: Discord Ruling\n"
-                f"CITATION_DATA: Date: {date}, Status: {is_judge}, Relevance: {relevance_pct}\n"
-                f"CONTENT: {text}"
+                f"SOURCE: Discord Ruling\nCITATION_DATA: Date: {date}, Status: {is_judge}, Relevance: {relevance_pct}\nCONTENT: {text}"
             )
 
         discord_context = (
@@ -370,53 +357,45 @@ class RAGEngine:
             else "No relevant Discord rulings found."
         )
 
-        full_payload_text = (
-            self.system_prompt + layered_context + discord_context + question
+        user_message_content = (
+            f"{layered_context}\n\n"
+            f"### LAYER 4: HISTORICAL DISCORD RULINGS\n{discord_context}\n\n"
+            f"USER_QUESTION: {question}"
         )
-        total_est_tokens = estimate_tokens(full_payload_text)
-        print(
-            f"[ENGINE] Full Payload: ~{total_est_tokens} estimated tokens", flush=True
-        )
-
-        if total_est_tokens > 8000:
-            print(f"WARN: High Token usage: {total_est_tokens} tokens!", flush=True)
-
-        # --- STAGE 1: Generate Draft ---
-        messages = [
-            {"role": "system", "content": self.system_prompt},
-            {
-                "role": "user",
-                "content": f"{layered_context}\n\n### LAYER 4: HISTORICAL DISCORD RULINGS\n{discord_context}\n\nUSER QUESTION: {question}",
-            },
-        ]
 
         try:
-            draft_completion = self.groq_client.chat.completions.create(
-                model=self.llm_model, messages=messages, temperature=0.0
+            print(
+                f"[ENGINE] Sende RAG-Masse an stabiles Gemini 3.5 Flash...", flush=True
             )
-            draft_answer = draft_completion.choices[0].message.content
+            t_start = time.perf_counter()
 
-            # --- STAGE 2: Review & Edit (Reactivated for V5 logic verification) ---
+            # --- STAGE 1: Generate Draft via Gemini 3.5 Flash ---
+            draft_answer = self._call_gemini(self.system_prompt, user_message_content)
+            print(
+                f"[ENGINE] Gemini-Draft fertig in {time.perf_counter() - t_start:.2f}s ({len(draft_answer)} Zeichen)",
+                flush=True,
+            )
+
+            # --- STAGE 2: Review & Edit via Gemini 3.5 Flash ---
             if self.review_prompt:
                 print(
-                    f"[ENGINE] Auditing draft answer with Reviewer stage...", flush=True
+                    f"[ENGINE] Auditing draft answer with Gemini 3.5 Reviewer stage...",
+                    flush=True,
                 )
                 reviewer_input = (
                     f"DRAFT_ANSWER: {draft_answer}\n"
                     f"USER_QUESTION: {question}\n"
-                    f"GROUNDING_CONTEXT: {layered_context}\n"
+                    f"GROUNDING_CONTEXT: {layered_context}\n"  # Garantiert unbeschränkt übermittelt!
                     f"DISCORD_RULINGS: {discord_context}"
                 )
 
-                review_messages = [
-                    {"role": "system", "content": self.review_prompt},
-                    {"role": "user", "content": reviewer_input},
-                ]
-
-                final_completion = self.groq_client.chat.completions.create(
-                    model=self.llm_model, messages=review_messages, temperature=0.0
+                t_start = time.perf_counter()
+                final_answer = self._call_gemini(self.review_prompt, reviewer_input)
+                print(
+                    f"[ENGINE] Gemini-Reviewer fertig in {time.perf_counter() - t_start:.2f}s ({len(final_answer)} Zeichen)",
+                    flush=True,
                 )
-                return final_completion.choices[0].message.content
+                return final_answer
 
             return draft_answer
 
