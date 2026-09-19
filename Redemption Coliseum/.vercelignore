@@ -1,0 +1,21 @@
+# 1. Unabhängige Hauptordner komplett ignorieren
+Bots/
+Tools/
+
+# 2. Unnötige Teile innerhalb von "Redemption Coliseum" ignorieren
+Redemption Coliseum/.agents/
+Redemption Coliseum/docs/
+Redemption Coliseum/examples/
+Redemption Coliseum/server/
+
+# 3. Einzelne Dateien im Projekt-Unterordner ignorieren
+Redemption Coliseum/.aiexclude
+Redemption Coliseum/.rooignore
+Redemption Coliseum/README.md
+Redemption Coliseum/architecture_audit*
+
+# 4. Globale Wildcards für Build-Müll (gilt für alle Unterordner)
+**/node_modules/
+**/dist/
+**/.next/
+**/.cache/
