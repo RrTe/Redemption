@@ -663,17 +663,32 @@ def run_ability_parser() -> None:
         card_id = str(card.get("Id", "")).strip() or (card.get("OfficialSet", "") + "_" + card.get("Name", ""))
         card_name = get_card_name(card)
         sides_dict = card.get("CardSides", {})
+        shared_data = sides_dict.get("shared", {}) if isinstance(sides_dict.get("shared"), dict) else {}
+        top_data = sides_dict.get("top", {}) if isinstance(sides_dict.get("top"), dict) else {}
+        bottom_data = sides_dict.get("bottom") if isinstance(sides_dict.get("bottom"), dict) else None
 
         card_logic_entry = CardLogic(card_identifier=card_id)
         card_all_sides_ok = True
 
-        for side_key, side_data in sides_dict.items():
-            if not isinstance(side_data, dict):
-                continue
+        # Determine sides to process without redundant duplication:
+        sides_to_process = []
+        shared_sa = (shared_data.get("SpecialAbility") or "").strip()
+        top_sa = (top_data.get("SpecialAbility") or "").strip()
+        bottom_sa = (bottom_data.get("SpecialAbility") or "").strip() if bottom_data else ""
 
+        if shared_sa:
+            sides_to_process.append(("shared", shared_sa))
+        if top_sa:
+            sides_to_process.append(("top", top_sa))
+        if bottom_sa:
+            sides_to_process.append(("bottom", bottom_sa))
+
+        if not sides_to_process:
+            # Pure meek/vanilla card with no special ability on any side:
+            sides_to_process = [("shared", "")]
+
+        for side_key, raw_ability in sides_to_process:
             total_sides += 1
-            raw_ability = side_data.get("SpecialAbility", "")
-
             side_logic, failure_reason = parse_side_ability(card_name, side_key, raw_ability)
 
             if side_logic is not None:
@@ -689,9 +704,9 @@ def run_ability_parser() -> None:
                     "reason": failure_reason
                 })
 
-        # All-or-nothing per side is enforced in parse_side_ability().
-        # Save card if it has valid parsed sides.
-        if card_logic_entry.sides:
+        # Save card only if all its real sides were successfully parsed.
+        # If any side failed, the card is left for AI generation (Stage 9).
+        if card_all_sides_ok and card_logic_entry.sides:
             output_logic_map[card_id] = card_logic_entry.model_dump()
 
     # Ensure output directory exists

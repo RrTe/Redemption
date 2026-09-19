@@ -57,8 +57,8 @@ def load_unparsed_sample(offset: int = 0, max_items: int = 10, existing: Optiona
             if m:
                 if current and "raw_ability" in current:
                     cid, side = current["card_identifier"], current["side"]
-                    k = f"{cid}_{side}"
-                    if not (existing and k in existing):
+                    is_done = existing and any(f"{cid}_{s}" in existing for s in (side, "shared", "top"))
+                    if not is_done:
                         seen += 1
                         if seen > offset:
                             entries.append(current)
@@ -71,8 +71,8 @@ def load_unparsed_sample(offset: int = 0, max_items: int = 10, existing: Optiona
                 current["reason"] = line[7:].strip()
         if current and "raw_ability" in current and len(entries) < max_items:
             cid, side = current["card_identifier"], current["side"]
-            k = f"{cid}_{side}"
-            if not (existing and k in existing):
+            is_done = existing and any(f"{cid}_{s}" in existing for s in (side, "shared", "top"))
+            if not is_done:
                 seen += 1
                 if seen > offset:
                     entries.append(current)
