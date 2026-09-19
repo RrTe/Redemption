@@ -1,20 +1,27 @@
-# 1. Unabhängige Hauptordner komplett ignorieren
-Bots/
-Tools/
+# 1. Alles auf oberster Ebene ignorieren
 
-# 2. Unnötige Teile innerhalb von "Redemption Coliseum" ignorieren
-Redemption Coliseum/.agents/
-Redemption Coliseum/docs/
-Redemption Coliseum/examples/
-Redemption Coliseum/server/
+/\*
 
-# 3. Einzelne Dateien im Projekt-Unterordner ignorieren
-Redemption Coliseum/.aiexclude
-Redemption Coliseum/.rooignore
-Redemption Coliseum/README.md
-Redemption Coliseum/architecture_audit*
+# 2. Nur benötigte Ordner erlauben
 
-# 4. Globale Wildcards für Build-Müll (gilt für alle Unterordner)
+!/Redemption\ Coliseum
+!/shared
+!/package.json
+!/package-lock.json
+
+# 3. Nicht benötigte Unterordner innerhalb des Projekts ausschließen
+
+Redemption\ Coliseum/.agents/
+Redemption\ Coliseum/docs/
+Redemption\ Coliseum/examples/
+Redemption\ Coliseum/server/
+Redemption\ Coliseum/.aiexclude
+Redemption\ Coliseum/.rooignore
+Redemption\ Coliseum/README.md
+Redemption\ Coliseum/architecture_audit\*
+
+# 4. Temporäre Build-Verzeichnisse ausschließen
+
 **/node_modules/
 **/dist/
 **/.next/
