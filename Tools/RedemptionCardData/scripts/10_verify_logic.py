@@ -19,7 +19,8 @@ from models.logic.card_logic import CardLogic
 from models.enums.selection_mode import SelectionMode
 from models.enums.zone import Zone
 from models.enums.action_verb import ActionVerb
-from utils.card_linker import CardLinker
+from utils.card_linker import CardLinker, normalize_chained_targets
+from utils.card_helpers import get_card_name
 
 CONFIG_FILE = BASE_DIR / "config.json"
 with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
@@ -54,21 +55,31 @@ def verify_card_logic(
         return [f"Schema validation failure: {e}"], None
 
     for side_key, side_logic in card_logic.sides.items():
+        normalize_chained_targets(side_logic)
         for ability in side_logic.abilities:
-            # Check effect sequential integrity
-            seen_steps = set()
+            # Check sequential integrity within costs
+            seen_cost_steps = set()
+            for cost in ability.costs:
+                if cost.step in seen_cost_steps:
+                    issues.append(f"Duplicate step index {cost.step} in costs of '{ability.ability_id}' ({side_key})")
+                seen_cost_steps.add(cost.step)
+
+            # Check sequential integrity and chained references within effects
+            seen_eff_steps = set()
+            prior_steps = set(seen_cost_steps)
             for eff in ability.effects:
-                if eff.step in seen_steps:
+                if eff.step in seen_eff_steps:
                     issues.append(f"Duplicate step index {eff.step} in ability '{ability.ability_id}' ({side_key})")
-                seen_steps.add(eff.step)
+                seen_eff_steps.add(eff.step)
 
                 # Check chained target reference validity
                 if eff.target and eff.target.selection_mode == SelectionMode.CHAINED_TARGET:
                     ref = eff.target.ref_step
                     if ref is None:
                         issues.append(f"Step {eff.step} uses CHAINED_TARGET but ref_step is missing in '{ability.ability_id}'")
-                    elif ref >= eff.step or ref not in seen_steps:
+                    elif ref >= eff.step or ref not in prior_steps:
                         issues.append(f"Step {eff.step} references non-prior step {ref} in '{ability.ability_id}'")
+                prior_steps.add(eff.step)
 
                 # Check Land of Bondage constraints per REG
                 if eff.destination == Zone.LAND_OF_BONDAGE:
@@ -106,16 +117,34 @@ def run_logic_verifier() -> None:
         sys.exit(1)
 
     linker: CardLinker | None = None
+    id_to_meta: Dict[str, tuple[str, str]] = {}
     if CARDS_EXT_FILE.exists():
         print(f"Loading extended cards for ID linking from: {CARDS_EXT_FILE}")
         with CARDS_EXT_FILE.open("r", encoding="utf-8") as f:
             ext_cards = json.load(f).get("cards", [])
             linker = CardLinker(ext_cards)
+            id_to_meta = {str(c.get("Id", "")).strip(): (get_card_name(c), c.get("OfficialSet", "")) for c in ext_cards}
             print(f"CardLinker initialized with {len(linker._index)} cards.")
 
     print(f"Loading raw card abilities from: {INPUT_FILE}")
     with INPUT_FILE.open("r", encoding="utf-8") as f:
         raw_map: Dict[str, Dict[str, Any]] = json.load(f)
+
+    # Merge AI generated abilities (Stage 9)
+    AI_INPUT_FILE = BASE_DIR / "data" / "ai_generated_abilities.json"
+    if AI_INPUT_FILE.exists():
+        print(f"Merging AI generated abilities from: {AI_INPUT_FILE}")
+        with AI_INPUT_FILE.open("r", encoding="utf-8") as f_ai:
+            ai_data = json.load(f_ai)
+        for entry in ai_data.values():
+            cid = str(entry.get("card_id", "")).strip()
+            side = entry.get("side", "shared")
+            ast = entry.get("ast")
+            if not cid or not ast:
+                continue
+            if cid not in raw_map:
+                raw_map[cid] = {"card_identifier": cid, "sides": {}}
+            raw_map[cid]["sides"][side] = ast
 
     total_cards = len(raw_map)
     clean_cards = 0
@@ -126,12 +155,20 @@ def run_logic_verifier() -> None:
     print(f"Verifying {total_cards} card logic trees...")
     for card_id, card_data in raw_map.items():
         card_issues, linked_data = verify_card_logic(card_id, card_data, linker=linker)
+        meta_name, meta_set = id_to_meta.get(card_id, ("", ""))
+        node = linked_data or card_data
+        entry_payload = {
+            "card_id": card_id,
+            "card_name": meta_name or card_data.get("card_name", ""),
+            "set": meta_set or card_data.get("set", ""),
+            "sides": node.get("sides", {})
+        }
         if card_issues:
             total_issues += len(card_issues)
             issue_report[card_id] = card_issues
         else:
             clean_cards += 1
-            verified_distribution_map[card_id] = linked_data or card_data
+            verified_distribution_map[card_id] = entry_payload
 
     # Ensure output dist directory exists
     OUTPUT_LOGIC_FILE.parent.mkdir(parents=True, exist_ok=True)

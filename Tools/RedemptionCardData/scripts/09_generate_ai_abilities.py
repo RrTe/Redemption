@@ -6,10 +6,12 @@ Pydantic JSON schema constraints, automatic resume, and 1-turn self-correction r
 
 from __future__ import annotations
 import argparse
+import concurrent.futures
 import json
 from pathlib import Path
 import re
 import sys
+import threading
 import time
 from typing import Any, Dict, List, Optional
 from pydantic import ValidationError
@@ -20,13 +22,14 @@ sys.path.extend([str(Path(__file__).resolve().parent), str(BASE_DIR)])
 from models.logic.card_logic import CardSideLogic
 from ability_prompt import build_system_prompt
 from ai_client import load_env, query_llm_messages, QuotaExhaustedError
+from utils.finding_logger import log_finding, resolve_card_findings, get_findings_summary, FINDINGS_FILE
+from utils.card_linker import CardLinker, link_side_logic_targets, normalize_chained_targets
 
-CONFIG_FILE = BASE_DIR / "config.json"
-with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
-    _config = json.load(_cf)
+_config = json.loads((BASE_DIR / "config.json").read_text(encoding="utf-8")) if (BASE_DIR / "config.json").exists() else {}
 
 UNPARSED_LOG = BASE_DIR / _config.get("unparsed_abilities_log", "data/unparsed_abilities.log")
 AI_OUTPUT_FILE = BASE_DIR / "data" / "ai_generated_abilities.json"
+CARDS_EXT_FILE = BASE_DIR / _config.get("cards_extended_with_ordir_fuzzy", "data/cards_extended_with_ordir_fuzzy.json")
 
 
 def load_unparsed_sample(offset: int = 0, max_items: int = 10, existing: Optional[set] = None) -> List[Dict[str, str]]:
@@ -53,8 +56,8 @@ def load_unparsed_sample(offset: int = 0, max_items: int = 10, existing: Optiona
             m = re.match(r"^\[(.*?)\]\s*\((.*?)\)\s*(.*)$", line)
             if m:
                 if current and "raw_ability" in current:
-                    cid, name, side = current["card_identifier"], current["card_name"], current["side"]
-                    k = f"{cid}_{name}_{side}" if cid != name else f"{name}_{side}"
+                    cid, side = current["card_identifier"], current["side"]
+                    k = f"{cid}_{side}"
                     if not (existing and k in existing):
                         seen += 1
                         if seen > offset:
@@ -67,8 +70,8 @@ def load_unparsed_sample(offset: int = 0, max_items: int = 10, existing: Optiona
             elif line.startswith("Reason:") and current:
                 current["reason"] = line[7:].strip()
         if current and "raw_ability" in current and len(entries) < max_items:
-            cid, name, side = current["card_identifier"], current["card_name"], current["side"]
-            k = f"{cid}_{name}_{side}" if cid != name else f"{name}_{side}"
+            cid, side = current["card_identifier"], current["side"]
+            k = f"{cid}_{side}"
             if not (existing and k in existing):
                 seen += 1
                 if seen > offset:
@@ -99,6 +102,7 @@ def _process_single_card(backend: str, prompt: str, name: str, raw_ability: str 
         data = json.loads(raw_resp)
         validated = CardSideLogic.model_validate(data)
     except (json.JSONDecodeError, ValidationError) as err:
+        log_finding(name, "SCHEMA_ERROR", str(err), resolved=False, raw_ability=raw_ability)
         print(f" [RETRY] Validation error for {name}: {err}\n Requesting self-correction...", flush=True)
         time.sleep(2.0)
         correction_msg = (
@@ -113,43 +117,89 @@ def _process_single_card(backend: str, prompt: str, name: str, raw_ability: str 
         retry_resp = query_llm_messages(backend, retry_messages)
         retry_data = json.loads(retry_resp)
         validated = CardSideLogic.model_validate(retry_data)
+        log_finding(name, "SCHEMA_ERROR", f"Auto-corrected: {err}", resolved=True, raw_ability=raw_ability)
         print(f" [OK-RETRY] Successfully self-corrected schema for {name}!", flush=True)
 
-    # In-flight fact invariant check (numbers, modifiers, primary actions)
+    # In-flight fact invariant & chained target check
     if validated and raw_ability:
-        passed_facts, fact_issues = verify_fact_matrix(raw_ability, extract_ast_facts(validated))
-        if not passed_facts:
-            print(f" [FACT-RETRY] Fact check issues for {name}: {fact_issues}\n Requesting factual correction...", flush=True)
+        _, fact_issues = verify_fact_matrix(raw_ability, extract_ast_facts(validated))
+        ambig_issues = normalize_chained_targets(validated)
+        issues = fact_issues + ambig_issues
+        if issues:
+            log_finding(name, "VALIDATION_ISSUE", ", ".join(issues), resolved=False, raw_ability=raw_ability)
+            print(f" [RETRY-ISSUES] Issues for {name}: {issues}\n Requesting correction...", flush=True)
             time.sleep(2.0)
-            fact_msg = (
-                f"Your JSON missed the following factual card mechanics from the text:\n"
-                f"{', '.join(fact_issues)}\n\n"
-                "Please update the JSON to accurately include these mechanics and return ONLY the corrected JSON."
+            corr_msg = (
+                f"Your JSON had the following issues:\n{', '.join(issues)}\n\n"
+                "Please fix these issues (specify ref_step for chained targets, include missing facts) and return ONLY valid JSON."
             )
             retry_messages = [
                 {"role": "user", "content": prompt},
                 {"role": "assistant", "content": raw_resp},
-                {"role": "user", "content": fact_msg}
+                {"role": "user", "content": corr_msg}
             ]
-            retry_resp = query_llm_messages(backend, retry_messages)
             try:
+                retry_resp = query_llm_messages(backend, retry_messages)
                 retry_data = json.loads(retry_resp)
                 validated = CardSideLogic.model_validate(retry_data)
-                print(f" [OK-FACT-RETRY] Successfully fixed facts for {name}!", flush=True)
+                normalize_chained_targets(validated)
+                log_finding(name, "VALIDATION_ISSUE", f"Auto-fixed: {', '.join(issues)}", resolved=True, raw_ability=raw_ability)
+                print(f" [OK-RETRY] Successfully fixed issues for {name}!", flush=True)
             except Exception as e:
-                print(f" [WARN] Fact retry could not parse: {e}. Keeping previous valid AST.", flush=True)
+                print(f" [WARN] Correction retry could not parse: {e}. Keeping previous valid AST.", flush=True)
 
     return validated
 
 
+def _worker_task(
+    item: Dict[str, str], backend: str, sys_prompt: str,
+    results: Dict[str, Any], lock: threading.Lock, stats: Dict[str, int],
+    linker: Optional[CardLinker] = None
+) -> None:
+    """Worker task processing a single card ability in parallel."""
+    cid, name, raw = item["card_identifier"], item["card_name"], item["raw_ability"]
+    card_key = f"{cid}_{item['side']}"
+    prompt = f"{sys_prompt}\n\nParse this card ability for card '{name}':\n\"{raw}\""
+    try:
+        validated = _process_single_card(backend, prompt, name, raw_ability=raw)
+        if validated:
+            normalize_chained_targets(validated)
+            if linker:
+                link_side_logic_targets(validated, linker)
+            with lock:
+                results[card_key] = {
+                    "card_id": cid,
+                    "card_name": name,
+                    "side": item["side"],
+                    "raw_ability": raw,
+                    "ast": validated.model_dump()
+                }
+                stats["success"] += 1
+                for _ in range(3):
+                    try:
+                        AI_OUTPUT_FILE.write_text(json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8")
+                        break
+                    except OSError:
+                        time.sleep(0.5)
+                resolve_card_findings(name)
+                print(f" [OK] Validated {name} ({stats['success']}/{stats['total']})", flush=True)
+    except QuotaExhaustedError as qe:
+        log_finding(name, "QUOTA_EXHAUSTED", str(qe), resolved=False, raw_ability=raw, card_identifier=cid)
+        print(f"\n[FATAL] Quota exhausted on card '{name}': {qe}", flush=True)
+    except Exception as e:
+        log_finding(name, "EXTRACTION_FAILED", str(e), resolved=False, raw_ability=raw, card_identifier=cid)
+        print(f" [FAIL] Failed {name}: {e}", flush=True)
+
+
 def run_ai_generator() -> None:
-    """Batch-processes unparsed abilities using the available LLM backend."""
+    """Batch-processes unparsed abilities using concurrent worker threads."""
     parser = argparse.ArgumentParser(description="Stage 9: AI Ability Extractor")
-    parser.add_argument("--backend", choices=["gemini", "groq", "openrouter", "ollama"], default="openrouter")
+    parser.add_argument("--backend", choices=["gemini", "groq", "openrouter", "ollama", "nvidia"], default="nvidia")
     parser.add_argument("--count", type=int, default=10)
     parser.add_argument("--offset", type=int, default=0)
-    parser.add_argument("--delay", type=float, default=7.5)
+    parser.add_argument("--workers", type=int, default=4, help="Parallel worker threads")
     parser.add_argument("--max-runtime", type=float, default=7200.0)
+    parser.add_argument("--overwrite", action="store_true", help="Force re-extraction of cards")
     args = parser.parse_args()
 
     load_env()
@@ -161,49 +211,37 @@ def run_ai_generator() -> None:
         except Exception:
             results = {}
 
-    print(f"Selected AI backend: {args.backend.upper()} (Target: {args.count} cards, delay: {args.delay}s)")
-    samples = load_unparsed_sample(offset=args.offset, max_items=args.count, existing=set(results.keys()))
+    print(f"Selected AI backend: {args.backend.upper()} (Target: {args.count} cards, Workers: {args.workers})")
+    skip_set = None if args.overwrite else set(results.keys())
+    samples = load_unparsed_sample(offset=args.offset, max_items=args.count, existing=skip_set)
     if not samples:
         print("No unparsed cards left to process.")
         return
 
     sys_prompt = build_system_prompt()
-    success_count = 0
-    start_time = time.time()
-    try:
-        for idx, item in enumerate(samples, start=1):
-            if time.time() - start_time > args.max_runtime:
-                print(f"\n[TIMEOUT] Reached {args.max_runtime}s runtime. Aborting batch.")
-                break
-            cid, name, raw = item["card_identifier"], item["card_name"], item["raw_ability"]
-            card_key = f"{cid}_{name}_{item['side']}" if cid != name else f"{name}_{item['side']}"
-            print(f"[{idx}/{len(samples)}] [{cid}] {name} -> '{raw}'", flush=True)
-            prompt = f"{sys_prompt}\n\nParse this card ability for card '{name}':\n\"{raw}\""
-            try:
-                validated = _process_single_card(args.backend, prompt, name, raw_ability=raw)
-                if validated:
-                    results[card_key] = {
-                        "card_name": name,
-                        "side": item["side"],
-                        "raw_ability": raw,
-                        "ast": validated.model_dump()
-                    }
-                    AI_OUTPUT_FILE.write_text(json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8")
-                    success_count += 1
-                    print(f" [OK] Validated {name}", flush=True)
-            except QuotaExhaustedError as qe:
-                print(f"\n[FATAL] Quota exhausted on card '{name}': {qe}", flush=True)
-                break
-            except Exception as e:
-                print(f" [FAIL] Failed {name}: {e}", flush=True)
-            if idx < len(samples):
-                time.sleep(args.delay)
-    finally:
-        if results:
-            AI_OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-            AI_OUTPUT_FILE.write_text(json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8")
-    rate = (success_count / len(samples) * 100) if samples else 0
-    print(f"\nFinished: {success_count}/{len(samples)} ({rate:.1f}%) ASTs in batch. Total saved: {len(results)} -> {AI_OUTPUT_FILE}")
+    lock = threading.Lock()
+    stats = {"success": 0, "total": len(samples)}
+    linker = None
+    if CARDS_EXT_FILE.exists():
+        try:
+            db_cards = json.loads(CARDS_EXT_FILE.read_text(encoding="utf-8")).get("cards", [])
+            linker = CardLinker(db_cards)
+        except Exception:
+            pass
+    print(f"Starting {args.workers} concurrent workers for {len(samples)} cards...", flush=True)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = [
+            executor.submit(_worker_task, item, args.backend, sys_prompt, results, lock, stats, linker)
+            for item in samples
+        ]
+        concurrent.futures.wait(futures, timeout=args.max_runtime)
+
+    rate = (stats["success"] / len(samples) * 100) if samples else 0
+    print(f"\nFinished: {stats['success']}/{len(samples)} ({rate:.1f}%) ASTs in batch. Total saved: {len(results)} -> {AI_OUTPUT_FILE}")
+    fs = get_findings_summary()
+    if fs["total"]:
+        print(f"[FINDINGS] Total logged: {fs['total']} ({fs['unresolved']} unresolved) -> {FINDINGS_FILE}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,74 @@
+Match at 93277:
+Negate 
+Last Updated: 9/1/2022 (v8.2.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    A negate effect undoes active or completed abilities, or completing effects of abilities, and keeps the ability and 
+its effects from ever completing. 
+●    A negate effect interrupts all specified abilities and prevents them from reactivating. A negate effect also 
+prevents targeted abilities from ever being able to activate. 
+●    Negating an ability negates all effects of that ability, unless the negate specifies a type of effect it negates, in 
+which case it only negates the specified effects. 
+●    Negate effects target the cards and abilities that they negate. The card and the ability are targeted separately – if 
+either cannot be targeted (such as a protected card or a card without an ability), the other can still be targeted. 
+●    Unless otherwise specified, the targets must be cards and abilities on cards in play or a set-aside area. 
+●    A negate effect that undoes abilities that are active or completed, or completing effects of abilities, is instant, as 
+an interrupt. 
+●    A negate effect that prevents uncompleted abilities from activating is ongoing, as a prevent. 
+ 
+ 
+ 
+Special Conditions 
+ 
+●    A negate effect cannot negate itself. 
+●    If a negate effect targets an ability that changed the locations of one or more cards, only those cards that remain 
+in second location are returned to the original location. Cards that moved from the second location prior to the 
+negate remain in their new location. This includes Lost Souls, which often don’t reach the second location by 
+game rule. 
+●    If a negate effect targets one or more abilities, it negates those abilities simultaneously, such that the abilities 
+appear to be negated from most recent to least recent. If a negate effect targets multiple abilities that changed 
+the locations of one or more cards, any of those cards that remain in the last location return to the location they 
+were in prior to the first negated ability. 
+●    A negate effect that targets “abilities” or “all abilities” (as opposed to “special abilities”) on a card will negate 
+the star ability of that card, if applicable. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    Phrases that are constructed as “Negate a/an/all [card type/card name](s)” are equivalent to “Negate all abilities 
+on a/an/all [card type/card name](s)”. 
+●    The phrase “has no effect” when referring to cards other than characters means “negate”. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+59 
+ 
+Paralyze 
+Last Updated: 6/11/2018 (v5.1.0) 
+Released: 10/10/2012
+ 
+ 
+How to Play 
+ 
+●    A paralyze effect inflicts a paralyzed condition on a character. 
+●    While the paralyzed condition remains, the paralyzed character cannot enter battle. 
+●    A paralyze effect is sometimes paired with an ongoing ability, which only has an effect while the character 
+remains paralyzed. 
+●    A paralyze effect is permanent, unless a duration is specified. If a duration is specified, the paralyzed character 
+is no longer paralyzed when the duration is reached. This is not a heal effect. 
+●    A paralyze effect targets characters. 
+●    Targets must be in a territory. 
+●    All paralyze effects are instant. 
+ 
+ 
+ 
+Special Conditions 
+ 
+●    A card that is already paralyzed can be targeted by another paralyze effect. The paralyze durations, if they exist, 
+do not stack but are counted concurrently. 
+●    Any “while paralyzed” effect on a character 

@@ -3,129 +3,1057 @@
 Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-mechanic matrix.
 
 ## Summary Metrics
-- **Total Cards Audited:** 45
-- **High Fidelity (>= 0.82):** 24 (53.3%)
-- **Moderate Fidelity (0.68 - 0.81):** 12 (26.7%)
-- **Review Required (< 0.68 or Fact Invariant Failure):** 9 (20.0%)
+- **Total Cards Audited:** 597
+- **High Fidelity (>= 0.82):** 160 (26.8%)
+- **Moderate Fidelity (0.68 - 0.81):** 251 (42.0%)
+- **Review Required (< 0.68 or Fact Invariant Failure):** 186 (31.2%)
 
 ---
 ## Review Required Cards (Prioritized for Inspection)
 
-### A Mighty Blow (Score: 0.678)
-- **Original:** *"This card is worth 10/0 if a demon is in battle."*
-- **Decompiled:** *"If a all your evil in battle is in battle all your character in play is worth +10/0."*
+### Burial Shroud [ID: -1557092137] (Score: 0.174)
+- **Key:** `-1557092137_top`
+- **Original:** *"Holder may not make a rescue attempt or be attacked.  May be used twice."*
+- **Decompiled:** *"restrict This Character, restrict This Character. Limit."*
 
-### Abandonment (L) (Score: 0.53)
+### City of Refuge (PoC) [ID: 551003852] (Score: 0.211)
+- **Key:** `551003852_shared`
+- **Original:** *"SITE: Protect O.T. humans from discard. FORT: Once per turn, if an opponent's ability harms your O.T. human, you may hold it here instead."*
+- **Decompiled:** *"restrict all good Old Testament hero in play. If all your good Old Testament hero in play is in play You may hold all your good Old Testament hero in play. Limit."*
+- **Fact Violations:** Missing primary action: 'discard'
+
+### Buckler (Wa) [ID: -389033207] (Score: 0.283)
+- **Key:** `-389033207_shared`
+- **Original:** *"Worth 6/4 against any Evil Character who fought in an earthly battle."*
+- **Decompiled:** *"gain This Hero."*
+- **Fact Violations:** Missing numbers in AST: [4, 6]
+
+### Child of Great Wisdom [ID: 606515729] (Score: 0.318)
+- **Key:** `606515729_shared`
+- **Original:** *"All Pharisees and Sadducees are ignored."*
+- **Decompiled:** *"ignore all evil evil character in play."*
+
+### Bear [ID: 842668674] (Score: 0.323)
+- **Key:** `842668674_shared`
+- **Original:** *"Bear is immune to red brigade."*
+- **Decompiled:** *"immune This Hero."*
+
+### Abram/Abraham [ID: -1080205892] (Score: 0.362)
+- **Key:** `-1080205892_shared`
+- **Original:** *"Hero starts as Abram.  After he makes a successful rescue, he becomes Abraham and can interrupt and prevent all special abilities on all Lost Soul cards except the Proverbs 22:14 Lost Souls card."*
+- **Decompiled:** *"interrupt all Lost Soul in play until end of phase, prevent all Lost Soul in play until end of phase."*
+
+### Banks of the Nile/Pharaoh's Court [ID: -1331490969] (Score: 0.391)
+- **Key:** `-1331490969_top`
+- **Original:** *"This card enters play as Banks of the Nile. If a Hero rescues a Lost Soul from this Site, it becomes Pharaoh's Court."*
+- **Decompiled:** *"gain This card. If rescue convert This card."*
+
+### Abandonment (UL) [ID: 112834751] (Score: 0.396)
+- **Key:** `112834751_shared`
 - **Original:** *"Evil Character repels Red Brigade."*
-- **Decompiled:** *"ignore all evil character in play."*
+- **Decompiled:** *"prevent all Red in play."*
 
-### Abdon (Score: 0.459)
-- **Original:** *"This Hero may use good Enhancements with a Judges reference, regardless of color. Cannot be negated."*
-- **Decompiled:** *"Cannot be negated."*
+### Antidote (UL) [ID: -1708272999] (Score: 0.401)
+- **Key:** `-1708272999_shared`
+- **Original:** *"Renders all poisons harmless."*
+- **Decompiled:** *"ignore all evil enhancement in play."*
 
-### Abducted Subjects (LoC) (Score: 0.464)
-- **Original:** *"Capture a human (or 2 humans if used by an Edomite) to a player."*
-- **Decompiled:** *"You may capture 1 opponent's character in play. If Abducted Subjects is in play You may capture 2 opponent's character in play."*
+### Babylonian Banquet Hall [ID: -1988870646] (Score: 0.401)
+- **Key:** `-1988870646_shared`
+- **Original:** *"This Site may hold one Lost Soul for each Babylonian Site in play."*
+- **Decompiled:** *"hold 1 your Lost Soul in play."*
 
-### Abel's Sacrifice (Score: 0.373)
+### Assyrian Camp (LoC) [ID: -1270964017] (Score: 0.403)
+- **Key:** `-1270964017_top`
+- **Original:** *"Prevent multi-brigade Enhancements used by Heroes (except meek Heroes)."*
+- **Decompiled:** *"prevent all your enhancement in play."*
+
+### Chamber of Angels [ID: 1724947058] (Score: 0.405)
+- **Key:** `1724947058_top`
+- **Original:** *"Set this fortress aside.  If holder's angel is being discarded, place it here instead. After two turns, return Hero to the top of your draw pile."*
+- **Decompiled:** *"set-aside 1 your site in play. If discard place 1 your good hero from discard pile. Instead. topdeck 1 your hero in play."*
+
+### Axe (TxP) [ID: 2042978395] (Score: 0.412)
+- **Key:** `2042978395_shared`
+- **Original:** *"If used by a Babylonian, you may discard this card to discard a Fortress. Opponent may discard one of his Sites instead."*
+- **Decompiled:** *"discard 1 your artifact from hand, discard 1 site in play or discard 1 your artifact from hand, discard 1 opponent's site in play. Instead."*
+
+### Captured by Assyria (LoC) [ID: -2090982852] (Score: 0.424)
+- **Key:** `-2090982852_shared`
+- **Original:** *"Capture a human (or 2 humans if used by an Assyrian)."*
+- **Decompiled:** *"capture 2 character in play."*
+
+### Admiral [ID: 24735900] (Score: 0.437)
+- **Key:** `24735900_shared`
+- **Original:** *"Kingdoms of this World fortresses do not protect Evil Characters this turn.  You may release your demon from any evil fortress in play or set aside area and band it into battle."*
+- **Decompiled:** *"release 1 your evil evil character in play, band 1 your evil evil character in play."*
+
+### Christian Suing Another [ID: 2126166458] (Score: 0.438)
+- **Key:** `2126166458_shared`
+- **Original:** *"Holder interrupts the battle and chooses a Hero in play to fight the rescuing Hero.  The loser is discarded."*
+- **Decompiled:** *"You may interrupt all cards in battle, side battle 1 hero in play, discard 1 hero in play."*
+
+### Captain of the Chariots (LoC) [ID: -1327078379] (Score: 0.445)
+- **Key:** `-1327078379_shared`
+- **Original:** *"If blocking, you may equip an evil weapon from Reserve to draw 2. If you do not, you may choose a good king to attack. Cannot be negated if a Syrian king is in play."*
+- **Decompiled:** *"If Captain of the Chariots is in battle equip 1 your evil enhancement from Reserve, draw 2 your card from deck. Cannot be negated or may side battle your good king hero in play. Cannot be negated."*
+
+### Athaliah [ID: 953850989] (Score: 0.446)
+- **Key:** `953850989_shared`
+- **Original:** *"Character gains 1/1 for each Purple Brigade Hero discarded or captured while she is in play."*
+- **Decompiled:** *"If discard If This card is in play gain This Character +1/+1. If capture If This card is in play gain This Character +1/+1."*
+
+### Army of Simeonites [ID: -1098625920] (Score: 0.45)
+- **Key:** `-1098625920_shared`
+- **Original:** *"Each time this character is about to be discarded, instead return it to territory with abilities decreased 3/3."*
+- **Decompiled:** *"place 1 your hero in play, 1 your hero in play is worth -3/-3. Instead."*
+
+### Angel with the Secret Name (Wa) [ID: -129942653] (Score: 0.454)
+- **Key:** `-129942653_shared`
+- **Original:** *"Hero's abilities (*/*) are equal to the number of Silver Brigade heroes in play."*
+- **Decompiled:** *"modify stats This Hero."*
+
+### Carried into Exile [ID: 1708698410] (Score: 0.46)
+- **Key:** `1708698410_shared`
+- **Original:** *"Capture a human (or two humans if used by a Babylonian)."*
+- **Decompiled:** *"You may capture 2 character in play."*
+
+### Angel at Shur (Roots) [ID: 603346170] (Score: 0.462)
+- **Key:** `603346170_shared`
+- **Original:** *"May band to an O.T. angel, or you may take an O.T. female from deck."*
+- **Decompiled:** *"You may band your Old Testament hero in play or You may take your Old Testament hero from deck."*
+
+### Ananias of Damascus (Ap) [ID: 748830080] (Score: 0.466)
+- **Key:** `748830080_shared`
+- **Original:** *"Any Saul/Paul in play, repents and Saul becomes Paul."*
+- **Decompiled:** *"If repents convert all your hero in play."*
+
+### Baggage [ID: -457899472] (Score: 0.468)
+- **Key:** `-457899472_shared`
+- **Original:** *"Take any Evil Character prisoner and place in your Land of Bondage.  Character is treated as a Lost Soul."*
+- **Decompiled:** *"You may capture 1 evil character in play, place 1 your card in play, convert 1 your card in play."*
+
+### Chamber of Angels (GoC) [ID: 459315001] (Score: 0.479)
+- **Key:** `459315001_top`
+- **Original:** *"If your angel is harmed or defeated, you may hold it here instead. While occupied, negate opponents' evil cards in territories."*
+- **Decompiled:** *"If all your good hero in play is in play You may hold 1 your good hero in play. Instead. negate all opponent's evil in play."*
+
+### Ambush [ID: 2073961628] (Score: 0.485)
+- **Key:** `2073961628_shared`
+- **Original:** *"Set aside a male Hero (face down) from your hand for one turn.  Hero returns to territory face down.  Hero enters battle face down with access to any site.  When opponent presents an Evil Character in battle, Hero is flipped face up."*
+- **Decompiled:** *"You may set-aside 1 your hero from hand. return to hand 1 your hero."*
+
+### Bronze Cymbals [ID: 773830287] (Score: 0.491)
+- **Key:** `773830287_shared`
+- **Original:** *"Prevent the special ability of the next evil Enhancement played this battle."*
+- **Decompiled:** *"If play You may prevent 1 enhancement in play."*
+
+### Burning Incense [ID: -1101186497] (Score: 0.498)
+- **Key:** `-1101186497_shared`
+- **Original:** *"All Heroes ignore an evil brigade of holder's choice.  Cannot be negated if Altar of Incense is active."*
+- **Decompiled:** *"ignore all hero in play until end of phase. Cannot be negated."*
+
+### Amaziah's Order [ID: -74177057] (Score: 0.501)
+- **Key:** `-74177057_shared`
+- **Original:** *"Evil Character repels good prophets.  Cannot be negated if used by an evil Priest."*
+- **Decompiled:** *"ignore This Character. Cannot be negated."*
+
+### Battle Cry [ID: -765162791] (Score: 0.503)
+- **Key:** `-765162791_shared`
+- **Original:** *"Interrupt the battle and band into battle as many Heroes from holder's territory as holder chooses."*
+- **Decompiled:** *"You may interrupt all cards in battle, band your good hero in play."*
+
+### Bad Decision [ID: -115958239] (Score: 0.504)
+- **Key:** `-115958239_shared`
+- **Original:** *"If opponent has an empty single color site, capture any Hero in play and place there."*
+- **Decompiled:** *"If all your cards in play is in play capture 1 hero in play, place 1 your hero in play."*
+
+### Captain of the Host (Wa) [ID: -331049176] (Score: 0.504)
+- **Key:** `-331049176_shared`
+- **Original:** *"Interrupt and prevent all special abilities except banding.  Fight by the numbers."*
+- **Decompiled:** *"interrupt all cards in play, prevent all cards in play. This Hero has first strike."*
+
+### Angelic Rebellion [ID: 1548481979] (Score: 0.506)
+- **Key:** `1548481979_shared`
+- **Original:** *"One angel (excluding Michael, Captain of the Host, and Gabriel) falls and becomes a Crimson evil character."*
+- **Decompiled:** *"convert 1 evil Crimson hero in play."*
+
+### Answered Prayer (Ki) [ID: 282482448] (Score: 0.506)
+- **Key:** `282482448_shared`
+- **Original:** *"Selected Hero (until discarded) gains 7 ability points to be distributed as holder chooses.  Distribution must be announced when played."*
+- **Decompiled:** *"1 your good hero in play is worth +7/0 until end of phase."*
+
+### Angry Travelers [ID: -1637877733] (Score: 0.507)
+- **Key:** `-1637877733_shared`
+- **Original:** *"Place this card on a Lost Soul.  If that Lost Soul is not rescued by the end of the current player's next turn, discard this card to return the Lost Soul to the bottom of owner's draw pile."*
+- **Decompiled:** *"place 1 character in play. discard Angry Travelers, draw 1 your cards from deck."*
+
+### Barnabas (D) [ID: 1666819503] (Score: 0.508)
+- **Key:** `1666819503_shared`
+- **Original:** *"Hero is immune to any card with the word False in card title."*
+- **Decompiled:** *"ignore all False in play."*
+
+### Broken Cisterns [ID: -1363263826] (Score: 0.511)
+- **Key:** `-1363263826_shared`
+- **Original:** *"Place in an opponent's territory. Negate draw abilities used by that player. All Heroes in that territory are decreased by 0/X."*
+- **Decompiled:** *"place 1 opponent's site in territory. restrict 1 opponent's cards in play. decrease 1 opponent's hero in territory 0/0."*
+- **Fact Violations:** Missing primary action: 'draw'
+
+### Abijah, son of Samuel [ID: 1330205561] (Score: 0.515)
+- **Key:** `1330205561_shared`
+- **Original:** *"Each time opponent plays an Enhancement in battle, you may draw a card."*
+- **Decompiled:** *"You may draw 1 your cards from deck."*
+
+### Commander Phicol (LoC) [ID: 1308091240] (Score: 0.515)
+- **Key:** `1308091240_shared`
+- **Original:** *"If blocking, you may negate a good card, discard a good Enhancement or equip a weapon from Reserve. May band to a Philistine (except a king)."*
+- **Decompiled:** *"If all your hero in battle is in battle You may negate 1 good in play or may discard 1 good enhancement in play or may equip 1 your Weapon enhancement from Reserve. You may band 1 Philistine hero in play."*
+
+### Angel at Shur (Promo) [ID: 391681411] (Score: 0.518)
+- **Key:** `391681411_shared`
+- **Original:** *"Search draw pile for an O.T. male Hero and put it in hand. This Hero is immune to demons."*
+- **Decompiled:** *"draw 1 your good hero from deck. immune This Hero."*
+
+### Ambushed Moabites (LoC) [ID: -386684264] (Score: 0.52)
+- **Key:** `-386684264_shared`
+- **Original:** *"STAR: Give this card to opponent's territory. EC: Negate discard abilities on your evil cards. Each upkeep, you must discard another evil O.T.  human in territory."*
+- **Decompiled:** *"give 1 your evil evil character in play. negate all your evil evil character in play until end of phase. discard 1 your evil evil character in territory."*
+
+### Answered Prayer (Wa) [ID: -126624504] (Score: 0.522)
+- **Key:** `-126624504_shared`
+- **Original:** *"Selected Hero (until discarded) gains 7 ability points to be distributed as holder chooses.  Distribution must be announced when played."*
+- **Decompiled:** *"gain 1 your good hero in play +7/0."*
+
+### Clemency of David (A) [ID: 1025590662] (Score: 0.522)
+- **Key:** `1025590662_shared`
+- **Original:** *"Hero ignores Brown Brigade."*
+- **Decompiled:** *"ignore This Hero."*
+
+### Altar of Incense (E) [ID: 1142905143] (Score: 0.523)
+- **Key:** `1142905143_top`
+- **Original:** *"O.T. Heroes are protected from discard special abilities on evil enhancements."*
+- **Decompiled:** *"protect all good hero in play."*
+
+### Ahimaaz (Ki) [ID: -761019419] (Score: 0.525)
+- **Key:** `-761019419_shared`
+- **Original:** *"Holder may look at one opponent's hand or cards face down in a Site.  Hero may then withdraw from battle unharmed or continue the battle.  Ahimaaz cannot be captured."*
+- **Decompiled:** *"You may look 1 opponent's card from hand or You may look all cards. You may withdraw This Hero. ignore This Hero."*
+
+### Babylonian Soldiers [ID: 1722110593] (Score: 0.527)
+- **Key:** `1722110593_shared`
+- **Original:** *"If blocking, you may remove a captured character from the game to negate and discard an Artifact or draw X (limit 3). Increase this character by X/X."*
+- **Decompiled:** *"If This card is in battle remove from the game 1 your character in play, negate 1 artifact in play, discard 1 artifact in play, increase 1 your evil evil character in play +1/+1 this turn or Remove from the game 1 your character in play, draw 3 your card from deck, increase 1 your evil evil character in play +3/+3 this turn. limit."*
+
+### Centurion's Proclamation [ID: -1442557023] (Score: 0.527)
+- **Key:** `-1442557023_shared`
+- **Original:** *"If used by a male Hero, interrupt the battle and capture a human Evil Character Character. Opponent may convert it to a Hero in any brigade instead."*
+- **Decompiled:** *"If Centurion's Proclamation is in play interrupt all cards in battle, capture 1 opponent's evil human evil character in play. Instead. You may convert 1 opponent's evil human evil character in play."*
+
+### Abiezer (Ki) [ID: 1271490991] (Score: 0.529)
+- **Key:** `1271490991_shared`
+- **Original:** *"Hero is immune to Crimson Brigade."*
+- **Decompiled:** *"immune This Hero."*
+
+### Abiezer (Wa) [ID: -1510996855] (Score: 0.529)
+- **Key:** `-1510996855_shared`
+- **Original:** *"Hero is immune to Crimson Brigade."*
+- **Decompiled:** *"immune This Hero."*
+
+### Breastplate of Righteousness (Wa) [ID: 41136034] (Score: 0.529)
+- **Key:** `41136034_shared`
+- **Original:** *"Hero is immune to Crimson Brigade."*
+- **Decompiled:** *"immune This Hero."*
+
+### Abraham's Servant to Ur [ID: 935171339] (Score: 0.533)
+- **Key:** `935171339_shared`
+- **Original:** *"All special abilities except banding on characters and enhancements, except this one, are negated.  Battle is determined by the numbers."*
+- **Decompiled:** *"negate all character in play, negate all enhancement in play. modify stats This Hero."*
+
+### Abijah, the Conqueror / Abijam, the Half-Hearted (LoC) [ID: -864321273] (Score: 0.544)
+- **Key:** `-864321273_bottom`
+- **Original:** *"If blocking, you may take an idol or evil female from deck or draw X (limit 3)."*
+- **Decompiled:** *"If This card is in battle You may take 1 your evil evil character from deck or may draw 3 your card from deck. Limit."*
+
+### Amos (PoC) [ID: 397050664] (Score: 0.544)
+- **Key:** `397050664_shared`
+- **Original:** *"STAR: Play a Lost Soul from a deck. HERO: If opponent has board advantage, shuffle up to X of their cards. Cannot be negated if a king of Israel is in play."*
+- **Decompiled:** *"play 1 your character from deck. If all your cards in play is in play shuffle opponent's card from hand. Cannot be negated."*
+
+### Battle Axe (Wa) [ID: -1562506344] (Score: 0.545)
+- **Key:** `-1562506344_shared`
+- **Original:** *"Hero ignores gray brigade."*
+- **Decompiled:** *"ignore This Hero."*
+
+### Battle Axe (Ki) [ID: -1962838492] (Score: 0.545)
+- **Key:** `-1962838492_shared`
+- **Original:** *"Hero ignores gray brigade."*
+- **Decompiled:** *"ignore This Hero."*
+
+### Babylonian Siege Army [ID: 2146383899] (Score: 0.546)
+- **Key:** `2146383899_shared`
+- **Original:** *"Negate a good or neutral card. If it is an Artifact, take it. If it is a human, capture it. If it is an Enhancement, discard it. If it is a Site or Fortress, reserve it."*
+- **Decompiled:** *"negate 1 good in play, take 1 artifact in play, capture 1 human in play, discard 1 enhancement in play, reserve 1 site in play."*
+
+### Alexandrian Ship [ID: 1864749015] (Score: 0.548)
+- **Key:** `1864749015_top`
+- **Original:** *"Each upkeep, if you control a Centurion or an Egyptian, you may transfer contents to any Land of Bondage."*
+- **Decompiled:** *"If all your Centurion Egyptian in play is in play You may transfer 1 your card in play."*
+
+### Athaliah, Usurper Queen (LoC) [ID: 1676890855] (Score: 0.55)
+- **Key:** `1676890855_shared`
+- **Original:** *"You may draw X (limit 3). If blocking, you may discard a royal human (except a meek Hero) after battle. Cannot be negated if opponent has used a search ability this turn."*
+- **Decompiled:** *"You may draw 3 your card from deck. Cannot be negated. If all your good hero in battle is in battle You may discard 1 your good royal human hero from hand. Cannot be negated."*
+
+### Ashdod [ID: -1944215232] (Score: 0.551)
+- **Key:** `-1944215232_shared`
+- **Original:** *"While this Site is occupied, your Philistine Evil Characters may use O.T. Enhancements of any evil brigade except orange and pale green."*
+- **Decompiled:** *"If Ashdod is in play all your evil Philistine evil character in play may use other enhancements."*
+
+### Children [ID: 320354507] (Score: 0.552)
+- **Key:** `320354507_shared`
+- **Original:** *"All Gold Brigade Heroes in Holder's territory must join the battle."*
+- **Decompiled:** *"band all your good Gold hero in territory."*
+
+### Cast into Lion's Den [ID: -1899241932] (Score: 0.557)
+- **Key:** `-1899241932_shared`
+- **Original:** *"Capture a character in battle. If used by a Daniel Hero or Persian, this ability gains regardless of protection"*
+- **Decompiled:** *"You may capture 1 character in battle. Cannot be prevented."*
+
+### Annas the Elder (GoC) [ID: -2100481405] (Score: 0.559)
+- **Key:** `-2100481405_shared`
+- **Original:** *"If blocking, you may underdeck a Lost Soul (or 2 meek Lost Souls). May band to a unique Sadducee. If opponent has used a search ability this turn, your Sadducees cannot be negated."*
+- **Decompiled:** *"If Annas the Elder is in battle You may underdeck 1 Lost Soul in play or may underdeck 2 Lost Soul in play. You may band 1 evil Sadducee Unique hero in play. give all your evil Sadducee hero in play. Cannot be negated."*
+
+### Agur [ID: 388381318] (Score: 0.561)
+- **Key:** `388381318_shared`
+- **Original:** *"You may place an O.T.  Enhancement from hand (or discard pile if Book of the Law is active) on a human Hero of matching brigade in your territory.  The next time that Hero enters battle, that Enhancement activates and is discarded immediately."*
+- **Decompiled:** *"You may place 1 your enhancement from hand. activate an ability all your enhancement in play, discard all your enhancement in play."*
+
+### Arrogance [ID: 82821452] (Score: 0.563)
+- **Key:** `82821452_shared`
+- **Original:** *"Holder may play as many evil enhancements as desired.  Initiative passes when holder is done playing enhancements."*
+- **Decompiled:** *"You may play 1 your evil enhancement from hand."*
+
+### Angel of Deliverance (Ap) [ID: 1533006290] (Score: 0.564)
+- **Key:** `1533006290_shared`
+- **Original:** *"Hero has access to any site.  Any guards on the site are immediately prevented and discarded.  If Hero wins, Holder may return any Hero held captive at the site to player's territory or count as a redeemed soul."*
+- **Decompiled:** *"This Hero has access to any Site. prevent all evil enhancement in play, discard all evil enhancement in play. You may take all good hero in play or You may gain This card."*
+
+### Asahel (TxP) [ID: -1070093237] (Score: 0.564)
+- **Key:** `-1070093237_shared`
+- **Original:** *"May band to an O.T. warrior class human Hero or may choose opponent's male human Evil Character to block. Protect Asahel from withdraw and return abilities."*
+- **Decompiled:** *"You may band 1 your good warrior Old Testament hero in play or You may restrict 1 opponent's evil Male evil character in play. protect 1 your good hero in play."*
+
+### Clemency of David (UL) [ID: -748121087] (Score: 0.57)
+- **Key:** `-748121087_shared`
+- **Original:** *"Hero ignores Brown Brigade."*
+- **Decompiled:** *"ignore all Brown in play."*
+
+### Abram's Army [ID: -514188870] (Score: 0.571)
+- **Key:** `-514188870_shared`
+- **Original:** *"You may release a captured Hero to negate and discard a single-color Site, Artifact or evil card. Cannot be interrupted by O.T. Evil Characters."*
+- **Decompiled:** *"release 1 your hero in play, negate opponent's enhancement in play, discard opponent's enhancement in play. Cannot be interrupted or release 1 your hero in play, negate opponent's artifact in play, discard opponent's artifact in play. Cannot be interrupted or release 1 your hero in play, negate opponent's evil in play, discard opponent's evil in play. Cannot be interrupted."*
+
+### City of Enoch [ID: 112006992] (Score: 0.572)
+- **Key:** `112006992_shared`
+- **Original:** *"SITE: If you play this Site, you may take an evil antediluvian from deck or Reserve.FORT: While occupied, protect opponent's Heroes from other Heroes."*
+- **Decompiled:** *"If City of Enoch is in play You may take 1 your evil antediluvian evil character from deck or may take 1 your evil antediluvian evil character from Reserve. protect all opponent's good hero in play."*
+
+### By My Spirit (LoC) [ID: 1810297174] (Score: 0.573)
+- **Key:** `1810297174_shared`
+- **Original:** *"Negate an evil or neutral card. If used by a postexilic Hero, discard that card unless it is human. Cannot be negated if used by a meek Hero."*
+- **Decompiled:** *"You may negate 1 character in play, discard 1 character in play. Cannot be negated."*
+
+### Christ's Triumph [ID: 38114992] (Score: 0.573)
+- **Key:** `38114992_shared`
+- **Original:** *"Place on your N.T. human Hero: If your N.T. human Hero fails a rescue attempt, you may discard this card to begin a new rescue attempt with this Hero."*
+- **Decompiled:** *"place 1 your good N.T. human hero in play. If all your good N.T. human hero in play is in play discard 1 your enhancement in play, begin a new phase 1 your good N.T. human hero in play."*
+
+### All Hope Lost [ID: -2051463540] (Score: 0.574)
+- **Key:** `-2051463540_shared`
+- **Original:** *"If Hero(s) in battle returns to territory without making a successful rescue, Hero(s) may not enter battle until healed."*
+- **Decompiled:** *"If returns_to_territory If all your cards in battle is in battle restrict all hero in play."*
+
+### Banner of Truth (D) [ID: 570414903] (Score: 0.574)
+- **Key:** `570414903_shared`
+- **Original:** *"All of holder's Heroes gain 2/2 until end of turn."*
+- **Decompiled:** *"gain all your good hero in play +2/+2 this turn."*
+
+### Breastplate of Righteousness [ID: 480523468] (Score: 0.577)
+- **Key:** `480523468_shared`
+- **Original:** *"Place on your clay, red or white N.T. Hero: Protect Hero from brown and gray. If Hero enters battle, select X evil brigades. Negate Evil Characters of selected brigades."*
+- **Decompiled:** *"protect This Hero. If This card is in battle negate all evil character in play."*
+
+### Abandonment (L) [ID: 1459937673] (Score: 0.578)
+- **Key:** `1459937673_shared`
+- **Original:** *"Evil Character repels Red Brigade."*
+- **Decompiled:** *"protect This Evil Character."*
+
+### Ashkelon [ID: 1119795234] (Score: 0.578)
+- **Key:** `1119795234_shared`
+- **Original:** *"SITE: If an O.T. Lost Soul is put here, each opponent must discard a card from hand. FORT: Each upkeep, if occupied you may draw X (Limit 3)."*
+- **Decompiled:** *"discard 1 opponent's card from hand. You may draw 1 your card from deck. Limit."*
+
+### Captain of the Host (Ki) [ID: 1915440124] (Score: 0.58)
+- **Key:** `1915440124_shared`
+- **Original:** *"Negate all non-weapon class special abilities except banding."*
+- **Decompiled:** *"negate all character in play, gain all banding character in play."*
+
+### Balaam (FoM) [ID: -1817016546] (Score: 0.583)
+- **Key:** `-1817016546_shared`
+- **Original:** *"May use gray Enhancements. Take a gray or pale green O.T. Curse from discard pile. Prevent Enhancements. Cannot be prevented."*
+- **Decompiled:** *"This Character may use other enhancements. You may take 1 your enhancement from discard pile. You may prevent 1 enhancement in play. Cannot be prevented."*
+
+### Book of the Wars [ID: 299806379] (Score: 0.584)
+- **Key:** `299806379_shared`
+- **Original:** *"Hero may use any good enhancement having an illustration depicting a weapon regardless of brigade color until end of turn."*
+- **Decompiled:** *"This Hero may use other enhancements this turn."*
+
+### Ahimaaz, the Swift [ID: 858470180] (Score: 0.585)
+- **Key:** `858470180_shared`
+- **Original:** *"Protect O.T. priests from evil withdraw and reserve abilities. You may play a Lost Soul from a deck or negate a neutral card."*
+- **Decompiled:** *"protect all good Old Testament hero in play. You may play Lost Soul or You may negate 1 neutral in play."*
+
+### Caleb (Promo) [ID: 1875212355] (Score: 0.592)
+- **Key:** `1875212355_shared`
+- **Original:** *"Caleb may use any empty Lost Soul site from opponent to gain access to a Lost Soul held in a site of the same color.  May band with Joshua.  Caleb ignores Giants."*
+- **Decompiled:** *"You may opponent's empty site in play may use other enhancements, opponent's Lost Soul in play has access to any Site. You may band Joshua. ignore This Hero."*
+
+### Agabus (PC) [ID: -1305841430] (Score: 0.593)
+- **Key:** `-1305841430_shared`
+- **Original:** *"Negate O.T. Artifacts. You may reveal a hand: if it contains a card with a capture or decrease ability, search discard pile for an Enhancement with one of those abilities."*
+- **Decompiled:** *"negate all Old Testament artifact in play. reveal This card, search all your enhancement from discard pile."*
+
+### Breastplate of Righteousness (Ki) [ID: 1336406851] (Score: 0.593)
+- **Key:** `1336406851_shared`
+- **Original:** *"Hero is immune to crimson brigade.  Holder may play the next enhancement."*
+- **Decompiled:** *"immune This Hero. You may play 1 your enhancement from hand."*
+
+### City of Refuge [ID: 1605169800] (Score: 0.594)
+- **Key:** `1605169800_top`
+- **Original:** *"If your human would be removed from the game by an opponent, instead place it here.  Protect cards here from effect.  If a High Priest is discarded from play, release all characters from here to your territory."*
+- **Decompiled:** *"If would_be_removed_from_game_by_opponent place all your human character in play. Instead. protect all your on this site in play. If discarded_from_play release all your on this site character in play."*
+
+### Bethlehem Stable (GoC) [ID: -1838539963] (Score: 0.595)
+- **Key:** `-1838539963_top`
+- **Original:** *"Protect hand, deck and Reserve from opponents. If your nativity Hero is harmed or defeated by an opponent, you may reserve it instead. Each upkeep, you may take a good nativity card from Reserve."*
+- **Decompiled:** *"protect This card, protect your card from deck, protect This card. You may reserve This Hero. Instead. You may take 1 your good from Reserve."*
+
+### Ambush! (GoC) [ID: -1027223523] (Score: 0.598)
+- **Key:** `-1027223523_shared`
+- **Original:** *"Interrupt the battle. You may take a thief from Reserve. Character may band to any number of N.T. crimson humans. Cannot be negated if used by a thief."*
+- **Decompiled:** *"You may search 1 your evil evil character from Reserve, band your crimson character in play. Cannot be negated."*
+
+### Angel of God [2023 - National] [ID: 1174674772] (Score: 0.599)
+- **Key:** `1174674772_bottom`
+- **Original:** *"H: Negate up to X evil cards."*
+- **Decompiled:** *"You may negate evil in play."*
+
+### Chief Captain Lysias [ID: -1188531134] (Score: 0.599)
+- **Key:** `-1188531134_shared`
+- **Original:** *"If Lysias successfully blocks, he may be placed on a N.T. site.  When rescue is attempted at the site, Lysias joins the blocker in battle."*
+- **Decompiled:** *"If Lysias is in battle You may place This Hero. add to battle This Hero."*
+
+### Angel of the Waters [ID: 1958295081] (Score: 0.601)
+- **Key:** `1958295081_shared`
+- **Original:** *"Silver brigade Heroes cannot be taken prisoner this turn."*
+- **Decompiled:** *"protect all good silver hero in play this turn."*
+
+### Banishment [ID: 846722336] (Score: 0.602)
+- **Key:** `846722336_shared`
+- **Original:** *"Take any demon prisoner and place in your Tartaros site.  If Tartaros is not in play, discard the demon."*
+- **Decompiled:** *"take 1 opponent's evil demon in play, place your evil demon in play, discard your evil demon in play."*
+
+### Coat of Mail (Ki) [ID: 1914795075] (Score: 0.602)
+- **Key:** `1914795075_shared`
+- **Original:** *"Holder may negate and discard one evil weapon class enhancement on an Evil Character.  Any time during battle, holder may discard Coat of Mail to return bearer being discarded to your territory."*
+- **Decompiled:** *"You may negate evil weapon class on evil character enhancement in play, discard evil weapon class on evil character enhancement in play. discard This card, place This Hero."*
+
+### Assyria's Tribute [ID: -1828165989] (Score: 0.603)
+- **Key:** `-1828165989_top`
+- **Original:** *"While you are blocking with an Assyrian, negate all special abilities on Enhancements and Heroes. Cannot be negated during the battle phase. May be used twice per game."*
+- **Decompiled:** *"If block negate all enhancement in play, negate all good hero in play. Cannot be negated. Limit."*
+
+### Benaiah (Wa) [ID: 1954315913] (Score: 0.603)
+- **Key:** `1954315913_shared`
+- **Original:** *"All special abilities on character cards and enhancement cards except this one are interrupted and prevented.  Battle is determined by the numbers."*
+- **Decompiled:** *"interrupt all special ability character in play, prevent all special ability character in play. interrupt all special ability enhancement in play, prevent all special ability enhancement in play."*
+
+### Charred Vine [ID: -1072745363] (Score: 0.603)
+- **Key:** `-1072745363_shared`
+- **Original:** *"Set Hero aside for five turns.  On turn six Hero returns with abilities increased 7/7."*
+- **Decompiled:** *"set-aside 1 your hero in play, play 1 your hero +7/+7."*
+
+### Asaph [ID: -1702895840] (Score: 0.604)
+- **Key:** `-1702895840_shared`
+- **Original:** *"Good Enhancements involving music cannot be negated by evil cards."*
+- **Decompiled:** *"gain all your good involve music enhancement in play. Cannot be negated."*
+
+### Abner, the Commander (Roots) [ID: 809979804] (Score: 0.605)
+- **Key:** `809979804_shared`
+- **Original:** *"Negate a good card. If alone, you may choose an O.T. Hero to attack. Cannot be prevented."*
+- **Decompiled:** *"negate 1 good character in play. Cannot be prevented. If Abner, the Commander (Roots) is in battle You may choose opponent 1 good O.T. hero in play. Cannot be prevented."*
+
+### Abel's Sacrifice [ID: 1728300639] (Score: 0.607)
+- **Key:** `1728300639_shared`
 - **Original:** *"Abel's Sacrifice and all good enhancements played after it this turn may not be interrupted or prevented."*
-- **Decompiled:** *"Cannot be interrupted. Cannot be prevented."*
+- **Decompiled:** *"protect This Hero this turn, protect all your good enhancement in play this turn. Cannot be interrupted. Cannot be prevented."*
 
-### Abiathar (1st Print - K) (Score: 0.649)
+### Captive Princes [ID: 704610103] (Score: 0.608)
+- **Key:** `704610103_shared`
+- **Original:** *"You may capture this character to opponent's Land of Bondage to look at opponent's hand or Reserve add a human of matching brigade to battle."*
+- **Decompiled:** *"capture 1 your good hero in play, look all opponent's cards from hand or capture 1 your good hero in play, add to battle all your good character from Reserve."*
+
+### Adino's Spear (Ki) [ID: 180354666] (Score: 0.609)
+- **Key:** `180354666_shared`
+- **Original:** *"Hero is immune to Gold Brigade."*
+- **Decompiled:** *"immune This Hero."*
+
+### Adino's Spear (Wa) [ID: 894516778] (Score: 0.609)
+- **Key:** `894516778_shared`
+- **Original:** *"Hero is immune to Gold Brigade."*
+- **Decompiled:** *"immune This Hero."*
+
+### Ahimelech, Priest at Nob [ID: -699735465] (Score: 0.609)
+- **Key:** `-699735465_shared`
+- **Original:** *"Search discard pile for a weapon class Enhancement and place on your warrior class Hero that has no weapon and convert weapon to that Hero's brigade."*
+- **Decompiled:** *"search 1 your Weapon enhancement from discard pile, place 1 your Weapon enhancement from discard pile, convert 1 your Weapon enhancement in play."*
+
+### Achan (Pa) [ID: -1524106876] (Score: 0.61)
+- **Key:** `-1524106876_shared`
+- **Original:** *"Joshua's strength (*/) is reduced by 5 while Achan remains in play."*
+- **Decompiled:** *"Joshua is worth -5/0."*
+
+### Angel's Sword [ID: 325104149] (Score: 0.61)
+- **Key:** `325104149_shared`
+- **Original:** *"If blocked by a human Evil Character, Hero may play the first enhancement."*
+- **Decompiled:** *"If blocked You may play 1 your enhancement from hand."*
+
+### Brought to Egypt [ID: -160510189] (Score: 0.61)
+- **Key:** `-160510189_shared`
+- **Original:** *"Interrupt the battle. You may take a son of Jacob from Reserve. Hero may band to up to 3 sons of Jacob."*
+- **Decompiled:** *"You may interrupt 1 in battle. You may take 1 your hero from Reserve. You may band 3 hero in play."*
+
+### Beast from the Earth (Wa) [ID: 1456858680] (Score: 0.611)
+- **Key:** `1456858680_shared`
+- **Original:** *"Character is immune to all female heroes."*
+- **Decompiled:** *"immune This Hero."*
+
+### Abigail (1st Print - K) [ID: -1506905177] (Score: 0.614)
+- **Key:** `-1506905177_shared`
+- **Original:** *"You may choose an Evil Character to block."*
+- **Decompiled:** *"You may add to battle 1 evil evil character in play."*
+
+### Claudia [ID: -1618711053] (Score: 0.616)
+- **Key:** `-1618711053_shared`
+- **Original:** *"Claudia may band with any male Hero from the New Testament each turn."*
+- **Decompiled:** *"You may band 1 good male New Testament hero in play. Limit."*
+
+### Ahaz, the Unfaithful (LoC) [ID: 968734370] (Score: 0.617)
+- **Key:** `968734370_shared`
+- **Original:** *"STAR: Underdeck a meek Lost Soul. EC: Negate protect abilities on other cards. Opponent may discard their human. If they do not, protect meek Lost Souls from rescue. Cannot be prevented."*
+- **Decompiled:** *"underdeck Lost Soul. negate all cards in play. You may discard 1 opponent's Human character in play or protect Lost Soul until end of phase. Cannot be prevented."*
+
+### Chastisement of the Lord (L) [ID: 1964372488] (Score: 0.618)
+- **Key:** `1964372488_shared`
+- **Original:** *"Set Hero aside for three turns.  On turn four Hero returns with abilities increased 6/6."*
+- **Decompiled:** *"set-aside This Hero, place your hero +6/+6."*
+
+### Angel at Shur (Wa) [ID: -1187490455] (Score: 0.622)
+- **Key:** `-1187490455_shared`
+- **Original:** *"Hero is immune to demons and beasts."*
+- **Decompiled:** *"immune This Hero."*
+
+### Banks of the Nile/Pharaoh's Court [ID: -1331490969] (Score: 0.622)
+- **Key:** `-1331490969_bottom`
+- **Original:** *"While this Site is occupied, prevent ignore abilities on opponent's good O.T. cards."*
+- **Decompiled:** *"prevent all opponent's good O.T. hero in play."*
+
+### Amorite Invasion [ID: -2053406169] (Score: 0.623)
+- **Key:** `-2053406169_shared`
+- **Original:** *"Worth 2/10 against a Hero who fought in an earthly battle."*
+- **Decompiled:** *"This Character is worth +2/+10."*
+
+### Ark of the Covenant (Wa) [ID: -558431000] (Score: 0.625)
+- **Key:** `-558431000_top`
+- **Original:** *"Regardless of battle outcome, any Evil Character an opponent uses to block a rescue attempt is discarded at the end of battle.  Limit Holder to two such discards per game."*
+- **Decompiled:** *"discard 1 opponent's evil evil character in play. Limit."*
+
+### Asa's Good Reign [ID: -901535226] (Score: 0.626)
+- **Key:** `-901535226_shared`
+- **Original:** *"Place this card on your good King for 3 turns. While this remains, your O.T. Heroes are immune to warrior class Evil Characters."*
+- **Decompiled:** *"place your good hero in play until end of phase. immune all your good O.T. hero in play."*
+
+### Bereans [ID: 535352430] (Score: 0.627)
+- **Key:** `535352430_shared`
+- **Original:** *"You may exchange a good O.T. card in hand with a good N.T. Enhancement in deck or discard pile. May band to a Missionary."*
+- **Decompiled:** *"You may exchange 1 your good O.T. character from hand. You may band 1 your good Missionary hero in play."*
+
+### Burst of Light [ID: -2026804768] (Score: 0.628)
+- **Key:** `-2026804768_shared`
+- **Original:** *"Shuffle one 'The Darkness' fortress and its contents into owner's draw pile."*
+- **Decompiled:** *"shuffle The Darkness."*
+
+### Chastisement of the Lord (Promo) [ID: 941312626] (Score: 0.628)
+- **Key:** `941312626_shared`
+- **Original:** *"Set Hero aside for two turns.  On turn three Hero returns with abilities increased 6/6."*
+- **Decompiled:** *"set-aside 1 your good hero in play, play 1 your good hero +6/+6."*
+
+### Arrogance (LoC) [ID: -2139719223] (Score: 0.629)
+- **Key:** `-2139719223_shared`
+- **Original:** *"If used by an O.T. human, you may negate and discard a good multi-brigade Enhancement. Cannot be negated if used by a taunting character."*
+- **Decompiled:** *"You may negate good multi-brigade enhancement in play, discard good multi-brigade enhancement in play. gain This card. Cannot be negated."*
+
+### Book of Jashar [ID: -1761830176] (Score: 0.632)
+- **Key:** `-1761830176_shared`
+- **Original:** *"This enhancement duplicates (becomes an exact copy of) the previous good enhancement played by holder this turn."*
+- **Decompiled:** *"copy 1 your good enhancement in play."*
+
+### Alexander the Great [ID: -213074732] (Score: 0.633)
+- **Key:** `-213074732_shared`
+- **Original:** *"First strike. Take a City or Artifact, discard a multi-brigade card, or each player must draw 1. If this card is discarded, you may withdraw it instead. May band to a Greek warrior. Cannot be prevented."*
+- **Decompiled:** *"This Hero has first strike. Cannot be prevented. You may take City or Artifact. Cannot be prevented or You may discard 1 from hand. Cannot be prevented or You may draw 1 from hand from deck. Cannot be prevented. If Alexander the Great is in discard pile You may withdraw Alexander the Great. Cannot be prevented. You may band 1 greek hero in play. Cannot be prevented."*
+
+### Adino (Ki) [ID: 1633621557] (Score: 0.635)
+- **Key:** `1633621557_shared`
+- **Original:** *"If Adino is holding a spear he gains 3/3 and prevents all special abilities except banding on non-weapon class enhancements."*
+- **Decompiled:** *"If Adino is in play This Hero is worth +3/+3, prevent all enhancement in play."*
+
+### Boaz' Sandal [ID: -1219999882] (Score: 0.637)
+- **Key:** `-1219999882_top`
+- **Original:** *"At any time, you may discard this card to search deck or discard pile for a Ruth Hero. If used during battle and an Evil Character is blocking, you may add your Ruth Hero to battle."*
+- **Decompiled:** *"discard Boaz Sandal, search Ruth. discard Boaz Sandal, search Ruth. If all your evil evil character in battle is in battle You may add to battle Ruth."*
+
+### Abimelech (Pa) [ID: -1963231580] (Score: 0.638)
+- **Key:** `-1963231580_shared`
+- **Original:** *"Evil Character repels all Heroes with a Judges reference."*
+- **Decompiled:** *"prevent all good Judges hero in play."*
+
+### Amariah the High Priest [ID: 439012927] (Score: 0.638)
+- **Key:** `439012927_shared`
+- **Original:** *"Enhancements used by this Hero cannot be interrupted."*
+- **Decompiled:** *"Cannot be interrupted."*
+
+### Altar of Incense (Pi) [ID: -1634585636] (Score: 0.64)
+- **Key:** `-1634585636_top`
+- **Original:** *"Protect O.T.  Heroes from discard abilities on evil Enhancements."*
+- **Decompiled:** *"protect all O.T. hero in play."*
+
+### Boils ( C) [ID: -599109376] (Score: 0.642)
+- **Key:** `-599109376_shared`
+- **Original:** *"Selected Hero decreases 0/2 per turn.  If Hero reaches */0 or less, discard Hero."*
+- **Decompiled:** *"1 your hero in play is worth 0/-2 this turn. If all your cards in play is in play discard 1 your hero in play."*
+
+### Chastisement of the Lord (UL) [ID: -63081148] (Score: 0.642)
+- **Key:** `-63081148_shared`
+- **Original:** *"Set Hero aside for three turns.  On turn four Hero returns with abilities increased 6/6."*
+- **Decompiled:** *"You may set-aside 1 your hero in play, place 1 your hero +6/+6."*
+
+### Battle Neutralized [ID: 1475323583] (Score: 0.644)
+- **Key:** `1475323583_shared`
+- **Original:** *"The battle immediately ends in a stalemate.  All characters in battle return to territories.  All enhancements in battle are discarded."*
+- **Decompiled:** *"end the battle all cards in battle, take all character in battle, discard all enhancement in battle."*
+
+### Angel at Jerusalem (Roots) [ID: -812545622] (Score: 0.645)
+- **Key:** `-812545622_shared`
+- **Original:** *"O.T. Enhancements used by this Hero are regardless of protect abilities. After battle, discard all blocking evil warriors."*
+- **Decompiled:** *"ignore all your good enhancement in play. discard all evil evil character in battle."*
+
+### Authority of Christ (GoC UR+) [ID: 636588188] (Score: 0.646)
+- **Key:** `636588188_shared`
+- **Original:** *"STAR: Set aside a Hero from hand for 2 turns. On return, draw 3. GE: Discard all Evil Characters that you do not control. Cannot be negated if used by a meek disciple."*
+- **Decompiled:** *"set-aside 1 your good hero from hand +2/0, draw 3 your card from hand from deck. discard all opponent's evil evil character in play. Cannot be negated."*
+
+### Capturing Canaan [ID: 1104445256] (Score: 0.646)
+- **Key:** `1104445256_shared`
+- **Original:** *"Capture an evil human (or two if used by a Judge)."*
+- **Decompiled:** *"You may capture 2 opponent's evil human character in play."*
+
+### Boaz' Offspring (LoC) [ID: -893807779] (Score: 0.647)
+- **Key:** `-893807779_shared`
+- **Original:** *"STAR: Reveal hand: If there is no Hero, take one from deck. GE: You may take a Ruth Hero from deck (or Reserve if used by a meek Hero). If played in battle, bounce up to X humans."*
+- **Decompiled:** *"If all your good hero from hand is in hand reveal This card, take Ruth. You may take Ruth. If Boaz' Offspring is in battle You may bounce good hero in play."*
+
+### Book of Nathan [ID: -2024671648] (Score: 0.649)
+- **Key:** `-2024671648_shared`
+- **Original:** *"Hero may use any good enhancement based on prophecy regardless of brigade color until end of battle."*
+- **Decompiled:** *"This Hero may use other enhancements until end of phase."*
+
+### Aquila (EC) [ID: -1901958431] (Score: 0.65)
+- **Key:** `-1901958431_shared`
+- **Original:** *"If you control another missionary, search deck for a N.T. good Fortress or N.T. Site. May band to Priscilla. Cannot be negated."*
+- **Decompiled:** *"If all your character in play is in play search your card from deck. Cannot be negated. You may band Priscilla. Cannot be negated."*
+
+### Chronicles of the Kings (LoC Plus) [ID: 2132888307] (Score: 0.65)
+- **Key:** `2132888307_shared`
+- **Original:** *"LAMB: Negate and discard all Curses, idols and evil Enhancements. REAPER: Negate and discard all Covenants, Temple Artifacts and good Enhancements."*
+- **Decompiled:** *"You may negate all evil Curse Idol enhancement in play, discard all evil Curse Idol enhancement in play or You may negate all good Covenant Temple Artifact enhancement in play, discard all good Covenant Temple Artifact enhancement in play."*
+
+### Blue Tassels [ID: -1774043513] (Score: 0.651)
+- **Key:** `-1774043513_top`
+- **Original:** *"No character may be taken prisoner.  Prevents Unholy Writ."*
+- **Decompiled:** *"restrict all character in play. prevent Unholy Writ."*
+
+### Brother's Reunion [ID: -1364276124] (Score: 0.652)
+- **Key:** `-1364276124_shared`
+- **Original:** *"Hero is immune to gold brigade.  Search draw pile for Goshen and put in play."*
+- **Decompiled:** *"immune This Hero. search Goshen, play your site from deck."*
+
+### Burning up the Chaff [ID: -1210454473] (Score: 0.652)
+- **Key:** `-1210454473_shared`
+- **Original:** *"Remove all cards except lost soul cards in one opponent's discard pile from the game."*
+- **Decompiled:** *"banish all opponent's cards from discard pile."*
+
+### Chloe [ID: -446486238] (Score: 0.652)
+- **Key:** `-446486238_shared`
+- **Original:** *"Holder may draw a card."*
+- **Decompiled:** *"You may draw 1 your card from deck."*
+
+### Angry Mob [ID: 839560547] (Score: 0.653)
+- **Key:** `839560547_shared`
+- **Original:** *"Spin card sideways (two full rotations to count).  Top of card must be facing a player over halfway to count.  If not, spin again.  Targeted player turns all Heroes not in battle upside down and then mixes them up.  Pick one hero to discard."*
+- **Decompiled:** *"shuffle all hero in play, discard 1 hero in play."*
+
+### Arianna [ID: -1105881200] (Score: 0.655)
+- **Key:** `-1105881200_shared`
+- **Original:** *"Protect all cards in holder's hand and draw pile from being discarded or removed by an evil special ability."*
+- **Decompiled:** *"protect all your cards from hand, protect all your cards from deck, draw 1 your cards from deck."*
+
+### Chariot of Fire (Promo) [ID: -1626166109] (Score: 0.655)
+- **Key:** `-1626166109_top`
+- **Original:** *"Following your rescue attempt, return all Heroes in your discard pile to your draw pile.  Shuffle draw pile."*
+- **Decompiled:** *"topdeck all your hero from discard pile, shuffle all your cards from deck."*
+
+### Chariot of Fire (Wa) [ID: -763498807] (Score: 0.655)
+- **Key:** `-763498807_top`
+- **Original:** *"Following your rescue attempt, return all Heroes in your discard pile to your draw pile.  Shuffle draw pile."*
+- **Decompiled:** *"topdeck all your hero from discard pile, shuffle all your cards from deck."*
+
+### Backward Shadow [ID: 1719368921] (Score: 0.656)
+- **Key:** `1719368921_shared`
+- **Original:** *"Heal a Hero in play.  Abilities (*/*) of that Hero may not decrease below Hero's face value for remainder of game."*
+- **Decompiled:** *"heal 1 your hero in play, protect 1 your hero in play."*
+
+### Burial Shroud (GoC) [ID: -994600113] (Score: 0.656)
+- **Key:** `-994600113_top`
+- **Original:** *"If your N.T. human Hero is removed from battle by an opponent's special ability, you may discard this card to add a Hero from discard pile or Reserve to battle."*
+- **Decompiled:** *"If removed_from_battle_by_opponent_special_ability discard 1 your enhancement in play, add to battle 1 your hero from discard pile or If removed_from_battle_by_opponent_special_ability discard 1 your enhancement in play, add to battle 1 your hero from Reserve."*
+
+### Andrew, First Called / Andrew, Fisher of Men (GoC) [ID: -1302640813] (Score: 0.657)
+- **Key:** `-1302640813_shared`
+- **Original:** *"You may reveal a good Dominant from hand to negate characters (except disciples). You may convert this card to meek to negate Enhancements."*
+- **Decompiled:** *"reveal 1 your good character from hand, negate all character in play. convert 1 your hero in play, negate all enhancement in play."*
+
+### Assyrian Laborers [ID: 2122692611] (Score: 0.657)
+- **Key:** `2122692611_shared`
+- **Original:** *"(Star) Play this character. (EC) If played from hand, you may reserve a card from hand to activate a pale green Curse from Reserve on this card."*
+- **Decompiled:** *"You may take pale green Curse, play 1 your enhancement from hand."*
+
+### Bernice [ID: 132893542] (Score: 0.659)
+- **Key:** `132893542_shared`
+- **Original:** *"If blocking, take a male, human Evil Character to your territory and convert it to evil gold. Its owner may withdraw a Hero instead. May band to Herod Agrippa I."*
+- **Decompiled:** *"If This card is in battle take 1 opponent's evil male human evil character in territory, convert your evil male human evil character in territory. You may withdraw 1 opponent's good hero in battle. Instead. You may band Herod Agrippa I."*
+
+### Cain (CoW AB) [ID: 161516557] (Score: 0.659)
+- **Key:** `161516557_shared`
+- **Original:** *"If Cain is targeted by an opponent's special ability, that player must discard a card from hand or battle."*
+- **Decompiled:** *"If targeted_by_special_ability discard 1 opponent's card from hand or If targeted_by_special_ability discard 1 opponent's card in battle."*
+
+### Apollos [ID: 1896034888] (Score: 0.66)
+- **Key:** `1896034888_shared`
+- **Original:** *"Increase 2/2 when banded to Paul."*
+- **Decompiled:** *"If Paul is in play increase This Hero +2/+2."*
+
+### Archippus [ID: 68669474] (Score: 0.66)
+- **Key:** `68669474_shared`
+- **Original:** *"If a heretic is in play, clay Enhancements with 'Christ' or 'Jesus' in the title or scripture verse used by Colossae Heroes cannot be negated by an evil card."*
+- **Decompiled:** *"If Heretic is in play protect Christ or Jesus. Cannot be negated."*
+
+### Authority of Christ (GoC) [ID: -1658306455] (Score: 0.661)
+- **Key:** `-1658306455_shared`
+- **Original:** *"STAR: Set aside a Hero from hand for 2 turns. On return, draw 3. GE: Discard all Evil Characters that you do not control. Cannot be negated if used by a meek disciple."*
+- **Decompiled:** *"set-aside 1 your hero from hand, draw 3 your card from deck. discard all opponent's evil character in play. Cannot be negated."*
+
+### Bera, King of Sodom [ID: 379137011] (Score: 0.661)
+- **Key:** `379137011_shared`
+- **Original:** *"If an unoccupied Sodom site is in play, capture a red brigade Hero and place in Sodom."*
+- **Decompiled:** *"If Sodom is in play capture 1 red hero in play, place 1 your hero in play."*
+
+### Assyrian Survivor [ID: -1278295935] (Score: 0.662)
+- **Key:** `-1278295935_shared`
+- **Original:** *"Protected from discard abilities on opponent's cards. If defeated, capture to opponent's Land of Bondage. Cannot be interrupted."*
+- **Decompiled:** *"protect This Hero. If all your cards from discard pile is in discard pile capture This Hero. Cannot be interrupted."*
+
+### Beast from the Earth (RoJ AB) [ID: 1562163101] (Score: 0.662)
+- **Key:** `1562163101_shared`
+- **Original:** *"During battle, if opponent plays a good Enhancement with a brigade not already in battle, you may underdeck a good card in a territory. If blocking, search deck or Reserve for a card with "Beast" in the title."*
+- **Decompiled:** *"You may underdeck 1 good hero in territory. If Beast from the Earth (RoJ AB) is in battle search 1 your Beast character from deck."*
+
+### Achim, the Compiler / Achim, the Talmid (LoC) [ID: 1482900311] (Score: 0.664)
+- **Key:** `1482900311_shared`
+- **Original:** *"STAR: Topdeck an O.T. card from a Reserve."*
+- **Decompiled:** *"You may topdeck 1 your good from Reserve."*
+
+### Angel from the Sun (RoJ) [ID: -1388540463] (Score: 0.664)
+- **Key:** `-1388540463_shared`
+- **Original:** *"You may exchange this Hero with a martyr from hand, deck, territory or Reserve. If it is a Revelation martyr, you may draw 2."*
+- **Decompiled:** *"You may exchange 1 your character from hand. You may draw 2 your card from hand from deck."*
+
+### Accursed of God [ID: -1364873795] (Score: 0.667)
+- **Key:** `-1364873795_shared`
+- **Original:** *"(Star) Exchange this card with a Curse from Reserve. (EE) Discard a Hero. Cannot be prevented if a Curse is in play."*
+- **Decompiled:** *"You may exchange 1 your enhancement from Reserve. You may discard 1 good hero in play. Cannot be prevented."*
+
+### Baptism of Jesus [ID: 1049588416] (Score: 0.667)
+- **Key:** `1049588416_shared`
+- **Original:** *"Negate special abilities on Evil Character Characters and weapons.  If used by a N.T. prophet, discard an Evil Character card.  Cannot be prevented."*
+- **Decompiled:** *"negate all evil evil character in play, negate all artifact in play. discard 1 your evil evil character from hand. Cannot be prevented."*
+
+### Bearing Our Sin [ID: 392484879] (Score: 0.667)
+- **Key:** `392484879_shared`
+- **Original:** *"STAR: Reserve this card to draw 1. GE: Heal your prophet, priest or king to add a Hero of matching brigade to battle."*
+- **Decompiled:** *"reserve 1 your card in play, draw 1 your card from deck. heal 1 your prophet priest king hero in play, add to battle 1 your hero from hand."*
+
+### Beast from the Earth (RoJ) [ID: -28367582] (Score: 0.668)
+- **Key:** `-28367582_shared`
+- **Original:** *"During battle, If opponent plays a good enhancement with a brigade not already in battle, you may underdeck a good card in a territory. If blocking, search deck or Reserve for a card with "Beast" in the title."*
+- **Decompiled:** *"You may underdeck 1 your good in territory. search 1 your Beast from deck."*
+
+### Babylon (The Harlot) (RoJ AB) [ID: -664220831] (Score: 0.669)
+- **Key:** `-664220831_shared`
+- **Original:** *"SITE: If you are attacked, you may convert this Site to an Evil Character. EC: The Harlot may band to an Evil Character or discard a martyr."*
+- **Decompiled:** *"If attacked You may convert This Evil Character. You may band 1 evil evil character in play or You may discard 1 good martyr hero in play."*
+
+### Bildad, the Shuhite (RoJ) [ID: -1426862267] (Score: 0.669)
+- **Key:** `-1426862267_shared`
+- **Original:** *"If you control no human Heroes (except Job), you may decrease a Hero 3/3. May band to a Job Evil Character. Cannot be prevented by an O.T. Hero."*
+- **Decompiled:** *"If all your good human hero in play is in play You may decrease 1 hero in play until end of phase. You may band Job until end of phase. gain 1 your hero in play. Cannot be prevented."*
+- **Fact Violations:** Missing numbers in AST: [3]
+
+### Babel (FoM) [ID: -1142609134] (Score: 0.671)
+- **Key:** `-1142609134_shared`
+- **Original:** *"SITE: If you play this Site, you may take an evil O.T. human from Reserve.  FORT: Negate opponents' characters with toughness X or less."*
+- **Decompiled:** *"You may take 1 your evil O.T. from Reserve. negate all opponent's character in play."*
+
+### Belt of Truth (Wa) [ID: 1250141641] (Score: 0.671)
+- **Key:** `1250141641_shared`
+- **Original:** *"Hero is immune to Lies."*
+- **Decompiled:** *"immune This Hero."*
+
+### Blood Avenger [ID: -1812037992] (Score: 0.671)
+- **Key:** `-1812037992_shared`
+- **Original:** *"You may draw 2. If this character is discarded, you may discard a character of opposite alignment."*
+- **Decompiled:** *"You may draw 2 your card from deck. If This card is in discard pile You may discard 1 good character in play."*
+
+### Climb the Walls [ID: -952756480] (Score: 0.671)
+- **Key:** `-952756480_shared`
+- **Original:** *"Jerusalem Tower has no effect this turn."*
+- **Decompiled:** *"negate Jerusalem Tower this turn."*
+
+### Abiathar (1st Print - K) [ID: 660351859] (Score: 0.673)
+- **Key:** `660351859_shared`
 - **Original:** *"You may look at a hand or take a good O.T. card from Reserve."*
-- **Decompiled:** *"You may reveal all opponent's cards from hand. You may search 1 your good from Reserve."*
+- **Decompiled:** *"You may look 1 opponent's card from hand or You may take 1 your good from Reserve."*
 
-### Abiathar [K] (Score: 0.644)
-- **Original:** *"You may look at a hand or take a good O.T. card from Reserve."*
-- **Decompiled:** *"You may reveal all opponent's cards from hand. You may search 1 good from Reserve."*
+### Bearing Bad News [ID: -1032295582] (Score: 0.673)
+- **Key:** `-1032295582_shared`
+- **Original:** *"If a unique human Evil Character is discarded as a result of this battle, no Lost Soul may be rescued by a Hero this turn."*
+- **Decompiled:** *"If discard prevent all Lost Soul in play this turn."*
 
-### Abiezer (Ki) (Score: 0.269)
-- **Original:** *"Hero is immune to Crimson Brigade."*
-- **Decompiled:** *"protect Abiezer (Ki)."*
+### A New Beginning [ID: -590899574] (Score: 0.674)
+- **Key:** `-590899574_shared`
+- **Original:** *"ALL players shuffle ALL cards in the field of play, set-aside areas and their hands (except this one) back into their draw pile.  Only cards in Land of Redemption and discard piles remain.  ALL players Draw 8 new cards.  Holder may begin a new turn."*
+- **Decompiled:** *"shuffle all cards in play, shuffle all cards, shuffle all cards from hand, draw 8 from deck. You may begin a new phase This card."*
 
-### Abiezer (Wa) (Score: 0.214)
-- **Original:** *"Hero is immune to Crimson Brigade."*
-- **Decompiled:** *"protect Abiezer (Wa)."*
+### Betrayal [ID: 1609027840] (Score: 0.675)
+- **Key:** `1609027840_shared`
+- **Original:** *"All abilities (*/*) on good enhancements are worth half."*
+- **Decompiled:** *"increase all good enhancement in play."*
+
+### Amasa [ID: -1034125914] (Score: 0.676)
+- **Key:** `-1034125914_shared`
+- **Original:** *"Cannot be taken prisoner.  May band to Absalom's Soldiers."*
+- **Decompiled:** *"ignore This Hero. You may band 1 Absalom's Soldiers hero in play."*
+
+### Caiaphas the Conspirator (GoC) [ID: -505112161] (Score: 0.676)
+- **Key:** `-505112161_shared`
+- **Original:** *"Evil N.T. Enhancements used by this card are regardless of protect abilities. While blocking alone and you control a meek Lost Soul, restrict good Dominants. May band to a Pharisee or Sadducee."*
+- **Decompiled:** *"gain all your evil N.T. used by this card enhancement in play. Cannot be prevented. If all your character in battle is in battle If all your meek Lost Soul in play is in play restrict all good Dominant site in play until end of phase. You may band your Pharisee Sadducee hero in play."*
+
+### Battle Prayer (Ki) [ID: -592653306] (Score: 0.677)
+- **Key:** `-592653306_shared`
+- **Original:** *"Search your draw pile or discard pile for any good gold brigade enhancement and add it to your hand.  Shuffle card pile."*
+- **Decompiled:** *"You may search 1 your good gold enhancement from deck, take your good gold enhancement from deck, shuffle your card from deck."*
+
+### Carcasses (PoC) [ID: -1904374322] (Score: 0.677)
+- **Key:** `-1904374322_bottom`
+- **Original:** *"Discard a human. Cannot be negated if it is a multi-brigade or dual icon card."*
+- **Decompiled:** *"discard 1 your good human character from hand. Cannot be negated."*
+
+### Coat of Many Colors [ID: -1489554188] (Score: 0.677)
+- **Key:** `-1489554188_shared`
+- **Original:** *"Selected Hero may use enhancement cards from any good brigade until end of current battle."*
+- **Decompiled:** *"This Hero may use other enhancements until end of phase."*
+
+### Amminadab, the Generous / Amminadab, the Gracious (LoC) [ID: -622696180] (Score: 0.678)
+- **Key:** `-622696180_top`
+- **Original:** *"If a meek Hero is in play, you may play a Lost Soul from a deck or bounce an evil card. Cannot be prevented."*
+- **Decompiled:** *"If all your cards in play is in play You may play Lost Soul. Cannot be prevented or may bounce 1 evil in play. Cannot be prevented."*
+
+### Babylon The Harlot (RoJ) [ID: -720136147] (Score: 0.678)
+- **Key:** `-720136147_shared`
+- **Original:** *"If you are attacked, you may convert this Site to an Evil Character. The Harlot may band to an Evil Character or discard a martyr."*
+- **Decompiled:** *"If attacked You may convert This Evil Character. You may band 1 evil evil character in play or You may discard 1 good martyr hero in play."*
+
+### Blindness [ID: 126690624] (Score: 0.678)
+- **Key:** `126690624_shared`
+- **Original:** *"While an evil card is on a Hero, your demons are immune to that Hero."*
+- **Decompiled:** *"immune all your evil evil character in play."*
+
+### Babel [ID: 754014860] (Score: 0.679)
+- **Key:** `754014860_shared`
+- **Original:** *"All Evil Characters that holder chooses may enter battle."*
+- **Decompiled:** *"You may add to battle your evil character in play."*
+
+### Cage (Roots) [ID: 161413499] (Score: 0.679)
+- **Key:** `161413499_shared`
+- **Original:** *"Negate a good card in battle. Bounce a character."*
+- **Decompiled:** *"negate 1 good hero in battle, return to hand 1 character in play."*
+
+### Adam (FoM) [ID: -381378507] (Score: 0.76)
+- **Key:** `-381378507_shared`
+- **Original:** *"Protect Adam from non-humans. You may topdeck an antediluvian human or a Genesis 1-7 Enhancement from Reserve. May band to Eve. Cannot be interrupted by a human."*
+- **Decompiled:** *"protect This Hero. Cannot be interrupted. You may topdeck Antediluvian Human or You may topdeck Genesis 1-7 Enhancement. You may band Eve."*
+- **Fact Violations:** Missing numbers in AST: [7]
+
+### Capturing Canaan (FoM) [ID: -1929360855] (Score: 0.786)
+- **Key:** `-1929360855_shared`
+- **Original:** *"Capture an evil human (or 2 if used by a judge)."*
+- **Decompiled:** *"capture 1 opponent's evil human character in play. If Judge is in play capture 1 opponent's evil human character in play."*
+- **Fact Violations:** Missing numbers in AST: [2]
+
+### Angelic Visit [ID: 999243565] (Score: 0.791)
+- **Key:** `999243565_shared`
+- **Original:** *"Cornelius may join the battle this turn."*
+- **Decompiled:** *"You may add to battle Cornelius."*
+- **Fact Violations:** Missing action 'band' for legacy term 'join the battle'
+
+### Beast from the Sea (RoJ AB) [ID: -1356503623] (Score: 0.864)
+- **Key:** `-1356503623_shared`
+- **Original:** *"If an opponent uses a draw or search ability (except on an evil card), you may topdeck a N.T. Lost Soul. Cannot be negated if Red Dragon or The False Prophet is in play."*
+- **Decompiled:** *"If opponent_draw_or_search_ability You may topdeck N.T. Lost Soul. Cannot be negated."*
+- **Fact Violations:** Missing primary action: 'draw'
+
+### Absalom (Ki) [ID: 730143821] (Score: 0.867)
+- **Key:** `730143821_shared`
+- **Original:** *"May band with any Evil Character with a reference from 2 Samuel 14-18.  While Absalom is in play, David cannot enter battle."*
+- **Decompiled:** *"You may band evil 2 Samuel evil character in play. If Absalom is in play restrict David."*
+- **Fact Violations:** Missing numbers in AST: [2]
 
 ---
 ## High Fidelity Samples (Top Mechanical Alignment)
 
-- **A Roman Soldier's Faith** (Score: 0.877):
-  - *Orig:* "Heal any Hero in play."
-  - *AST:*  "heal 1 good hero in play."
-- **Aaron (Di)** (Score: 0.884):
-  - *Orig:* "Protect your Tabernacle artifacts from opponents' cards.  May band to an Exodus or Leviticus Hero.  Cannot be negated by a good card."
-  - *AST:*  "protect all your Tabernacle artifact in play. You may band 1 your good Exodus Leviticus hero in territory."
-- **Aaron (Pa)** (Score: 0.882):
-  - *Orig:* "May band to Miriam.  Holy of Holies cannot be discarded while Aaron is in play."
-  - *AST:*  "You may band Miriam. If Aaron is in play protect Holy of Holies. Instead."
-- **Aaron, God's Mediator** (Score: 0.837):
-  - *Orig:* "(Star) Look at the bottom 10 cards of deck: Topdeck an Exodus card or a Dominant. (Hero) May band to an Exodus human or a Tabernacle priest. Cannot be negated."
-  - *AST:*  "look 10 your cards from deck, topdeck 1 your Exodus Dominant. You may band 1 your Exodus Human Tabernacle priest in territory. Cannot be negated."
-- **Aaron's Rod (G)** (Score: 0.863):
-  - *Orig:* "All evil enhancement cards now in play must be discarded. Cannot be prevented, interrupted, or negated."
-  - *AST:*  "discard all evil enhancement in play. Cannot be prevented. Cannot be interrupted. Cannot be negated."
-- **Aaron's Rod (L)** (Score: 0.832):
-  - *Orig:* "All evil enhancement cards now in play must be discarded."
-  - *AST:*  "discard all evil enhancement in play."
-- **A New Beginning (FoM)** (Score: 0.847):
-  - *Orig:* "Negate protect abilities. If it is your turn banish this card: Shuffle all cards in play, set-aside, and hands. Each player must draw 8. Begin a new turn."
-  - *AST:*  "negate all protect ability in play until end of phase. If is turn of banish A New Beginning, shuffle all card in play, shuffle all card, shuffle all card from hand, draw 8 card from deck, begin a new phase a card."
-- **A New Creation** (Score: 0.826):
-  - *Orig:* "If all your Heroes are clay, you may remove your discard pile and this card from the game to convert a human Evil Character to a clay hero."
-  - *AST:*  "If a all your good clay hero in territory is in territory remove from the game all your cards from discard pile, remove from the game A New Creation, convert 1 opponent's evil human evil character in battle."
-- **Aaron and Miriam's Dissent** (Score: 0.859):
-  - *Orig:* "Decrease all O.T. heroes in play by 2/2 until the end of the turn."
-  - *AST:*  "decrease all good O.T. hero in play -2/-2 this turn."
-- **Aaron's Rod (UL)** (Score: 0.832):
-  - *Orig:* "All evil enhancement cards now in play must be discarded."
-  - *AST:*  "discard all evil enhancement in play."
-- **Abaddon, the Destroyer (RoJ AB)** (Score: 0.849):
-  - *Orig:* "Negate a good or neutral card. You may search deck or Reserve for an evil Fortress or Revelation demon. May band to Locust from the Pit. Cannot be negated."
-  - *AST:*  "negate 1 opponent's card in play, search 1 your evil from deck, band Locust from the Pit. Cannot be negated."
-- **Abishai (Ki)** (Score: 0.893):
-  - *Orig:* "Discard Ishbibenob.  May band to any red-brigade warrior class Hero."
-  - *AST:*  "discard Ishbibenob, band 1 your good red-brigade warrior hero in play until end of phase."
-- **Abishai (Wa)** (Score: 0.93):
-  - *Orig:* "May band with Joab and/or Asahel."
-  - *AST:*  "You may band Joab or Asahel."
-- **Abihu (Pi)** (Score: 0.912):
+- **Abihu (Pi) [ID: 1576969800]** (Score: 0.996):
+  - *Key:* `1576969800_shared`
   - *Orig:* "If Nadab is in battle, you may remove all cards in battle from the game."
-  - *AST:*  "If Nadab is in battle You may banish all cards in battle."
-- **Acts of Uzziah** (Score: 0.826):
-  - *Orig:* "Discard Household Idols.  Return all Evil Characters in set aside areas to owner's territory at face value."
-  - *AST:*  "discard Household Idols, convert all evil evil character."
+  - *AST:*  "If Nadab is in battle You may remove from the game all cards in battle."
+- **Burning Incense (1st Print - L) [ID: 22299947]** (Score: 0.981):
+  - *Key:* `22299947_shared`
+  - *Orig:* "Shuffle all Evil Characters in battle."
+  - *AST:*  "shuffle all evil character in battle."
+- **Burning Incense [L] [ID: 1682743467]** (Score: 0.981):
+  - *Key:* `1682743467_shared`
+  - *Orig:* "Shuffle all Evil Characters in battle."
+  - *AST:*  "shuffle all evil character in battle."
+- **Abeyance (Roots) [ID: -1197352418]** (Score: 0.977):
+  - *Key:* `-1197352418_shared`
+  - *Orig:* "Reserve all Evil Characters in battle."
+  - *AST:*  "reserve all evil character in battle."
+- **Breaking Through [ID: -1585499617]** (Score: 0.971):
+  - *Key:* `-1585499617_shared`
+  - *Orig:* "If Nebuchadnezzar is in play, discard one Wall of Protection or Jerusalem Tower."
+  - *AST:*  "If Nebuchadnezzar is in play discard Wall of Protection or Discard jerusalem tower."
+- **Angel Food (D) [ID: -1909341904]** (Score: 0.965):
+  - *Key:* `-1909341904_shared`
+  - *Orig:* "Heal any Hero in play."
+  - *AST:*  "heal all hero in play."
+- **Burnt Offering [IR] [ID: -1968489529]** (Score: 0.959):
+  - *Key:* `-1968489529_shared`
+  - *Orig:* "Underdeck all Evil Characters in battle. You may take an O.T. clay Enhancement from deck or Reserve."
+  - *AST:*  "underdeck all evil character in battle. You may take 1 your O.T. clay enhancement from deck or You may take 1 your O.T. clay enhancement from Reserve."
+- **Brothers' Envy [ID: -1879988445]** (Score: 0.949):
+  - *Key:* `-1879988445_shared`
+  - *Orig:* "Negate and discard all Coat of Many Colors in play including any on Joseph.  If an unoccupied Pit of Dothan is in play, capture Joseph and place there."
+  - *AST:*  "negate Coat of Many Colors, discard Coat of Many Colors. If Pit of Dothan is in play capture Joseph, place Joseph."
+- **Angel at Jerusalem (Wa) [ID: 1981349585]** (Score: 0.947):
+  - *Key:* `1981349585_shared`
+  - *Orig:* "Hero has access to any Site."
+  - *AST:*  "This Hero has access to any Site."
+- **Behold the Lamb [ID: -1332492180]** (Score: 0.939):
+  - *Key:* `-1332492180_shared`
+  - *Orig:* "Interrupt the battle and reveal a Lamb icon card in your hand to discard up to 3 Evil Enhancements and/or Curses.  Cannot be negated."
+  - *AST:*  "interrupt all cards in battle, reveal 1 your Lamb icon from hand, discard 3 evil enhancement in play. Cannot be negated."
+- **Cain [ID: -1339431942]** (Score: 0.938):
+  - *Key:* `-1339431942_shared`
+  - *Orig:* "If Cain is defeated in battle, discard any Hero in a territory."
+  - *AST:*  "If defeated If Cain is in battle discard 1 territory hero in play."
+- **Alexander of Troas (Roots) [ID: 1733743587]** (Score: 0.937):
+  - *Key:* `1733743587_shared`
+  - *Orig:* "Underdeck a Hero. Opponent may underdeck a good Enhancement from hand instead. Cannot be negated if another evil Greek is in play."
+  - *AST:*  "If all your evil Greek character in play is in play underdeck 1 your hero from hand. Cannot be negated. may underdeck 1 opponent's good enhancement from hand. Instead. Cannot be negated."
+- **Barnabas, the Bold (Roots) [ID: 1311430238]** (Score: 0.937):
+  - *Key:* `1311430238_shared`
+  - *Orig:* "Protect Lost Souls from evil N.T. cards. You may play a Lost Soul from a deck. Cannot be prevented."
+  - *AST:*  "protect all evil N.T. cards Lost Soul in play. Cannot be prevented. You may play 1 your Lost Soul from deck. Cannot be prevented."
+- **Chariot of Fire (Roots) [ID: 668084410]** (Score: 0.935):
+  - *Key:* `668084410_top`
+  - *Orig:* "Shuffle all Heroes from discard pile."
+  - *AST:*  "shuffle all your hero from discard pile."
+- **Authority of Peter (I) [ID: -1694206552]** (Score: 0.931):
+  - *Key:* `-1694206552_shared`
+  - *Orig:* "Remove an Evil Character from the game. Topdeck a Hero from your discard pile."
+  - *AST:*  "remove from the game 1 evil evil character in play, topdeck 1 your good hero from discard pile."
 
 ---
 ## Moderate Fidelity Samples
 
-- **A New Beginning** (Score: 0.686):
-  - *Orig:* "ALL players shuffle ALL cards in the field of play, set-aside areas and their hands (except this one) back into their draw pile.  Only cards in Land of Redemption and discard piles remain.  ALL players Draw 8 new cards.  Holder may begin a new turn."
-  - *AST:*  "shuffle all cards in play, shuffle all cards, shuffle all cards from hand, draw 8 from deck, ignore all your cards in play."
-- **A New Commandment** (Score: 0.751):
-  - *Orig:* "Convert X human Evil Character Characters to Heroes in the brigade of your choice.  Cannot be prevented by an Evil Character card."
-  - *AST:*  "convert evil human character in play. Cannot be prevented."
-- **A New Creation** (Score: 0.705):
-  - *Orig:* "Convert one human Evil Character to a red brigade Hero."
-  - *AST:*  "convert 1 evil human evil character in play."
-- **A Soldier's Prayer** (Score: 0.738):
-  - *Orig:* "If used by a warrior class Hero, search your deck or discard pile for a red Enhancement. Shuffle this card into that pile."
-  - *AST:*  "You may search 1 your red enhancement from deck, shuffle A Soldier's Prayer. You may search 1 your red enhancement from discard pile, shuffle A Soldier's Prayer."
-- **Aaron, Moses' Brother (1st Print - L)** (Score: 0.812):
-  - *Orig:* "May band to a generic priest, or you may draw 2."
-  - *AST:*  "You may band 1 your good priest in play. You may draw 2 your cards from deck."
-- **Aaron, Moses' Brother [L]** (Score: 0.747):
-  - *Orig:* "May band to a generic priest, or you may draw 2."
-  - *AST:*  "You may band 1 priest in play until end of phase. You may draw 2 your cards from deck."
-- **Aaron's Staff (CoW AB)** (Score: 0.742):
-  - *Orig:* "Once per turn, if your good Tabernacle Priest enters battle, reveal the top X cards of opponent's deck: Put Lost Souls in play and discard an evil card. Good Tabernacle Priests cannot be negated."
-  - *AST:*  "If Tabernacle Priest is in battle reveal opponent's cards from deck, discard 1 your evil from hand. Limit. Cannot be negated."
-- **Abaddon, the Destroyer (RoJ)** (Score: 0.806):
+- **Abaddon, the Destroyer (RoJ AB) [ID: -333944980]** (Score: 0.819):
+  - *Key:* `-333944980_shared`
   - *Orig:* "Negate a good or neutral card. You may search deck or Reserve for an evil Fortress or Revelation demon. May band to Locust from the Pit. Cannot be negated."
-  - *AST:*  "negate 1 in play. Cannot be negated. You may search 1 your evil from deck. Cannot be negated. You may search 1 your evil from Reserve. Cannot be negated. You may band Locust. Cannot be negated."
-- **Abandonment (UL)** (Score: 0.734):
-  - *Orig:* "Evil Character repels Red Brigade."
-  - *AST:*  "negate all Red Brigade character in play."
-- **Abed-nego (Azariah) (PoC)** (Score: 0.817):
-  - *Orig:* "You may underdeck the top card of deck to topdeck a good Daniel card from Reserve. Protect Lost Souls from evil cards. May band to a Daniel human."
-  - *AST:*  "discard 1 your card from deck, topdeck Daniel. protect all character in play. You may band Daniel."
+  - *AST:*  "negate 1 in play. Cannot be negated. You may search 1 your evil from deck. Cannot be negated or You may search 1 your evil from Reserve. Cannot be negated. You may band Locust from the Pit. Cannot be negated."
+- **Abaddon, the Destroyer (RoJ) [ID: -2077306357]** (Score: 0.819):
+  - *Key:* `-2077306357_shared`
+  - *Orig:* "Negate a good or neutral card. You may search deck or Reserve for an evil Fortress or Revelation demon. May band to Locust from the Pit. Cannot be negated."
+  - *AST:*  "negate 1 in play. Cannot be negated. You may search 1 your evil from deck. Cannot be negated or You may search 1 your evil from Reserve. Cannot be negated. You may band Locust from the Pit. Cannot be negated."
+- **Adjourn [ID: 246872368]** (Score: 0.819):
+  - *Key:* `246872368_shared`
+  - *Orig:* "Paralyze X Heroes in opponent's territory for 2 turns. If all Evil Characters in battle are Greek, end the battle."
+  - *AST:*  "You may paralyze opponent's hero in territory until end of phase. Limit. If all your evil Greek evil character in battle is in battle end the battle all character in battle."
+- **Angel in the Path (Roots) [ID: -290993525]** (Score: 0.819):
+  - *Key:* `-290993525_shared`
+  - *Orig:* "Paralyze animals and evil prophets in territories this turn. You may take a silver weapon from deck."
+  - *AST:*  "paralyze all Animal hero in territory this turn, paralyze all evil Prophet hero in territory this turn. You may take 1 your Silver enhancement from deck."
+- **Betrayal (PoC) [ID: 1987652921]** (Score: 0.819):
+  - *Key:* `1987652921_shared`
+  - *Orig:* "(Star) Topdeck an Artifact from Reserve. (EE) Underdeck an opponent's good card or a good card from an opponent's hand. If played in battle, you may draw 3."
+  - *AST:*  "You may topdeck 1 your artifact from Reserve. You may underdeck 1 opponent's good character in play or You may underdeck 1 opponent's good character from hand. If This card is in battle You may draw 3 your card from deck."
+- **Ahimaaz (Pi) [ID: 518930504]** (Score: 0.817):
+  - *Key:* `518930504_shared`
+  - *Orig:* "Protect this Hero from capture.  You may look at one opponent's hand or cards face down in a Site.  You may then withdraw Hero from battle unharmed."
+  - *AST:*  "protect This Hero. You may look all opponent's cards from hand or You may look all cards in play. You may withdraw This Hero."
+- **Benjamin, the Young [ID: -1429884000]** (Score: 0.817):
+  - *Key:* `-1429884000_shared`
+  - *Orig:* "Protect Lost Souls from evil cards. You may exchange this card with a son of Jacob from deck or territory. Cannot be prevented."
+  - *AST:*  "protect all your Lost Soul in play. You may exchange your good hero from deck. Cannot be prevented. You may exchange your good Son of Jacob hero in territory. Cannot be prevented."
+- **Battle Prayer (Wa) [ID: -1332490584]** (Score: 0.816):
+  - *Key:* `-1332490584_shared`
+  - *Orig:* "Search through your draw pile or discard pile and select one Gold Enhancement Card.  Shuffle card pile."
+  - *AST:*  "You may search 1 your gold enhancement from deck, take your card from deck, shuffle all your cards from deck."
+- **Besieged [ID: -27859788]** (Score: 0.816):
+  - *Key:* `-27859788_shared`
+  - *Orig:* "Banding abilities used by human Evil Characters cannot be negated by good cards or Artifacts.  If 3 or more human Evil Characters are in battle while this card is active, you may discard this card to discard an O.T.  Fortress in play."
+  - *AST:*  "gain all evil Human banding character in play. Cannot be negated. If all evil Human in battle is in battle discard 1 your card in play, discard 1 O.T. Fortress site in play."
+- **Chains ( C) [ID: -407321859]** (Score: 0.816):
+  - *Key:* `-407321859_shared`
+  - *Orig:* "Return any Hero in play to owner's hand."
+  - *AST:*  "return to hand 1 hero in play."

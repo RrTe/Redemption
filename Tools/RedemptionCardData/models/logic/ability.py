@@ -4,8 +4,9 @@ Orchestrates activation modes, trigger events, conditions, costs, sequential
 effects, and ability-specific modifiers per REG Section 'Abilities'.
 """
 
+from __future__ import annotations
 from typing import Any, List, Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from models.enums.activation_mode import ActivationMode
 from models.logic.target_selector import TargetSelector
 from models.logic.condition_expression import ConditionExpression
@@ -42,6 +43,7 @@ class Ability(BaseModel):
     costs: List[ActionEffect] = Field(default_factory=list)
     effects: List[ActionEffect] = Field(default_factory=list)
     modifiers: List[Modifier] = Field(default_factory=list)
+    choice_group: Optional[str] = Field(default=None, description="Groups mutually exclusive modal choices.")
 
     @field_validator("activation_mode", mode="before")
     @classmethod
@@ -59,3 +61,13 @@ class Ability(BaseModel):
             if clean in ("manual_triggered", "manual", "manually"):
                 return ActivationMode.MANUALLY_TRIGGERED
         return value
+
+    @model_validator(mode="after")
+    def validate_has_payload(self) -> Ability:
+        """Ensures that an ability contains at least one effect or modifier."""
+        if not self.effects and not self.modifiers:
+            raise ValueError(
+                f"Ability '{self.ability_id}' must contain at least one action effect (e.g. 'first strike', 'draw') "
+                "or modifier. Empty effects are not allowed."
+            )
+        return self

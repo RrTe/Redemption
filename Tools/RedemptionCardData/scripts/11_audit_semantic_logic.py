@@ -28,6 +28,30 @@ EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
 from fact_matrix import extract_ast_facts, verify_fact_matrix
 
 
+def _build_id_lookup() -> Dict[str, str]:
+    """Builds a lookup mapping card keys and names to 32-bit Coliseum IDs."""
+    cards_file = BASE_DIR / "data" / "cards_extended_with_ordir_fuzzy.json"
+    if not cards_file.exists():
+        return {}
+    try:
+        cards_data = json.loads(cards_file.read_text(encoding="utf-8"))
+        lookup: Dict[str, str] = {}
+        for c in cards_data.get("cards", []):
+            cid = str(c.get("Id", ""))
+            ident = c.get("Identifier", "")
+            for sname, side in c.get("CardSides", {}).items():
+                if not side:
+                    continue
+                name = side.get("Name", "")
+                if name:
+                    lookup[f"{ident}_{name}_{sname}"] = cid
+                    lookup[f"{name}_{sname}"] = cid
+                    lookup[name] = cid
+        return lookup
+    except Exception:
+        return {}
+
+
 def audit_cards() -> None:
     """Performs semantic embedding comparison and fact-matrix audit on all ASTs."""
     if not AI_OUTPUT_FILE.exists():
@@ -35,6 +59,7 @@ def audit_cards() -> None:
         return
 
     data: Dict[str, Any] = json.loads(AI_OUTPUT_FILE.read_text(encoding="utf-8"))
+    id_map = _build_id_lookup()
     print(f"Running offline Hybrid-Audit on {len(data)} AI-generated card ASTs...")
 
     raw_texts: List[str] = []
@@ -59,7 +84,8 @@ def audit_cards() -> None:
         raw_texts.append(raw)
         decomp_texts.append(decomp)
         cards_info.append({
-            "name": name, "raw": raw, "decomp": decomp,
+            "key": key, "name": name, "raw": raw, "decomp": decomp,
+            "id": entry.get("card_id") or id_map.get(key, id_map.get(name, "N/A")),
             "passed_facts": passed_facts, "issues": fact_issues
         })
 
@@ -68,23 +94,30 @@ def audit_cards() -> None:
     raw_embeds = EMBED_MODEL.encode(raw_texts, normalize_embeddings=True, show_progress_bar=False)
     decomp_embeds = EMBED_MODEL.encode(decomp_texts, normalize_embeddings=True, show_progress_bar=False)
 
+    import numpy as np
+    sims = np.sum(raw_embeds * decomp_embeds, axis=1)
+
     high_fidelity: List[Dict[str, Any]] = []
     moderate_fidelity: List[Dict[str, Any]] = []
     review_required: List[Dict[str, Any]] = []
 
     for idx, info in enumerate(cards_info):
-        # Cosine similarity is dot product of normalized vectors
-        cos_sim = float(raw_embeds[idx] @ decomp_embeds[idx])
-        info["score"] = round(cos_sim, 3)
+        score = float(sims[idx])
+        passed_facts = info["passed_facts"]
+        item = {**info, "score": round(score, 3)}
 
-        if cos_sim >= 0.82 and info["passed_facts"]:
-            high_fidelity.append(info)
-        elif cos_sim >= 0.68 and info["passed_facts"]:
-            moderate_fidelity.append(info)
+        if passed_facts and score >= 0.82:
+            high_fidelity.append(item)
+        elif passed_facts and score >= 0.68:
+            moderate_fidelity.append(item)
         else:
-            review_required.append(info)
+            review_required.append(item)
 
-    total = len(data)
+    review_required.sort(key=lambda x: x["score"])
+    high_fidelity.sort(key=lambda x: x["score"], reverse=True)
+    moderate_fidelity.sort(key=lambda x: x["score"], reverse=True)
+
+    total = len(cards_info)
     pct_high = (len(high_fidelity) / total * 100) if total else 0
     pct_mod = (len(moderate_fidelity) / total * 100) if total else 0
     pct_rev = (len(review_required) / total * 100) if total else 0
@@ -105,8 +138,9 @@ def audit_cards() -> None:
         ""
     ]
 
-    for it in review_required[:35]:
-        lines.append(f"### {it['name']} (Score: {it['score']})")
+    for it in review_required:
+        lines.append(f"### {it['name']} [ID: {it['id']}] (Score: {it['score']})")
+        lines.append(f"- **Key:** `{it['key']}`")
         lines.append(f"- **Original:** *\"{it['raw']}\"*")
         lines.append(f"- **Decompiled:** *\"{it['decomp']}\"*")
         if it["issues"]:
@@ -115,19 +149,20 @@ def audit_cards() -> None:
 
     lines.extend(["---", "## High Fidelity Samples (Top Mechanical Alignment)", ""])
     for it in high_fidelity[:15]:
-        lines.append(f"- **{it['name']}** (Score: {it['score']}):")
+        lines.append(f"- **{it['name']} [ID: {it['id']}]** (Score: {it['score']}):")
+        lines.append(f"  - *Key:* `{it['key']}`")
         lines.append(f"  - *Orig:* \"{it['raw']}\"")
         lines.append(f"  - *AST:*  \"{it['decomp']}\"")
 
     lines.extend(["", "---", "## Moderate Fidelity Samples", ""])
     for it in moderate_fidelity[:10]:
-        lines.append(f"- **{it['name']}** (Score: {it['score']}):")
+        lines.append(f"- **{it['name']} [ID: {it['id']}]** (Score: {it['score']}):")
+        lines.append(f"  - *Key:* `{it['key']}`")
         lines.append(f"  - *Orig:* \"{it['raw']}\"")
         lines.append(f"  - *AST:*  \"{it['decomp']}\"")
 
     REPORT_FILE.write_text("\n".join(lines), encoding="utf-8")
     print(f"\nAudit complete! Report written to {REPORT_FILE}")
-    print(f"Results: [High >=0.82]: {len(high_fidelity)} ({pct_high:.1f}%) | [Moderate]: {len(moderate_fidelity)} ({pct_mod:.1f}%) | [Review]: {len(review_required)} ({pct_rev:.1f}%)")
 
 
 if __name__ == "__main__":

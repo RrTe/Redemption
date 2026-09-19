@@ -1,0 +1,88 @@
+[
+  {
+    "key": "1783980323_top",
+    "card_id": "1783980323",
+    "name": "Aaron's Staff (CoW AB)",
+    "raw": "Once per turn, if your good Tabernacle Priest enters battle, reveal the top X cards of opponent's deck: Put Lost Souls in play and discard an evil card. Good Tabernacle Priests cannot be negated.",
+    "issues": [
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ],
+    "all_issues": [
+      "Missing modifier: 'cannot be negated'",
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ]
+  },
+  {
+    "key": "1459937673_shared",
+    "card_id": "1459937673",
+    "name": "Abandonment (L)",
+    "raw": "Evil Character repels Red Brigade.",
+    "issues": [
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ],
+    "all_issues": [
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ]
+  },
+  {
+    "key": "1786449883_shared",
+    "card_id": "1786449883",
+    "name": "Amariah, the High Priest (Roots)",
+    "raw": "O.T. clay Enhancements used by this card cannot be interrupted.",
+    "issues": [
+      "Missing restriction identifier: 'used by this card'"
+    ],
+    "all_issues": [
+      "Missing modifier: 'cannot be interrupted'",
+      "Missing restriction identifier: 'used by this card'"
+    ]
+  },
+  {
+    "key": "-1034125914_shared",
+    "card_id": "-1034125914",
+    "name": "Amasa",
+    "raw": "Cannot be taken prisoner.  May band to Absalom's Soldiers.",
+    "issues": [
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ],
+    "all_issues": [
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ]
+  },
+  {
+    "key": "2101123495_shared",
+    "card_id": "2101123495",
+    "name": "Antidote (L)",
+    "raw": "Renders all poisons harmless.",
+    "issues": [
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ],
+    "all_issues": [
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ]
+  },
+  {
+    "key": "-2139719223_shared",
+    "card_id": "-2139719223",
+    "name": "Arrogance (LoC)",
+    "raw": "If used by an O.T. human, you may negate and discard a good multi-brigade Enhancement. Cannot be negated if used by a taunting character.",
+    "issues": [
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ],
+    "all_issues": [
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ]
+  },
+  {
+    "key": "-1702895840_shared",
+    "card_id": "-1702895840",
+    "name": "Asaph",
+    "raw": "Good Enhancements involving music cannot be negated by evil cards.",
+    "issues": [
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ],
+    "all_issues": [
+      "Hallucinated action 'immune' (use 'gain' with modifier instead)"
+    ]
+  }
+]

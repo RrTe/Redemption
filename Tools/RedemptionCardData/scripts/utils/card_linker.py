@@ -97,3 +97,78 @@ class CardLinker:
         for title in target_titles:
             all_ids.update(self.resolve_title(title))
         return sorted(all_ids)
+
+
+def link_side_logic_targets(side_logic: Any, linker: CardLinker) -> None:
+    """Populates target_card_ids for all card_titles found in AST conditions, costs, and effects.
+
+    Args:
+        side_logic: CardSideLogic instance.
+        linker: Pre-indexed CardLinker instance.
+    """
+    for ab in getattr(side_logic, "abilities", []):
+        for cond in getattr(ab, "conditions", []):
+            sel = getattr(cond, "selector", None)
+            if sel and getattr(sel, "card_titles", None):
+                sel.target_card_ids = linker.resolve_titles(sel.card_titles)
+        for cost in getattr(ab, "costs", []):
+            tgt = getattr(cost, "target", None)
+            if tgt and getattr(tgt, "card_titles", None):
+                tgt.target_card_ids = linker.resolve_titles(tgt.card_titles)
+        for eff in getattr(ab, "effects", []):
+            tgt = getattr(eff, "target", None)
+            if tgt and getattr(tgt, "card_titles", None):
+                tgt.target_card_ids = linker.resolve_titles(tgt.card_titles)
+
+
+def normalize_chained_targets(side_logic: Any) -> List[str]:
+    """Ensures chained targets have valid ref_step or self-corrects unambiguous ones.
+
+    Args:
+        side_logic: CardSideLogic instance.
+
+    Returns:
+        List of error descriptions for ambiguous chained targets requiring LLM retry.
+    """
+    from models.enums.selection_mode import SelectionMode
+
+    ambiguous: List[str] = []
+    for ab in getattr(side_logic, "abilities", []):
+        target_source_steps: List[int] = []
+        prior_steps: List[int] = []
+
+        for c in getattr(ab, "costs", []):
+            c_step = getattr(c, "step", 1)
+            prior_steps.append(c_step)
+            if getattr(c, "target", None):
+                target_source_steps.append(c_step)
+
+        for eff in getattr(ab, "effects", []):
+            tgt = getattr(eff, "target", None)
+            step = getattr(eff, "step", 1)
+            sel_mode = getattr(tgt, "selection_mode", None)
+            mode_val = sel_mode.value if hasattr(sel_mode, "value") else str(sel_mode)
+
+            if tgt and mode_val == "chained_target":
+                ref = getattr(tgt, "ref_step", None)
+                if ref is None or ref >= step or ref not in prior_steps:
+                    if step == 1 and not target_source_steps:
+                        # Cannot chain if on step 1 and no prior cost targets: set to automatic_all
+                        tgt.selection_mode = SelectionMode.AUTOMATIC_ALL
+                        tgt.ref_step = None
+                    elif len(target_source_steps) == 1:
+                        # Exactly one previous step introduced a target: unambiguously link to it
+                        tgt.ref_step = target_source_steps[0]
+                    elif len(prior_steps) == 1:
+                        tgt.ref_step = prior_steps[0]
+                    else:
+                        ambiguous.append(
+                            f"Step {step} uses chained_target without valid ref_step among candidate steps {target_source_steps or prior_steps}"
+                        )
+            elif tgt:
+                target_source_steps.append(step)
+
+            prior_steps.append(step)
+
+    return ambiguous
+

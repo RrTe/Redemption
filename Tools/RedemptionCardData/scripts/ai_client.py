@@ -52,15 +52,19 @@ def query_llm_messages(backend: str, messages: List[Dict[str, str]]) -> str:
         ValueError: If backend is unrecognized or required API keys are missing.
         QuotaExhaustedError: If rate limits or quota caps are permanently exceeded.
     """
-    if backend in ("openrouter", "groq"):
-        if backend == "openrouter":
+    if backend in ("openrouter", "groq", "nvidia"):
+        if backend == "nvidia":
+            api_key = os.environ.get("NVIDIA_API_KEY")
+            url = "https://integrate.api.nvidia.com/v1/chat/completions"
+            model_name = os.environ.get("NVIDIA_MODEL", "nvidia/nemotron-3-super-120b-a12b")
+        elif backend == "openrouter":
             api_key = os.environ.get("OPENROUTER_API_KEY")
             url = "https://openrouter.ai/api/v1/chat/completions"
             model_name = os.environ.get("OPENROUTER_MODEL", "nvidia/nemotron-3-super-120b-a12b:free")
         else:
             api_key = os.environ.get("GROQ_API_KEY")
             url = "https://api.groq.com/openai/v1/chat/completions"
-            model_name = os.environ.get("GROQ_MODEL", "qwen/qwen3.8-27b")
+            model_name = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
 
         if not api_key:
             raise ValueError(f"{backend.upper()}_API_KEY not configured in .env")
@@ -69,11 +73,17 @@ def query_llm_messages(backend: str, messages: List[Dict[str, str]]) -> str:
         body = {
             "model": model_name,
             "messages": messages,
+            "temperature": 0.0,
             "response_format": {"type": "json_object"}
         }
 
         for attempt in range(5):
-            resp = requests.post(url, headers=headers, json=body, timeout=75)
+            try:
+                resp = requests.post(url, headers=headers, json=body, timeout=75)
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as net_err:
+                print(f" [Network/Timeout error] {net_err}, waiting 4s before retry ({attempt + 1}/5)...", flush=True)
+                time.sleep(4)
+                continue
             if resp.status_code in (500, 502, 503, 504):
                 print(f" [{resp.status_code}] Transient server error, waiting 3s...", flush=True)
                 time.sleep(3)
@@ -121,6 +131,7 @@ def query_llm_messages(backend: str, messages: List[Dict[str, str]]) -> str:
             "contents": contents,
             "generationConfig": {
                 "responseMimeType": "application/json",
+                "temperature": 0.0,
                 "thinkingConfig": {"thinkingBudget": 0}
             }
         }
@@ -147,7 +158,13 @@ def query_llm_messages(backend: str, messages: List[Dict[str, str]]) -> str:
         last_prompt = messages[-1]["content"] if messages else ""
         resp = requests.post(
             f"{host}/api/generate",
-            json={"model": model, "prompt": last_prompt, "format": "json", "stream": False},
+            json={
+                "model": model,
+                "prompt": last_prompt,
+                "format": "json",
+                "stream": False,
+                "options": {"temperature": 0.0}
+            },
             timeout=90
         )
         resp.raise_for_status()

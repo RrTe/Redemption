@@ -1,0 +1,796 @@
+=== SEARCH: Cannot be Negated ===
+Total matches: 10
+--- MATCH AT [373]:
+Special Abilities 
+Abilities 
+Modifiers 
+Conditions 
+Effects 
+Targeting 
+Duration 
+Ability Activation Order 
+Modifier Listing 
+Cannot be Interrupted 
+Cannot be Negated 
+Cannot be Prevented 
+Instead 
+Limit 
+Regardless 
+Effect Listing 
+Activate an Ability 
+Activate an Artifact 
+Add to Battle 
+Band 
+Banish (Remove from the game) 
+Begin a New Phase 
+Bounce (Return to hand) 
+Cannot be Ignored 
+Capture 
+Change Hand Size (Reduce, Increase, or Set Hand Size) 
+Choose Opponent (Choose the Blocker/Rescuer) 
+Convert (Repent
+
+--- MATCH AT [32448]:
+d that appear before the 
+sentence containing the modifier. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+18 
+ 
+Cannot be Negated 
+Last Updated: 6/21/2021 (v7.1.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    The cannot be negated modifier modifies an ability, making it so that the modified ability cannot be affected by 
+any interrupt, prevent or negate effect. The modified ability can still be targeted by the interrupt, prevent or 
+negate effect. 
+●    An ability cannot be 
+
+--- MATCH AT [32549]:
+                                          
+18 
+ 
+Cannot be Negated 
+Last Updated: 6/21/2021 (v7.1.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    The cannot be negated modifier modifies an ability, making it so that the modified ability cannot be affected by 
+any interrupt, prevent or negate effect. The modified ability can still be targeted by the interrupt, prevent or 
+negate effect. 
+●    An ability cannot be modified by cannot be negated retroactively; it has cannot be negated when the card it is 
+on is play
+
+--- MATCH AT [32827]:
+vent or negate effect. The modified ability can still be targeted by the interrupt, prevent or 
+negate effect. 
+●    An ability cannot be modified by cannot be negated retroactively; it has cannot be negated when the card it is 
+on is played or not at all. 
+ 
+ 
+ 
+Special Conditions 
+ 
+●    All abilities on Dominants are cannot be negated. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be negated modifier and does not specify what abilities 
+the cannot be negated modifier m
+
+--- MATCH AT [32867]:
+ity can still be targeted by the interrupt, prevent or 
+negate effect. 
+●    An ability cannot be modified by cannot be negated retroactively; it has cannot be negated when the card it is 
+on is played or not at all. 
+ 
+ 
+ 
+Special Conditions 
+ 
+●    All abilities on Dominants are cannot be negated. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be negated modifier and does not specify what abilities 
+the cannot be negated modifier modifies, it modifies all abilities on th
+
+--- MATCH AT [32999]:
+oactively; it has cannot be negated when the card it is 
+on is played or not at all. 
+ 
+ 
+ 
+Special Conditions 
+ 
+●    All abilities on Dominants are cannot be negated. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be negated modifier and does not specify what abilities 
+the cannot be negated modifier modifies, it modifies all abilities on the card that appear before the sentence 
+containing the modifier. 
+ 
+Return to Table of Contents 
+ 
+                                 
+
+--- MATCH AT [33098]:
+ Conditions 
+ 
+●    All abilities on Dominants are cannot be negated. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be negated modifier and does not specify what abilities 
+the cannot be negated modifier modifies, it modifies all abilities on the card that appear before the sentence 
+containing the modifier. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+19 
+ 
+Cannot be Prevented 
+Last Updated: 1/27/2020 (v7.0.0) 
+Released: 7/26/2011
+ 
+
+--- MATCH AT [33166]:
+. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be negated modifier and does not specify what abilities 
+the cannot be negated modifier modifies, it modifies all abilities on the card that appear before the sentence 
+containing the modifier. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+19 
+ 
+Cannot be Prevented 
+Last Updated: 1/27/2020 (v7.0.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    The cannot be prevented modifier modifies an 
+
+--- MATCH AT [84741]:
+tect effect when it appears as its own phrase but not when it appears as part of a longer 
+phrase such as “may not be blocked by”. 
+●    The phrases “cannot be negated”, “cannot be prevented” and “cannot be interrupted” are not protect effects, but 
+rather modifiers. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+54 
+ 
+Increase and Decrease 
+Last Updated: 8/10/2015 (v3.0.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    An increase or decrease effect changes the strength and/or
+
+--- MATCH AT [169925]:
+ 
+Dominant 
+ 
+A lamb or grim reaper illustration located in the icon box identifies a Dominant. All 
+Dominants are unique. All abilities on Dominants cannot be negated. A Dominant can be 
+played at any time on the active player’s turn regardless of initiative provided no effects are 
+resolving. 
+ 
+Dominants are discarded after they are played, unless their ability states otherwise. 
+Dominants on the playing surface are discarded when their ability ends. 
+ 
+The priority to play a Dominant is laid out under Action
+
+
+==================================================
+
+=== SEARCH: Cannot be Interrupted ===
+Total matches: 11
+--- MATCH AT [350]:
+ial Ability Structure 
+Special Abilities 
+Abilities 
+Modifiers 
+Conditions 
+Effects 
+Targeting 
+Duration 
+Ability Activation Order 
+Modifier Listing 
+Cannot be Interrupted 
+Cannot be Negated 
+Cannot be Prevented 
+Instead 
+Limit 
+Regardless 
+Effect Listing 
+Activate an Ability 
+Activate an Artifact 
+Add to Battle 
+Band 
+Banish (Remove from the game) 
+Begin a New Phase 
+Bounce (Return to hand) 
+Cannot be Ignored 
+Capture 
+Change Hand Size (Reduce, Increase, or Set Hand Size) 
+Choose Opponent (Choose the Blocker/Rescue
+
+--- MATCH AT [31338]:
+under Action 
+Priority in the Glossary. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+17 
+ 
+Modifier Listing 
+ 
+Cannot be Interrupted 
+Last Updated: 6/21/2021 (v7.1.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    The cannot be interrupted modifier modifies an ability, making it so that the modified ability cannot be 
+affected by any interrupt or negate effect activated after the card the modified ability is on is played. The 
+modified ability can still be targeted by the interru
+
+--- MATCH AT [31443]:
+                  
+17 
+ 
+Modifier Listing 
+ 
+Cannot be Interrupted 
+Last Updated: 6/21/2021 (v7.1.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    The cannot be interrupted modifier modifies an ability, making it so that the modified ability cannot be 
+affected by any interrupt or negate effect activated after the card the modified ability is on is played. The 
+modified ability can still be targeted by the interrupt or negate effect. 
+●    An ability cannot be modified by cannot be interrupted retroactively; it has c
+
+--- MATCH AT [31769]:
+dified ability is on is played. The 
+modified ability can still be targeted by the interrupt or negate effect. 
+●    An ability cannot be modified by cannot be interrupted retroactively; it has cannot be interrupted when the 
+card it is on is played or not at all. A cannot be interrupted modifier on a card that is met by actions performed 
+during the playing of that card is considered to be modifying the abilities of that card when it is played. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability incl
+
+--- MATCH AT [31813]:
+d ability can still be targeted by the interrupt or negate effect. 
+●    An ability cannot be modified by cannot be interrupted retroactively; it has cannot be interrupted when the 
+card it is on is played or not at all. A cannot be interrupted modifier on a card that is met by actions performed 
+during the playing of that card is considered to be modifying the abilities of that card when it is played. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be interrupted modifier and 
+
+--- MATCH AT [31886]:
+An ability cannot be modified by cannot be interrupted retroactively; it has cannot be interrupted when the 
+card it is on is played or not at all. A cannot be interrupted modifier on a card that is met by actions performed 
+during the playing of that card is considered to be modifying the abilities of that card when it is played. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be interrupted modifier and does not specify what 
+abilities the cannot be interrupted modifier modif
+
+--- MATCH AT [32149]:
+sidered to be modifying the abilities of that card when it is played. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be interrupted modifier and does not specify what 
+abilities the cannot be interrupted modifier modifies, it modifies all abilities on the card that appear before the 
+sentence containing the modifier. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+18 
+ 
+Cannot be Negated 
+Last Updated: 6/21/2021 (v7.1.0) 
+Released: 7/26/2011
+
+--- MATCH AT [32221]:
+
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be interrupted modifier and does not specify what 
+abilities the cannot be interrupted modifier modifies, it modifies all abilities on the card that appear before the 
+sentence containing the modifier. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+18 
+ 
+Cannot be Negated 
+Last Updated: 6/21/2021 (v7.1.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    The cannot be negated modifier modifies an abil
+
+--- MATCH AT [68854]:
+n end the battle effect completes, the pending abilities never take effect. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    All end the battle effects effectively have cannot be interrupted status because the effect is used in the Battle 
+Phase and causes the Battle Phase to end, and effects that complete in one phase can only be interrupted or 
+negated during the phase in which they are used. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+44 
+ 
+Equip 
+Last Updated: 3/10/2025 (v10.0.0) 
+Released: 
+
+--- MATCH AT [84788]:
+ut not when it appears as part of a longer 
+phrase such as “may not be blocked by”. 
+●    The phrases “cannot be negated”, “cannot be prevented” and “cannot be interrupted” are not protect effects, but 
+rather modifiers. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+54 
+ 
+Increase and Decrease 
+Last Updated: 8/10/2015 (v3.0.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    An increase or decrease effect changes the strength and/or toughness of characters or Enhancements by 
+increa
+
+--- MATCH AT [113897]:
+have the required number of Redeemed Souls to win (5 in Type I games, 
+and 7 in Type II games), then the game ends immediately, and the rescue effect cannot be interrupted. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+71 
+ 
+Reserve 
+Last Updated:  
+Released: 5/7/2019 (v6.0.0)
+ 
+ 
+How to Play 
+ 
+●    A reserve effect moves cards from their current location to their owners’ Reserve. 
+●    A reserve effect targets the cards that are to be reserved. 
+●    Unless otherwise specified
+
+
+==================================================
+
+=== SEARCH: Cannot be Prevented ===
+Total matches: 11
+--- MATCH AT [392]:
+Abilities 
+Modifiers 
+Conditions 
+Effects 
+Targeting 
+Duration 
+Ability Activation Order 
+Modifier Listing 
+Cannot be Interrupted 
+Cannot be Negated 
+Cannot be Prevented 
+Instead 
+Limit 
+Regardless 
+Effect Listing 
+Activate an Ability 
+Activate an Artifact 
+Add to Battle 
+Band 
+Banish (Remove from the game) 
+Begin a New Phase 
+Bounce (Return to hand) 
+Cannot be Ignored 
+Capture 
+Change Hand Size (Reduce, Increase, or Set Hand Size) 
+Choose Opponent (Choose the Blocker/Rescuer) 
+Convert (Repent/Fall) 
+Copy 
+Create 
+
+--- MATCH AT [33389]:
+d that appear before the sentence 
+containing the modifier. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+19 
+ 
+Cannot be Prevented 
+Last Updated: 1/27/2020 (v7.0.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    The cannot be prevented modifier modifies an ability, making it so that the modified ability cannot be affected 
+by any prevent or negate effect activated before the card the modified ability is on is played. The modified 
+ability can still be targeted by the prevent or
+
+--- MATCH AT [33492]:
+                                        
+19 
+ 
+Cannot be Prevented 
+Last Updated: 1/27/2020 (v7.0.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    The cannot be prevented modifier modifies an ability, making it so that the modified ability cannot be affected 
+by any prevent or negate effect activated before the card the modified ability is on is played. The modified 
+ability can still be targeted by the prevent or negate effect. 
+●    An ability cannot be modified by cannot be prevented retroactively; it has cannot
+
+--- MATCH AT [33813]:
+modified ability is on is played. The modified 
+ability can still be targeted by the prevent or negate effect. 
+●    An ability cannot be modified by cannot be prevented retroactively; it has cannot be prevented when the card it 
+is on is played or not at all. 
+ 
+ 
+ 
+Special Conditions 
+ 
+●    An ability that has been modified by a cannot be prevented modifier can be interrupted. Once interrupted, it 
+can then be prevented. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be p
+
+--- MATCH AT [33855]:
+fied 
+ability can still be targeted by the prevent or negate effect. 
+●    An ability cannot be modified by cannot be prevented retroactively; it has cannot be prevented when the card it 
+is on is played or not at all. 
+ 
+ 
+ 
+Special Conditions 
+ 
+●    An ability that has been modified by a cannot be prevented modifier can be interrupted. Once interrupted, it 
+can then be prevented. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be prevented modifier and does not specify wha
+
+--- MATCH AT [33997]:
+ it has cannot be prevented when the card it 
+is on is played or not at all. 
+ 
+ 
+ 
+Special Conditions 
+ 
+●    An ability that has been modified by a cannot be prevented modifier can be interrupted. Once interrupted, it 
+can then be prevented. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be prevented modifier and does not specify what 
+abilities the cannot be prevented modifier modifies, it modifies all abilities on the card that appear before the 
+sentence containing the 
+
+--- MATCH AT [34171]:
+fier can be interrupted. Once interrupted, it 
+can then be prevented. 
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be prevented modifier and does not specify what 
+abilities the cannot be prevented modifier modifies, it modifies all abilities on the card that appear before the 
+sentence containing the modifier. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+20 
+ 
+Instead 
+Last Updated: 3/10/2025 (v10.0.0) 
+Released: 7/26/2011
+ 
+ 
+How to
+
+--- MATCH AT [34241]:
+
+ 
+ 
+ 
+Clarifications 
+ 
+●    When a sentence in a special ability includes the cannot be prevented modifier and does not specify what 
+abilities the cannot be prevented modifier modifies, it modifies all abilities on the card that appear before the 
+sentence containing the modifier. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+20 
+ 
+Instead 
+Last Updated: 3/10/2025 (v10.0.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    The instead modifier allows an ability to replace an eff
+
+--- MATCH AT [84762]:
+ppears as its own phrase but not when it appears as part of a longer 
+phrase such as “may not be blocked by”. 
+●    The phrases “cannot be negated”, “cannot be prevented” and “cannot be interrupted” are not protect effects, but 
+rather modifiers. 
+ 
+Return to Table of Contents 
+ 
+                                                 
+54 
+ 
+Increase and Decrease 
+Last Updated: 8/10/2015 (v3.0.0) 
+Released: 7/26/2011
+ 
+ 
+How to Play 
+ 
+●    An increase or decrease effect changes the strength and/or toughness of character
+
+--- MATCH AT [104528]:
+ an ability is prevented while it is pending reactivation, it 
+cannot reactivate. An ability that has activated (but is not pending) or has completed cannot be prevented. 
+●    If an instant ability is prevented, and the prevent is later negated, the instant ability does not activate. 
+●    If an ongoing ability is prevented, and the prevent is later negated, the ongoing ability activates at that time, but 
+may not be able to declare its targets if they are selected by the player. 
+●    Preventing an ability preve
+
+--- MATCH AT [222140]:
+nsidered to have used an ability when that ability is completed on a card they 
+control. To be considered used, the ability must complete, meaning it cannot be prevented or 
+affected by an instead modifier. 
+ 
+An optional ability (usually indicated by “may”) is not considered completed if the 
+controlling player elects not to activate it, but it is considered completed if they either elect to 
+activate it or if it is not optional. 
+ 
+An ability is considered used if it completes, even if there is no effect or if t
+
+
+==================================================
+
+=== SEARCH: inherent ===
+Total matches: 1
+--- MATCH AT [186428]:
+region 
+111 
+ 
+is not normally sufficient to give a civilization identifier. Unless a character is a patriarch 
+of a Nation their descendants are not inherently the same culture or civilization. 
+Generally, characters are given identifiers for civilizations that they were born into, 
+explicitly granted citizenship for, or for which there is explicit mention of their inclusion 
+as a member of that civilization. Women are generally also given the civilization 
+identifier of their husband, and children are
+
+
+==================================================
+
+=== SEARCH: involve ===
+Total matches: 9
+--- MATCH AT [30355]:
+e step are delayed until that step. 
+1. Verify the rescuing/taunting/attacking/blocking/defending status of the characters in battle and 
+the players involved in the battle. 
+2. Activate all abilities in the order written on the card EXCEPT those with effects that move a 
+character to a battle. 
+3. Activate all gained abilities in the order gained EXCEPT those with effects that move a 
+character to a battle. 
+4. Activate all abilities on any equipped weapons EXCEPT those with effects that move a 
+chara
+
+--- MATCH AT [30927]:
+ve a character into the same side of battle. 
+6. Verify the begins a battle/blocked status of the characters that are/were in battle and the 
+players involved in the battle. 
+7. Activate all abilities with effects that move a character into the opposite side of battle. 
+8. Activate all abilities with side battle effects. 
+9. Activate all pending abilities with triggered effects, following the order laid out under Action 
+Priority in the Glossary. 
+ 
+Return to Table of Contents 
+ 
+                      
+
+--- MATCH AT [125404]:
+ctive battle and starts a new Battle Phase with a new battle. The suspended 
+battle resumes when the new battle ends. 
+●    The two players that were involved in the suspended battle each control one side of the side battle. Determine 
+which player controls which side (character) in the side battle, as follows: 
+1     If both characters selected to fight in the side battle were controlled by players other than the two in 
+battle, the player that used the side battle effect decides which player controls
+
+--- MATCH AT [144293]:
+or Redeemed Souls, except in the case of 
+“Lost Soul advantage” and “Redeemed Soul advantage”, respectively. Unless otherwise 
+specified, the players involved in the advantage comparison are the player(s) it names and the 
+player controlling the card with the advantage comparison. If the players involved in the 
+advantage comparison have the same number of cards, neither player has advantage. 
+ 
+For cards in play and set-aside areas, a player has the cards they own and control (including 
+those that ar
+
+--- MATCH AT [144440]:
+rs involved in the advantage comparison are the player(s) it names and the 
+player controlling the card with the advantage comparison. If the players involved in the 
+advantage comparison have the same number of cards, neither player has advantage. 
+ 
+For cards in play and set-aside areas, a player has the cards they own and control (including 
+those that are face down). For cards in other locations, the owner of those locations has the 
+cards in it, regardless of their ownership of the individual card
+
+--- MATCH AT [151621]:
+y allows for additional 
+battles. The Battle Phase ends after battle resolution, which is initiated by an end the battle 
+effect or when both players involved in the battle decline to play or use any more cards 
+during the battle. (See Battle Phase in the rulebook for additional information.) Each battle 
+takes place in a separate Battle Phase. 
+ 
+Battle Resolution 
+ 
+As is described in battle resolution in the rulebook, there are four outcomes to a battle: 
+•    Evil Character wins 
+•    Hero wins 
+95
+
+--- MATCH AT [195922]:
+ same brigade. 
+ 
+Pass 
+ 
+During a mutual destruction or stalemate, a player with initiative may pass. This transfers 
+initiative to the other player involved in the battle. If initiative passes three times and no 
+Enhancement is played, then the battle moves to battle resolution. 
+ 
+116 
+ 
+Permanent Control 
+ 
+If a player has permanent control of a card, then they can treat that card as if it came from 
+their deck. By default, a player has permanent control of all cards on the playing surface that 
+th
+
+--- MATCH AT [207504]:
+. 
+NOTE: Type II Tournament Categories are always played under the Rescuer’s Choice rule. 
+ 
+Rescuing 
+ 
+A Hero is a rescuing Hero if it is currently involved in a rescue attempt, regardless of 
+whether it has access to a Lost Soul. All Heroes that are in battle during battle resolution of a 
+successful rescue attempt are rescuing Heroes. A player is rescuing if they control a rescuing 
+Hero. 
+ 
+Reserve 
+ 
+The Reserve is a pile of cards that are only a valid target of cards that specifically target the
+
+--- MATCH AT [222519]:
+ either elect to 
+activate it or if it is not optional. 
+ 
+An ability is considered used if it completes, even if there is no effect or if the effect involves 
+other players. 
+ 
+Used By 
+ 
+An Enhancement is used by a character when one of the following criteria is met: 
+•    the Enhancement is equipped to a character that enters battle 
+•    the Enhancement was placed on the character with a triggered play effect 
+•    the Enhancement is moved from a location or being held onto the character unless: 
+o
+
+
+==================================================
+
+=== SEARCH: music ===
+Total matches: 1
+--- MATCH AT [184636]:
+  Royal or political position 
+•    Reference Testament, Book, Chapter or Verse 
+•    Conceptual relationships (typically for Enhancements; involving music, etc.) 
+ 
+Identifiers are also used as explanations for certain parts of cards, such as defining numbers 
+or abilities that have an X or a *, explaining how a non-standard card type is used, or to 
+explain deck building rules that apply to a card. Abilities in identifiers are active while the 
+card with the identifier remains in play or a set-asid
+
+
+==================================================

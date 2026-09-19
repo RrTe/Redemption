@@ -1,0 +1,129 @@
+Table of Contents 
+ 
+Set Abbreviations 
+Name Errata 
+Reference Errata 
+Identifier Errata 
+ 
+Glossary of Terms Jump to letter (click the letter there to return): 
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z 
+ 
+ 
+ 
+                                                 
+3 
+ 
+Set Abbreviations 
+ 
+When a card appears in a list, the name will be followed by a set (or list of sets) in which cards 
+with that name appear. If multiple cards in a set have the same name, there will be some 
+identifying information in brackets after the name but before the set(s) to differentiate them. 
+These are the set abbreviations: 
+ 
+Abbreviation                           Set                           Abbreviation                           Set 
+A, B, C, D, E, F    Corresponding Starter Deck                  TP               Thesaurus Ex Preteritus 
+G, H, I, J, K, L     Corresponding Starter Deck                  Di               Disciples 
+IJ+              I/J Starter Deck Bonus Cards                EC              The Early Church 
+Or               Original                                                 PC               Persecuted Church 
+Pr               Prophets                                                CW              Cloud of Witnesses 
+Wo              Women                                                  RJ               Revelation of John 
+Wa              Warriors                                                FM              Fall of Man 
+Ap               Apostles                                                PoC              Prophecies of Christ 
+Pa               Patriarchs                                               LC              Lineage of Christ 
+Ki               Kings                                                     GC              Gospel of Christ 
+AW              Angel Wars                                            IR               Israel’s Rebellion 
+Pi               Priests                                                     II                Israel’s Inheritance 
+FF               Faith of our Fathers (2007)                  T2C             Times to Come 
+FF2              Faith of our Fathers (2011)                   LR              Legacy Rare 
+RA              Rock of Ages (2008)                             RR              Redemption Roots 
+RA2             Rock of Ages (2011)                               P                Promo 
+RA3             Rock of Ages (2013)                                                  
+ 
+Some sets that have multiple releases may have cards that do not appear in all releases. These 
+cards will be identified with the following abbreviations: 
+ 
+Abbreviation                Print                Abbreviation                                   Print 
+L                Limited Edition                 Main             Main Print 
+Ul               Unlimited Edition               Alt              Alternate Border Print 
+1st               1st Print                            [Year]            Promo Only – Year Distributed 
+2nd              2nd Print                        [Location]         Promo Only – Initial Distribution Method 
+ 
+                                                 
+4 
+ 
+Name Errata 
+ 
+Some cards have received errata to change or correct the name. The following cards appear with 
+the errata as their name in lists: 
+ 
+Card Name (Sets)                                       Errata 
+Alexander the Coopersmith (E)               Alexander the Coppersmith 
+Ethiopian Treasurer (Ap, EC)                  The Ethiopian Treasurer 
+Isaiah (PoC)                                              Isaiah, Prince of Prophets 
+Namaan’s Chariot and Horses (FF)          Naaman’s Chariot and Horses 
+Pharoah (A-L, Or-L)                                Pharaoh 
+The Sanhedrin (EC)                                 Sanhedrin 
+ 
+                                                 
+5 
+ 
+Reference Errata 
+ 
+Some cards have received errata to correct reference errors. Many of these are to correct the 
+formatting or spelling of the reference and do not change the reference. The following cards have 
+errata that change the reference or give a reference when there was not one printed: 
+ 
+Card Name (Sets)                                     New Reference 
+A Child is Born (P)                                         Luke 2:7 
+Authority of Christ (P)                                   Matthew 8:26-27 
+Brass Serpent (P)                                            Numbers 21:8 
+Caleb (P)                                                         Joshua 15:14 
+Chastisement of the Lord (P)                         Jonah 1:17 
+Evil Fire (C-Ul)                                              II Kings 17:7 
+Faith Among Corruption (CW-Main)            Genesis 6:8, 12 
+Faith of Enoch (CW-Main)                            Hebrews 11:5 
+Faith of Gideon (CW-Main)                           Hebrews 11:32-34 
+Frog Demons (P)                                            Revelation 16:13 
+Helmet of Salvation (A-L, B-L)                     Ephesians 6:17-18 
+Joab (P)                                                           I Chronicles 11:6 
+John (P)                                                          Revelation 21:2 
+Joshua (P-Settlers)                                          Joshua 1:10-11 
+King David (P)                                               II Samuel 5:3-5 
+King Solomon (P)                                           I Kings 2:45 
+Love (P)                                                          Galatians 5:22-23 
+Mary’s Prophetic Act (P)                               John 12:3 
+New Covenant [Jeremiah] (PoC)                   Jeremiah 31:33 (Hebrews 8:10) 
+Obedience of Noah (Or-L, P)                         Genesis 6:22 
+Paul (Ap)                                                        Acts 20:7 
+Rage (P)                                                          Psalm 2:1 
+Ram’s Horn (Pi)                                             Joshua 6:5 
+Samson (P)                                                     Judges 14:5-6 
+Saul (Ap)                                                        Acts 7:58 
+Threatened Lives (AW)                                  Esther 3:13 
+Water to Wine (P)                                          John 2:3-5 
+ 
+                                                 
+6 
+ 
+Identifier Errata 
+ 
+Some cards have received errata to remove or correct incorrect identifiers printed on the card. 
+The list below only contains identifiers that appear later in this document, so corrections to 
+abilities in identifiers (such as what a card holds) are not listed. The following cards have 
+received errata to remove or correct an identifier: 
+ 
+Card Name (Sets)                 Incorrect Identifier(s)           Correct Identifier(s) 
+Angel of Deliverance (EC)            Unique                                   None (Removed) 
+Antiochus IV Epiphanes (FF)       Syrian                                     None (Removed) 
+Captain of the Host 
+(Ki, PoC, II, RR, P)                       Prophet                                   None (Removed) 
+Fire, Smoke and Sulfur (FF)         Plague                                    None (Removed) 
+Ithamar, Son of Aaron (L)             Tabernacle High Priest          Tabernacle Priest 
+King Ahaz (Ki)                              Israelite King                         King of Judah 
+Melchizedek (RA)                         Prophet                                   None (Removed) 
+Nicodemus (Di)                             Pharisee                                 None (Removed) 
+Paul (P)                                          Pharisee                                 None (Removed) 
+Philip the Evangelist (EC-1st)       Caesera                                  Caesarea 
+Quirinius (J)                                  Syrian                                     None (Removed) 
+Reassuring Angels (EC)                Unique                                   None (Removed) 
+Shobach (P)                                   King                          

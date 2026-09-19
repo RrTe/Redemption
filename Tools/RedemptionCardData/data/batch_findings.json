@@ -1,0 +1,2945 @@
+{
+  "Alexander the Great": {
+    "card_name": "Alexander the Great",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'band'",
+    "resolved": true,
+    "raw_ability": "First strike. Take a City or Artifact, discard a multi-brigade card, or each player must draw 1. If this card is discarded, you may withdraw it instead. May band to a Greek warrior. Cannot be prevented.",
+    "last_updated": "2026-09-17T18:48:41.587931",
+    "history": [
+      {
+        "timestamp": "2026-09-17T14:48:11.076990",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing ability: 'first strike'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T14:48:53.035217",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing ability: 'first strike'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T18:47:44.516806",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'band'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:48:41.587890",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'band'",
+        "resolved": true
+      }
+    ]
+  },
+  "Andrew, First Called / Andrew, Fisher of Men (GoC)": {
+    "card_name": "Andrew, First Called / Andrew, Fisher of Men (GoC)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'convert'",
+    "resolved": true,
+    "raw_ability": "You may reveal a good Dominant from hand to negate characters (except disciples). You may convert this card to meek to negate Enhancements.",
+    "last_updated": "2026-09-17T19:00:56.268326",
+    "history": [
+      {
+        "timestamp": "2026-09-17T14:51:04.478586",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'convert'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T14:51:55.812431",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'convert'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T18:59:11.257465",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'convert'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:00:56.268272",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'convert'",
+        "resolved": true
+      }
+    ]
+  },
+  "Angel at Shur (Promo)": {
+    "card_name": "Angel at Shur (Promo)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "Search draw pile for an O.T. male Hero and put it in hand. This Hero is immune to demons.",
+    "last_updated": "2026-09-17T19:14:59.548250",
+    "history": [
+      {
+        "timestamp": "2026-09-17T14:53:19.916479",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T14:55:06.897211",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:14:18.934609",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:14:59.548190",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Ananias of Damascus (EC)": {
+    "card_name": "Ananias of Damascus (EC)",
+    "card_identifier": "Damascus",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries. (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "Negate Sites. Once per game, you may search deck or discard pile for N.T. Saul, play and convert him. Protect Paul from opponents' cards while he is in territory. Cannot be interrupted.",
+    "last_updated": "2026-09-17T18:59:10.776114",
+    "history": [
+      {
+        "timestamp": "2026-09-17T14:54:03.851526",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Angel at the Tomb (Pi)": {
+    "card_name": "Angel at the Tomb (Pi)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Missing primary action: 'draw' (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "If your Son of God card was discarded without making a rescue, shuffle it into draw pile.  Cannot be negated.",
+    "last_updated": "2026-09-17T19:14:45.208476",
+    "history": [
+      {
+        "timestamp": "2026-09-17T14:54:26.507164",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T14:55:16.903027",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T14:55:16.924987",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T14:57:11.265184",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:14:02.287476",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:14:12.272367",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:14:12.342539",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      }
+    ]
+  },
+  "Angel at the Tomb (Wa)": {
+    "card_name": "Angel at the Tomb (Wa)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "If holder's Son of God card was discarded without making a rescue, return it to holder's draw pile.  Shuffle draw pile.",
+    "last_updated": "2026-09-17T19:15:07.105740",
+    "history": [
+      {
+        "timestamp": "2026-09-17T14:54:48.233172",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T14:55:17.320039",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:14:44.687042",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:15:07.105688",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Angel Departed": {
+    "card_name": "Angel Departed",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='return', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+    "resolved": true,
+    "raw_ability": "Return a silver brigade Hero in battle to owner's territory. Cannot be prevented.",
+    "last_updated": "2026-09-17T14:56:11.994506",
+    "history": [
+      {
+        "timestamp": "2026-09-17T14:55:47.148767",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='return', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T14:56:11.994506",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='return', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      }
+    ]
+  },
+  "Angel of Might": {
+    "card_name": "Angel of Might",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing ability: 'first strike'",
+    "resolved": true,
+    "raw_ability": "Hero has first strike ability.",
+    "last_updated": "2026-09-17T15:02:12.722033",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:00:29.405776",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing ability: 'first strike'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:02:12.722033",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing ability: 'first strike'",
+        "resolved": true
+      }
+    ]
+  },
+  "Angel of the Harvest": {
+    "card_name": "Angel of the Harvest",
+    "card_identifier": "Generic, Male, Angel",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries. (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "Discard the top card of opponent's deck. If it is a Lost Soul, put it in play instead. If it is a good card, add it to opponent's hand instead and you may draw a card.",
+    "last_updated": "2026-09-17T19:22:21.768743",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:03:22.979118",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Angel of Deliverance (Ap)": {
+    "card_name": "Angel of Deliverance (Ap)",
+    "card_identifier": "Apostles_",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries. (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "Hero has access to any site.  Any guards on the site are immediately prevented and discarded.  If Hero wins, Holder may return any Hero held captive at the site to player's territory or count as a redeemed soul.",
+    "last_updated": "2026-09-17T19:18:31.972169",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:03:31.900317",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Angelic Advice": {
+    "card_name": "Angelic Advice",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "Shuffle all Artifact piles in play back into each players draw pile.  Active artifacts are shuffled but not negated.",
+    "last_updated": "2026-09-17T19:24:36.868962",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:07:06.393387",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:07:47.478007",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:24:02.489009",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:24:36.868924",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Angelic News (I)": {
+    "card_name": "Angelic News (I)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [2]",
+    "resolved": true,
+    "raw_ability": "Draw 1 (or 2 if used by Gabriel).",
+    "last_updated": "2026-09-17T15:08:56.890367",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:08:07.702167",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:08:56.890367",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [2]",
+        "resolved": true
+      }
+    ]
+  },
+  "Angel with the Secret Name (RoA)": {
+    "card_name": "Angel with the Secret Name (RoA)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+    "resolved": true,
+    "raw_ability": "Negate Sites. You may exchange this Hero with a gold Judge in your hand, deck, or discard pile. Samson has Site Access. Good Judges cards cannot be negated.",
+    "last_updated": "2026-09-17T15:10:22.760839",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:08:36.358022",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing modifier: 'cannot be negated'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:10:22.760839",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+        "resolved": true
+      }
+    ]
+  },
+  "Angelic Warrior (RoJ AB)": {
+    "card_name": "Angelic Warrior (RoJ AB)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing ability: 'first strike'",
+    "resolved": true,
+    "raw_ability": "First Strike. Protect your hand, deck and human Heroes from opponent's evil cards. If blocked by a non-human, Hero may band to a Revelation angel.",
+    "last_updated": "2026-09-17T15:13:42.890404",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:11:36.123830",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing ability: 'first strike'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:13:42.890404",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing ability: 'first strike'",
+        "resolved": true
+      }
+    ]
+  },
+  "Angelic Visitor": {
+    "card_name": "Angelic Visitor",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'discard'",
+    "resolved": true,
+    "raw_ability": "Protect human N.T. Heroes from discard and capture this turn. You may discard this Hero to search deck or discard pile for Peter or a Centurion Hero and add it to battle.",
+    "last_updated": "2026-09-17T19:29:58.137124",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:11:39.592625",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:13:55.905086",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'discard'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:26:41.103508",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:29:58.137080",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'discard'",
+        "resolved": true
+      }
+    ]
+  },
+  "Angelic Warrior (RoJ)": {
+    "card_name": "Angelic Warrior (RoJ)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing ability: 'first strike'",
+    "resolved": true,
+    "raw_ability": "First Strike. Protect your hand, deck and human Heroes from opponent's evil cards. If blocked by a non-human, Hero may band to a Revelation angel",
+    "last_updated": "2026-09-17T15:16:46.695705",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:15:33.344274",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing ability: 'first strike'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:16:46.695705",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing ability: 'first strike'",
+        "resolved": true
+      }
+    ]
+  },
+  "Angry Travelers": {
+    "card_name": "Angry Travelers",
+    "card_identifier": "Angel Wars_",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries.",
+    "resolved": false,
+    "raw_ability": "Place this card on a Lost Soul.  If that Lost Soul is not rescued by the end of the current player's next turn, discard this card to return the Lost Soul to the bottom of owner's draw pile.",
+    "last_updated": "2026-09-17T19:46:01.270803",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:17:38.272081",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw', Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:18:23.942485",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw', Missing primary action: 'discard'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:29:48.452304",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw', Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:46:01.270785",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Annas the Elder (GoC)": {
+    "card_name": "Annas the Elder (GoC)",
+    "card_identifier": "High Priest, Sadducee",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries. (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "If blocking, you may underdeck a Lost Soul (or 2 meek Lost Souls). May band to a unique Sadducee. If opponent has used a search ability this turn, your Sadducees cannot be negated.",
+    "last_updated": "2026-09-17T23:11:45.162584",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:20:25.888494",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing modifier: 'cannot be negated'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:21:10.900374",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:46:02.155445",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.2.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='cannot be negated', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:49:16.103385",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Apollos (EC)": {
+    "card_name": "Apollos (EC)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'convert'",
+    "resolved": true,
+    "raw_ability": "Site access. You may exchange a good card in hand with a clay Enhancement in your discard pile. Good convert Enhancements cannot be prevented.",
+    "last_updated": "2026-09-17T19:55:40.784060",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:22:38.532641",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'convert'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:23:10.180166",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'convert'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:55:14.178031",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'convert'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:55:40.784044",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'convert'",
+        "resolved": true
+      }
+    ]
+  },
+  "Archelaus (Di)": {
+    "card_name": "Archelaus (Di)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [2]",
+    "resolved": true,
+    "raw_ability": "If 2 or more Heroes are in battle, discard 1 of them. Opponent may withdraw 2 of them instead. Cannot be prevented by a Hero.",
+    "last_updated": "2026-09-17T15:27:32.219660",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:26:22.064906",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:27:32.219660",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [2]",
+        "resolved": true
+      }
+    ]
+  },
+  "Arianna": {
+    "card_name": "Arianna",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "Protect all cards in holder's hand and draw pile from being discarded or removed by an evil special ability.",
+    "last_updated": "2026-09-17T19:56:57.902084",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:27:49.130027",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:31:07.411679",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:55:18.261640",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:56:57.902068",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Arioch": {
+    "card_name": "Arioch",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'discard'",
+    "resolved": true,
+    "raw_ability": "If opponent does not have a prophet in play, you may discard a male human from your territory to place a Lost Soul beneath owner's deck.",
+    "last_updated": "2026-09-17T19:58:27.671749",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:28:18.432016",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:28:59.461122",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'discard'",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:56:16.735903",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:58:27.671738",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'discard'",
+        "resolved": true
+      }
+    ]
+  },
+  "Aristarchus": {
+    "card_name": "Aristarchus",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [2]",
+    "resolved": true,
+    "raw_ability": "You may remove 2 clay cards in your discard pile from the game to discard an idol or Curse. Cannot be prevented.",
+    "last_updated": "2026-09-17T19:56:32.300775",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:29:23.941472",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:29:44.534789",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [2]",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T19:56:12.346881",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:56:32.300765",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [2]",
+        "resolved": true
+      }
+    ]
+  },
+  "Army of Simeonites": {
+    "card_name": "Army of Simeonites",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='return', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+    "resolved": true,
+    "raw_ability": "Each time this character is about to be discarded, instead return it to territory with abilities decreased 3/3.",
+    "last_updated": "2026-09-17T15:34:40.884222",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:34:22.333965",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='return', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:34:40.884222",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='return', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      }
+    ]
+  },
+  "Army of the Lord (Roots)": {
+    "card_name": "Army of the Lord (Roots)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [3]",
+    "resolved": true,
+    "raw_ability": "Interrupt the battle. Hero may band to up to 3 angel warriors. Cannot be negated if used by a Joshua angel.",
+    "last_updated": "2026-09-17T20:02:03.900147",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:34:24.534047",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:34:47.681841",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [3]",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T20:01:14.507088",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T20:02:03.900115",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [3]",
+        "resolved": true
+      }
+    ]
+  },
+  "Arrest in Gethsemane": {
+    "card_name": "Arrest in Gethsemane",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Missing numbers in AST: [3] (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "Place this card in a territory: Judas and Sadducees cannot be ignored. Protect all Lost Souls from rescue, except by human Heroes. Discard this card after 3 turns.",
+    "last_updated": "2026-09-17T20:02:57.884695",
+    "history": [
+      {
+        "timestamp": "2026-09-17T15:35:23.471146",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T15:37:17.637332",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [3]",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T20:02:15.227493",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      }
+    ]
+  },
+  "A New Creation": {
+    "card_name": "A New Creation",
+    "card_identifier": "Early Church_",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries. (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "If all your Heroes are clay, you may remove your discard pile and this card from the game to convert a human Evil Character to a clay hero.",
+    "last_updated": "2026-09-17T17:13:37.049207",
+    "history": [
+      {
+        "timestamp": "2026-09-17T17:13:37.049207",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Aaron's Staff (CoW AB)": {
+    "card_name": "Aaron's Staff (CoW AB)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Missing modifier: 'cannot be negated' (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "Once per turn, if your good Tabernacle Priest enters battle, reveal the top X cards of opponent's deck: Put Lost Souls in play and discard an evil card. Good Tabernacle Priests cannot be negated.",
+    "last_updated": "2026-09-17T17:17:50.148527",
+    "history": [
+      {
+        "timestamp": "2026-09-17T17:16:54.650236",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.1.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='cannot be negated', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T17:17:50.125553",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.1.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='cannot be negated', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T17:17:50.148527",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing modifier: 'cannot be negated'",
+        "resolved": false
+      }
+    ]
+  },
+  "Aaron, God's Mediator": {
+    "card_name": "Aaron, God's Mediator",
+    "card_identifier": "Tabernacle High Priest, Prophet",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries. (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "(Star) Look at the bottom 10 cards of deck: Topdeck an Exodus card or a Dominant. (Hero) May band to an Exodus human or a Tabernacle priest. Cannot be negated.",
+    "last_updated": "2026-09-17T17:17:45.202113",
+    "history": [
+      {
+        "timestamp": "2026-09-17T17:17:45.202113",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Abducted Subjects (LoC)": {
+    "card_name": "Abducted Subjects (LoC)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [2]",
+    "resolved": true,
+    "raw_ability": "Capture a human (or 2 humans if used by an Edomite) to a player.",
+    "last_updated": "2026-09-17T17:20:48.361033",
+    "history": [
+      {
+        "timestamp": "2026-09-17T17:20:18.077577",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T17:20:48.361033",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [2]",
+        "resolved": true
+      }
+    ]
+  },
+  "Aaron's Staff (CoW)": {
+    "card_name": "Aaron's Staff (CoW)",
+    "card_identifier": "Tabernacle, Solomon's Temple, X=# of your Tabernacle Priests",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries. (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "Once per turn, if your good Tabernacle Priest enters battle, reveal the top X cards of opponent's deck: Put Lost Souls in play and discard an evil card. Good Tabernacle Priests cannot be negated.",
+    "last_updated": "2026-09-17T17:22:52.316212",
+    "history": [
+      {
+        "timestamp": "2026-09-17T17:22:52.316212",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Abigail (Wo)": {
+    "card_name": "Abigail (Wo)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [6]",
+    "resolved": true,
+    "raw_ability": "All Heroes gain 0/6 when Abigail is in the Field of Battle including this one.",
+    "last_updated": "2026-09-17T17:23:54.346010",
+    "history": [
+      {
+        "timestamp": "2026-09-17T17:23:39.030533",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [6]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T17:23:54.346010",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [6]",
+        "resolved": true
+      }
+    ]
+  },
+  "Abigail (1st Print - K)": {
+    "card_name": "Abigail (1st Print - K)",
+    "card_identifier": "Queen of Israel and Judah",
+    "issue_type": "EXTRACTION_FAILED",
+    "details": "[Errno 22] Invalid argument: 'D:\\\\Documents\\\\Workspaces\\\\Redemption\\\\Tools\\\\RedemptionCardData\\\\data\\\\ai_generated_abilities.json' (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "You may choose an Evil Character to block.",
+    "last_updated": "2026-09-17T17:23:49.794401",
+    "history": [
+      {
+        "timestamp": "2026-09-17T17:23:39.995119",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='block', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T17:23:49.771656",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='block', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T17:23:49.794401",
+        "issue_type": "EXTRACTION_FAILED",
+        "details": "[Errno 22] Invalid argument: 'D:\\\\Documents\\\\Workspaces\\\\Redemption\\\\Tools\\\\RedemptionCardData\\\\data\\\\ai_generated_abilities.json'",
+        "resolved": false
+      }
+    ]
+  },
+  "Abihu (Pi)": {
+    "card_name": "Abihu (Pi)",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+    "resolved": true,
+    "raw_ability": "If Nadab is in battle, you may remove all cards in battle from the game.",
+    "last_updated": "2026-09-17T17:25:13.855812",
+    "history": [
+      {
+        "timestamp": "2026-09-17T17:23:58.409588",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T17:25:13.855812",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Abihu, the Disobedient": {
+    "card_name": "Abihu, the Disobedient",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [2]",
+    "resolved": true,
+    "raw_ability": "Protect evil priests from the next good Enhancement played. If 2 or more good brigades are in battle, you may reserve a good card in a territory.",
+    "last_updated": "2026-09-17T17:24:53.010275",
+    "history": [
+      {
+        "timestamp": "2026-09-17T17:24:32.434413",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T17:24:53.010275",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [2]",
+        "resolved": true
+      }
+    ]
+  },
+  "Abijah, the Conqueror / Abijam, the Half-Hearted (LoC)": {
+    "card_name": "Abijah, the Conqueror / Abijam, the Half-Hearted (LoC)",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 2 validation errors for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+    "resolved": true,
+    "raw_ability": "If blocking, you may take an idol or evil female from deck or draw X (limit 3).",
+    "last_updated": "2026-09-17T17:27:49.629225",
+    "history": [
+      {
+        "timestamp": "2026-09-17T17:25:41.862517",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "2 validation errors for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T17:27:49.629225",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 2 validation errors for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Abner's Spear (Ki)": {
+    "card_name": "Abner's Spear (Ki)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [4]",
+    "resolved": true,
+    "raw_ability": "Holder may discard Abner's Spear to discard a male Hero in battle with abilities of */4 or less.",
+    "last_updated": "2026-09-17T18:16:56.983764",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:15:09.923264",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [4]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:16:56.983673",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [4]",
+        "resolved": true
+      }
+    ]
+  },
+  "Abomination of Desolation": {
+    "card_name": "Abomination of Desolation",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "If used by a Greek, place in opponent's territory. Each time opponent draws cards (except during draw phase), you may discard a card in that territory except a Lost Soul.",
+    "last_updated": "2026-09-17T18:19:13.366711",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:15:43.710436",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:19:13.366627",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Abraham's Servant to Ur (LoC)": {
+    "card_name": "Abraham's Servant to Ur (LoC)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'band'",
+    "resolved": true,
+    "raw_ability": "Negate abilities (except band abilities) on characters and other Enhancements.",
+    "last_updated": "2026-09-17T18:21:13.636436",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:20:19.490884",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'band'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:21:13.636383",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'band'",
+        "resolved": true
+      }
+    ]
+  },
+  "Abram's Army": {
+    "card_name": "Abram's Army",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing modifier: 'cannot be interrupted'",
+    "resolved": true,
+    "raw_ability": "You may release a captured Hero to negate and discard a single-color Site, Artifact or evil card. Cannot be interrupted by O.T. Evil Characters.",
+    "last_updated": "2026-09-17T18:22:04.443605",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:21:52.405213",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing modifier: 'cannot be interrupted'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:22:04.443584",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing modifier: 'cannot be interrupted'",
+        "resolved": true
+      }
+    ]
+  },
+  "Abram/Abraham": {
+    "card_name": "Abram/Abraham",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [22]",
+    "resolved": true,
+    "raw_ability": "Hero starts as Abram.  After he makes a successful rescue, he becomes Abraham and can interrupt and prevent all special abilities on all Lost Soul cards except the Proverbs 22:14 Lost Souls card.",
+    "last_updated": "2026-09-17T18:24:10.611206",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:23:05.277238",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [22]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:24:10.611143",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [22]",
+        "resolved": true
+      }
+    ]
+  },
+  "Absalom (Ki)": {
+    "card_name": "Absalom (Ki)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [2]",
+    "resolved": true,
+    "raw_ability": "May band with any Evil Character with a reference from 2 Samuel 14-18.  While Absalom is in play, David cannot enter battle.",
+    "last_updated": "2026-09-17T18:24:14.960608",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:23:27.431543",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:24:14.960591",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [2]",
+        "resolved": true
+      }
+    ]
+  },
+  "Abraham's Descendant (LoC)": {
+    "card_name": "Abraham's Descendant (LoC)",
+    "card_identifier": "Lineage of Christ_",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries.",
+    "resolved": false,
+    "raw_ability": "STAR: Reveal hand: If there is no Hero, take one from deck. GE: Negate an evil Enhancement or a Curse. Bounce it or take it. Hero may band to any number of Genesis Heroes.",
+    "last_updated": "2026-09-17T18:23:27.957628",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:23:27.957580",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Absalom's Soldiers": {
+    "card_name": "Absalom's Soldiers",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "Place David beneath owner's draw pile.  May band to Absalom's Soldier.",
+    "last_updated": "2026-09-17T18:26:13.479070",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:24:57.499653",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:26:13.479037",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Achaicus": {
+    "card_name": "Achaicus",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.ability_id\n  Field required [type=missing, input_value={'activation_mode': 'imme...on_position': 'as_is'}]}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing",
+    "resolved": true,
+    "raw_ability": "Set aside any number of your Corinth Heroes for one turn. One retrun, reveal the top X cards of an opponent's deck; put Lost Souls in play and underdeck the rest.",
+    "last_updated": "2026-09-17T18:25:52.873200",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:25:39.119884",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.ability_id\n  Field required [type=missing, input_value={'activation_mode': 'imme...on_position': 'as_is'}]}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:25:52.873168",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.ability_id\n  Field required [type=missing, input_value={'activation_mode': 'imme...on_position': 'as_is'}]}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing",
+        "resolved": true
+      }
+    ]
+  },
+  "Adam (FoM)": {
+    "card_name": "Adam (FoM)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [7]",
+    "resolved": true,
+    "raw_ability": "Protect Adam from non-humans. You may topdeck an antediluvian human or a Genesis 1-7 Enhancement from Reserve. May band to Eve. Cannot be interrupted by a human.",
+    "last_updated": "2026-09-17T18:31:56.922110",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:31:23.182163",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [7]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:31:56.922084",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [7]",
+        "resolved": true
+      }
+    ]
+  },
+  "Adjourn": {
+    "card_name": "Adjourn",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [2]",
+    "resolved": true,
+    "raw_ability": "Paralyze X Heroes in opponent's territory for 2 turns. If all Evil Characters in battle are Greek, end the battle.",
+    "last_updated": "2026-09-17T18:32:50.573063",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:32:05.413052",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:32:50.573049",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [2]",
+        "resolved": true
+      }
+    ]
+  },
+  "Ahab's Armor": {
+    "card_name": "Ahab's Armor",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'convert'",
+    "resolved": true,
+    "raw_ability": "Protect Evil Character from capture and convert abilities.  Discard that Evil Character after battle if Syrian Archer is in play.  Ahab may retain as a weapon until discarded.",
+    "last_updated": "2026-09-17T18:36:42.713862",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:36:19.082134",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'convert'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:36:42.713833",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'convert'",
+        "resolved": true
+      }
+    ]
+  },
+  "Alabaster Jar": {
+    "card_name": "Alabaster Jar",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Missing primary action: 'draw' (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "Holder may search draw pile for Potter's Field and put it in play.",
+    "last_updated": "2026-09-17T18:45:35.688792",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:43:25.756007",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "2 validation errors for CardSideLogic\nabilities.0.effects.0.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum\nabilities.0.effects.1.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:43:42.457383",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 2 validation errors for CardSideLogic\nabilities.0.effects.0.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum\nabilities.0.effects.1.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T18:43:42.520843",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      }
+    ]
+  },
+  "All Hope Lost": {
+    "card_name": "All Hope Lost",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+    "resolved": true,
+    "raw_ability": "If Hero(s) in battle returns to territory without making a successful rescue, Hero(s) may not enter battle until healed.",
+    "last_updated": "2026-09-17T18:48:00.555361",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:47:27.514258",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:48:00.555342",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Alliance Against Judah (LoC)": {
+    "card_name": "Alliance Against Judah (LoC)",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+    "resolved": true,
+    "raw_ability": "Character may band to a character in each territory. Cannot be negated if a good king is in battle.",
+    "last_updated": "2026-09-17T18:50:06.954630",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:48:23.428730",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:50:06.954609",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Amariah, the High Priest (Roots)": {
+    "card_name": "Amariah, the High Priest (Roots)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Missing modifier: 'cannot be interrupted' (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "O.T. clay Enhancements used by this card cannot be interrupted.",
+    "last_updated": "2026-09-17T18:52:17.055959",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:51:23.653126",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='cannot be interrupted', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:51:55.111051",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='cannot be interrupted', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      },
+      {
+        "timestamp": "2026-09-17T18:51:55.155025",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing modifier: 'cannot be interrupted'",
+        "resolved": false
+      }
+    ]
+  },
+  "Ambush! (GoC)": {
+    "card_name": "Ambush! (GoC)",
+    "card_identifier": "Gospel",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries.",
+    "resolved": false,
+    "raw_ability": "Interrupt the battle. You may take a thief from Reserve. Character may band to any number of N.T. crimson humans. Cannot be negated if used by a thief.",
+    "last_updated": "2026-09-17T18:57:56.548948",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:57:56.548916",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Angel at Jerusalem (Pi)": {
+    "card_name": "Angel at Jerusalem (Pi)",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 2 validation errors for CardSideLogic\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error\nabilities.2.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+    "resolved": true,
+    "raw_ability": "This Hero has access to any Site.  If King Hezekiah is in play or set aside, discard a warrior-class Assyrian.",
+    "last_updated": "2026-09-17T18:59:55.235712",
+    "history": [
+      {
+        "timestamp": "2026-09-17T18:59:23.154317",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "2 validation errors for CardSideLogic\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error\nabilities.2.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T18:59:55.235663",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 2 validation errors for CardSideLogic\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error\nabilities.2.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Answer to Prayer (FooF)": {
+    "card_name": "Answer to Prayer (FooF)",
+    "card_identifier": "Faith of Our Fathers_",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries.",
+    "resolved": false,
+    "raw_ability": "Search your deck for a good Genesis card and add it to hand or battle. Cannot be negated if used by a Genesis Hero.",
+    "last_updated": "2026-09-17T19:49:02.433207",
+    "history": [
+      {
+        "timestamp": "2026-09-17T19:49:02.433181",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Answered Prayer (Ki)": {
+    "card_name": "Answered Prayer (Ki)",
+    "card_identifier": "Kings_",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries.",
+    "resolved": false,
+    "raw_ability": "Selected Hero (until discarded) gains 7 ability points to be distributed as holder chooses.  Distribution must be announced when played.",
+    "last_updated": "2026-09-17T19:49:12.059617",
+    "history": [
+      {
+        "timestamp": "2026-09-17T19:49:12.059595",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Answered Prayer (Wa)": {
+    "card_name": "Answered Prayer (Wa)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [7]",
+    "resolved": true,
+    "raw_ability": "Selected Hero (until discarded) gains 7 ability points to be distributed as holder chooses.  Distribution must be announced when played.",
+    "last_updated": "2026-09-17T19:50:20.861495",
+    "history": [
+      {
+        "timestamp": "2026-09-17T19:49:58.328422",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [7]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:50:20.861486",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [7]",
+        "resolved": true
+      }
+    ]
+  },
+  "Archippus": {
+    "card_name": "Archippus",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+    "resolved": true,
+    "raw_ability": "If a heretic is in play, clay Enhancements with 'Christ' or 'Jesus' in the title or scripture verse used by Colossae Heroes cannot be negated by an evil card.",
+    "last_updated": "2026-09-17T19:55:01.800880",
+    "history": [
+      {
+        "timestamp": "2026-09-17T19:54:48.200970",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing modifier: 'cannot be negated'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:55:01.800865",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+        "resolved": true
+      }
+    ]
+  },
+  "Ark of the Covenant (RoJ AB)": {
+    "card_name": "Ark of the Covenant (RoJ AB)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+    "resolved": true,
+    "raw_ability": "Negate and underdeck a Curse or an idol. If your lone Priest, musician or Revelation Hero is blocked by more than one Evil Character, Enhancements used by that Hero cannot be negated by an evil card.",
+    "last_updated": "2026-09-17T19:58:43.160740",
+    "history": [
+      {
+        "timestamp": "2026-09-17T19:57:58.937778",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing modifier: 'cannot be negated'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T19:58:43.160727",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+        "resolved": true
+      }
+    ]
+  },
+  "Asa, the Upright / Asa, the Blameless (LoC)": {
+    "card_name": "Asa, the Upright / Asa, the Blameless (LoC)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'band'",
+    "resolved": true,
+    "raw_ability": "You may reserve an evil male with a band ability or an evil royal female. If you control a meek Hero, you may draw 2.",
+    "last_updated": "2026-09-17T20:04:33.507462",
+    "history": [
+      {
+        "timestamp": "2026-09-17T20:04:09.251096",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'band'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T20:04:33.507447",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'band'",
+        "resolved": true
+      }
+    ]
+  },
+  "Asa's Good Reign": {
+    "card_name": "Asa's Good Reign",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Missing numbers in AST: [3] (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "Place this card on your good King for 3 turns. While this remains, your O.T. Heroes are immune to warrior class Evil Characters.",
+    "last_updated": "2026-09-17T20:05:06.649567",
+    "history": [
+      {
+        "timestamp": "2026-09-17T20:04:41.796068",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      }
+    ]
+  },
+  "Asaph": {
+    "card_name": "Asaph",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+    "resolved": true,
+    "raw_ability": "Good Enhancements involving music cannot be negated by evil cards.",
+    "last_updated": "2026-09-17T20:06:03.131585",
+    "history": [
+      {
+        "timestamp": "2026-09-17T20:05:48.318935",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing modifier: 'cannot be negated'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T20:06:03.131567",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+        "resolved": true
+      }
+    ]
+  },
+  "Asaph, the Psalmist (Roots)": {
+    "card_name": "Asaph, the Psalmist (Roots)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+    "resolved": true,
+    "raw_ability": "Good Enhancements that involve music used by this card cannot be negated.",
+    "last_updated": "2026-09-17T20:06:28.833906",
+    "history": [
+      {
+        "timestamp": "2026-09-17T20:06:01.403889",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing modifier: 'cannot be negated'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T20:06:28.833891",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+        "resolved": true
+      }
+    ]
+  },
+  "Asherah Pole": {
+    "card_name": "Asherah Pole",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+    "resolved": true,
+    "raw_ability": "When blocking any O.T. Hero, evil enhancements cannot be negated.  Discard if Gideon, King Asa, King Hezekiah, or King Josiah enters battle.",
+    "last_updated": "2026-09-17T20:07:55.566718",
+    "history": [
+      {
+        "timestamp": "2026-09-17T20:07:33.205585",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing modifier: 'cannot be negated'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T20:07:55.566704",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+        "resolved": true
+      }
+    ]
+  },
+  "Ashkelon": {
+    "card_name": "Ashkelon",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [3]",
+    "resolved": true,
+    "raw_ability": "SITE: If an O.T. Lost Soul is put here, each opponent must discard a card from hand. FORT: Each upkeep, if occupied you may draw X (Limit 3).",
+    "last_updated": "2026-09-17T20:09:08.465206",
+    "history": [
+      {
+        "timestamp": "2026-09-17T20:08:04.370968",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T20:09:08.465187",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [3]",
+        "resolved": true
+      }
+    ]
+  },
+  "Assyrian Camp": {
+    "card_name": "Assyrian Camp",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'discard'",
+    "resolved": true,
+    "raw_ability": "Protect Assyrian Evil Characters in your territory from discard, conversion, and capture unless King Hezekiah is in play or set aside.",
+    "last_updated": "2026-09-17T23:18:46.933941",
+    "history": [
+      {
+        "timestamp": "2026-09-17T23:18:08.707442",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T23:18:46.933925",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'discard'",
+        "resolved": true
+      }
+    ]
+  },
+  "Assyrian Siege Army": {
+    "card_name": "Assyrian Siege Army",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+    "resolved": true,
+    "raw_ability": "If blocking and another Assyrian is in play, you may negate and discard an Artifact, single color Site, or Fortress in play or set aside area. Cannot be negated.",
+    "last_updated": "2026-09-17T23:21:33.055658",
+    "history": [
+      {
+        "timestamp": "2026-09-17T23:21:15.498480",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing modifier: 'cannot be negated'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T23:21:33.055635",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+        "resolved": true
+      }
+    ]
+  },
+  "Astrologers (TxP)": {
+    "card_name": "Astrologers (TxP)",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.1.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='add to hand', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+    "resolved": true,
+    "raw_ability": "Reveal the top or bottom card of deck. If it is evil, add it to hand and opponent must discard one of his cards from territory, except a Lost Soul. Cannot be interrutped.",
+    "last_updated": "2026-09-17T23:23:17.741111",
+    "history": [
+      {
+        "timestamp": "2026-09-17T23:22:40.274175",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.effects.1.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='add to hand', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T23:23:17.741092",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.1.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='add to hand', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      }
+    ]
+  },
+  "Authority of Christ (GoC UR+)": {
+    "card_name": "Authority of Christ (GoC UR+)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [2]",
+    "resolved": true,
+    "raw_ability": "STAR: Set aside a Hero from hand for 2 turns. On return, draw 3. GE: Discard all Evil Characters that you do not control. Cannot be negated if used by a meek disciple.",
+    "last_updated": "2026-09-17T23:26:24.777930",
+    "history": [
+      {
+        "timestamp": "2026-09-17T23:24:12.665757",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T23:26:24.777921",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [2]",
+        "resolved": true
+      }
+    ]
+  },
+  "Authority of Christ (GoC)": {
+    "card_name": "Authority of Christ (GoC)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Missing numbers in AST: [2] (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "STAR: Set aside a Hero from hand for 2 turns. On return, draw 3. GE: Discard all Evil Characters that you do not control. Cannot be negated if used by a meek disciple.",
+    "last_updated": "2026-09-17T23:27:01.968843",
+    "history": [
+      {
+        "timestamp": "2026-09-17T23:24:58.271303",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      }
+    ]
+  },
+  "Azor, the Recusant / Azor, the Submissive (LoC)": {
+    "card_name": "Azor, the Recusant / Azor, the Submissive (LoC)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [3]",
+    "resolved": true,
+    "raw_ability": "Negate pale green humans. You may banish 3 evil cards from discard pile to discard an idol, Site or evil Fortress.",
+    "last_updated": "2026-09-17T23:29:10.074369",
+    "history": [
+      {
+        "timestamp": "2026-09-17T23:28:18.897787",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T23:29:10.074359",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [3]",
+        "resolved": true
+      }
+    ]
+  },
+  "Baal Worship (FoM)": {
+    "card_name": "Baal Worship (FoM)",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [3], Missing primary action: 'discard'",
+    "resolved": true,
+    "raw_ability": "Negate a card. If used by an Canaanite, you may discard a human in territory to draw X (limit 3 unless played in battle).",
+    "last_updated": "2026-09-17T23:29:13.157631",
+    "history": [
+      {
+        "timestamp": "2026-09-17T23:28:29.109334",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [3], Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T23:29:13.157619",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [3], Missing primary action: 'discard'",
+        "resolved": true
+      }
+    ]
+  },
+  "Babylonian Forces": {
+    "card_name": "Babylonian Forces",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "Negate all special abilities on Red brigade Heroes.  You may search draw pile for Headquarters at Riblah and put it in play.",
+    "last_updated": "2026-09-17T23:31:16.592464",
+    "history": [
+      {
+        "timestamp": "2026-09-17T23:30:37.897351",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T23:31:16.592450",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Babylonian Soldiers": {
+    "card_name": "Babylonian Soldiers",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [3]",
+    "resolved": true,
+    "raw_ability": "If blocking, you may remove a captured character from the game to negate and discard an Artifact or draw X (limit 3). Increase this character by X/X.",
+    "last_updated": "2026-09-17T23:31:53.025679",
+    "history": [
+      {
+        "timestamp": "2026-09-17T23:31:26.598732",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T23:31:53.025668",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [3]",
+        "resolved": true
+      }
+    ]
+  },
+  "Balaam's Prophecy": {
+    "card_name": "Balaam's Prophecy",
+    "card_identifier": "",
+    "issue_type": "FACT_MISMATCH",
+    "details": "Auto-fixed: Missing numbers in AST: [6]",
+    "resolved": true,
+    "raw_ability": "(Star) Look at a hand or a Reserve. (EE) Reveal the top 6 cards of a deck: Take a * card (or add it to battle). Topdeck the rest in any order. Cannot be prevented.",
+    "last_updated": "2026-09-17T23:39:54.770236",
+    "history": [
+      {
+        "timestamp": "2026-09-17T23:34:42.756829",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Missing numbers in AST: [6]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-17T23:39:54.770202",
+        "issue_type": "FACT_MISMATCH",
+        "details": "Auto-fixed: Missing numbers in AST: [6]",
+        "resolved": true
+      }
+    ]
+  },
+  "Antidote (L)": {
+    "card_name": "Antidote (L)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Hallucinated action 'immune' (use 'gain' with modifier instead)",
+    "resolved": true,
+    "raw_ability": "Renders all poisons harmless.",
+    "last_updated": "2026-09-18T14:47:14.596001",
+    "history": [
+      {
+        "timestamp": "2026-09-18T14:46:46.383842",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Hallucinated action 'immune' (use 'gain' with modifier instead)",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T14:47:14.595991",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Hallucinated action 'immune' (use 'gain' with modifier instead)",
+        "resolved": true
+      }
+    ]
+  },
+  "Banishment": {
+    "card_name": "Banishment",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'discard'",
+    "resolved": true,
+    "raw_ability": "Take any demon prisoner and place in your Tartaros site.  If Tartaros is not in play, discard the demon.",
+    "last_updated": "2026-09-18T16:59:04.200173",
+    "history": [
+      {
+        "timestamp": "2026-09-18T16:58:24.323601",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T16:59:04.200129",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'discard'",
+        "resolved": true
+      }
+    ]
+  },
+  "Basemath (LoC)": {
+    "card_name": "Basemath (LoC)",
+    "card_identifier": "524705721",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries. (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "You may bounce a Hero. Opponent may banish a card of matching brigade from hand instead. May band to Esau. Cannot be negated if opponent used a search ability this turn.",
+    "last_updated": "2026-09-18T20:04:52.198477",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:05:33.849900",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Battle Prayer (Ki)": {
+    "card_name": "Battle Prayer (Ki)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Missing primary action: 'draw' (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "Search your draw pile or discard pile for any good gold brigade enhancement and add it to your hand.  Shuffle card pile.",
+    "last_updated": "2026-09-18T17:07:55.889518",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:06:57.161322",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      }
+    ]
+  },
+  "Battle Prayer (Wa)": {
+    "card_name": "Battle Prayer (Wa)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "Search through your draw pile or discard pile and select one Gold Enhancement Card.  Shuffle card pile.",
+    "last_updated": "2026-09-18T17:08:22.120810",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:07:36.057467",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:08:22.120796",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Bearing Our Sin": {
+    "card_name": "Bearing Our Sin",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Step 2 uses chained_target without valid ref_step among candidate steps [] (Resolved in subsequent run)",
+    "resolved": true,
+    "raw_ability": "STAR: Reserve this card to draw 1. GE: Heal your prophet, priest or king to add a Hero of matching brigade to battle.",
+    "last_updated": "2026-09-18T17:11:01.675406",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:10:14.734350",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Step 2 uses chained_target without valid ref_step among candidate steps []",
+        "resolved": false
+      }
+    ]
+  },
+  "Beast from the Sea (RoJ AB)": {
+    "card_name": "Beast from the Sea (RoJ AB)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "If an opponent uses a draw or search ability (except on an evil card), you may topdeck a N.T. Lost Soul. Cannot be negated if Red Dragon or The False Prophet is in play.",
+    "last_updated": "2026-09-18T17:14:09.309826",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:13:19.277528",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:14:09.309783",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Beast from the Sea (RoJ)": {
+    "card_name": "Beast from the Sea (RoJ)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "If an opponent uses a draw or search ability (except on an evil card), you may topdeck a N.T. Lost Soul. Cannot be negated if Red Dragon or The False Prophet is in play.",
+    "last_updated": "2026-09-18T17:16:05.157526",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:14:59.411751",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:16:05.157516",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Beelzebub [UR+] (GoC)": {
+    "card_name": "Beelzebub [UR+] (GoC)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Step 2 uses chained_target without valid ref_step among candidate steps []",
+    "resolved": true,
+    "raw_ability": "You may banish a placed orange card on a Hero to discard that Hero. May band to a demon, or you may take a demon from deck or Reserve. Cannot be negated.",
+    "last_updated": "2026-09-18T17:17:07.631668",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:15:51.015915",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Step 2 uses chained_target without valid ref_step among candidate steps []",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:17:07.631637",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Step 2 uses chained_target without valid ref_step among candidate steps []",
+        "resolved": true
+      }
+    ]
+  },
+  "Begging to go Back": {
+    "card_name": "Begging to go Back",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "Discard the top two cards of opponent's draw pile.  Then select any card except a dominant card in that opponent's discard pile and return it to the top of that draw pile.",
+    "last_updated": "2026-09-18T17:17:58.254853",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:17:12.931995",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:17:58.254825",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Beelzebub (GoC)": {
+    "card_name": "Beelzebub (GoC)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Step 2 uses chained_target without valid ref_step among candidate steps []",
+    "resolved": true,
+    "raw_ability": "You may banish a placed orange card on a Hero to discard that Hero. May band to a demon, or you may take a demon from deck or Reserve. Cannot be negated.",
+    "last_updated": "2026-09-18T17:19:47.055583",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:18:36.347588",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Step 2 uses chained_target without valid ref_step among candidate steps []",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:19:47.055524",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Step 2 uses chained_target without valid ref_step among candidate steps []",
+        "resolved": true
+      }
+    ]
+  },
+  "Benaiah (FoM)": {
+    "card_name": "Benaiah (FoM)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'band'",
+    "resolved": true,
+    "raw_ability": "You may discard an animal or take, convert, and equip an evil weapon. Negate special abilities (except band abilities) on other characters and Enhancements (except good weapons).",
+    "last_updated": "2026-09-18T17:25:22.992447",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:24:18.510418",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'band'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:25:22.992391",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'band'",
+        "resolved": true
+      }
+    ]
+  },
+  "Bernice": {
+    "card_name": "Bernice",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'band'",
+    "resolved": true,
+    "raw_ability": "If blocking, take a male, human Evil Character to your territory and convert it to evil gold. Its owner may withdraw a Hero instead. May band to Herod Agrippa I.",
+    "last_updated": "2026-09-18T17:28:09.166053",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:27:14.757202",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'band'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:28:09.166022",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'band'",
+        "resolved": true
+      }
+    ]
+  },
+  "Besieging the City": {
+    "card_name": "Besieging the City",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "Opponent may not draw cards or make a rescue attempt next turn.",
+    "last_updated": "2026-09-18T17:29:30.926081",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:28:35.114306",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:29:30.926055",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Bezaleel": {
+    "card_name": "Bezaleel",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "Search draw pile for The Tabernacle or a Tabernacle Artifact and put it in hand.",
+    "last_updated": "2026-09-18T17:33:04.109304",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:32:46.411348",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:33:04.109269",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Bethlehem (Promo)": {
+    "card_name": "Bethlehem (Promo)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing numbers in AST: [6]",
+    "resolved": true,
+    "raw_ability": "(Site) Protect your human Heroes with strength 6 or less from discard abilities.  (Fortress) Each upkeep, you may reserve contents to take a good card matching the reserved Hero's book from deck.",
+    "last_updated": "2026-09-18T17:33:28.340048",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:33:02.202444",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing numbers in AST: [6]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:33:28.340004",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing numbers in AST: [6]",
+        "resolved": true
+      }
+    ]
+  },
+  "Bildad, the Shuhite (RoJ)": {
+    "card_name": "Bildad, the Shuhite (RoJ)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing numbers in AST: [3]",
+    "resolved": true,
+    "raw_ability": "If you control no human Heroes (except Job), you may decrease a Hero 3/3. May band to a Job Evil Character. Cannot be prevented by an O.T. Hero.",
+    "last_updated": "2026-09-18T17:35:32.926772",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:34:50.955147",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:35:32.926743",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing numbers in AST: [3]",
+        "resolved": true
+      }
+    ]
+  },
+  "Bless the Nations": {
+    "card_name": "Bless the Nations",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Step 2 uses chained_target without valid ref_step among candidate steps []",
+    "resolved": true,
+    "raw_ability": "(Star) Look at the bottom 6 cards of deck: You may topdeck a good card. (HE) Interrupt the battle. Hero may band to up to X humans from Hero's testament.",
+    "last_updated": "2026-09-18T17:37:46.722204",
+    "history": [
+      {
+        "timestamp": "2026-09-18T17:37:21.469323",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Step 2 uses chained_target without valid ref_step among candidate steps []",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T17:37:46.722156",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Step 2 uses chained_target without valid ref_step among candidate steps []",
+        "resolved": true
+      }
+    ]
+  },
+  "Blessings for Obedience": {
+    "card_name": "Blessings for Obedience",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing numbers in AST: [9]",
+    "resolved": true,
+    "raw_ability": "Shuffle all Evil Characters with toughness */9 or greater into owner's draw pile.  Cannot be interrupted.",
+    "last_updated": "2026-09-18T20:05:37.468098",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:05:15.868694",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing numbers in AST: [9]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:05:37.468085",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing numbers in AST: [9]",
+        "resolved": true
+      }
+    ]
+  },
+  "Blinding Light (Ap)": {
+    "card_name": "Blinding Light (Ap)",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.1.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='set-aside', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+    "resolved": true,
+    "raw_ability": "Set-aside Saul/Paul for two turns.  On turn three he returns as the Hero Paul.",
+    "last_updated": "2026-09-18T20:05:28.828554",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:05:19.855257",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.effects.1.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='set-aside', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:05:28.828542",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.1.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='set-aside', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      }
+    ]
+  },
+  "Blood Avenger": {
+    "card_name": "Blood Avenger",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+    "resolved": true,
+    "raw_ability": "You may draw 2. If this character is discarded, you may discard a character of opposite alignment.",
+    "last_updated": "2026-09-18T20:08:27.886922",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:08:09.023822",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:08:27.886911",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Body Armor (LoC)": {
+    "card_name": "Body Armor (LoC)",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+    "resolved": true,
+    "raw_ability": "Protect bearer from evil warriors. If your lone warrior is blocked, you may toss a good Enhancement.",
+    "last_updated": "2026-09-18T20:13:24.155401",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:13:05.428033",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:13:24.155386",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.1.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Boils (Wa)": {
+    "card_name": "Boils (Wa)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'discard'",
+    "resolved": true,
+    "raw_ability": "Selected Hero decreases 0/2 per turn.  If Hero reaches */0 or less, discard Hero.",
+    "last_updated": "2026-09-18T20:14:20.349451",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:13:46.396032",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:14:20.349435",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'discard'",
+        "resolved": true
+      }
+    ]
+  },
+  "Book of Hozai": {
+    "card_name": "Book of Hozai",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'discard'",
+    "resolved": true,
+    "raw_ability": "Holder may draw three cards and play the next enhancement.  During discard phase, holder may return any cards from hand to top of draw pile.",
+    "last_updated": "2026-09-18T20:16:00.541234",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:14:43.237772",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:16:00.541221",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'discard'",
+        "resolved": true
+      }
+    ]
+  },
+  "Brass Serpent (UL)": {
+    "card_name": "Brass Serpent (UL)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Hallucinated action 'immune' (use 'gain' with modifier instead)",
+    "resolved": true,
+    "raw_ability": "Renders all poisons harmless.",
+    "last_updated": "2026-09-18T20:19:31.069467",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:18:49.172074",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Hallucinated action 'immune' (use 'gain' with modifier instead)",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:19:31.069453",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Hallucinated action 'immune' (use 'gain' with modifier instead)",
+        "resolved": true
+      }
+    ]
+  },
+  "Broken Cisterns": {
+    "card_name": "Broken Cisterns",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "Place in an opponent's territory. Negate draw abilities used by that player. All Heroes in that territory are decreased by 0/X.",
+    "last_updated": "2026-09-18T20:24:38.889060",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:22:27.408154",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:24:38.889051",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Brother's Conflict": {
+    "card_name": "Brother's Conflict",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='begin a side battle', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+    "resolved": true,
+    "raw_ability": "Begin a side battle between 2 Evil Characters.",
+    "last_updated": "2026-09-18T20:23:45.489568",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:23:25.673987",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='begin a side battle', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:23:45.489554",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='begin a side battle', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      }
+    ]
+  },
+  "Brought to Egypt": {
+    "card_name": "Brought to Egypt",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing numbers in AST: [3]",
+    "resolved": true,
+    "raw_ability": "Interrupt the battle. You may take a son of Jacob from Reserve. Hero may band to up to 3 sons of Jacob.",
+    "last_updated": "2026-09-18T20:26:46.543295",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:26:27.509650",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:26:46.543285",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing numbers in AST: [3]",
+        "resolved": true
+      }
+    ]
+  },
+  "Buckler (Wa)": {
+    "card_name": "Buckler (Wa)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing numbers in AST: [4, 6]",
+    "resolved": true,
+    "raw_ability": "Worth 6/4 against any Evil Character who fought in an earthly battle.",
+    "last_updated": "2026-09-18T20:26:49.820320",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:26:41.099898",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing numbers in AST: [4, 6]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:26:49.820308",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing numbers in AST: [4, 6]",
+        "resolved": true
+      }
+    ]
+  },
+  "Building Egypt": {
+    "card_name": "Building Egypt",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.0.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+    "resolved": true,
+    "raw_ability": "For each Lost Soul in your territory that is not in a Site, search draw pile for an Egyptian Site and put it in play.  Put a Lost Soul in each of those Sites.  Cannot be interrupted.",
+    "last_updated": "2026-09-18T20:28:09.283040",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:27:30.794791",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.effects.0.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:28:09.283027",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.effects.0.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      }
+    ]
+  },
+  "Caesarea Philippi": {
+    "card_name": "Caesarea Philippi",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.1.effects.0.target.zone_owner\n  Input should be 'controller', 'opponent', 'both', 'either' or 'target_player' [type=literal_error, input_value='zone_owner', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+    "resolved": true,
+    "raw_ability": "Protect N.T. human Evil Character Characters in your territory from capture and discard abilities on opponents' cards. Protect N.T. Sites in your territory from opponents' cards.",
+    "last_updated": "2026-09-18T20:34:14.047373",
+    "history": [
+      {
+        "timestamp": "2026-09-18T20:34:06.631640",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.1.effects.0.target.zone_owner\n  Input should be 'controller', 'opponent', 'both', 'either' or 'target_player' [type=literal_error, input_value='zone_owner', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T20:34:14.047349",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.1.effects.0.target.zone_owner\n  Input should be 'controller', 'opponent', 'both', 'either' or 'target_player' [type=literal_error, input_value='zone_owner', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Call Me \"Mara\" (LoC)": {
+    "card_name": "Call Me \"Mara\" (LoC)",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 2 validation errors for CardSideLogic\nabilities.0.effects.0.dependency\n  Input should be 'always', 'if_previous_successful', 'if_you_do', 'if_you_cannot' or 'otherwise' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error\nabilities.1.effects.0.dependency\n  Input should be 'always', 'if_previous_successful', 'if_you_do', 'if_you_cannot' or 'otherwise' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+    "resolved": true,
+    "raw_ability": "Opponent must underdeck a good card from hand. You may underdeck a good card in battle. Cannot be prevented.",
+    "last_updated": "2026-09-18T21:00:15.279287",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:00:03.020562",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "2 validation errors for CardSideLogic\nabilities.0.effects.0.dependency\n  Input should be 'always', 'if_previous_successful', 'if_you_do', 'if_you_cannot' or 'otherwise' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error\nabilities.1.effects.0.dependency\n  Input should be 'always', 'if_previous_successful', 'if_you_do', 'if_you_cannot' or 'otherwise' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:00:15.279212",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 2 validation errors for CardSideLogic\nabilities.0.effects.0.dependency\n  Input should be 'always', 'if_previous_successful', 'if_you_do', 'if_you_cannot' or 'otherwise' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error\nabilities.1.effects.0.dependency\n  Input should be 'always', 'if_previous_successful', 'if_you_do', 'if_you_cannot' or 'otherwise' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Caleb (FoM)": {
+    "card_name": "Caleb (FoM)",
+    "card_identifier": "266388578",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries.",
+    "resolved": false,
+    "raw_ability": "You may underdeck an evil giant. Take a City and play it. If alone, Caleb may band to an O.T. red warrior or you may take or equip a good weapon from Reserve. Cannot be interrupted.",
+    "last_updated": "2026-09-18T21:03:13.867517",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:03:13.867499",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Captain of the Guard (GoC)": {
+    "card_name": "Captain of the Guard (GoC)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing modifier: 'cannot be interrupted'",
+    "resolved": true,
+    "raw_ability": "You may play a Sadducee warrior from Reserve (or deck if you control a meek Lost Soul). May band to a Sadducee warrior. Cannot be interrupted.",
+    "last_updated": "2026-09-18T21:07:47.667571",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:06:29.280806",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing modifier: 'cannot be interrupted'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:07:47.667541",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing modifier: 'cannot be interrupted'",
+        "resolved": true
+      }
+    ]
+  },
+  "Canaan, the Cursed": {
+    "card_name": "Canaan, the Cursed",
+    "card_identifier": "1828696304",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries.",
+    "resolved": false,
+    "raw_ability": "You may take a Canaanite human or Site from deck. If a Curse is active, you may give a Canaanite to opponent's territory to take an Enhancement from opponent's discard pile. Cannot be interrupted.",
+    "last_updated": "2026-09-18T21:07:24.383844",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:07:24.383830",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Captain of the Host (2016 Promo)": {
+    "card_name": "Captain of the Host (2016 Promo)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'band'",
+    "resolved": true,
+    "raw_ability": "Negate all special abilities (except band abilities) on Enhancements and other characters.",
+    "last_updated": "2026-09-18T21:07:59.859768",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:07:38.522575",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'band'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:07:59.859756",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'band'",
+        "resolved": true
+      }
+    ]
+  },
+  "Captain of the Host (2020 Promo)": {
+    "card_name": "Captain of the Host (2020 Promo)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'band'",
+    "resolved": true,
+    "raw_ability": "Negate all special abilities (except band abilities) on Enhancements and other characters.",
+    "last_updated": "2026-09-18T21:08:28.679561",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:08:01.456392",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'band'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:08:28.679530",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'band'",
+        "resolved": true
+      }
+    ]
+  },
+  "Captain of the Host (Roots)": {
+    "card_name": "Captain of the Host (Roots)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'band'",
+    "resolved": true,
+    "raw_ability": "Negate all special abilities (except band abilities) on Enhancements and other characters.",
+    "last_updated": "2026-09-18T21:09:58.351645",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:09:16.582429",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'band'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:09:58.351632",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'band'",
+        "resolved": true
+      }
+    ]
+  },
+  "Captured by Assyria (LoC)": {
+    "card_name": "Captured by Assyria (LoC)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing numbers in AST: [2]",
+    "resolved": true,
+    "raw_ability": "Capture a human (or 2 humans if used by an Assyrian).",
+    "last_updated": "2026-09-18T21:13:44.677968",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:13:05.750910",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:13:44.677960",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing numbers in AST: [2]",
+        "resolved": true
+      }
+    ]
+  },
+  "Capturing Canaan (FoM)": {
+    "card_name": "Capturing Canaan (FoM)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing numbers in AST: [2]",
+    "resolved": true,
+    "raw_ability": "Capture an evil human (or 2 if used by a judge).",
+    "last_updated": "2026-09-18T21:14:48.018812",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:14:04.358382",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing numbers in AST: [2]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:14:48.018801",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing numbers in AST: [2]",
+        "resolved": true
+      }
+    ]
+  },
+  "Casting Stones": {
+    "card_name": "Casting Stones",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing numbers in AST: [3]",
+    "resolved": true,
+    "raw_ability": "nterrupt the battle. Reveal cards from the top of draw pile until 3 evil Enhancements are revealed: You may toss any number of revealed evil Enhancements, then shuffle the rest.",
+    "last_updated": "2026-09-18T21:19:01.370943",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:18:35.628272",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:19:01.370924",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing numbers in AST: [3]",
+        "resolved": true
+      }
+    ]
+  },
+  "Charioteers of Seir (LoC)": {
+    "card_name": "Charioteers of Seir (LoC)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "You may banish a good Enhancement. If opponent has used a draw or search ability this turn, you may play an evil O.T. Enhancement. Cannot be prevented.",
+    "last_updated": "2026-09-18T21:23:42.681182",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:21:26.282834",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:23:42.681171",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
+        "resolved": true
+      }
+    ]
+  },
+  "Christ's Triumph": {
+    "card_name": "Christ's Triumph",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: Expecting ',' delimiter: line 106 column 1 (char 2609)",
+    "resolved": true,
+    "raw_ability": "Place on your N.T. human Hero: If your N.T. human Hero fails a rescue attempt, you may discard this card to begin a new rescue attempt with this Hero.",
+    "last_updated": "2026-09-18T21:29:57.310478",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:29:38.046534",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Expecting ',' delimiter: line 106 column 1 (char 2609)",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:29:57.310466",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: Expecting ',' delimiter: line 106 column 1 (char 2609)",
+        "resolved": true
+      }
+    ]
+  },
+  "City of Refuge (PoC)": {
+    "card_name": "City of Refuge (PoC)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'discard'",
+    "resolved": true,
+    "raw_ability": "SITE: Protect O.T. humans from discard. FORT: Once per turn, if an opponent's ability harms your O.T. human, you may hold it here instead.",
+    "last_updated": "2026-09-18T21:34:53.693021",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:34:09.398760",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:34:53.692994",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'discard'",
+        "resolved": true
+      }
+    ]
+  },
+  "Clinging to Power (GoC)": {
+    "card_name": "Clinging to Power (GoC)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'band'",
+    "resolved": true,
+    "raw_ability": "You may take an evil card with a band or protect ability from deck or Reserve. You may add that card to battle, reserve a Hero in battle or underdeck this card.",
+    "last_updated": "2026-09-18T21:37:14.349021",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:36:09.774394",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'band'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:37:14.349001",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'band'",
+        "resolved": true
+      }
+    ]
+  },
+  "Clinging to Power [2022 - GoC P]": {
+    "card_name": "Clinging to Power [2022 - GoC P]",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'band'",
+    "resolved": true,
+    "raw_ability": "You may take an evil card with a band or protect ability from deck or Reserve. You may add that card to battle, reserve a Hero in battle or underdeck this card.",
+    "last_updated": "2026-09-18T21:40:14.342057",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:39:14.086358",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'band'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:40:14.342046",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'band'",
+        "resolved": true
+      }
+    ]
+  },
+  "Coliseum": {
+    "card_name": "Coliseum",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+    "resolved": true,
+    "raw_ability": "Negate all protect abilities on cards in the Field of Battle. Toss all Enhancements played in battle that have 'cannot be negated' in the special ability, or that have no special ability.",
+    "last_updated": "2026-09-18T21:40:25.410545",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:39:17.981606",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing modifier: 'cannot be negated'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:40:25.410523",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+        "resolved": true
+      }
+    ]
+  },
+  "Coliseum (CoW AB)": {
+    "card_name": "Coliseum (CoW AB)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+    "resolved": true,
+    "raw_ability": "Negate all protect abilities on cards in the Field of Battle. Toss all Enhancements played in battle that have \"cannot be negated\" in the special ability, or that have no special ability.",
+    "last_updated": "2026-09-18T21:41:32.363440",
+    "history": [
+      {
+        "timestamp": "2026-09-18T21:40:54.976599",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing modifier: 'cannot be negated'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-18T21:41:32.363426",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+        "resolved": true
+      }
+    ]
+  }
+}

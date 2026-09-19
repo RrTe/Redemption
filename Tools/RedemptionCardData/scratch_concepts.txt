@@ -1,0 +1,32 @@
+REG around 'Conceptual relationships':
+entifiers include, but are not limited to: 
+ 
+•    Being type 
+•    Gender 
+•    Nationality 
+•    Occupation 
+•    Royal or political position 
+•    Reference Testament, Book, Chapter or Verse 
+•    Conceptual relationships (typically for Enhancements; involving music, etc.) 
+ 
+Identifiers are also used as explanations for certain parts of cards, such as defining numbers 
+or abilities that have an X or a *, explaining how a non-standard card type is used, or to 
+explain deck building rules that apply to a card. Abilities in identifiers are active while the 
+card with the identifier remains in play or a set-aside area. 
+ 
+Identifiers are especially significant when it comes to characters, as many abilities apply to 
+characters based on certain identifiers. Identifiers are assigned to chara
+
+==================================================
+ORDIR lines with 'involve' or 'involving':
+
+Involves Music 
+involves music if it does one of four things: 
+involving 
+involve music. The following Redemption® cards refer to 
+involving music: 
+involve music are musicians. The following Redemption® characters 
+involve music: 
+involve music: 
+involve music: 
+involve music, see Involves Music. 

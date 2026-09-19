@@ -1,0 +1,36 @@
+1. Terminal-Befehle für die externe Ausführung
+Öffne eine PowerShell in deinem Projektordner (d:\Documents\Workspaces\Redemption\Tools\RedemptionCardData) und führe folgende Schritte aus:
+
+Schritt A: Virtuelle Umgebung aktivieren
+powershell
+.venv\Scripts\Activate.ps1
+Schritt B: Batch generieren (z. B. nächste 100 Karten)
+powershell
+python scripts/09_generate_ai_abilities.py --backend nvidia --count 100 --workers 4
+Was passiert: Das Skript überspringt automatisch alle bereits vorhandenen Karten und zieht sich die nächsten 100 unkompilierten Karten (z. B. 601–700). Die ASTs werden thread-sicher direkt in 
+
+data/ai_generated_abilities.json
+ gespeichert.
+Schritt C: Semantischen Audit & Report aktualisieren
+powershell
+python scripts/11_audit_semantic_logic.py
+Was passiert: Das Skript dekompiliert die neuen ASTs lokal offline, berechnet die MiniLM-Embeddings sowie die Fakt-Invarianten und aktualisiert sofort 
+
+data/semantic_audit_report.md
+.
+2. Wie wir hier nahtlos zusammenarbeiten
+Sobald ein Lauf im externen Terminal durchgelaufen ist, genügt im Chat eine kurze Nachricht wie:
+
+„Batch 601–700 ist durch, schau dir bitte den Report an.“
+
+Ich kann daraufhin sofort:
+
+
+
+data/semantic_audit_report.md
+ und 
+
+data/ai_generated_abilities.json
+ einlesen,
+Die Verteilung (High / Moderate / Review) und etwaige Auffälligkeiten auswerten,
+Spezifische Review-Karten analysieren und gezielte Optimierungen vorbereiten.

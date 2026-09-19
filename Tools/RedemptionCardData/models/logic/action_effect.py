@@ -92,4 +92,6 @@ class ActionEffect(BaseModel):
                 return ActionVerb.CANNOT_BE_IGNORED
             if clean in ("play an enhancement", "play enhancement", "play"):
                 return ActionVerb.PLAY
+            if clean in ("move", "move card", "relocate", "put"):
+                return ActionVerb.PLACE
         return v

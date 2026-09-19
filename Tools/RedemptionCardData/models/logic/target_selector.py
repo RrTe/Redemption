@@ -38,6 +38,16 @@ class TargetSelector(BaseModel):
     count: Optional[DynamicValue] = None
     ref_step: Optional[int] = None
 
+    @field_validator("selection_mode", mode="before")
+    @classmethod
+    def normalize_selection_mode(cls, value: Any) -> Any:
+        """Normalizes selection mode aliases like 'self' to AUTOMATIC_SELF."""
+        if isinstance(value, str):
+            clean = value.strip().lower().replace("-", "_").replace(" ", "_")
+            if clean in ("self", "this", "this_card", "source", "automatic_self"):
+                return SelectionMode.AUTOMATIC_SELF
+        return value
+
     @field_validator("zone_owner", mode="before")
     @classmethod
     def normalize_zone_owner(cls, value: Any) -> Any:

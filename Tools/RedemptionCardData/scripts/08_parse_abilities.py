@@ -660,7 +660,7 @@ def run_ability_parser() -> None:
 
     print(f"Processing {len(cards)} cards (Abbreviation Protection, X, Colon Scope, All-Or-Nothing)...")
     for card in cards:
-        card_id = card.get("Identifier") or card.get("OfficialSet", "") + "_" + card.get("Name", "")
+        card_id = str(card.get("Id", "")).strip() or (card.get("OfficialSet", "") + "_" + card.get("Name", ""))
         card_name = get_card_name(card)
         sides_dict = card.get("CardSides", {})
 

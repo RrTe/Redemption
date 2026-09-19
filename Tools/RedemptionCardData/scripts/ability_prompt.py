@@ -16,6 +16,7 @@ SLIM_SCHEMA_TEMPLATE = """{
       "is_preventable": true,
       "is_interruptible": true,
       "is_negatable": true,
+      "choice_group": "choice_1" | null,
       "trigger_event": null,
       "trigger_filter": {
         "target_type": "hero" | "evil_character" | "character" | null,
@@ -38,25 +39,25 @@ SLIM_SCHEMA_TEMPLATE = """{
       "effects": [
         {
           "step": 1,
-          "action": "<verb: band|draw|discard|negate|prevent|modify_stats|search|shuffle|convert|protect|heal|banish|topdeck|ignore|decrease|reveal|exchange|choose_opponent|create_token|change_hand_size>",
+          "action": "<verb: activate an ability|activate an artifact|add to battle|band|banish|begin a new phase|bounce|cannot be ignored|capture|change hand size|choose opponent|convert|copy|create a token|decrease|discard|disease|draw|end the battle|equip|exchange|first strike|gain|give|heal|hold|ignore|immune|increase|interrupt|look|modify_stats|negate|paralyze|place|play|play an enhancement|poison|present|prevent|protect|redirect|release|remove from the game|repeat|rescue|reserve|restrict|resurrect|return to hand|reveal|search|set-aside|shuffle|side battle|site access|take|taunt|topdeck|toss|transfer|underdeck|use other enhancements|withdraw>",
           "effect_type": "instant" | "ongoing",
           "duration": "instant" | "this_turn" | "until_end_of_phase" | "while_condition" | "permanent",
           "target": {
-            "selection_mode": "manual_controller" | "manual_opponent" | "automatic_all" | "automatic_next" | "automatic_last" | "chained_target" | "context_remainder" | "random",
+            "selection_mode": "manual_controller" | "manual_opponent" | "automatic_all" | "automatic_self" | "automatic_next" | "automatic_last" | "chained_target" | "context_remainder" | "random",
             "zone_owner": "controller" | "opponent" | "both" | "either" | "target_player",
             "scope": "in_play" | "battle" | "deck" | "discard_pile" | "hand" | "set_aside" | "land_of_redemption" | "reserve_pile",
-            "target_type": "hero" | "evil_character" | "character" | "enhancement" | "artifact" | "priest" | "demon" | null,
+            "target_type": "hero" | "evil_character" | "character" | "enhancement" | "artifact" | "lost_soul" | "site" | "priest" | "demon" | null,
             "brigades": [],
             "alignment": "good" | "evil" | "neutral" | null,
             "identifiers": [],
             "card_titles": [],
             "count": {"fixed_value": 1} | null,
-            "ref_step": null
+            "ref_step": 1 | null
           },
           "destination": "hand" | "deck" | "discard_pile" | "in_play" | "territory" | null,
           "destination_position": "as_is",
-          "strength_mod": null,
-          "toughness_mod": null,
+          "strength_mod": 2 | 0 | -3 | null,
+          "toughness_mod": 2 | 6 | -3 | null,
           "creates_context_scope": false,
           "dependency": "always" | "if_previous_successful" | "if_you_do" | "if_you_cannot" | "otherwise"
         }
@@ -92,13 +93,21 @@ Rules:
 4. For cards "in play" or "field of play", always use scope: "in_play" (never use "play", as "play" is an action verb).
 5. For activation_mode, use ONLY 'immediate', 'triggered', 'manually_triggered', or 'static' (never use 'manual_triggered').
 6. For target zone_owner, use ONLY 'controller', 'opponent', 'both', 'either', or 'target_player'. When an ability affects 'all' cards/characters in play (e.g. 'all evil enhancements in play must be discarded') without specifying an opponent, always use zone_owner: 'both' (never 'controller'). Use 'opponent' only when the card explicitly restricts to opponent's cards.
-7. For target selection_mode, use ONLY: 'manual_controller', 'manual_opponent', 'automatic_all', 'automatic_next', 'automatic_last', 'chained_target', 'context_remainder', or 'random'. Never invent hybrid values like 'automatic_controller'; use 'automatic_all' with zone_owner: 'controller' instead.
+7. For target selection_mode, use ONLY: 'manual_controller', 'manual_opponent', 'automatic_all', 'automatic_self', 'automatic_next', 'automatic_last', 'chained_target', 'context_remainder', or 'random'. When a card says 'Hero has...', 'This Hero has...', 'Holder is...', or refers to itself, always use selection_mode: 'automatic_self'. Never invent hybrid values like 'automatic_controller'. When using selection_mode: 'chained_target', you MUST provide 'ref_step': <int> indicating which prior step's target is referenced (e.g. ref_step: 1). Never use 'chained_target' on step 1 (use 'automatic_all' matching the trigger or target).
 8. For dependency, use ONLY: 'always', 'if_previous_successful', 'if_you_do', 'if_you_cannot', or 'otherwise'.
 9. For destination, use ONLY a single string (e.g. 'hand', 'deck', 'discard_pile') or null (never a dictionary).
 10. For modifiers, use objects with 'modifier_type' (e.g. {{"modifier_type": "cannot_be_negated"}} or {{"modifier_type": "limit"}}), never raw strings.
 11. In 'conditions', each element MUST be an object containing 'condition_type' (e.g. 'zone_check'), NOT a bare TargetSelector.
 12. For 'trigger_filter', use a TargetSelector object or null, never a string. For timing/phase restrictions like 'except during draw phase', express as a condition or omit.
-13. Return ONLY valid JSON matching the structure.
+13. For modal choices between distinct abilities (e.g. 'You may [A], or you may [B]'), model each option as an ability and assign both the same 'choice_group' (e.g. "choice_1").
+14. Trait- and keyword-abilities (e.g. 'First Strike', 'Site Access', 'Use Other Enhancements', 'Taunt', 'Cannot be Ignored') on characters apply to that character itself unless stated otherwise. Model them as action effects with effect_type: 'ongoing' and target: {{"selection_mode": "automatic_self", "zone_owner": "controller", "scope": "in_play", "target_type": "hero"}}. Never leave an ability with empty effects: [].
+15. When card text grants or modifies combat stats (*/*, +X/+Y, -X/-Y, e.g. 'gain 0/6', 'decrease by 3/3'), always populate strength_mod and toughness_mod as integers (e.g. strength_mod: 0, toughness_mod: 6). For Lost Souls, always use target_type: 'lost_soul' with alignment: null or 'neutral' (never 'evil_character').
+16. Conceptual qualifiers and relational terms (e.g. 'involve music', 'depicting a weapon', 'connected with demons', 'used by this card') MUST be extracted into target 'identifiers' (e.g. identifiers: ['involve music', 'used by this card']). When an ability grants a modifier (e.g. 'cannot be negated') to other cards, model as action: 'gain', effect_type: 'ongoing', duration: 'permanent', and modifier with applies_to: 'target_cards' (never hallucinate action: 'immune').
+17. Player Restrictions & Prohibitions: Phrases like 'player may not [action]', 'no player may [action]', 'opponent cannot [action]' mean 'restrict' per REG. Model them as action: 'restrict', effect_type: 'ongoing' with target zone_owner: 'opponent' (or 'both'). NEVER model prohibitions as an affirmative action (e.g. 'opponent may not draw' is action: 'restrict', NOT 'draw').
+18. REG Vocabulary Equivalences: Per official REG v11.0.0: 'repent' and 'fall' mean action: 'convert'; 'repel', 'ignore', 'may not be blocked by', 'return to territory', and 'cannot enter battle' mean action: 'withdraw'; 'return to hand' means action: 'bounce'; 'take prisoner' means action: 'capture'; 'restore abilities' means action: 'heal'; 'band with' and 'join the battle' mean action: 'band'; 'remove from the game' means action: 'banish'; 'do this twice' means action: 'repeat'; 'put on bottom of deck' means action: 'underdeck'; 'put on top of deck' means action: 'topdeck'; 'discard as it is played' means action: 'toss'; 'force to block' means action: 'taunt'.
+19. Replacement & Meta Modifiers ('instead', 'regardless', 'limit'): 'instead' represents a replacement modifier (e.g. 'if X, do Y instead') -> model in 'modifiers' with modifier_type: 'instead' and replacement_params: {{"trigger_event": "X", "replace_with_action": "Y"}}. 'regardless of [X]' (e.g. protect abilities, brigade) uses modifier_type: 'regardless'. Usage limits ('limit once per turn/battle') use modifier_type: 'limit' with limit_params: {{"count": 1, "per": "turn"|"battle"}}. ('Limit X per territory' is action: 'restrict', not a limit modifier).
+20. Target Exclusions ('except'): When a target clause contains 'except [X]' (e.g. 'except meek Heroes', 'all evil characters except Assyrians', 'except a king'), extract the exception clause into target 'identifiers' (e.g. identifiers: ["except meek Heroes"]) so it is never lost or ignored.
+21. Return ONLY valid JSON matching the structure.
 
 Reference Examples:
 Example 1 (Cost -> Effect + 'either' zone): "You may banish an evil card from a discard pile to discard an evil card from a Reserve. May band to a meek gold Hero."
@@ -147,6 +156,65 @@ Output:
       "is_optional": true,
       "conditions": [{{ "condition_type": "zone_check", "selector": {{ "card_titles": ["Nadab"], "scope": "battle" }} }}],
       "effects": [{{ "step": 1, "action": "banish", "target": {{ "selection_mode": "automatic_all", "zone_owner": "both", "scope": "battle" }} }}]
+    }}
+  ]
+}},
+
+Example 4 (Trait / Keyword Ability): "Hero has first strike ability."
+Output:
+{{
+  "modifiers": [],
+  "abilities": [
+    {{
+      "ability_id": "first_strike_ability",
+      "activation_mode": "static",
+      "effects": [
+        {{
+          "step": 1,
+          "action": "first strike",
+          "effect_type": "ongoing",
+          "duration": "permanent",
+          "target": {{ "selection_mode": "automatic_self", "zone_owner": "controller", "scope": "in_play", "target_type": "hero" }}
+        }}
+      ]
+    }}
+  ]
+}}
+
+Example 5 (Conceptual Identifiers + Modifier Granting): "Good Enhancements that involve music used by this card cannot be negated."
+Output:
+{{
+  "modifiers": [],
+  "abilities": [
+    {{
+      "ability_id": "music_enhancements_cannot_be_negated",
+      "activation_mode": "static",
+      "is_optional": false,
+      "is_preventable": false,
+      "is_interruptible": false,
+      "is_negatable": false,
+      "effects": [
+        {{
+          "step": 1,
+          "action": "gain",
+          "effect_type": "ongoing",
+          "duration": "permanent",
+          "target": {{
+            "selection_mode": "automatic_all",
+            "zone_owner": "controller",
+            "scope": "in_play",
+            "target_type": "enhancement",
+            "alignment": "good",
+            "identifiers": ["involve music", "used by this card"]
+          }}
+        }}
+      ],
+      "modifiers": [
+        {{
+          "modifier_type": "cannot_be_negated",
+          "applies_to": "target_cards"
+        }}
+      ]
     }}
   ]
 }}"""
