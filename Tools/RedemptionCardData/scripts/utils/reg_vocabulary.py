@@ -57,6 +57,7 @@ PROTECTION_MODIFIERS = [
 TRIGGER_PATTERNS = [
     re.compile(r"\b(?:each\s+time|when|whenever|if)\s+(?:an?\s+)?(?:opponent|player|hero)\s+(\w+)s?\b", re.I),
     re.compile(r"\bafter\s+(?:an?\s+)?(?:opponent|player|hero)\s+(\w+)s?\b", re.I),
+    re.compile(r"\b(?:cards?|enhancements?|characters?)\s+(?:that\s+)?(?:(?:an?|your|their)\s+)?(?:opponents?|players?|heroes?|you)\s+(\w+)s?\b", re.I),
 ]
 
 

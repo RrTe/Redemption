@@ -3,10 +3,10 @@
 Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-mechanic matrix.
 
 ## Summary Metrics
-- **Total Cards Audited:** 597
-- **High Fidelity (>= 0.82):** 160 (26.8%)
-- **Moderate Fidelity (0.68 - 0.81):** 251 (42.0%)
-- **Review Required (< 0.68 or Fact Invariant Failure):** 186 (31.2%)
+- **Total Cards Audited:** 692
+- **High Fidelity (>= 0.82):** 186 (26.9%)
+- **Moderate Fidelity (0.68 - 0.81):** 287 (41.5%)
+- **Review Required (< 0.68 or Fact Invariant Failure):** 219 (31.6%)
 
 ---
 ## Review Required Cards (Prioritized for Inspection)
@@ -113,6 +113,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"Hero's abilities (*/*) are equal to the number of Silver Brigade heroes in play."*
 - **Decompiled:** *"modify stats This Hero."*
 
+### Compassion of Jeremiah (UL) [ID: 1105788373] (Score: 0.458)
+- **Key:** `1105788373_shared`
+- **Original:** *"Hero ignores Crimson Brigade."*
+- **Decompiled:** *"ignore This Hero."*
+
 ### Carried into Exile [ID: 1708698410] (Score: 0.46)
 - **Key:** `1708698410_shared`
 - **Original:** *"Capture a human (or two humans if used by a Babylonian)."*
@@ -147,6 +152,16 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Key:** `773830287_shared`
 - **Original:** *"Prevent the special ability of the next evil Enhancement played this battle."*
 - **Decompiled:** *"If play You may prevent 1 enhancement in play."*
+
+### Covenant of Eden [ID: -784756194] (Score: 0.491)
+- **Key:** `-784756194_shared`
+- **Original:** *"Use as an enhancement or an Artifact.  No character may be removed from the game.  Instead discard the character targeted for removal."*
+- **Decompiled:** *"play 1 your card from hand. If banish discard 1 character in play. Instead."*
+
+### Conspiring Herodians (GoC) [ID: 765735812] (Score: 0.495)
+- **Key:** `765735812_top`
+- **Original:** *"STAR: Give this card to opponent's territory."*
+- **Decompiled:** *"give 1 your card in play."*
 
 ### Burning Incense [ID: -1101186497] (Score: 0.498)
 - **Key:** `-1101186497_shared`
@@ -198,6 +213,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"Place in an opponent's territory. Negate draw abilities used by that player. All Heroes in that territory are decreased by 0/X."*
 - **Decompiled:** *"place 1 opponent's site in territory. restrict 1 opponent's cards in play. decrease 1 opponent's hero in territory 0/0."*
 - **Fact Violations:** Missing primary action: 'draw'
+
+### Covenant with David [ID: -2071886612] (Score: 0.513)
+- **Key:** `-2071886612_shared`
+- **Original:** *"Use as an enhancement or an Artifact.  Household Idols is negated."*
+- **Decompiled:** *"You may play This card or You may play This card. negate Household Idols."*
 
 ### Abijah, son of Samuel [ID: 1330205561] (Score: 0.515)
 - **Key:** `1330205561_shared`
@@ -269,6 +289,16 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"All special abilities except banding on characters and enhancements, except this one, are negated.  Battle is determined by the numbers."*
 - **Decompiled:** *"negate all character in play, negate all enhancement in play. modify stats This Hero."*
 
+### Compassion of Jeremiah (L) [ID: -1176075065] (Score: 0.537)
+- **Key:** `-1176075065_shared`
+- **Original:** *"Hero ignores Red Brigade."*
+- **Decompiled:** *"ignore This Hero."*
+
+### Confusion (CoW AB) [ID: -709968123] (Score: 0.541)
+- **Key:** `-709968123_shared`
+- **Original:** *"Name a card (except a Lost Soul card). Remove Confusion from the game to remove all copies of the named card in a player's deck, discard pile and hand from the game."*
+- **Decompiled:** *"banish Confusion, banish 1 except a Lost Soul card from deck, banish 1 except a Lost Soul card from discard pile, banish 1 except a Lost Soul card from hand."*
+
 ### Abijah, the Conqueror / Abijam, the Half-Hearted (LoC) [ID: -864321273] (Score: 0.544)
 - **Key:** `-864321273_bottom`
 - **Original:** *"If blocking, you may take an idol or evil female from deck or draw X (limit 3)."*
@@ -319,6 +349,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"Capture a character in battle. If used by a Daniel Hero or Persian, this ability gains regardless of protection"*
 - **Decompiled:** *"You may capture 1 character in battle. Cannot be prevented."*
 
+### Corrupted (Roots) [ID: -376311557] (Score: 0.558)
+- **Key:** `-376311557_shared`
+- **Original:** *"Place on a human: Convert human to an orange Evil Character."*
+- **Decompiled:** *"place 1 human character in play, convert human character in play."*
+
 ### Annas the Elder (GoC) [ID: -2100481405] (Score: 0.559)
 - **Key:** `-2100481405_shared`
 - **Original:** *"If blocking, you may underdeck a Lost Soul (or 2 meek Lost Souls). May band to a unique Sadducee. If opponent has used a search ability this turn, your Sadducees cannot be negated."*
@@ -343,6 +378,17 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Key:** `-1070093237_shared`
 - **Original:** *"May band to an O.T. warrior class human Hero or may choose opponent's male human Evil Character to block. Protect Asahel from withdraw and return abilities."*
 - **Decompiled:** *"You may band 1 your good warrior Old Testament hero in play or You may restrict 1 opponent's evil Male evil character in play. protect 1 your good hero in play."*
+
+### Courage (Ki) [ID: -1778538985] (Score: 0.564)
+- **Key:** `-1778538985_shared`
+- **Original:** *"Holder may band any Hero from his territory or hand into battle."*
+- **Decompiled:** *"You may band your good hero in play or You may band your good hero from hand."*
+
+### Crooked Ways [ID: -264128981] (Score: 0.568)
+- **Key:** `-264128981_shared`
+- **Original:** *"Place on your magician: While all of your human Evil Characters are magicians, reveal all cards that your opponents draw"*
+- **Decompiled:** *"You may place 1 your hero in play. reveal all opponent's cards from hand."*
+- **Fact Violations:** Missing primary action: 'draw'
 
 ### Clemency of David (UL) [ID: -748121087] (Score: 0.57)
 - **Key:** `-748121087_shared`
@@ -414,6 +460,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"Protect O.T. priests from evil withdraw and reserve abilities. You may play a Lost Soul from a deck or negate a neutral card."*
 - **Decompiled:** *"protect all good Old Testament hero in play. You may play Lost Soul or You may negate 1 neutral in play."*
 
+### Conspiring Servants (LoC) [ID: 2138046710] (Score: 0.589)
+- **Key:** `2138046710_shared`
+- **Original:** *"STAR: Give this card to opponent's territory. EC: Negate your idols and Curses. Each upkeep, you must discard a royal human in territory."*
+- **Decompiled:** *"You may give Conspiring Servants (LoC). negate all your idol curse enhancement in play. discard 1 your good royal hero in territory."*
+
 ### Caleb (Promo) [ID: 1875212355] (Score: 0.592)
 - **Key:** `1875212355_shared`
 - **Original:** *"Caleb may use any empty Lost Soul site from opponent to gain access to a Lost Soul held in a site of the same color.  May band with Joshua.  Caleb ignores Giants."*
@@ -439,6 +490,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"Protect hand, deck and Reserve from opponents. If your nativity Hero is harmed or defeated by an opponent, you may reserve it instead. Each upkeep, you may take a good nativity card from Reserve."*
 - **Decompiled:** *"protect This card, protect your card from deck, protect This card. You may reserve This Hero. Instead. You may take 1 your good from Reserve."*
 
+### Covering the Sacred Things [ID: 1742678859] (Score: 0.597)
+- **Key:** `1742678859_shared`
+- **Original:** *"Place on any active Tabernacle Artifact.  That Artifact cannot be negated or discarded while a Priest is in play.  If that Artifact is deactivated, return this card to hand."*
+- **Decompiled:** *"place 1 Tabernacle active artifact in play, gain 1 your Tabernacle artifact in play. Cannot be negated. Cannot be prevented. If all your Tabernacle deactivated artifact in play is in play bounce 1 your artifact in play."*
+
 ### Ambush! (GoC) [ID: -1027223523] (Score: 0.598)
 - **Key:** `-1027223523_shared`
 - **Original:** *"Interrupt the battle. You may take a thief from Reserve. Character may band to any number of N.T. crimson humans. Cannot be negated if used by a thief."*
@@ -459,6 +515,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"Silver brigade Heroes cannot be taken prisoner this turn."*
 - **Decompiled:** *"protect all good silver hero in play this turn."*
 
+### Corrupted [ID: 557919552] (Score: 0.601)
+- **Key:** `557919552_shared`
+- **Original:** *"Convert a human Hero to a brown brigade Evil Character.  Cannot be prevented by a good card if an occupied Site is in play."*
+- **Decompiled:** *"If all site in play is in play convert 1 good Human hero in play. Cannot be prevented."*
+
 ### Banishment [ID: 846722336] (Score: 0.602)
 - **Key:** `846722336_shared`
 - **Original:** *"Take any demon prisoner and place in your Tartaros site.  If Tartaros is not in play, discard the demon."*
@@ -468,6 +529,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Key:** `1914795075_shared`
 - **Original:** *"Holder may negate and discard one evil weapon class enhancement on an Evil Character.  Any time during battle, holder may discard Coat of Mail to return bearer being discarded to your territory."*
 - **Decompiled:** *"You may negate evil weapon class on evil character enhancement in play, discard evil weapon class on evil character enhancement in play. discard This card, place This Hero."*
+
+### Crowd's Choice (GoC) [ID: -1953554392] (Score: 0.602)
+- **Key:** `-1953554392_shared`
+- **Original:** *"LAMB: You may take a good card from deck or Reserve. REAPER: You may take an evil card from deck or Reserve."*
+- **Decompiled:** *"You may take 1 your good from deck or You may take 1 your good from Reserve. You may take 1 your evil from deck or You may take 1 your evil from Reserve."*
 
 ### Assyria's Tribute [ID: -1828165989] (Score: 0.603)
 - **Key:** `-1828165989_top`
@@ -494,6 +560,16 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"Negate a good card. If alone, you may choose an O.T. Hero to attack. Cannot be prevented."*
 - **Decompiled:** *"negate 1 good character in play. Cannot be prevented. If Abner, the Commander (Roots) is in battle You may choose opponent 1 good O.T. hero in play. Cannot be prevented."*
 
+### Covenant Keepers [ID: -1106378997] (Score: 0.605)
+- **Key:** `-1106378997_shared`
+- **Original:** *"You may search draw pile for a Covenant, or an Artifact with 'Covenant' in the title, and add it to hand."*
+- **Decompiled:** *"You may search Covenant, take 1 your card from deck or You may search 1 your Covenant artifact from deck, take 1 your card from deck."*
+
+### Covenant of Abraham [ID: -811903860] (Score: 0.606)
+- **Key:** `-811903860_shared`
+- **Original:** *"Use as an enhancement or an Artifact.  No Evil Character may be set aside while this card is in play."*
+- **Decompiled:** *"ignore This card. If Covenant of Abraham is in play restrict all evil character in play."*
+
 ### Abel's Sacrifice [ID: 1728300639] (Score: 0.607)
 - **Key:** `1728300639_shared`
 - **Original:** *"Abel's Sacrifice and all good enhancements played after it this turn may not be interrupted or prevented."*
@@ -519,6 +595,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"Search discard pile for a weapon class Enhancement and place on your warrior class Hero that has no weapon and convert weapon to that Hero's brigade."*
 - **Decompiled:** *"search 1 your Weapon enhancement from discard pile, place 1 your Weapon enhancement from discard pile, convert 1 your Weapon enhancement in play."*
 
+### Contagious Fear (GoC) [ID: 1137272339] (Score: 0.609)
+- **Key:** `1137272339_top`
+- **Original:** *"STAR: Reserve the top card of a deck."*
+- **Decompiled:** *"You may reserve 1 from deck."*
+
 ### Achan (Pa) [ID: -1524106876] (Score: 0.61)
 - **Key:** `-1524106876_shared`
 - **Original:** *"Joshua's strength (*/) is reduced by 5 while Achan remains in play."*
@@ -539,10 +620,20 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"Character is immune to all female heroes."*
 - **Decompiled:** *"immune This Hero."*
 
+### Conqueror over Death [ID: -945112256] (Score: 0.612)
+- **Key:** `-945112256_shared`
+- **Original:** *"Return all Heroes in your Potter's Field to the field of play.  This ability cannot be negated."*
+- **Decompiled:** *"place all your good hero. Cannot be negated."*
+
 ### Abigail (1st Print - K) [ID: -1506905177] (Score: 0.614)
 - **Key:** `-1506905177_shared`
 - **Original:** *"You may choose an Evil Character to block."*
 - **Decompiled:** *"You may add to battle 1 evil evil character in play."*
+
+### Cup of Wrath [ID: 2131131542] (Score: 0.614)
+- **Key:** `2131131542_shared`
+- **Original:** *"Holder may take any two Evil Characters in play and cause them to fight each other.  The loser is discarded."*
+- **Decompiled:** *"You may take 2 evil evil character in play, discard 1 evil evil character in play."*
 
 ### Claudia [ID: -1618711053] (Score: 0.616)
 - **Key:** `-1618711053_shared`
@@ -568,6 +659,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Key:** `-1331490969_bottom`
 - **Original:** *"While this Site is occupied, prevent ignore abilities on opponent's good O.T. cards."*
 - **Decompiled:** *"prevent all opponent's good O.T. hero in play."*
+
+### Covenant of Prayer (RoJ AB) [ID: -1750024669] (Score: 0.622)
+- **Key:** `-1750024669_shared`
+- **Original:** *"You may banish this card to add to hand your card that was banished by an opponent or a card from Reserve."*
+- **Decompiled:** *"banish 1 your card in play, bounce 1 your card from discard pile or banish 1 your card in play, bounce 1 your card from Reserve."*
 
 ### Amorite Invasion [ID: -2053406169] (Score: 0.623)
 - **Key:** `-2053406169_shared`
@@ -614,10 +710,20 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"First strike. Take a City or Artifact, discard a multi-brigade card, or each player must draw 1. If this card is discarded, you may withdraw it instead. May band to a Greek warrior. Cannot be prevented."*
 - **Decompiled:** *"This Hero has first strike. Cannot be prevented. You may take City or Artifact. Cannot be prevented or You may discard 1 from hand. Cannot be prevented or You may draw 1 from hand from deck. Cannot be prevented. If Alexander the Great is in discard pile You may withdraw Alexander the Great. Cannot be prevented. You may band 1 greek hero in play. Cannot be prevented."*
 
+### Cross Beams of the Cross [ID: 747025152] (Score: 0.633)
+- **Key:** `747025152_top`
+- **Original:** *"No beast may block while this Artifact is in play."*
+- **Decompiled:** *"restrict all Beast character in play."*
+
 ### Adino (Ki) [ID: 1633621557] (Score: 0.635)
 - **Key:** `1633621557_shared`
 - **Original:** *"If Adino is holding a spear he gains 3/3 and prevents all special abilities except banding on non-weapon class enhancements."*
 - **Decompiled:** *"If Adino is in play This Hero is worth +3/+3, prevent all enhancement in play."*
+
+### Confusion (CoW) [ID: -2047775602] (Score: 0.636)
+- **Key:** `-2047775602_shared`
+- **Original:** *"Name a card (except a Lost Soul card). Remove Confusion from the game to remove all copies of the named card in a player's deck, discard pile and hand from the game."*
+- **Decompiled:** *"banish 1 your character in play, banish all named card except a Lost Soul card from deck, banish all named card except a Lost Soul card from discard pile, banish all named card except a Lost Soul card from hand."*
 
 ### Boaz' Sandal [ID: -1219999882] (Score: 0.637)
 - **Key:** `-1219999882_top`
@@ -633,6 +739,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Key:** `439012927_shared`
 - **Original:** *"Enhancements used by this Hero cannot be interrupted."*
 - **Decompiled:** *"Cannot be interrupted."*
+
+### Courage (Wa) [ID: 569222665] (Score: 0.639)
+- **Key:** `569222665_shared`
+- **Original:** *"Holder may add an additional Hero from his territory to the battle."*
+- **Decompiled:** *"You may add to battle 1 your good hero in territory."*
 
 ### Altar of Incense (Pi) [ID: -1634585636] (Score: 0.64)
 - **Key:** `-1634585636_top`
@@ -739,6 +850,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"If your N.T. human Hero is removed from battle by an opponent's special ability, you may discard this card to add a Hero from discard pile or Reserve to battle."*
 - **Decompiled:** *"If removed_from_battle_by_opponent_special_ability discard 1 your enhancement in play, add to battle 1 your hero from discard pile or If removed_from_battle_by_opponent_special_ability discard 1 your enhancement in play, add to battle 1 your hero from Reserve."*
 
+### Cubus [ID: 734571580] (Score: 0.656)
+- **Key:** `734571580_shared`
+- **Original:** *"You may search draw pile for 'Spiritual Realm' and put it in play.  Cubus may band to a female Evil Character."*
+- **Decompiled:** *"You may search Spiritual Realm, play 1 your site in play. You may band 1 evil female evil character in play."*
+
 ### Andrew, First Called / Andrew, Fisher of Men (GoC) [ID: -1302640813] (Score: 0.657)
 - **Key:** `-1302640813_shared`
 - **Original:** *"You may reveal a good Dominant from hand to negate characters (except disciples). You may convert this card to meek to negate Enhancements."*
@@ -789,6 +905,16 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"During battle, if opponent plays a good Enhancement with a brigade not already in battle, you may underdeck a good card in a territory. If blocking, search deck or Reserve for a card with "Beast" in the title."*
 - **Decompiled:** *"You may underdeck 1 good hero in territory. If Beast from the Earth (RoJ AB) is in battle search 1 your Beast character from deck."*
 
+### Cruelty (L) [ID: -1443124473] (Score: 0.662)
+- **Key:** `-1443124473_shared`
+- **Original:** *"Evil Character ignores White Brigade."*
+- **Decompiled:** *"ignore This Evil Character."*
+
+### Cruelty (UL) [ID: 985401119] (Score: 0.662)
+- **Key:** `985401119_shared`
+- **Original:** *"Evil Character ignores White Brigade."*
+- **Decompiled:** *"ignore This Evil Character."*
+
 ### Achim, the Compiler / Achim, the Talmid (LoC) [ID: 1482900311] (Score: 0.664)
 - **Key:** `1482900311_shared`
 - **Original:** *"STAR: Topdeck an O.T. card from a Reserve."*
@@ -798,6 +924,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Key:** `-1388540463_shared`
 - **Original:** *"You may exchange this Hero with a martyr from hand, deck, territory or Reserve. If it is a Revelation martyr, you may draw 2."*
 - **Decompiled:** *"You may exchange 1 your character from hand. You may draw 2 your card from hand from deck."*
+
+### Covenant of Palestine [ID: 2120349932] (Score: 0.664)
+- **Key:** `2120349932_shared`
+- **Original:** *"Use as an enhancement or an Artifact.  Return all Heroes in all Lands of Bondage to owner's territories.  Capture of Heroes is prevented."*
+- **Decompiled:** *"gain This card. bounce all Lands of Bondage hero in play. prevent all hero in play."*
 
 ### Accursed of God [ID: -1364873795] (Score: 0.667)
 - **Key:** `-1364873795_shared`
@@ -829,6 +960,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"If you control no human Heroes (except Job), you may decrease a Hero 3/3. May band to a Job Evil Character. Cannot be prevented by an O.T. Hero."*
 - **Decompiled:** *"If all your good human hero in play is in play You may decrease 1 hero in play until end of phase. You may band Job until end of phase. gain 1 your hero in play. Cannot be prevented."*
 - **Fact Violations:** Missing numbers in AST: [3]
+
+### Consumed by Doubt [ID: 1707740502] (Score: 0.67)
+- **Key:** `1707740502_shared`
+- **Original:** *"Place this card on a Hero in battle. While there, Hero's special ability is negated. If Hero returns to territory without making a successful rescue, that Hero cannot enter battle until this card is removed."*
+- **Decompiled:** *"place 1 hero in battle. negate all affected_by_this_card hero in play. If returns_to_territory restrict all affected_by_this_card hero in play."*
 
 ### Babel (FoM) [ID: -1142609134] (Score: 0.671)
 - **Key:** `-1142609134_shared`
@@ -880,6 +1016,16 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"Evil N.T. Enhancements used by this card are regardless of protect abilities. While blocking alone and you control a meek Lost Soul, restrict good Dominants. May band to a Pharisee or Sadducee."*
 - **Decompiled:** *"gain all your evil N.T. used by this card enhancement in play. Cannot be prevented. If all your character in battle is in battle If all your meek Lost Soul in play is in play restrict all good Dominant site in play until end of phase. You may band your Pharisee Sadducee hero in play."*
 
+### Consumed by Wants [ID: 1479473892] (Score: 0.676)
+- **Key:** `1479473892_shared`
+- **Original:** *"Place this card on a Lost Soul.  While this card remains, holder's black brigade demons gain 4/4."*
+- **Decompiled:** *"You may place 1 Lost Soul in play. gain all your evil black evil character in play +4/+4."*
+
+### Covenant with David (PoC) [ID: 2020698611] (Score: 0.676)
+- **Key:** `2020698611_shared`
+- **Original:** *"HE: You may play a Site or good Fortress from deck (or Reserve if used by David). ART: If you do not control a king, you may take a king from deck."*
+- **Decompiled:** *"You may play 1 your site from deck or You may play 1 your good Fortress site from deck. If king is in play You may take king."*
+
 ### Battle Prayer (Ki) [ID: -592653306] (Score: 0.677)
 - **Key:** `-592653306_shared`
 - **Original:** *"Search your draw pile or discard pile for any good gold brigade enhancement and add it to your hand.  Shuffle card pile."*
@@ -894,6 +1040,11 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Key:** `-1489554188_shared`
 - **Original:** *"Selected Hero may use enhancement cards from any good brigade until end of current battle."*
 - **Decompiled:** *"This Hero may use other enhancements until end of phase."*
+
+### Covenant with Moses [ID: -395463156] (Score: 0.677)
+- **Key:** `-395463156_shared`
+- **Original:** *"Use as an enhancement or an Artifact.  Burial Shroud, Unholy Writ, Thirty Pieces of Silver, and Household Idols are negated for one round.  May be used twice."*
+- **Decompiled:** *"play This card. You may negate Burial Shroud or Unholy Writ or Thirty Pieces of Silver or Household Idols this turn. (limit 2)."*
 
 ### Amminadab, the Generous / Amminadab, the Gracious (LoC) [ID: -622696180] (Score: 0.678)
 - **Key:** `-622696180_top`
@@ -920,6 +1071,12 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"Negate a good card in battle. Bounce a character."*
 - **Decompiled:** *"negate 1 good hero in battle, return to hand 1 character in play."*
 
+### Controlling Demon (Ap) [ID: -1702192139] (Score: 0.696)
+- **Key:** `-1702192139_shared`
+- **Original:** *"No Heroes may band this turn.  Any already banded must return to their territories."*
+- **Decompiled:** *"restrict all hero in play this turn. withdraw all already banded hero in play."*
+- **Fact Violations:** Missing primary action: 'band'
+
 ### Adam (FoM) [ID: -381378507] (Score: 0.76)
 - **Key:** `-381378507_shared`
 - **Original:** *"Protect Adam from non-humans. You may topdeck an antediluvian human or a Genesis 1-7 Enhancement from Reserve. May band to Eve. Cannot be interrupted by a human."*
@@ -938,6 +1095,12 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Decompiled:** *"You may add to battle Cornelius."*
 - **Fact Violations:** Missing action 'band' for legacy term 'join the battle'
 
+### Corrupt People [ID: 1230874469] (Score: 0.863)
+- **Key:** `1230874469_shared`
+- **Original:** *"Protect evil antediluvians from convert abilities. If you are attacked, you may discard a card from hand or territory to search deck or discard pile for an evil Genesis 6"*
+- **Decompiled:** *"protect all evil Antediluvian evil character in play. If attacked discard 1 your card from hand, search all your evil Genesis 6 6 site from deck. convert This Hero."*
+- **Fact Violations:** Missing numbers in AST: [6]
+
 ### Beast from the Sea (RoJ AB) [ID: -1356503623] (Score: 0.864)
 - **Key:** `-1356503623_shared`
 - **Original:** *"If an opponent uses a draw or search ability (except on an evil card), you may topdeck a N.T. Lost Soul. Cannot be negated if Red Dragon or The False Prophet is in play."*
@@ -949,6 +1112,12 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
 - **Original:** *"May band with any Evil Character with a reference from 2 Samuel 14-18.  While Absalom is in play, David cannot enter battle."*
 - **Decompiled:** *"You may band evil 2 Samuel evil character in play. If Absalom is in play restrict David."*
 - **Fact Violations:** Missing numbers in AST: [2]
+
+### Corrupt People (CoW AB) [ID: 1070141064] (Score: 0.899)
+- **Key:** `1070141064_shared`
+- **Original:** *"Protect evil antediluvians from convert abilities. If you are attacked, you may discard a card from hand or territory to search deck or discard pile for an evil Genesis 6 Enhancement."*
+- **Decompiled:** *"protect all evil Antediluvian convert abilities character in play. discard 1 your card from hand, search your evil Genesis 6 6 enhancement from deck or discard 1 your card from hand, search your evil Genesis 6 6 enhancement from discard pile or discard 1 your card in territory, search your evil Genesis 6 6 enhancement from deck or discard 1 your card in territory, search your evil Genesis 6 6 enhancement from discard pile."*
+- **Fact Violations:** Missing numbers in AST: [6], Missing primary action: 'convert'
 
 ---
 ## High Fidelity Samples (Top Mechanical Alignment)
@@ -1009,10 +1178,10 @@ Evaluated via offline sentence embeddings (`all-MiniLM-L6-v2`) and factual game-
   - *Key:* `668084410_top`
   - *Orig:* "Shuffle all Heroes from discard pile."
   - *AST:*  "shuffle all your hero from discard pile."
-- **Authority of Peter (I) [ID: -1694206552]** (Score: 0.931):
-  - *Key:* `-1694206552_shared`
-  - *Orig:* "Remove an Evil Character from the game. Topdeck a Hero from your discard pile."
-  - *AST:*  "remove from the game 1 evil evil character in play, topdeck 1 your good hero from discard pile."
+- **Covenant with Abraham (PoC) [ID: -1265515809]** (Score: 0.935):
+  - *Key:* `-1265515809_bottom`
+  - *Orig:* "Convert an evil human in battle. Underdeck an evil non-human in battle."
+  - *AST:*  "convert 1 evil evil character in battle. underdeck 1 evil non-human evil character in battle."
 
 ---
 ## Moderate Fidelity Samples

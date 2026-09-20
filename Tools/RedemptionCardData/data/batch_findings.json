@@ -2593,10 +2593,16 @@
     "details": "Nvidia rate limit exceeded after retries.",
     "resolved": false,
     "raw_ability": "You may underdeck an evil giant. Take a City and play it. If alone, Caleb may band to an O.T. red warrior or you may take or equip a good weapon from Reserve. Cannot be interrupted.",
-    "last_updated": "2026-09-18T21:03:13.867517",
+    "last_updated": "2026-09-20T12:17:36.348258",
     "history": [
       {
         "timestamp": "2026-09-18T21:03:13.867499",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:17:36.348239",
         "issue_type": "QUOTA_EXHAUSTED",
         "details": "Nvidia rate limit exceeded after retries.",
         "resolved": false
@@ -2633,10 +2639,16 @@
     "details": "Nvidia rate limit exceeded after retries.",
     "resolved": false,
     "raw_ability": "You may take a Canaanite human or Site from deck. If a Curse is active, you may give a Canaanite to opponent's territory to take an Enhancement from opponent's discard pile. Cannot be interrupted.",
-    "last_updated": "2026-09-18T21:07:24.383844",
+    "last_updated": "2026-09-20T12:19:27.411641",
     "history": [
       {
         "timestamp": "2026-09-18T21:07:24.383830",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:19:27.411620",
         "issue_type": "QUOTA_EXHAUSTED",
         "details": "Nvidia rate limit exceeded after retries.",
         "resolved": false
@@ -2938,6 +2950,333 @@
         "timestamp": "2026-09-18T21:41:32.363426",
         "issue_type": "VALIDATION_ISSUE",
         "details": "Auto-fixed: Missing modifier: 'cannot be negated'",
+        "resolved": true
+      }
+    ]
+  },
+  "Complaint of Moses": {
+    "card_name": "Complaint of Moses",
+    "card_identifier": "344349034",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries.",
+    "resolved": false,
+    "raw_ability": "Return a Hero from a set-aside area to owner's territory.  Hero is returned to face value.  Discard all set-aside cards on that Hero.",
+    "last_updated": "2026-09-20T12:19:27.219432",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:19:27.219409",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Complainers": {
+    "card_name": "Complainers",
+    "card_identifier": "-1633267878",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries.",
+    "resolved": false,
+    "raw_ability": "Negate all special abilities on opponent's Heroes. You may exchange a hero in battle with a Hero in opponent's territory.",
+    "last_updated": "2026-09-20T12:19:31.662943",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:19:31.662921",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Confusion": {
+    "card_name": "Confusion",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 3 validation errors for CardSideLogic\nabilities.0.effects.0.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum\nabilities.0.effects.1.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum\nabilities.0.effects.2.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+    "resolved": true,
+    "raw_ability": "Owner may look through one opponent's draw pile, discard one card and shuffle remaining cards.",
+    "last_updated": "2026-09-20T12:20:34.164033",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:20:22.473679",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "3 validation errors for CardSideLogic\nabilities.0.effects.0.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum\nabilities.0.effects.1.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum\nabilities.0.effects.2.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:20:34.164026",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 3 validation errors for CardSideLogic\nabilities.0.effects.0.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum\nabilities.0.effects.1.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum\nabilities.0.effects.2.target.scope\n  Input should be 'battle', 'territory', 'in_play', 'hand', 'deck', 'discard_pile', 'banish_pile', 'land_of_bondage', 'land_of_redemption', 'artifact_pile', 'set_aside', 'reserve_pile' or 'context_scope' [type=enum, input_value='draw_pile', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      }
+    ]
+  },
+  "Concealed Riches (GoC)": {
+    "card_name": "Concealed Riches (GoC)",
+    "card_identifier": "862714410",
+    "issue_type": "QUOTA_EXHAUSTED",
+    "details": "Nvidia rate limit exceeded after retries.",
+    "resolved": false,
+    "raw_ability": "You may discard this card. If you do, shuffle all cards from Reserve or exchange up to X cards from hand with an equal number of cards from Reserve.",
+    "last_updated": "2026-09-20T12:20:58.607820",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:20:58.607803",
+        "issue_type": "QUOTA_EXHAUSTED",
+        "details": "Nvidia rate limit exceeded after retries.",
+        "resolved": false
+      }
+    ]
+  },
+  "Continuous Evil (CoW AB)": {
+    "card_name": "Continuous Evil (CoW AB)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'discard'",
+    "resolved": true,
+    "raw_ability": "Place in territory: If you are attacked, you may discard a card from hand or territory to search deck or discard pile for an evil antediluvian.",
+    "last_updated": "2026-09-20T12:27:13.894935",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:26:04.640733",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:27:13.894921",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'discard'",
+        "resolved": true
+      }
+    ]
+  },
+  "Controlling Demon (Ap)": {
+    "card_name": "Controlling Demon (Ap)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'band'",
+    "resolved": true,
+    "raw_ability": "No Heroes may band this turn.  Any already banded must return to their territories.",
+    "last_updated": "2026-09-20T12:28:10.012139",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:27:25.879511",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'band'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:28:10.012119",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'band'",
+        "resolved": true
+      }
+    ]
+  },
+  "Corrupt People": {
+    "card_name": "Corrupt People",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing numbers in AST: [6], Missing primary action: 'convert'",
+    "resolved": true,
+    "raw_ability": "Protect evil antediluvians from convert abilities. If you are attacked, you may discard a card from hand or territory to search deck or discard pile for an evil Genesis 6",
+    "last_updated": "2026-09-20T12:29:34.457782",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:28:47.646370",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing numbers in AST: [6], Missing primary action: 'convert'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:29:34.457767",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing numbers in AST: [6], Missing primary action: 'convert'",
+        "resolved": true
+      }
+    ]
+  },
+  "Corrupted": {
+    "card_name": "Corrupted",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+    "resolved": true,
+    "raw_ability": "Convert a human Hero to a brown brigade Evil Character.  Cannot be prevented by a good card if an occupied Site is in play.",
+    "last_updated": "2026-09-20T12:29:57.754124",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:29:35.260001",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:29:57.754109",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.conditions.0.operator\n  Input should be '==', '!=', '>', '>=', '<' or '<=' [type=literal_error, input_value=None, input_type=NoneType]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Corrupt People (CoW AB)": {
+    "card_name": "Corrupt People (CoW AB)",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing numbers in AST: [6], Missing primary action: 'convert'",
+    "resolved": true,
+    "raw_ability": "Protect evil antediluvians from convert abilities. If you are attacked, you may discard a card from hand or territory to search deck or discard pile for an evil Genesis 6 Enhancement.",
+    "last_updated": "2026-09-20T12:30:47.107052",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:29:38.583820",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing numbers in AST: [6], Missing primary action: 'convert'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:30:47.107035",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing numbers in AST: [6], Missing primary action: 'convert'",
+        "resolved": true
+      }
+    ]
+  },
+  "Covenant of Eden": {
+    "card_name": "Covenant of Eden",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'discard'",
+    "resolved": true,
+    "raw_ability": "Use as an enhancement or an Artifact.  No character may be removed from the game.  Instead discard the character targeted for removal.",
+    "last_updated": "2026-09-20T12:36:40.761828",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:36:09.990780",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'discard'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:36:40.761816",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'discard'",
+        "resolved": true
+      }
+    ]
+  },
+  "Covenant of Prayer (RoJ)": {
+    "card_name": "Covenant of Prayer (RoJ)",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 2 validation errors for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='add to hand', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum\nabilities.1.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='add to hand', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+    "resolved": true,
+    "raw_ability": "You may banish this card to add to hand your card that was banished by an opponent or a card from Reserve.",
+    "last_updated": "2026-09-20T12:37:22.160842",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:37:11.067427",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "2 validation errors for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='add to hand', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum\nabilities.1.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='add to hand', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:37:22.160831",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 2 validation errors for CardSideLogic\nabilities.0.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='add to hand', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum\nabilities.1.effects.0.action\n  Input should be 'activate an ability', 'activate an artifact', 'add to battle', 'band', 'banish', 'begin a new phase', 'bounce', 'cannot be ignored', 'capture', 'change hand size', 'choose opponent', 'convert', 'copy', 'create a token', 'decrease', 'discard', 'disease', 'draw', 'end the battle', 'equip', 'exchange', 'first strike', 'gain', 'give', 'heal', 'hold', 'ignore', 'immune', 'increase', 'interrupt', 'look', 'modify_stats', 'negate', 'paralyze', 'place', 'play', 'play an enhancement', 'poison', 'present', 'prevent', 'protect', 'redirect', 'release', 'remove from the game', 'repeat', 'rescue', 'reserve', 'restrict', 'resurrect', 'return to hand', 'reveal', 'search', 'set-aside', 'shuffle', 'side battle', 'site access', 'take', 'taunt', 'topdeck', 'toss', 'transfer', 'underdeck', 'use other enhancements', 'withdraw' or 'unknown' [type=enum, input_value='add to hand', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/enum",
+        "resolved": true
+      }
+    ]
+  },
+  "Covenant with Moses": {
+    "card_name": "Covenant with Moses",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0\n  Value error, Ability 'use_as_enhancement_or_artifact' must contain at least one action effect (e.g. 'first strike', 'draw') or modifier. Empty effects are not allowed. [type=value_error, input_value={'ability_id': 'use_as_en...s': [], 'modifiers': []}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/value_error",
+    "resolved": true,
+    "raw_ability": "Use as an enhancement or an Artifact.  Burial Shroud, Unholy Writ, Thirty Pieces of Silver, and Household Idols are negated for one round.  May be used twice.",
+    "last_updated": "2026-09-20T12:41:49.894274",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:41:16.745593",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0\n  Value error, Ability 'use_as_enhancement_or_artifact' must contain at least one action effect (e.g. 'first strike', 'draw') or modifier. Empty effects are not allowed. [type=value_error, input_value={'ability_id': 'use_as_en...s': [], 'modifiers': []}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/value_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:41:49.894254",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0\n  Value error, Ability 'use_as_enhancement_or_artifact' must contain at least one action effect (e.g. 'first strike', 'draw') or modifier. Empty effects are not allowed. [type=value_error, input_value={'ability_id': 'use_as_en...s': [], 'modifiers': []}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/value_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Covenant with Moses (PoC)": {
+    "card_name": "Covenant with Moses (PoC)",
+    "card_identifier": "",
+    "issue_type": "SCHEMA_ERROR",
+    "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.modifiers.0.limit_params.per\n  Input should be 'turn', 'battle', 'round' or 'game' [type=literal_error, input_value='activation', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+    "resolved": true,
+    "raw_ability": "HE: Draw up to X (limit 3 unless played in battle). Cannot be prevented. ART: You may take a Tabernacle Artifact from deck or a Curse from Reserve.",
+    "last_updated": "2026-09-20T12:43:40.179190",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:43:20.348574",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "1 validation error for CardSideLogic\nabilities.0.modifiers.0.limit_params.per\n  Input should be 'turn', 'battle', 'round' or 'game' [type=literal_error, input_value='activation', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:43:40.179154",
+        "issue_type": "SCHEMA_ERROR",
+        "details": "Auto-corrected: 1 validation error for CardSideLogic\nabilities.0.modifiers.0.limit_params.per\n  Input should be 'turn', 'battle', 'round' or 'game' [type=literal_error, input_value='activation', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/literal_error",
+        "resolved": true
+      }
+    ]
+  },
+  "Creeping Deceiver": {
+    "card_name": "Creeping Deceiver",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing numbers in AST: [3]",
+    "resolved": true,
+    "raw_ability": "Protect up to 3 N.T. Lost Souls in Sites from rescue.  May band to a heretic or N.T. female Evil Character Character. Cannot be negated by a character.",
+    "last_updated": "2026-09-20T12:44:27.681106",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:43:52.529765",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing numbers in AST: [3]",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:44:27.681087",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing numbers in AST: [3]",
+        "resolved": true
+      }
+    ]
+  },
+  "Crooked Ways": {
+    "card_name": "Crooked Ways",
+    "card_identifier": "",
+    "issue_type": "VALIDATION_ISSUE",
+    "details": "Auto-fixed: Missing primary action: 'draw'",
+    "resolved": true,
+    "raw_ability": "Place on your magician: While all of your human Evil Characters are magicians, reveal all cards that your opponents draw",
+    "last_updated": "2026-09-20T12:46:53.928285",
+    "history": [
+      {
+        "timestamp": "2026-09-20T12:44:21.551737",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Missing primary action: 'draw'",
+        "resolved": false
+      },
+      {
+        "timestamp": "2026-09-20T12:46:53.928271",
+        "issue_type": "VALIDATION_ISSUE",
+        "details": "Auto-fixed: Missing primary action: 'draw'",
         "resolved": true
       }
     ]

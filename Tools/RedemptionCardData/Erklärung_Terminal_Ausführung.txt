@@ -11,6 +11,7 @@ Was passiert: Das Skript überspringt automatisch alle bereits vorhandenen Karte
 
 data/ai_generated_abilities.json
  gespeichert.
+
 Schritt C: Semantischen Audit & Report aktualisieren
 powershell
 python scripts/11_audit_semantic_logic.py
