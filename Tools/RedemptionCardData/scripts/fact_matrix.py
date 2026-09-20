@@ -130,6 +130,10 @@ def verify_fact_matrix(raw: str, ast_facts: Dict[str, Any]) -> Tuple[bool, List[
                 if not is_action_prohibited(raw, legacy_term) and not is_action_in_trigger(raw, legacy_term):
                     issues.append(f"Missing action '{canonical_act}' for legacy term '{legacy_term}'")
 
+    if re.search(r"\b(?:has|have|had)\s+no\s+effect\b", raw_lower):
+        if not any(a in ast_facts["actions"] for a in ["withdraw", "negate", "ignore", "protect", "immune"]):
+            issues.append("Missing action 'withdraw' or 'negate' for 'has no effect'")
+
     core_actions = ["draw", "band", "convert", "heal"]
     for act in core_actions:
         if act == "draw":

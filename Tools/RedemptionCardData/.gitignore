@@ -12,11 +12,20 @@ cline-python-openrouter
 Cline_Startprompt.txt
 .clinerules
 .clineignore
+.roorules
+.rooignore
 log.txt
+*.log
+data/*.log
+debug_output.txt
+live_test_log.txt
 *.code-workspace
 Prompts
 Prompts/
 scratch/
+scratch_*
+Erklärung_Terminal_Ausführung.*
+game_ast_interpreter_handover_guide.md
 
 
 # Local Environment Secrets (NIE einchecken!)

@@ -28,6 +28,8 @@ REG_LEGACY_SYNONYMS: Dict[str, str] = {
     "discard as it is played": "toss",
     "force to block": "taunt",
     "force to enter battle": "taunt",
+    "renders harmless": "negate",
+    "render harmless": "negate",
 }
 
 # Regex patterns identifying player restrictions / prohibitions (ActionVerb: RESTRICT)
@@ -62,10 +64,19 @@ TRIGGER_PATTERNS = [
 
 
 def is_action_prohibited(raw_text: str, action: str) -> bool:
-    """Checks if an action verb appears in a negated or prohibited context."""
+    """Checks if an action verb appears in a negated, prohibited, protected, or immune context."""
     raw_lower = raw_text.lower()
-    prohibition_re = re.compile(rf"\b(?:may\s+not|cannot|can\s+not|prevent(?:ed)?\s+from)\s+(?:be\s+)?{action}\b", re.I)
+    prohibition_re = re.compile(
+        rf"\b(?:may\s+not|cannot|can\s+not|prevent(?:ed)?\s+from|protect(?:ed)?\s+from|immune\s+to)\s+(?:be\s+|being\s+)?{action}\b",
+        re.I
+    )
     if prohibition_re.search(raw_lower):
+        return True
+
+    # Check for relational protection/immunity clauses: 'protect [targets] from [action]'
+    if re.search(rf"\bprotect(?:ed)?\b.*?\bfrom\s+(?:being\s+)?{action}\b", raw_lower):
+        return True
+    if re.search(rf"\bimmune\b.*?\bto\s+(?:being\s+)?{action}\b", raw_lower):
         return True
 
     if f"cannot be {action}" in raw_lower or f"may not be {action}" in raw_lower:
