@@ -59,6 +59,7 @@ export class PreviewManager {
       const cardWidth = card.width * card.scaleX;
       const cardHeight = card.height * card.scaleY;
       const imageSrc = this.resolveTextureSrc(card.cardData);
+      const badgeText = card.badge?.isVisible() ? card.badge.getText() : "";
 
       this.isPreviewActive = true;
       CardDetailOverlay.show(
@@ -70,6 +71,7 @@ export class PreviewManager {
           cardHeight,
           isModal: isTouch,
           imageSrc,
+          badgeText,
         },
         () => {
           this.isPreviewActive = false;

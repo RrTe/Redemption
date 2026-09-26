@@ -110,6 +110,12 @@ export class GameEventCoordinator {
       }),
     );
 
+    this.roomListeners.push(
+      this.room.onMessage("starCardsRevealed", (msg: { playerName: string; sessionId: string; cards: any[] }) => {
+        this.scene.events.emit(GameEvents.NET_STAR_CARDS_REVEALED, msg);
+      }),
+    );
+
     // --- State Mapping ---
     this.stateListeners.push(
       this.$(this.room.state).revealedCards.onAdd((card, index) =>

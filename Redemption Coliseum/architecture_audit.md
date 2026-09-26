@@ -37,8 +37,26 @@ This document tracks modularization targets, line-count audits, and architectura
   3. **Drag & Drop Dispatcher (`DragDropHandler.ts`)**:
      - Triggers `reorderZone` exclusively when `fromZone === toZone` and the drop target is a managed row/hand.
 
+### 3. Suite-Wide UI String Centralization & i18n Architecture
+- **Status**: Audit Planned (Architectural Technical Debt)
+- **Scope**: Entire Redemption Coliseum suite (Game Scenes, Dialogs, Overlays, and Deck Catacombs).
+- **Issue**: Hardcoded UI strings, dialog texts, button labels, and system messages are scattered throughout views and scenes (violating the "No Magic Strings" rule).
+- **Target Architecture**:
+  - Migrate all user-facing strings into a unified dictionary structure (e.g. `client/src/constants/uiStrings.ts` or scoped i18n JSON bundles).
+  - Prepare for multi-language localization (English standard, expandable to German/other languages) without touching game or scene logic.
+  - Eliminate all hardcoded action descriptions in Colyseus schema via `shared/actionStrings.js`.
+
+### 4. Action Type Harmonization (`ACTIVATE_STAR_ABILITY` -> Generic `ACTIVATE_ABILITY`)
+- **Status**: Audit Planned (Code Hygiene & Consistency)
+- **Scope**: `shared/actions.js`, `server/src/services/MatchService.js`, `server/src/commands/NextPhaseCommand.js`, `client/src/ui/CardUI.ts`.
+- **Issue**: `ACTIVATE_STAR_ABILITY` was historically introduced as a standalone action type, whereas all other special abilities (Lost Souls, Fortresses, Artifacts, Heroes) use the generic `ActionType.ACTIVATE_ABILITY`.
+- **Target Architecture**:
+  - Unify Star card activation to use `ActionType.ACTIVATE_ABILITY` with Star class validation.
+  - Maintain backward-compatibility alias during transitional phases to prevent regression.
+
 ---
 
 ## Clean Code & Modular Architecture Guidelines
 - Strict 250-line limit per file/class (`*Manager.ts`, `*Handler.ts`, `*Effect.ts`, `.css`).
 - Separation of concerns: UI/DOM views decoupled from game state managers and network event listeners.
+

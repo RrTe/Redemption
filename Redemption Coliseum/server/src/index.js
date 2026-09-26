@@ -34,3 +34,4 @@ gameServer.define("lobby", LobbyRoom); // ✨ NEU: Hinzufügen
 gameServer.listen(PORT, () => {
   logger.info(`Colyseus läuft: ws://localhost:${PORT}`);
 });
+

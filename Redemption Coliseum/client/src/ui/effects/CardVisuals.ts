@@ -52,8 +52,9 @@ export class CardVisuals {
   // Debugging
   private debugGraphics: Phaser.GameObjects.Graphics | null = null;
 
-  // Star Highlight State
+  // Star & Lost Soul Highlight State
   private starHighlightActive: boolean = false;
+  private lostSoulHighlightActive: boolean = false;
   private starIcon: Phaser.GameObjects.Image | null = null;
   private starPulseControl: { stop: () => void } | null = null;
 
@@ -400,6 +401,7 @@ export class CardVisuals {
   /** Startet den Glow-Effekt (z.B. bei Mouseover). */
   public startGlow(ignoreZoneCheck: boolean = false) {
     if (!this.areEffectsEnabled()) return;
+    if (this.starHighlightActive || this.lostSoulHighlightActive) return;
     if (!ignoreZoneCheck && PILE_ZONES.includes(this.cardUI.currentZone))
       return;
     this.updateGlowZone(true, true);
@@ -407,7 +409,7 @@ export class CardVisuals {
 
   /** Stoppt den Glow-Effekt. */
   public stopGlow() {
-    if (this.starHighlightActive) return; // ✨ FIX: Wenn Star-Highlight an ist, nicht durch MouseOut stoppen
+    if (this.starHighlightActive || this.lostSoulHighlightActive) return;
 
     if (this.glowEmitter) {
       this.glowEmitter.stop();
@@ -472,6 +474,27 @@ export class CardVisuals {
       }
     }
   }
+
+  /** ✨ NEU: Schaltet das Lost Soul Highlight (Flammenrand + Pulse, ohne Stern) ein oder aus. */
+  public updateLostSoulHighlight(isActive: boolean) {
+    if (this.lostSoulHighlightActive === isActive) return;
+    this.lostSoulHighlightActive = isActive;
+
+    if (isActive) {
+      const cyanTint = [0x80E5FF, 0x00C0FF, 0x0080FF, 0x00E5FF];
+      this.updateGlowZone(true, true, cyanTint);
+    } else {
+      if (!this.starHighlightActive && this.glowEmitter) {
+        this.glowEmitter.stop();
+        this.glowEmitter.setVisible(false);
+      }
+    }
+  }
+
+  public getStarIcon(): Phaser.GameObjects.Image | null {
+    return this.starIcon;
+  }
+
 
   /** Aktiviert oder deaktiviert den Paralyze-Effekt. */
   public updateParalyzeEffect(active: boolean) {
@@ -553,10 +576,12 @@ export class CardVisuals {
 
         const shape = new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h);
 
-        // Wenn Star Highlight aktiv ist, erzwingen wir die blauen Partikel und Farben
-        const textureKey = this.starHighlightActive ? "blue_spark_small" : "spark";
+        // Wenn Star- oder Lost Soul Highlight aktiv ist, entsprechende Partikel und Farben erzwingen
+        const textureKey = (this.starHighlightActive || this.lostSoulHighlightActive) ? "blue_spark_small" : "spark";
         const finalTint = this.starHighlightActive
           ? [0xCFEAFF, 0x87CEFA, 0x1E90FF, 0x7DC5F5]
+          : this.lostSoulHighlightActive
+          ? [0x80E5FF, 0x00C0FF, 0x0080FF, 0x00E5FF]
           : (customTint || [0xF5CA0A, 0xffa500, 0xff8c00, 0xff4500]);
 
         this.glowEmitter = this.scene.add.particles(0, 0, textureKey, {

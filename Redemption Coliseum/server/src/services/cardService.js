@@ -9,6 +9,9 @@ const {
 const { ArraySchema } = require("@colyseus/schema");
 const { PlayerState } = require("../state/PlayerState");
 const { generateCardId } = require("../../../shared/utils");
+const { ActionType } = require("../../../shared/actions");
+const { CardAction } = require("../../../shared/actionSchema");
+const { ACTION_DESCRIPTIONS } = require("../../../shared/actionStrings");
 const util = require("util");
 
 /**
@@ -265,7 +268,7 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
     // ✨ WICHTIG: cardLookup auf die geklonte Instanz aktualisieren
     if (cardLookup) cardLookup.set(card.id, card);
 
-    if (card.Type === CARD_TYPES.LOST_SOUL) {
+    if (card.Type === CARD_TYPES.LOST_SOUL || (card.Type && card.Type.includes("Lost Soul"))) {
       logger.debug(
         `[LOST_SOUL_RULE] Lost Soul '${card.Name}' vom Deck gezogen. Wird nach ${ZONES.LAND_OF_BONDAGE} umgeleitet.`,
       );
@@ -274,6 +277,15 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
       card.counters.clear();
       landOfBondage.push(card);
       divertedCards.push(card);
+
+      // ✨ NEU: Aktion für jede ins Land of Bondage gezogene Lost Soul hinzufügen
+      const action = new CardAction();
+      action.id = `soul_${Date.now()}_${card.id}`;
+      action.type = ActionType.ACTIVATE_ABILITY;
+      action.description = ACTION_DESCRIPTIONS.ACTIVATE_ABILITY;
+      action.isMandatory = false;
+      addAvailableAction(state, card, action);
+
 
       // ✨ FIX: StateView update for Lost Soul
       if (state._clientViews) {

@@ -139,6 +139,7 @@ export class CardRenderer {
       `Territory: ${totalTerritoryCount} Karten`,
     );
     this.cleanupUnusedCardUIs(renderedCardIds);
+    this.scene.events.emit("cardsRendered");
   }
 
   /**
@@ -503,4 +504,13 @@ export class CardRenderer {
       }
     }
   }
+
+  public getCardUI(cardId: string): CardUI | undefined {
+    return this.cardUIs.get(cardId);
+  }
+
+  public getAllCardUIs(): Map<string, CardUI> {
+    return this.cardUIs;
+  }
 }
+

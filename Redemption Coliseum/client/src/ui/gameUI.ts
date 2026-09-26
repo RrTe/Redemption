@@ -18,6 +18,7 @@ import { GameEventCoordinator } from "../network/GameEventCoordinator"; // ✨ N
 import { PileUI } from "./PileUI"; // ✨ Importiere die neue PileUI-Klasse
 import { GameNetworkManager } from "../network/GameNetworkManager.ts"; // ✨ NEU (SCHRITT 3)
 import { PhaseManager } from "./managers/PhaseManager"; // ✨ NEU
+import { DrawSequenceManager } from "./managers/DrawSequenceManager"; // ✨ NEU
 import { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Schritt 1.1
 import { SoundManager } from "../managers/SoundManager.ts"; // ✨ NEU: Schritt 1.2
 import { AnimationManager } from "./managers/AnimationManager";
@@ -88,6 +89,7 @@ export class GameUI {
   private tokenManager: TokenManager; // ✨ FIX: Property hinzufügen
   private undoManager: UndoManager;
   private staticUIHandler: StaticUIHandler; // Fix: handles Help/Settings/Save/Concede buttons
+  public drawSequenceManager!: DrawSequenceManager; // ✨ NEU
 
   constructor(
     scene: Phaser.Scene,
@@ -247,6 +249,13 @@ export class GameUI {
     );
     this.phaseManager.initialize();
 
+    // ✨ NEU: DrawSequenceManager für sequenziellen Stars- & Souls-Ablauf
+    this.drawSequenceManager = new DrawSequenceManager(
+      this.scene,
+      this.room,
+      this.cardRenderer,
+    );
+
     // Fix: Instantiate StaticUIHandler to wire up Help, Settings, Save, and Concede buttons.
     // Without this, the help button had no pointerdown listener during gameplay.
     this.staticUIHandler = new StaticUIHandler(
@@ -393,6 +402,7 @@ export class GameUI {
     this.chatManager?.destroy();
     this.overlayManager?.destroy(); // ✨ REFACTOR
     this.gameStateManager?.destroy(); // ✨ NEU
+    this.drawSequenceManager?.destroy(); // ✨ NEU
     this.previewManager?.hide(); // Hide any active preview
   }
 

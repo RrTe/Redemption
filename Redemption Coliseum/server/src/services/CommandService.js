@@ -31,6 +31,9 @@ const {
 } = require("../commands/UpdateRevealSelectionCommand");
 const { RequestUndoCommand } = require("../commands/RequestUndoCommand");
 const { ResolveUndoCommand } = require("../commands/ResolveUndoCommand");
+const {
+  SubmitDrawSequenceCommand,
+} = require("../commands/SubmitDrawSequenceCommand");
 
 class CommandService {
   /**
@@ -55,7 +58,9 @@ class CommandService {
     room.dispatcher.register("discardFromDeck", DiscardFromDeckCommand);
     room.dispatcher.register("requestUndo", RequestUndoCommand);
     room.dispatcher.register("resolveUndo", ResolveUndoCommand);
+    room.dispatcher.register("submitDrawSequence", SubmitDrawSequenceCommand);
   }
 }
+
 
 module.exports = CommandService;

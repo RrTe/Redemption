@@ -11,6 +11,7 @@ import type { MoveCardMessage } from "../../../../shared/messages";
 import { ToastManager, type ToastType } from "./ToastManager";
 import { CardDetailOverlay } from "../overlays/CardDetailOverlay";
 import { log } from "../../utils/logger";
+import { GameEvents } from "../../constants/EventNames";
 
 /**
  * Manages the creation and interaction with various game dialogs.
@@ -56,6 +57,11 @@ export class DialogManager {
     );
     this.scene.events.on("net:gameToast", (data: { message: string; type?: ToastType }) =>
       ToastManager.show(data.message, data.type || "warning"),
+    );
+    this.scene.events.on(
+      GameEvents.NET_STAR_CARDS_REVEALED,
+      (data: { playerName: string; cards: any[] }) =>
+        this.showStarCardsRevealDialog(data.playerName, data.cards),
     );
   }
 
@@ -179,7 +185,6 @@ export class DialogManager {
     } as SelectionDialogData);
   }
 
-
   /**
    * Displays a modal error dialog with an OK button.
    * @param message The error message to display.
@@ -207,6 +212,29 @@ export class DialogManager {
       log("DialogManager", "Closing opponent's passive reveal dialog automatically.");
       dialog.closeDialog(true);
     }
+  }
+
+  public showStarCardsRevealDialog(playerName: string, cards: any[]) {
+    if (!cards || cards.length === 0) return;
+
+    if (this.scene.scene.isActive("SelectionDialogScene")) {
+      this.scene.scene.stop("SelectionDialogScene");
+    }
+
+    CardDetailOverlay.hide();
+    this.scene.scene.pause("CardGame");
+    this.scene.scene.launch("SelectionDialogScene", {
+      title: `${playerName}'s Star Cards`,
+      cards,
+      room: this.room,
+      showCloseButton: true,
+      isMyAction: false,
+      hideFilters: true,
+      fromZone: ZONES.HAND,
+      isInteractive: false,
+      onComplete: () => {},
+      onCancel: () => {},
+    } as SelectionDialogData);
   }
 
   private findOpponentId(): string | undefined {

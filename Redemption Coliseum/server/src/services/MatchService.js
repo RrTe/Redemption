@@ -4,6 +4,7 @@ const { CardAction } = require("../../../shared/actionSchema");
 const cardService = require("./cardService");
 const { ZONES } = require("../../../shared/zones");
 const { PHASES } = require("../../../shared/phases");
+const { DrawPhaseStepService } = require("./DrawPhaseStepService");
 
 const STARTING_HAND_SIZE = 8;
 
@@ -19,12 +20,12 @@ class MatchService {
 
     room.lock(); // Prevent new players from joining
 
-    // Pick starting player
+    // Pick starting player randomly
     const firstPlayerIndex = Math.floor(Math.random() * room.clients.length);
-    const startingClientId = room.clients[firstPlayerIndex].sessionId;
+    const startingClientId = room.clients[firstPlayerIndex] ? room.clients[firstPlayerIndex].sessionId : room.clients[0].sessionId;
     room.state.activePlayer = startingClientId;
 
-    logger.info(`[MatchService] Starting player: ${startingClientId}`);
+    logger.info(`[MatchService] Starting player (random): ${startingClientId}`);
 
     // Draw hands for all players
     room.state.players.forEach((player, sessionId) => {
@@ -37,12 +38,16 @@ class MatchService {
     const firstPlayer = room.state.players.get(room.state.activePlayer);
     if (firstPlayer) {
       firstPlayer.turn = 1;
+      room.broadcastGameLog(`Game started! ${firstPlayer.name} is the starting player.`);
     }
     room.state.currentPhase = PHASES.DRAW;
 
     logger.info(
       `[MatchService] Initialization complete. Starting player: ${startingClientId}, Round: 1, Phase: ${room.state.currentPhase}`,
     );
+
+    // ✨ Coordinated Draw Phase sequence for game start (Turn 1)
+    DrawPhaseStepService.startInitialSequence(room);
   }
 
   /**

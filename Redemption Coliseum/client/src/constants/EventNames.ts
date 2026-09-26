@@ -16,6 +16,7 @@ export const GameEvents = {
   NET_REVEALED_CARDS_ADDED: "net:revealedCardsAdded",
   NET_REVEALED_CARDS_REMOVED: "net:revealedCardsRemoved",
   NET_REVEALED_SELECTION_CHANGED: "net:revealedSelectionChanged",
+  NET_STAR_CARDS_REVEALED: "net:starCardsRevealed",
   NET_OFFLINE: "net:offline",
   NET_ONLINE: "net:online",
   NET_RECONNECTING: "net:reconnecting",

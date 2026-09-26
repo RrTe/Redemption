@@ -4,6 +4,7 @@ import type { CardState } from "../../../shared/types";
 import type { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Import für Typisierung
 import { log, DEBUG } from "../utils/logger";
 import { ActionType } from "../../../shared/actions"; // ✨ NEU
+import { DRAW_STEPS } from "../../../shared/phases"; // ✨ NEU
 import { CardVisuals } from "./effects/CardVisuals"; // ✨ NEU
 import { CardAttachVisuals } from "./effects/CardAttachVisuals"; // ✨ NEU
 import {
@@ -13,6 +14,7 @@ import {
 import { AssetManager } from "./managers/AssetManager"; // ✨ NEU: Import AssetManager
 import { InputManager } from "./managers/InputManager"; // ✨ NEU: Import InputManager
 import { CardCounterVisuals } from "./effects/CardCounterVisuals"; // ✨ NEU
+import { CardBadge } from "./components/CardBadge"; // ✨ NEU: Generische CardBadge-Komponente
 
 // ✨ Die Basis-URL, unter der die Kartenbilder zu finden sind.
 const IMAGE_BASE_URL = "/assets/cards/";
@@ -33,6 +35,7 @@ export class CardUI extends Phaser.GameObjects.Container {
   public dragTargetY: number | null = null;
   // ✨ NEU: Noise/Glitter Effekt
   public visuals: CardVisuals; // ✨ NEU: Umbenannt
+  public badge: CardBadge; // ✨ NEU: Generisches Medaillon für Reihenfolge, Counter, Status
   private attachVisuals: CardAttachVisuals; // ✨ NEU
   private physicsHandler: CardPhysicsEffects; // ✨ FIX: Typ aktualisiert
   private counterVisuals: CardCounterVisuals; // ✨ NEU
@@ -79,6 +82,9 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     // ✨ NEU: Counter Visuals erstellen
     this.counterVisuals = new CardCounterVisuals(scene, this, this.visuals);
+
+    // ✨ NEU: Generisches CardBadge erstellen
+    this.badge = new CardBadge(this);
 
     this.setSize(width, height);
 
@@ -287,10 +293,19 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     this.visuals.onUpdate(); // ✨ FIX: Effekte aktualisieren
 
-    // ✨ NEU: Prüfe auf verfügbare Star Action
-    const hasStarAction = this.cardData.availableActions && this.cardData.availableActions.some(a => a.type === ActionType.ACTIVATE_STAR_ABILITY);
-    const inGameSupport = this.settingsManager.isInGameSupportEnabled();
-    this.visuals.updateStarHighlight(hasStarAction && inGameSupport);
+    // ✨ Star Action (nur außerhalb aktiver Draw-Steps evaluieren, sonst durch DrawSequenceManager gesteuert)
+    const room = this.scene.registry?.get("room") as any;
+    const currentDrawStep = room?.state?.drawStep;
+    const isDrawStepActive = currentDrawStep && currentDrawStep !== DRAW_STEPS.NONE && currentDrawStep !== DRAW_STEPS.COMPLETED;
+
+    if (!isDrawStepActive) {
+      const hasStarAction = this.cardData.availableActions && this.cardData.availableActions.some(
+        a => a.type === ActionType.ACTIVATE_STAR_ABILITY ||
+             (a.type === ActionType.ACTIVATE_ABILITY && this.cardData.Class && this.cardData.Class.includes("Star"))
+      );
+      const inGameSupport = this.settingsManager.isInGameSupportEnabled();
+      this.visuals.updateStarHighlight(hasStarAction && inGameSupport);
+    }
 
     // ✨ NEU: Physik-Update an Handler delegieren
     this.physicsHandler.update(delta);
@@ -303,6 +318,7 @@ export class CardUI extends Phaser.GameObjects.Container {
     if (this.scene) {
       this.scene.events.off("settings-changed", this.onSettingsChanged, this);
     }
+    this.badge.destroy(); // ✨ NEU: Badge aufräumen
     this.visuals.destroy(); // ✨ NEU: Aufräumen
     this.attachVisuals.destroy(); // ✨ NEU: Aufräumen
     super.destroy(fromScene);

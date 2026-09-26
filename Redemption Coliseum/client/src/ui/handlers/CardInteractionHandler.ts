@@ -142,6 +142,7 @@ export class CardInteractionHandler {
         this.lastClickedCardId = card.cardData.id;
       }
       this.lastClickTime = now;
+      this.scene.events.emit("cardClicked", card);
     }
   }
 

@@ -29,6 +29,11 @@ class RoomState extends Schema {
     // ✨ NEU: Game Over Status
     this.winnerId = "";
     this.gameOverReason = "";
+
+    // ✨ NEU: Coordinated Draw Phase sub-steps & priority tracking
+    this.drawStep = "none";
+    this.priorityPlayerId = "";
+    this.activeSequenceCardIds = new ArraySchema();
   }
 }
 
@@ -54,4 +59,10 @@ type("string")(RoomState.prototype, "gameOverReason");
 // Battlefield (Array von Card)
 type([Card])(RoomState.prototype, "battlefield");
 
+// ✨ NEU: Coordinated Draw Phase sub-steps & priority tracking
+type("string")(RoomState.prototype, "drawStep");
+type("string")(RoomState.prototype, "priorityPlayerId");
+type(["string"])(RoomState.prototype, "activeSequenceCardIds");
+
 module.exports = { RoomState };
+

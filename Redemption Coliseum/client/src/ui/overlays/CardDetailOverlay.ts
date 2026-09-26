@@ -8,6 +8,7 @@ export interface CardDetailPositionOptions {
   cardHeight?: number;
   isModal?: boolean;
   imageSrc?: string;
+  badgeText?: string;
 }
 
 /**
@@ -17,6 +18,7 @@ export interface CardDetailPositionOptions {
 export class CardDetailOverlay {
   private static builder = new CardDetailDomBuilder();
   private static onCloseCallback: (() => void) | null = null;
+  private static currentCardId: string | null = null;
 
   public static show(
     rawData: any,
@@ -27,6 +29,8 @@ export class CardDetailOverlay {
     this.builder.create();
     if (!this.builder.overlayNode) return;
 
+    this.currentCardId = rawData.cardId || rawData.id || null;
+
     let options: CardDetailPositionOptions = {};
     if (typeof optionsOrClose === "function") {
       this.onCloseCallback = optionsOrClose;
@@ -36,6 +40,7 @@ export class CardDetailOverlay {
     }
 
     this.populateData(rawData, options.imageSrc);
+    this.builder.setBadge(options.badgeText);
 
     const isModal = options.isModal ?? false;
     if (isModal) {
@@ -184,6 +189,8 @@ export class CardDetailOverlay {
   }
 
   public static hide(): void {
+    this.currentCardId = null;
+    this.builder.setBadge("");
     if (this.builder.overlayNode) {
       this.builder.overlayNode.style.display = "none";
     }
@@ -195,6 +202,14 @@ export class CardDetailOverlay {
       this.onCloseCallback = null;
       cb();
     }
+  }
+
+  public static updateBadge(badgeText?: string): void {
+    this.builder.setBadge(badgeText);
+  }
+
+  public static isShowingCard(cardId?: string): boolean {
+    return !!cardId && this.currentCardId === cardId && this.builder.overlayNode?.style.display !== "none";
   }
 
   public static destroy(): void {

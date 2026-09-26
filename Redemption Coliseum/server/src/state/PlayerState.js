@@ -19,6 +19,7 @@ class SearchContext extends Schema {
 class PlayerState extends Schema {
   constructor() {
     super();
+    this.sessionId = ""; // SessionId des Spielers
     this.redeemedSouls = 0;
     this.turn = 0;
     this.name = "Unknown Player"; // ✨ NEU: Spielername
@@ -40,6 +41,9 @@ class PlayerState extends Schema {
 for (const zone of ALL_ZONES) {
   type([Card])(PlayerState.prototype, zone);
 }
+
+// Schema-Deklaration für die Session ID
+type("string")(PlayerState.prototype, "sessionId");
 
 // Schema-Deklaration für die erlösten Seelen
 type("number")(PlayerState.prototype, "redeemedSouls");

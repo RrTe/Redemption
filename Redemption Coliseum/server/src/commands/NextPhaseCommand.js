@@ -3,6 +3,7 @@ const { PHASES } = require("../../../shared/phases");
 const { ActionType } = require("../../../shared/actions");
 const { CardAction } = require("../../../shared/actionSchema");
 const MatchService = require("../services/MatchService");
+const { DrawPhaseStepService } = require("../services/DrawPhaseStepService");
 const logger = require("../utils/logger");
 
 class NextPhaseCommand extends BaseCommand {
@@ -92,6 +93,11 @@ class NextPhaseCommand extends BaseCommand {
 
     if (result.logEntry) {
       this.room.broadcastGameLog(result.logEntry);
+    }
+
+    // ✨ Coordinated Draw Phase sequence for turn draws
+    if (this.state.currentPhase === PHASES.DRAW) {
+      DrawPhaseStepService.startTurnDrawSequence(this.room);
     }
   }
 }

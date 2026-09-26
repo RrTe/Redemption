@@ -33,8 +33,15 @@ export interface ResolveUndoMessage {
   count: number;
 }
 
+export interface SubmitDrawSequenceMessage {
+  step: string;
+  orderedCardIds: string[];
+}
+
 export interface GameRoomMessages {
   moveCard: MoveCardMessage;
   requestUndo: RequestUndoMessage;
   resolveUndo: ResolveUndoMessage;
+  submitDrawSequence: SubmitDrawSequenceMessage;
 }
+

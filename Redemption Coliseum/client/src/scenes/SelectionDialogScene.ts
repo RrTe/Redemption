@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import type { CardState } from "../../../shared/types";
 import { type TypedRoom } from "../ui/gameUI";
-import { PILE_ZONES } from "../../../shared/zones";
+import { PILE_ZONES, ZONES } from "../../../shared/zones";
 import { type Zone } from "../../../shared/zones";
 import { CardUI } from "../ui/CardUI";
 import { SoundManager } from "../managers/SoundManager";
@@ -39,6 +39,7 @@ export interface SelectionDialogData {
   maxSelectableCount?: number;
   autoReplaceOnMax?: boolean;
   preSelectedCardIds?: string[];
+  hideFilters?: boolean;
   hidePlayerLabels?: boolean;
   confirmButtonLabel?: string;
   toZone?: Zone;
@@ -105,13 +106,27 @@ export class SelectionDialogScene extends Phaser.Scene {
   }
 
   create() {
-    // If this is a passive reveal dialog and the room state shows no cards are currently revealed or no action taker, close immediately
-    if (!this.dialogData.isMyAction && this.room && (this.room.state.revealedCards.length === 0 || !this.room.state.actionTakerId)) {
+    // If this is a passive deck reveal dialog and the room state shows no cards are currently revealed or no action taker, close immediately
+    const isDeckReveal = this.dialogData.fromZone === "deck" || this.dialogData.fromZone === ZONES.DECK;
+    if (!this.dialogData.isMyAction && isDeckReveal && this.room && (this.room.state.revealedCards.length === 0 || !this.room.state.actionTakerId)) {
       this.closeDialog(true);
       return;
     }
 
     this.scene.bringToTop();
+
+    const hasPlayerZoneButtons =
+      this.dialogData.isInteractive &&
+      !this.dialogData.confirmButtonLabel &&
+      !this.dialogData.hidePlayerLabels;
+
+    if (this.dialogData.title && !hasPlayerZoneButtons) {
+      this.add
+        .bitmapText(this.scale.width / 2, 40, "fairydust", this.dialogData.title, 32)
+        .setOrigin(0.5)
+        .setTint(0xffd700)
+        .setDepth(100);
+    }
 
     this.add
       .rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.7)
@@ -148,16 +163,18 @@ export class SelectionDialogScene extends Phaser.Scene {
       filterY = (toggleBottomY + bottomButtonsTopY) / 2 - 15; // -20 to center the filter background visual
     }
 
-    this.filterView.createFiltersUI(
-      this.scale.width / 2,
-      filterY,
-      this.scale.width,
-      this.dialogData.cards
-    );
-    this.filterView.updateSelectedText(
-      this.paginationManager.getFilteredCards().length,
-      this.paginationManager.getAllCards().length
-    );
+    if (!this.dialogData.hideFilters) {
+      this.filterView.createFiltersUI(
+        this.scale.width / 2,
+        filterY,
+        this.scale.width,
+        this.dialogData.cards
+      );
+      this.filterView.updateSelectedText(
+        this.paginationManager.getFilteredCards().length,
+        this.paginationManager.getAllCards().length
+      );
+    }
 
     this.uiManager.createPaginationControls(
       this.paginationManager,
@@ -508,7 +525,8 @@ export class SelectionDialogScene extends Phaser.Scene {
   }
 
   update() {
-    if (!this.dialogData?.isMyAction && this.room && (this.room.state.revealedCards.length === 0 || !this.room.state.actionTakerId)) {
+    const isDeckReveal = this.dialogData?.fromZone === "deck" || this.dialogData?.fromZone === ZONES.DECK;
+    if (!this.dialogData?.isMyAction && isDeckReveal && this.room && (this.room.state.revealedCards.length === 0 || !this.room.state.actionTakerId)) {
       this.closeDialog(true);
     }
   }

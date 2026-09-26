@@ -284,18 +284,21 @@ export class SelectionDialogUIManager {
     selectedCards: Set<string>
   ): { xCoords: number[]; targets: (Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[])[] } {
     const isShort = ViewportManager.isLowHeightProfile();
-    const cardWidth = this.scene.scale.width / (isShort ? 15.5 : 16);
+    const isRevealMode = !isInteractive;
+    const cardWidth = isRevealMode
+      ? Math.min(this.scene.scale.width / 8, (this.scene.scale.height * 0.55) / 1.4)
+      : this.scene.scale.width / (isShort ? 15.5 : 16);
     const cardHeight = cardWidth * 1.4;
 
     // Config for rows
-    const cardsPerRow = 9;
+    const cardsPerRow = isRevealMode ? 8 : 9;
     const ySpacing = 50; // Space between rows
 
     const xCoords: number[] = [];
     const targets: (Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[])[] = [];
 
     const isSingleRow = cards.length <= cardsPerRow;
-    const centerY = this.scene.scale.height / 2 - 30; // Shifted up by 30px
+    const centerY = isRevealMode ? this.scene.scale.height / 2 : this.scene.scale.height / 2 - 30;
 
     cards.forEach((data, i) => {
       const rowIndex = Math.floor(i / cardsPerRow);
@@ -320,6 +323,9 @@ export class SelectionDialogUIManager {
       this.setupCardInteractivity(card, isInteractive, previewManager, sessionId, transitionHandler, () => onCardClicked(card));
       if (selectedCards.has(data.id)) {
         card.setTint(0x00ff00);
+      }
+      if (!isInteractive && fromZone === "hand") {
+        card.badge.show(String(i + 1), "top-left");
       }
       this.cardUIs.push(card);
 
@@ -415,7 +421,7 @@ export class SelectionDialogUIManager {
     this.selectedCardsContainer.removeAll(true);
     if (cards.length === 0) return;
 
-    const bW = this.scene.scale.width / 10;
+    const bW = Math.min(this.scene.scale.width / 8, (this.scene.scale.height * 0.35) / 1.4);
     const totalW = cards.length * (bW + 10);
     const scale =
       totalW > this.scene.scale.width * 0.8
@@ -423,10 +429,11 @@ export class SelectionDialogUIManager {
         : 1;
     let sx = -((totalW * scale) / 2) + (bW * scale) / 2;
 
-    cards.forEach((data) => {
+    cards.forEach((data, index) => {
       const c = new CardUI(this.scene, sx, 0, data, bW, bW * 1.4)
         .setScale(scale)
         .setInteractive({ useHandCursor: true });
+      c.badge.show(String(index + 1), "top-left");
       c.on("pointerover", () => previewManager.show(c, sessionId));
       c.on("pointerout", () => previewManager.hide());
       this.selectedCardsContainer.add(c);

@@ -9,3 +9,16 @@ export const PHASES = /** @type {const} */ ({
   BATTLE: "battle",
   DISCARD: "discard",
 });
+
+/**
+ * Sub-steps during the coordinated Draw Phase resolution.
+ */
+export const DRAW_STEPS = /** @type {const} */ ({
+  NONE: "none",
+  ACTIVE_STARS: "active_stars",
+  OPPONENT_STARS: "opponent_stars",
+  ACTIVE_SOULS: "active_souls",
+  OPPONENT_SOULS: "opponent_souls",
+  COMPLETED: "completed",
+});
+

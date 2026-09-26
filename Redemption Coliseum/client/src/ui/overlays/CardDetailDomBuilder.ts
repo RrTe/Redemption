@@ -5,7 +5,9 @@
 export class CardDetailDomBuilder {
   public overlayNode: HTMLElement | null = null;
   public wrapperNode: HTMLElement | null = null;
+  public imgContainerNode: HTMLElement | null = null;
   public imgNode: HTMLImageElement | null = null;
+  public badgeNode: HTMLElement | null = null;
   public panelNode: HTMLElement | null = null;
   public titleNode: HTMLElement | null = null;
   public statsNode: HTMLElement | null = null;
@@ -30,7 +32,12 @@ export class CardDetailDomBuilder {
       display: "flex", gap: "16px", alignItems: "center", boxSizing: "border-box",
     });
 
-    // Card Image
+    // Image Container with Badge Overlay
+    this.imgContainerNode = document.createElement("div");
+    Object.assign(this.imgContainerNode.style, {
+      position: "relative", display: "inline-flex", flexShrink: "0",
+    });
+
     this.imgNode = document.createElement("img");
     Object.assign(this.imgNode.style, {
       objectFit: "contain", borderRadius: "8px",
@@ -38,6 +45,20 @@ export class CardDetailDomBuilder {
       border: "1.5px solid rgba(255, 215, 0, 0.4)",
       flexShrink: "0", visibility: "hidden",
     });
+
+    this.badgeNode = document.createElement("div");
+    Object.assign(this.badgeNode.style, {
+      position: "absolute", top: "14px", left: "14px",
+      width: "44px", height: "44px", borderRadius: "50%",
+      backgroundColor: "rgba(0, 0, 0, 0.8)", border: "3px solid #ffffff",
+      boxShadow: "0 4px 14px rgba(0, 0, 0, 0.9)", color: "#ffffff",
+      fontFamily: "Arial, sans-serif", fontSize: "24px", fontWeight: "bold",
+      display: "none", alignItems: "center", justifyContent: "center",
+      zIndex: "10", pointerEvents: "none", textShadow: "0 0 5px #000000, 1px 1px 2px #000000",
+    });
+
+    this.imgContainerNode.appendChild(this.imgNode);
+    this.imgContainerNode.appendChild(this.badgeNode);
 
     // Detail Panel
     this.panelNode = document.createElement("div");
@@ -103,10 +124,16 @@ export class CardDetailDomBuilder {
     this.panelNode.appendChild(this.referenceNode);
     this.panelNode.appendChild(this.hintNode);
 
-    this.wrapperNode.appendChild(this.imgNode);
+    this.wrapperNode.appendChild(this.imgContainerNode!);
     this.wrapperNode.appendChild(this.panelNode);
     this.overlayNode.appendChild(this.wrapperNode);
     document.body.appendChild(this.overlayNode);
+  }
+
+  public setBadge(badgeText?: string): void {
+    if (!this.badgeNode) return;
+    this.badgeNode.textContent = badgeText || "";
+    this.badgeNode.style.display = badgeText ? "flex" : "none";
   }
 
   public setImageSource(targetSrc: string): void {
@@ -205,15 +232,8 @@ export class CardDetailDomBuilder {
     if (this.overlayNode?.parentNode) {
       this.overlayNode.parentNode.removeChild(this.overlayNode);
     }
-    this.overlayNode = null;
-    this.wrapperNode = null;
-    this.imgNode = null;
-    this.panelNode = null;
-    this.titleNode = null;
-    this.statsNode = null;
-    this.metaNode = null;
-    this.abilityNode = null;
-    this.referenceNode = null;
-    this.hintNode = null;
+    this.overlayNode = this.wrapperNode = this.imgNode = this.imgContainerNode = null;
+    this.badgeNode = this.panelNode = this.titleNode = this.statsNode = null;
+    this.metaNode = this.abilityNode = this.referenceNode = this.hintNode = null;
   }
 }
