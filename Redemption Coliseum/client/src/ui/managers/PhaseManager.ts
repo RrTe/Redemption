@@ -2,6 +2,7 @@ import type { TypedRoom, GameUI } from "../gameUI";
 import type { ElementManager } from "./ElementManager";
 import type { GameNetworkManager } from "../../network/GameNetworkManager";
 import type { RoomState } from "../../../../shared/types";
+import { DRAW_STEPS } from "../../../../shared/phases";
 import { calculateLayout } from "../layout";
 
 const DEBUG = localStorage.getItem("debug") === "true";
@@ -54,6 +55,20 @@ export class PhaseManager {
 
   /** ✨ REFACTORING: Dies ist der Callback für das Button-Klick-Event. */
   private onNextPhaseClicked() {
+    const state = this.room.state;
+    const isDrawStepActive =
+      state?.currentPhase === "draw" &&
+      !!state?.drawStep &&
+      state.drawStep !== DRAW_STEPS.NONE &&
+      state.drawStep !== DRAW_STEPS.COMPLETED;
+
+    if (isDrawStepActive) {
+      log(
+        `[NEXT_PHASE] Blocked nextPhase click: draw step '${state.drawStep}' is active.`,
+      );
+      return;
+    }
+
     log(
       "[NEXT_PHASE] 'nextPhaseButtonClicked' event received. Sending 'nextPhase' message to server.",
     );
@@ -96,6 +111,16 @@ export class PhaseManager {
     let isButtonEnabled = isActive;
 
     if (state.currentPhase === "battle" && state.battlefield.length > 0) {
+      isButtonEnabled = false;
+    }
+
+    const isDrawStepActive =
+      state.currentPhase === "draw" &&
+      !!state.drawStep &&
+      state.drawStep !== DRAW_STEPS.NONE &&
+      state.drawStep !== DRAW_STEPS.COMPLETED;
+
+    if (isDrawStepActive) {
       isButtonEnabled = false;
     }
 

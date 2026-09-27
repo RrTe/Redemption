@@ -177,6 +177,41 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
       expect(state.drawStep).toBe(DRAW_STEPS.NONE);
       expect(state.priorityPlayerId).toBe("");
     });
+
+    test("auto-skips old Lost Souls without active actions", () => {
+      const oldSoul = new Card();
+      oldSoul.id = "ls_old";
+      oldSoul.Type = "Lost Soul";
+      oldSoul.controllerId = "p1";
+      oldSoul.zone = ZONES.LAND_OF_BONDAGE;
+      player1[ZONES.LAND_OF_BONDAGE].push(oldSoul);
+
+      DrawPhaseStepService.startTurnDrawSequence(room);
+      expect(state.drawStep).toBe(DRAW_STEPS.NONE);
+    });
+
+    test("only targets newly drawn soul and clears action on pass", () => {
+      const oldSoul = new Card();
+      oldSoul.id = "ls_old";
+      oldSoul.Type = "Lost Soul";
+      oldSoul.controllerId = "p1";
+      oldSoul.zone = ZONES.LAND_OF_BONDAGE;
+      player1[ZONES.LAND_OF_BONDAGE].push(oldSoul);
+
+      const newSoul = createLostSoul("ls_new", "p1");
+      player1[ZONES.LAND_OF_BONDAGE].push(newSoul);
+
+      const eligible = DrawPhaseStepService.getEligibleCards(room, DRAW_STEPS.ACTIVE_SOULS, player1);
+      expect(eligible.map(c => c.id)).toEqual(["ls_new"]);
+
+      DrawPhaseStepService.startTurnDrawSequence(room);
+      expect(state.drawStep).toBe(DRAW_STEPS.ACTIVE_SOULS);
+
+      const cmd = new SubmitDrawSequenceCommand(room, client1);
+      cmd.execute({ step: DRAW_STEPS.ACTIVE_SOULS, orderedCardIds: [] });
+      expect(newSoul.availableActions.length).toBe(0);
+      expect(state.drawStep).toBe(DRAW_STEPS.NONE);
+    });
   });
 
   describe("Security & Validation", () => {
@@ -193,6 +228,20 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
       // State did not change
       expect(state.drawStep).toBe(DRAW_STEPS.ACTIVE_STARS);
       expect(state.priorityPlayerId).toBe("p1");
+    });
+
+    test("rejects NextPhaseCommand when a draw sequence step is active", () => {
+      const { NextPhaseCommand } = require("../src/commands/NextPhaseCommand");
+      player1.hand.push(createStarCard("s1", "p1"));
+      DrawPhaseStepService.startTurnDrawSequence(room);
+
+      expect(state.drawStep).toBe(DRAW_STEPS.ACTIVE_STARS);
+
+      const nextPhaseCmd = new NextPhaseCommand(room, client1);
+      nextPhaseCmd.execute();
+
+      // State did not change: drawStep is still ACTIVE_STARS, phase did not advance
+      expect(state.drawStep).toBe(DRAW_STEPS.ACTIVE_STARS);
     });
   });
 });

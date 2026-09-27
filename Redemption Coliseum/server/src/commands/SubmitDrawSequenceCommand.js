@@ -1,6 +1,8 @@
 // server/src/commands/SubmitDrawSequenceCommand.js
 const { BaseCommand } = require("./BaseCommand");
 const { DRAW_STEPS } = require("../../../shared/phases");
+const { ActionType } = require("../../../shared/actions");
+const { ZONES } = require("../../../shared/zones");
 const { DrawPhaseStepService } = require("../services/DrawPhaseStepService");
 const logger = require("../utils/logger");
 
@@ -40,17 +42,6 @@ class SubmitDrawSequenceCommand extends BaseCommand {
           if (card && isStarStep) {
             card.isFaceUp = true;
             card.isFaceDown = false;
-
-            // Remove used star action from availableActions
-            if (card.availableActions) {
-              const actionIdx = card.availableActions.findIndex(
-                a => a.type === "ACTIVATE_STAR_ABILITY" || a.type === "activate_star_ability" ||
-                     (a.type === "ACTIVATE_ABILITY" && card.Class && card.Class.includes("Star"))
-              );
-              if (actionIdx !== -1) {
-                card.availableActions.splice(actionIdx, 1);
-              }
-            }
 
             revealedStarCards.push({
               id: card.id,
@@ -103,7 +94,37 @@ class SubmitDrawSequenceCommand extends BaseCommand {
       this.room.broadcastGameLog(`${playerName} passes on ${typeLabel}.`);
     }
 
-    // 5. Advance to next sub-step
+    // 5. Clean up temporary draw sequence actions for this player
+    if (player) {
+      if (isStarStep && player.hand) {
+        player.hand.forEach(card => {
+          if (card.availableActions && card.availableActions.length > 0) {
+            for (let i = card.availableActions.length - 1; i >= 0; i--) {
+              const a = card.availableActions[i];
+              if (
+                a.type === ActionType.ACTIVATE_STAR_ABILITY ||
+                (a.type === ActionType.ACTIVATE_ABILITY && card.Class && card.Class.includes("Star"))
+              ) {
+                card.availableActions.splice(i, 1);
+              }
+            }
+          }
+        });
+      } else if (!isStarStep) {
+        const landOfBondage = player[ZONES.LAND_OF_BONDAGE] || player.landOfBondage || [];
+        landOfBondage.forEach(card => {
+          if (card.availableActions && card.availableActions.length > 0) {
+            for (let i = card.availableActions.length - 1; i >= 0; i--) {
+              if (card.availableActions[i].type === ActionType.ACTIVATE_ABILITY) {
+                card.availableActions.splice(i, 1);
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // 6. Advance to next sub-step
     DrawPhaseStepService.advanceStep(this.room);
   }
 }

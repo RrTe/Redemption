@@ -118,10 +118,8 @@ class DrawPhaseStepService {
     if (step === DRAW_STEPS.ACTIVE_SOULS || step === DRAW_STEPS.OPPONENT_SOULS) {
       const landOfBondage = player[ZONES.LAND_OF_BONDAGE] || player.landOfBondage || [];
       return landOfBondage.filter(card => {
-        if (card.availableActions && card.availableActions.some(a => a.type === ActionType.ACTIVATE_ABILITY)) {
-          return true;
-        }
-        return card.Type === "Lost Soul" || (card.Type && card.Type.includes("Lost Soul"));
+        if (!card.availableActions || card.availableActions.length === 0) return false;
+        return card.availableActions.some(a => a.type === ActionType.ACTIVATE_ABILITY);
       });
     }
 

@@ -171,13 +171,13 @@ export class DrawSequenceManager {
     const isSouls = this.currentStep === DRAW_STEPS.ACTIVE_SOULS || this.currentStep === DRAW_STEPS.OPPONENT_SOULS;
 
     if (isStars && card.currentZone === ZONES.HAND) {
-      return !!(card.cardData.Class?.includes("Star") || card.cardData.availableActions?.some(
+      return !!card.cardData.availableActions?.some(
         a => a.type === ActionType.ACTIVATE_STAR_ABILITY || (a.type === ActionType.ACTIVATE_ABILITY && card.cardData.Class?.includes("Star"))
-      ));
+      );
     }
     const isLoB = card.currentZone === ZONES.LAND_OF_BONDAGE || card.cardData.zone === ZONES.LAND_OF_BONDAGE;
     if (isSouls && isLoB) {
-      return !!(card.cardData.Type?.includes("Lost Soul") || card.cardData.availableActions?.some(a => a.type === ActionType.ACTIVATE_ABILITY));
+      return !!card.cardData.availableActions?.some(a => a.type === ActionType.ACTIVATE_ABILITY);
     }
     return false;
   }

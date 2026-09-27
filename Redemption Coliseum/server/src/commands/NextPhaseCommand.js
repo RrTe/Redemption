@@ -1,5 +1,5 @@
 const { BaseCommand } = require("./BaseCommand");
-const { PHASES } = require("../../../shared/phases");
+const { PHASES, DRAW_STEPS } = require("../../../shared/phases");
 const { ActionType } = require("../../../shared/actions");
 const { CardAction } = require("../../../shared/actionSchema");
 const MatchService = require("../services/MatchService");
@@ -12,6 +12,11 @@ class NextPhaseCommand extends BaseCommand {
 
     const player = this.state.players.get(this.client.sessionId);
     if (!player) return;
+
+    if (this.state.drawStep && this.state.drawStep !== DRAW_STEPS.NONE && this.state.drawStep !== DRAW_STEPS.COMPLETED) {
+      logger.warn(`[NextPhaseCommand] Blocked nextPhase: draw sequence step '${this.state.drawStep}' is active.`);
+      return;
+    }
 
     let result = null;
     try {
