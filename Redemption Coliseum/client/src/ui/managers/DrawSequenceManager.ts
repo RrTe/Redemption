@@ -7,11 +7,13 @@ import { UI_STRINGS } from "../../constants/uiStrings";
 import { DRAW_STEPS } from "../../../../shared/phases";
 import { ZONES } from "../../../../shared/zones";
 import { ActionType } from "../../../../shared/actions";
+import { type SettingsManager } from "../../managers/SettingsManager";
 
 export class DrawSequenceManager {
   private scene: Phaser.Scene;
   private room: TypedRoom;
   private cardRenderer: CardRenderer;
+  private settingsManager?: SettingsManager;
 
   private bannerContainer!: Phaser.GameObjects.Container;
   private bannerBg!: Phaser.GameObjects.Graphics;
@@ -28,6 +30,7 @@ export class DrawSequenceManager {
     this.scene = scene;
     this.room = room;
     this.cardRenderer = cardRenderer;
+    this.settingsManager = scene.registry.get("settingsManager");
 
     this.createBannerUI();
     this.registerEventHandlers();
@@ -87,6 +90,7 @@ export class DrawSequenceManager {
   private registerEventHandlers() {
     this.scene.events.on("cardClicked", this.onCardClicked, this);
     this.scene.events.on("cardsRendered", this.onCardsRendered, this);
+    this.scene.events.on("settings-changed", this.onSettingsChanged, this);
 
     this.room.onStateChange((state) => {
       this.handleStateUpdate(state.drawStep, state.priorityPlayerId, state.activeSequenceCardIds);
@@ -125,14 +129,17 @@ export class DrawSequenceManager {
     this.bannerContainer.setVisible(true);
     const hasPriority = this.priorityPlayerId === this.room.sessionId;
     const isStars = this.currentStep === DRAW_STEPS.ACTIVE_STARS || this.currentStep === DRAW_STEPS.OPPONENT_STARS;
+    const showHelp = this.settingsManager?.isInGameSupportEnabled() ?? true;
 
-    this.promptText.setText(hasPriority
-      ? (isStars ? UI_STRINGS.DRAW_SEQUENCE.ACTIVE_STARS_PROMPT : UI_STRINGS.DRAW_SEQUENCE.ACTIVE_SOULS_PROMPT)
-      : (isStars ? UI_STRINGS.DRAW_SEQUENCE.OPPONENT_STARS_WAITING : UI_STRINGS.DRAW_SEQUENCE.OPPONENT_SOULS_WAITING)
-    );
+    this.promptText.setText(UI_STRINGS.DRAW_SEQUENCE.PROMPT(isStars, hasPriority, showHelp));
     this.confirmBtn.setVisible(hasPriority);
     this.passBtn.setVisible(hasPriority);
     if (hasPriority) this.updateConfirmButtonLabel();
+  }
+
+  private onSettingsChanged() {
+    this.updateBannerVisibility();
+    this.updateCardHighlights();
   }
 
   public onCardClicked(card: CardUI) {
@@ -196,11 +203,12 @@ export class DrawSequenceManager {
   private updateCardHighlights() {
     const isStars = this.currentStep === DRAW_STEPS.ACTIVE_STARS || this.currentStep === DRAW_STEPS.OPPONENT_STARS;
     const isSouls = this.currentStep === DRAW_STEPS.ACTIVE_SOULS || this.currentStep === DRAW_STEPS.OPPONENT_SOULS;
+    const showHelp = this.settingsManager?.isInGameSupportEnabled() ?? true;
 
     this.cardRenderer.getAllCardUIs().forEach(cardUI => {
       const isEligible = cardUI.cardData.controllerId === this.priorityPlayerId && this.isCardEligible(cardUI);
-      cardUI.visuals.updateStarHighlight(isStars && isEligible);
-      cardUI.visuals.updateLostSoulHighlight(isSouls && isEligible);
+      cardUI.visuals.updateStarHighlight(isStars && isEligible && showHelp);
+      cardUI.visuals.updateLostSoulHighlight(isSouls && isEligible && showHelp);
     });
   }
 
@@ -226,6 +234,7 @@ export class DrawSequenceManager {
   public destroy() {
     this.scene.events.off("cardClicked", this.onCardClicked, this);
     this.scene.events.off("cardsRendered", this.onCardsRendered, this);
+    this.scene.events.off("settings-changed", this.onSettingsChanged, this);
     this.bannerContainer.destroy();
   }
 }

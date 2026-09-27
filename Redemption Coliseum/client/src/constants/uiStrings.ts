@@ -6,10 +6,26 @@
  */
 export const UI_STRINGS = Object.freeze({
   DRAW_SEQUENCE: {
-    ACTIVE_STARS_PROMPT: "Select Star Cards to play (Click to order 1, 2...)",
-    OPPONENT_STARS_WAITING: "Waiting for opponent's Star card actions...",
-    ACTIVE_SOULS_PROMPT: "Select Lost Souls to activate (Click to order 1, 2...)",
-    OPPONENT_SOULS_WAITING: "Waiting for opponent's Lost Soul actions...",
+    PROMPT: (isStars: boolean, hasPriority: boolean, showHelp: boolean) => {
+      if (hasPriority) {
+        if (showHelp) {
+          return isStars
+            ? "Select Star Cards to play (Click to order 1, 2...)"
+            : "Select Lost Souls to activate (Click to order 1, 2...)";
+        }
+        return isStars
+          ? "Draw Phase: Stars – Your Priority"
+          : "Draw Phase: Lost Souls – Your Priority";
+      }
+      if (showHelp) {
+        return isStars
+          ? "Waiting for opponent's Star card actions..."
+          : "Waiting for opponent's Lost Soul actions...";
+      }
+      return isStars
+        ? "Draw Phase: Stars – Opponent's Priority..."
+        : "Draw Phase: Lost Souls – Opponent's Priority...";
+    },
     BTN_CONFIRM: (count: number) => `Confirm (${count})`,
     BTN_PASS: "Pass",
   },
