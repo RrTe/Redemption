@@ -14,6 +14,7 @@ import { KeyboardHandler } from "../handlers/KeyboardHandler"; // ✨ REFACTOR
 import { MenuFactory } from "../factories/MenuFactory.js"; // ✨ NEU
 import { CardUI } from "../CardUI"; // ✨ NEU
 import { DomUIManager } from "./GameDomManager.js"; // ✨ NEU
+import { ZoneInteractionHandler } from "../handlers/ZoneInteractionHandler.js";
 
 /**
  * Verwaltet alle globalen Input-Handler der Szene,
@@ -32,6 +33,7 @@ export class InputManager {
   private domUIManager: DomUIManager; // ✨ NEU
   private keyboardHandler: KeyboardHandler; // ✨ REFACTOR
   private interactionHandler: InteractionHandler;
+  private zoneInteractionHandler: ZoneInteractionHandler;
 
   constructor(
     scene: Phaser.Scene,
@@ -103,6 +105,14 @@ export class InputManager {
       networkManager,
       tokenManager,
     );
+
+    // ✨ Handler for desktop hover and mobile single-tap zone highlighting
+    this.zoneInteractionHandler = new ZoneInteractionHandler(
+      scene,
+      room,
+      elementManager,
+      this.dragDropHandler,
+    );
   }
 
   /** ✨ NEU: Aufräumen von Timern und Listeners. */
@@ -111,6 +121,7 @@ export class InputManager {
     this.dragDropHandler.destroy();
     this.cardInteractionHandler.destroy(); // CardInteractionHandler hat keine destroy, aber für Konsistenz
     this.interactionHandler.destroy();
+    this.zoneInteractionHandler.destroy();
     // Scene-Input-Listener werden von Phaser beim Scene-Shutdown automatisch entfernt.
   }
 
@@ -120,6 +131,7 @@ export class InputManager {
     this.dragDropHandler.registerHandlers();
     this.interactionHandler.registerHandlers();
     this.keyboardHandler.registerHandlers();
+    this.zoneInteractionHandler.registerHandlers();
   }
 
   /**

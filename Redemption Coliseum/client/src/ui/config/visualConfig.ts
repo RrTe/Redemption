@@ -18,3 +18,10 @@ export const PHASE_INDICATOR_STYLE = {
   BASE_ALPHA_INACTIVE: 0.12, // Start-Transparenz (inaktiv)
 };
 
+export const ZONE_HIGHLIGHT_STYLE = {
+  COLOR: 0xffd700,
+  ALPHA: 0.3,
+  CORNER_RADIUS: 15,
+  HOVER_DELAY_MS: 300,
+};
+

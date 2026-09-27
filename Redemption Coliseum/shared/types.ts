@@ -59,4 +59,10 @@ export interface RoomState {
   actionTakerId: string; // General flag for who is taking an action
   activeActionPiles: MapSchema<string>; // ✨ REFACTOR: pileId -> sessionId
   battlefield: ArraySchema<CardState>;
+  winnerId?: string;
+  gameOverReason?: string;
+  drawStep?: string;
+  priorityPlayerId?: string;
+  activeSequenceCardIds?: ArraySchema<string>;
 }
+
