@@ -41,3 +41,8 @@ examples/
 
 # Lokaler Standalone Deck Editor
 standalone_deck_ediitor/
+
+# Lokale Spezifikationen & Entwürfe
+docs/action_queue_specification.md
+docs/ast_engine_specification.md
+docs/assets/
