@@ -22,6 +22,9 @@ export const ZONE_HIGHLIGHT_STYLE = {
   COLOR: 0xffd700,
   ALPHA: 0.3,
   CORNER_RADIUS: 15,
-  HOVER_DELAY_MS: 300,
+  HOVER_DELAY_MS: 500,
 };
 
+export const CARD_PREVIEW_CONFIG = {
+  HOVER_DELAY_MS: 500,
+};

@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { CardUI } from "../CardUI";
 import { CardDetailOverlay } from "../overlays/CardDetailOverlay";
 import { ViewportManager } from "./ViewportManager";
+import { CARD_PREVIEW_CONFIG } from "../config/visualConfig.js";
 
 /**
  * Manages the enlarged card preview and detail overlay shown on hover or touch.
@@ -10,7 +11,7 @@ export class PreviewManager {
   private scene: Phaser.Scene;
   private showTimer: number | null = null;
   private isPreviewActive: boolean = false;
-  private readonly SHOW_DELAY = 250;
+  private currentCard: CardUI | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -40,13 +41,19 @@ export class PreviewManager {
    * @param isInstant If true, preview is rendered without delay
    */
   public show(card: CardUI, currentSessionId: string, isInstant: boolean = false): void {
+    if (this.currentCard === card && (this.showTimer !== null || this.isPreviewActive)) {
+      return;
+    }
+
     if (this.showTimer) {
       clearTimeout(this.showTimer);
       this.showTimer = null;
     }
+    this.currentCard = card;
 
     const render = () => {
       if (!card.scene || card.isBeingDragged || !this.scene.scene.isActive()) return;
+      if (this.currentCard !== card) return;
 
       const isControlledByMe = card.cardData.controllerId === currentSessionId;
       const shouldShowPreview = !card.isCurrentlyFaceDown() || isControlledByMe;
@@ -73,17 +80,25 @@ export class PreviewManager {
           imageSrc,
           badgeText,
         },
-        () => {
-          this.isPreviewActive = false;
-          this.scene.events.emit("ui:clear-hover");
-        }
+        isTouch
+          ? () => {
+              this.isPreviewActive = false;
+              this.currentCard = null;
+              this.scene.events.emit("ui:clear-hover");
+            }
+          : () => {
+              this.isPreviewActive = false;
+            }
       );
     };
 
     if (isInstant || this.isPreviewActive) {
       render();
     } else {
-      this.showTimer = window.setTimeout(render, this.SHOW_DELAY);
+      this.showTimer = window.setTimeout(
+        render,
+        CARD_PREVIEW_CONFIG.HOVER_DELAY_MS,
+      );
     }
   }
 
@@ -94,6 +109,7 @@ export class PreviewManager {
    * @param sourceY Source Y anchor position
    */
   public showFromData(cardData: any, sourceRightX: number, sourceY: number): void {
+    this.currentCard = null;
     if (this.showTimer) {
       clearTimeout(this.showTimer);
       this.showTimer = null;
@@ -114,29 +130,41 @@ export class PreviewManager {
           isModal: isTouch,
           imageSrc,
         },
-        () => {
-          this.isPreviewActive = false;
-          this.scene.events.emit("ui:clear-hover");
-        }
+        isTouch
+          ? () => {
+              this.isPreviewActive = false;
+              this.scene.events.emit("ui:clear-hover");
+            }
+          : () => {
+              this.isPreviewActive = false;
+            }
       );
     };
 
     if (this.isPreviewActive) {
       render();
     } else {
-      this.showTimer = window.setTimeout(render, this.SHOW_DELAY);
+      this.showTimer = window.setTimeout(
+        render,
+        CARD_PREVIEW_CONFIG.HOVER_DELAY_MS,
+      );
     }
   }
 
   /**
    * Hides the preview overlay and clears pending timers.
+   * @param card Optional card reference to avoid hiding preview of a newly hovered card.
    */
-  public hide(): void {
+  public hide(card?: CardUI): void {
+    if (card && this.currentCard && this.currentCard !== card) {
+      return;
+    }
     if (this.showTimer) {
       clearTimeout(this.showTimer);
       this.showTimer = null;
     }
     this.isPreviewActive = false;
+    this.currentCard = null;
     CardDetailOverlay.hide();
   }
 }

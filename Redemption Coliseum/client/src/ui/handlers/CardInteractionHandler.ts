@@ -159,7 +159,11 @@ export class CardInteractionHandler {
   public handleHoverIn(card: CardUI) {
     if (card.getData("waiting_for_overlay")) return;
 
-    if (this.currentHoveredCard && this.currentHoveredCard !== card) {
+    if (this.currentHoveredCard === card) {
+      return;
+    }
+
+    if (this.currentHoveredCard) {
       this.handleHoverOut(this.currentHoveredCard);
     }
     this.currentHoveredCard = card;
@@ -189,9 +193,7 @@ export class CardInteractionHandler {
    * Cleans up visual hover effects.
    */
   public handleHoverOut(card: CardUI) {
-    if (card.getData("waiting_for_overlay")) return; // ✨ NEU: Ignoriere Hover für Karten, die auf Overlay warten
-
-    this.previewManager.hide();
+    if (card.getData("waiting_for_overlay")) return;
 
     const isMyHandCard =
       card.currentZone === ZONES.HAND &&
@@ -204,8 +206,10 @@ export class CardInteractionHandler {
     }
 
     if (!card.isBeingDragged) card.stopGlow();
+
     if (this.currentHoveredCard === card) {
       this.currentHoveredCard = null;
+      this.previewManager.hide(card);
     }
   }
 
