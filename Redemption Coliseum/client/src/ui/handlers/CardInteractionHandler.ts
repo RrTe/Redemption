@@ -9,6 +9,7 @@ import { type MenuFactory } from "../factories/MenuFactory.js";
 import { RadialMenu } from "../components/RadialMenu.js";
 import { ViewportManager } from "../managers/ViewportManager.js";
 import { log } from "../../utils/logger.js";
+import { INTERACTION_CONFIG } from "../config/visualConfig.js";
 
 /**
  * Handles interactions specific to individual cards (Radial Menu, Flipping, Face-down).
@@ -97,8 +98,10 @@ export class CardInteractionHandler {
 
   public handlePointerUp(pointer: Phaser.Input.Pointer, card: CardUI) {
     // Ignore tap/click if pointer moved significantly (Drag & Drop gesture) or card is being dragged
-    const TAP_MOVE_THRESHOLD = 15;
-    if (pointer.getDistance() > TAP_MOVE_THRESHOLD || card.isBeingDragged) {
+    if (
+      pointer.getDistance() > INTERACTION_CONFIG.TAP_MOVE_THRESHOLD_PX ||
+      card.isBeingDragged
+    ) {
       return;
     }
 
@@ -114,7 +117,7 @@ export class CardInteractionHandler {
     // Left Click Release (or Touch Release)
     if (pointer.leftButtonReleased() || pointer.wasTouch) {
       // Mobile: If it was a long press, don't treat it as a tap
-      if (pointer.wasTouch && pointer.getDuration() > 500) {
+      if (pointer.wasTouch && pointer.getDuration() > INTERACTION_CONFIG.LONG_PRESS_MS) {
         return;
       }
 
@@ -132,7 +135,7 @@ export class CardInteractionHandler {
       const now = Date.now();
       if (
         this.lastClickedCardId === card.cardData.id &&
-        now - this.lastClickTime < 300
+        now - this.lastClickTime < INTERACTION_CONFIG.DOUBLE_CLICK_MS
       ) {
         if (this.isInteractable(card)) {
           this.handleFaceDownToggle(card);

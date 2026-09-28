@@ -13,6 +13,7 @@ import { type CardInteractionHandler } from "./CardInteractionHandler.js";
 import { type PileInteractionHandler } from "./PileInteractionHandler.js";
 import { type TokenManager } from "../managers/TokenManager.js";
 import { ViewportManager } from "../managers/ViewportManager.js";
+import { INTERACTION_CONFIG } from "../config/visualConfig.js";
 
 /**
  * Manages click, double-click, hover, and menu interactions.
@@ -136,8 +137,8 @@ export class InteractionHandler {
         this.tokenManager.startTokenCreationProcess(tokenContext);
       } else if (pointer.wasTouch || ViewportManager.isTouchPrimary()) {
         const startPos = pointer.position.clone();
-        this.boardLongPressTimer = this.scene.time.delayedCall(500, () => {
-          if (pointer.isDown && pointer.position.distance(startPos) < 15 && !this.dragDropHandler.isDragging) {
+        this.boardLongPressTimer = this.scene.time.delayedCall(INTERACTION_CONFIG.LONG_PRESS_MS, () => {
+          if (pointer.isDown && pointer.position.distance(startPos) < INTERACTION_CONFIG.TAP_MOVE_THRESHOLD_PX && !this.dragDropHandler.isDragging) {
             this.tokenManager.startTokenCreationProcess(tokenContext);
           }
         });
@@ -184,8 +185,8 @@ export class InteractionHandler {
     } else if (pointer.wasTouch) {
       // ✨ Mobile: Long press detection for context menu
       const startPos = pointer.position.clone();
-      this.longPressTimer = this.scene.time.delayedCall(500, () => {
-        if (pointer.isDown && pointer.position.distance(startPos) < 15) {
+      this.longPressTimer = this.scene.time.delayedCall(INTERACTION_CONFIG.LONG_PRESS_MS, () => {
+        if (pointer.isDown && pointer.position.distance(startPos) < INTERACTION_CONFIG.TAP_MOVE_THRESHOLD_PX) {
           this.openContextMenu(pointer, gameObject);
         }
       });
