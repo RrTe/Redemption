@@ -50,11 +50,33 @@ export interface PlayerState {
   searchContext: SearchContextState;
 }
 
+export type ChronicleItemStatus = "pending" | "resolving";
+
+export interface ChronicleItemData {
+  id: string;
+  cardId: string;
+  controllerId: string;
+  actionType: string;
+  title: string;
+  description: string;
+  status: ChronicleItemStatus;
+  order: number;
+  abilityId?: string;
+}
+
+export interface EffectChronicleStateData {
+  items: ArraySchema<ChronicleItemData>;
+  priorityPlayerId: string;
+  isResolving: boolean;
+  onChange?: (changes: any) => void;
+}
+
 export interface RoomState {
   players: MapSchema<PlayerState>;
   activePlayer: string;
   currentPhase: string;
   revealedCards: ArraySchema<CardState>;
+
   revealedSelectedCardIds: ArraySchema<string>;
   actionTakerId: string; // General flag for who is taking an action
   activeActionPiles: MapSchema<string>; // ✨ REFACTOR: pileId -> sessionId
@@ -64,5 +86,7 @@ export interface RoomState {
   drawStep?: string;
   priorityPlayerId?: string;
   activeSequenceCardIds?: ArraySchema<string>;
+  effectChronicle?: EffectChronicleStateData;
 }
+
 

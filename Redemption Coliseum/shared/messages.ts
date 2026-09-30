@@ -38,10 +38,17 @@ export interface SubmitDrawSequenceMessage {
   orderedCardIds: string[];
 }
 
+export interface ResolveChronicleItemMessage {
+  action: "execute" | "pass" | "pass_all";
+  itemId?: string;
+}
+
 export interface GameRoomMessages {
   moveCard: MoveCardMessage;
   requestUndo: RequestUndoMessage;
   resolveUndo: ResolveUndoMessage;
   submitDrawSequence: SubmitDrawSequenceMessage;
+  resolveChronicleItem: ResolveChronicleItemMessage;
 }
+
 

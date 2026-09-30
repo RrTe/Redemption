@@ -4,6 +4,7 @@ const { DRAW_STEPS } = require("../../../shared/phases");
 const { ActionType } = require("../../../shared/actions");
 const { ZONES } = require("../../../shared/zones");
 const { DrawPhaseStepService } = require("../services/DrawPhaseStepService");
+const { EffectChronicleService } = require("../services/EffectChronicleService");
 const logger = require("../utils/logger");
 
 class SubmitDrawSequenceCommand extends BaseCommand {
@@ -30,7 +31,6 @@ class SubmitDrawSequenceCommand extends BaseCommand {
     const playerName = player ? player.name : "Player";
     const currentStep = this.state.drawStep;
     const isStarStep = currentStep === DRAW_STEPS.ACTIVE_STARS || currentStep === DRAW_STEPS.OPPONENT_STARS;
-    const revealedStarCards = [];
 
     // 3. Synchronize ordered card IDs and reveal confirmed cards for both players
     if (this.state.activeSequenceCardIds) {
@@ -42,56 +42,9 @@ class SubmitDrawSequenceCommand extends BaseCommand {
           if (card && isStarStep) {
             card.isFaceUp = true;
             card.isFaceDown = false;
-
-            revealedStarCards.push({
-              id: card.id,
-              Name: card.Name,
-              ImageFile: card.ImageFile,
-              Type: card.Type,
-              Brigade: card.Brigade,
-              Strength: card.Strength,
-              Toughness: card.Toughness,
-              Class: card.Class,
-              SpecialAbility: card.SpecialAbility,
-              zone: card.zone,
-              isFaceUp: true,
-              isFaceDown: false,
-              controllerId: card.controllerId,
-              originalOwnerId: card.originalOwnerId,
-            });
           }
         });
       }
-    }
-
-    // 4. Broadcast revealed Star cards for all players to see
-    if (isStarStep && revealedStarCards.length > 0 && typeof this.room.broadcast === "function") {
-      this.room.broadcast("starCardsRevealed", {
-        playerName,
-        sessionId: this.client.sessionId,
-        cards: revealedStarCards,
-      });
-    }
-
-    // 5. Log actions in submitted order
-    if (Array.isArray(orderedCardIds) && orderedCardIds.length > 0) {
-      orderedCardIds.forEach((cardId, index) => {
-        const card = this.room.cardLookup ? this.room.cardLookup.get(cardId) : null;
-        const cardName = card ? card.Name : "Card";
-
-        if (isStarStep) {
-          this.room.broadcastGameLog(
-            `${playerName} reveals and activates Star card '${cardName}' (#${index + 1}).`
-          );
-        } else {
-          this.room.broadcastGameLog(
-            `${playerName} activates Lost Soul '${cardName}' (#${index + 1}).`
-          );
-        }
-      });
-    } else {
-      const typeLabel = isStarStep ? "Star cards" : "Lost Souls";
-      this.room.broadcastGameLog(`${playerName} passes on ${typeLabel}.`);
     }
 
     // 5. Clean up temporary draw sequence actions for this player
@@ -124,9 +77,32 @@ class SubmitDrawSequenceCommand extends BaseCommand {
       }
     }
 
-    // 6. Advance to next sub-step
-    DrawPhaseStepService.advanceStep(this.room);
+    // 6. Enqueue into Effect Chronicle if cards were selected, otherwise pass and advance immediately
+    if (Array.isArray(orderedCardIds) && orderedCardIds.length > 0) {
+      const cardsToEnqueue = orderedCardIds
+        .map(id => (this.room.cardLookup ? this.room.cardLookup.get(id) : null))
+        .filter(Boolean);
+
+      const actionType = isStarStep ? ActionType.ACTIVATE_STAR_ABILITY : ActionType.ACTIVATE_ABILITY;
+
+      EffectChronicleService.enqueueCards(
+        this.room,
+        cardsToEnqueue,
+        this.client.sessionId,
+        actionType,
+        {
+          onComplete: room => {
+            DrawPhaseStepService.advanceStep(room);
+          },
+        }
+      );
+    } else {
+      const typeLabel = isStarStep ? "Star cards" : "Lost Souls";
+      this.room.broadcastGameLog(`${playerName} passes on ${typeLabel}.`);
+      DrawPhaseStepService.advanceStep(this.room);
+    }
   }
 }
 
 module.exports = { SubmitDrawSequenceCommand };
+

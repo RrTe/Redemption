@@ -1,6 +1,7 @@
 // server/tests/drawPhaseSequence.test.js
 const { DrawPhaseStepService } = require("../src/services/DrawPhaseStepService");
 const { SubmitDrawSequenceCommand } = require("../src/commands/SubmitDrawSequenceCommand");
+const { ResolveChronicleCommand } = require("../src/commands/ResolveChronicleCommand");
 const { RoomState } = require("../src/state/RoomState");
 const { PlayerState } = require("../src/state/PlayerState");
 const { Card } = require("../src/state/Card");
@@ -8,6 +9,7 @@ const { CardAction } = require("../../shared/actionSchema");
 const { ActionType } = require("../../shared/actions");
 const { DRAW_STEPS } = require("../../shared/phases");
 const { ZONES } = require("../../shared/zones");
+const { CHRONICLE_ACTIONS } = require("../../shared/effectChronicleConstants");
 
 describe("Draw Phase Sequence & Priority State Machine", () => {
   let room;
@@ -39,6 +41,7 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
       state,
       clients: [client1, client2],
       cardLookup: new Map(),
+      chatHistory: [],
       broadcastGameLog: jest.fn(),
       broadcast: jest.fn(),
     };
@@ -66,7 +69,7 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
     const card = new Card();
     card.id = id;
     card.Name = `Lost Soul ${id}`;
-    card.Type = "Lost Soul";
+    card.Class = "Lost Soul";
     card.controllerId = controllerId;
     card.zone = ZONES.LAND_OF_BONDAGE;
 
@@ -93,11 +96,17 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
       expect(state.drawStep).toBe(DRAW_STEPS.ACTIVE_STARS);
       expect(state.priorityPlayerId).toBe("p1");
 
-      // P1 submits star order
+      // P1 submits star order into Effect Chronicle
       const cmd1 = new SubmitDrawSequenceCommand(room, client1);
       cmd1.execute({ step: DRAW_STEPS.ACTIVE_STARS, orderedCardIds: ["s1"] });
+      expect(state.effectChronicle.items.length).toBe(1);
+
+      // P1 executes chronicle item
+      const resolveCmd1 = new ResolveChronicleCommand(room, client1);
+      resolveCmd1.execute({ action: CHRONICLE_ACTIONS.EXECUTE });
+
       expect(room.broadcastGameLog).toHaveBeenCalledWith(
-        expect.stringContaining("activates Star card 'Star Card s1' (#1)")
+        expect.stringContaining("executes Star Card s1")
       );
 
       // Step 2: Opponent Stars
@@ -117,8 +126,11 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
 
       // P1 submits souls
       cmd1.execute({ step: DRAW_STEPS.ACTIVE_SOULS, orderedCardIds: ["ls1"] });
+      expect(state.effectChronicle.items.length).toBe(1);
+      resolveCmd1.execute({ action: CHRONICLE_ACTIONS.EXECUTE });
+
       expect(room.broadcastGameLog).toHaveBeenCalledWith(
-        expect.stringContaining("activates Lost Soul 'Lost Soul ls1' (#1)")
+        expect.stringContaining("executes Lost Soul ls1")
       );
 
       // Step 4: Opponent Souls
@@ -127,6 +139,9 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
 
       // P2 submits souls
       cmd2.execute({ step: DRAW_STEPS.OPPONENT_SOULS, orderedCardIds: ["ls2"] });
+      expect(state.effectChronicle.items.length).toBe(1);
+      const resolveCmd2 = new ResolveChronicleCommand(room, client2);
+      resolveCmd2.execute({ action: CHRONICLE_ACTIONS.EXECUTE });
 
       // Step 5: Completed (state resets to none, game remains in DRAW phase)
       expect(state.drawStep).toBe(DRAW_STEPS.NONE);
@@ -146,6 +161,8 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
       // P2 submits
       const cmd2 = new SubmitDrawSequenceCommand(room, client2);
       cmd2.execute({ step: DRAW_STEPS.OPPONENT_STARS, orderedCardIds: ["s2"] });
+      const resolveCmd2 = new ResolveChronicleCommand(room, client2);
+      resolveCmd2.execute({ action: CHRONICLE_ACTIONS.EXECUTE });
 
       // Steps 3 & 4 have 0 souls, so they auto-skip to completion!
       expect(state.drawStep).toBe(DRAW_STEPS.NONE);
@@ -166,17 +183,21 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
 
       const cmd = new SubmitDrawSequenceCommand(room, client1);
       cmd.execute({ step: DRAW_STEPS.ACTIVE_STARS, orderedCardIds: ["s1"] });
+      const resolveCmd = new ResolveChronicleCommand(room, client1);
+      resolveCmd.execute({ action: CHRONICLE_ACTIONS.EXECUTE });
 
       // Step 2: Active Souls
       expect(state.drawStep).toBe(DRAW_STEPS.ACTIVE_SOULS);
       expect(state.priorityPlayerId).toBe("p1");
 
       cmd.execute({ step: DRAW_STEPS.ACTIVE_SOULS, orderedCardIds: ["ls1"] });
+      resolveCmd.execute({ action: CHRONICLE_ACTIONS.EXECUTE });
 
       // Done
       expect(state.drawStep).toBe(DRAW_STEPS.NONE);
       expect(state.priorityPlayerId).toBe("");
     });
+
 
     test("auto-skips old Lost Souls without active actions", () => {
       const oldSoul = new Card();

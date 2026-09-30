@@ -19,7 +19,9 @@ import { PileUI } from "./PileUI"; // ✨ Importiere die neue PileUI-Klasse
 import { GameNetworkManager } from "../network/GameNetworkManager.ts"; // ✨ NEU (SCHRITT 3)
 import { PhaseManager } from "./managers/PhaseManager"; // ✨ NEU
 import { DrawSequenceManager } from "./managers/DrawSequenceManager"; // ✨ NEU
+import { EffectChronicleManager } from "./managers/EffectChronicleManager";
 import { SettingsManager } from "../managers/SettingsManager"; // ✨ NEU: Schritt 1.1
+
 import { SoundManager } from "../managers/SoundManager.ts"; // ✨ NEU: Schritt 1.2
 import { AnimationManager } from "./managers/AnimationManager";
 import { OverlayManager } from "./managers/OverlayManager"; // ✨ REFACTOR
@@ -90,6 +92,8 @@ export class GameUI {
   private undoManager: UndoManager;
   private staticUIHandler: StaticUIHandler; // Fix: handles Help/Settings/Save/Concede buttons
   public drawSequenceManager!: DrawSequenceManager; // ✨ NEU
+  public effectChronicleManager!: EffectChronicleManager;
+
 
   constructor(
     scene: Phaser.Scene,
@@ -256,6 +260,19 @@ export class GameUI {
       this.cardRenderer,
     );
 
+    // ✨ NEU: EffectChronicleManager für die Auflösungskette aktivierter Karten/Effekte
+    this.effectChronicleManager = new EffectChronicleManager(
+      this.room,
+      this.scene,
+      this.settingsManager,
+    );
+    this.effectChronicleManager.setOnPhaseLockCallback(() => {
+      if (this.room.state) {
+        this.phaseManager.updateNextPhaseButtonState(this.room.state);
+      }
+    });
+
+
     // Fix: Instantiate StaticUIHandler to wire up Help, Settings, Save, and Concede buttons.
     // Without this, the help button had no pointerdown listener during gameplay.
     this.staticUIHandler = new StaticUIHandler(
@@ -354,6 +371,9 @@ export class GameUI {
       this.room.state.currentPhase,
     );
     this.layout = this.layoutManager.layout;
+    if (this.layout) {
+      this.effectChronicleManager?.updateLayout(this.layout);
+    }
     this.layoutManager.repositionUI();
 
     // ✨ REFACTORING: Delegiere Debug-Updates an den DebugManager
@@ -403,8 +423,10 @@ export class GameUI {
     this.overlayManager?.destroy(); // ✨ REFACTOR
     this.gameStateManager?.destroy(); // ✨ NEU
     this.drawSequenceManager?.destroy(); // ✨ NEU
+    this.effectChronicleManager?.destroy();
     this.previewManager?.hide(); // Hide any active preview
   }
+
 
   /** ✨ NEU: Richtet die UI für einen beigetretenen Gegner ein. Wird vom NetworkManager aufgerufen. */
   public setupOpponentUI(opponentId: string) {

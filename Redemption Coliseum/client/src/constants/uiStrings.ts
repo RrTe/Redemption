@@ -28,5 +28,9 @@ export const UI_STRINGS = Object.freeze({
     },
     BTN_CONFIRM: (count: number) => `Confirm (${count})`,
     BTN_PASS: "Pass",
+    CHRONICLE_ACTIVE: (hasPriority: boolean) =>
+      hasPriority
+        ? "Effect Chronicle active: Resolve abilities via the Chronicle icon."
+        : "Effect Chronicle active: Waiting for opponent to resolve abilities...",
   },
 });

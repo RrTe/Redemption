@@ -1,0 +1,215 @@
+// server/src/services/EffectChronicleService.js
+const { ChronicleItem } = require("../state/EffectChronicleState");
+const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants");
+const GameLogService = require("./GameLogService");
+const logger = require("../utils/logger");
+
+/**
+ * Service orchestrating the lifecycle and resolution of items in the Effect Chronicle.
+ * Fully decoupled from specific phase engines via completion callbacks.
+ */
+class EffectChronicleService {
+  /**
+   * Enqueues cards into the Effect Chronicle.
+   * @param {import('../rooms/GameRoom').GameRoom} room
+   * @param {Array<object>} cards
+   * @param {string} controllerId
+   * @param {string} actionType
+   * @param {object} [options]
+   * @param {(room: any) => void} [options.onComplete]
+   */
+  static enqueueCards(room, cards, controllerId, actionType, options = {}) {
+    if (!room.state.effectChronicle) {
+      logger.error("[EffectChronicleService] room.state.effectChronicle is missing.");
+      return;
+    }
+
+    const chronicle = room.state.effectChronicle;
+    room._chronicleOnComplete = typeof options.onComplete === "function" ? options.onComplete : null;
+
+    if (Array.isArray(cards)) {
+      cards.forEach((card, index) => {
+        const item = new ChronicleItem({
+          id: `chronicle_${Date.now()}_${index}_${card.id || "card"}`,
+          cardId: card.id || "",
+          controllerId: controllerId,
+          actionType: actionType || "",
+          title: card.Name || card.name || "Card",
+          description: card.SpecialAbility || card.specialAbility || "",
+          status: CHRONICLE_STATUS.PENDING,
+          order: chronicle.items.length + 1,
+          abilityId: card.abilityId || "",
+        });
+        chronicle.items.push(item);
+      });
+    }
+
+    chronicle.priorityPlayerId = controllerId;
+    chronicle.isResolving = chronicle.items.length > 0;
+
+    const player = room.state.players.get(controllerId);
+    const playerName = player ? player.name : "Player";
+    logger.info(
+      `[EffectChronicleService] Enqueued ${cards ? cards.length : 0} items for '${playerName}' (${controllerId}).`
+    );
+  }
+
+  /**
+   * Resolves/executes an item in the chronicle.
+   * @param {import('../rooms/GameRoom').GameRoom} room
+   * @param {import('colyseus').Client} client
+   * @param {string} [itemId]
+   */
+  static executeItem(room, client, itemId) {
+    const chronicle = room.state.effectChronicle;
+    if (!chronicle || chronicle.items.length === 0) return;
+
+    if (client.sessionId !== chronicle.priorityPlayerId) {
+      logger.warn(`[EffectChronicleService] Client '${client.sessionId}' attempted execute without priority.`);
+      return;
+    }
+
+    const index = itemId ? chronicle.items.findIndex(i => i.id === itemId) : 0;
+    if (index === -1) return;
+
+    const item = chronicle.items[index];
+    const player = room.state.players.get(client.sessionId);
+    const playerName = player ? player.name : "Player";
+    const abilityText = item.description ? `: "${item.description}"` : "";
+
+    this._log(
+      room,
+      `${playerName} executes ${item.title}${abilityText}.`
+    );
+
+    // ✨ Prepared Hook for future AST Engine integration
+    // if (room.abilityResolver && typeof room.abilityResolver.resolve === "function") {
+    //   await room.abilityResolver.resolve(item);
+    // }
+
+    chronicle.items.splice(index, 1);
+    this._reindexOrders(chronicle);
+
+    if (chronicle.items.length === 0) {
+      this.finishChronicle(room);
+    }
+  }
+
+  /**
+   * Skips/passes on a single item in the chronicle.
+   * @param {import('../rooms/GameRoom').GameRoom} room
+   * @param {import('colyseus').Client} client
+   * @param {string} [itemId]
+   */
+  static passItem(room, client, itemId) {
+    const chronicle = room.state.effectChronicle;
+    if (!chronicle || chronicle.items.length === 0) return;
+
+    if (client.sessionId !== chronicle.priorityPlayerId) {
+      logger.warn(`[EffectChronicleService] Client '${client.sessionId}' attempted pass without priority.`);
+      return;
+    }
+
+    const index = itemId ? chronicle.items.findIndex(i => i.id === itemId) : 0;
+    if (index === -1) return;
+
+    const item = chronicle.items[index];
+    const player = room.state.players.get(client.sessionId);
+    const playerName = player ? player.name : "Player";
+
+    this._log(
+      room,
+      `${playerName} passes on ${item.title}.`
+    );
+
+    chronicle.items.splice(index, 1);
+    this._reindexOrders(chronicle);
+
+    if (chronicle.items.length === 0) {
+      this.finishChronicle(room);
+    }
+  }
+
+  /**
+   * Passes on all remaining items for the priority player.
+   * @param {import('../rooms/GameRoom').GameRoom} room
+   * @param {import('colyseus').Client} client
+   */
+  static passAllItems(room, client) {
+    const chronicle = room.state.effectChronicle;
+    if (!chronicle || chronicle.items.length === 0) return;
+
+    if (client.sessionId !== chronicle.priorityPlayerId) {
+      logger.warn(`[EffectChronicleService] Client '${client.sessionId}' attempted passAll without priority.`);
+      return;
+    }
+
+    const player = room.state.players.get(client.sessionId);
+    const playerName = player ? player.name : "Player";
+
+    this._log(
+      room,
+      `${playerName} passes on all remaining Chronicle effects.`
+    );
+
+    chronicle.items.splice(0, chronicle.items.length);
+    this.finishChronicle(room);
+  }
+
+  /**
+   * Emits game log via room helper or fallback service.
+   * @param {import('../rooms/GameRoom').GameRoom} room
+   * @param {string} text
+   * @private
+   */
+  static _log(room, text) {
+    if (typeof room.broadcastGameLog === "function") {
+      room.broadcastGameLog(text);
+    } else {
+      GameLogService.broadcastGameLog(room, text);
+    }
+  }
+
+
+  /**
+   * Finalizes chronicle resolution and triggers the registered completion callback.
+   * @param {import('../rooms/GameRoom').GameRoom} room
+   */
+  static finishChronicle(room) {
+    const chronicle = room.state.effectChronicle;
+    if (chronicle) {
+      chronicle.priorityPlayerId = "";
+      chronicle.isResolving = false;
+    }
+
+    const onComplete = room._chronicleOnComplete;
+    room._chronicleOnComplete = null;
+
+    if (typeof onComplete === "function") {
+      logger.info("[EffectChronicleService] Chronicle empty, invoking onComplete callback.");
+      onComplete(room);
+    }
+  }
+
+  /**
+   * Re-indexes item order numbers sequentially.
+   * @param {import('../state/EffectChronicleState').EffectChronicleState} chronicle
+   * @private
+   */
+  static _reindexOrders(chronicle) {
+    chronicle.items.forEach((item, idx) => {
+      item.order = idx + 1;
+    });
+  }
+
+  /**
+   * Checks if there are active items in the chronicle.
+   * @param {import('../rooms/GameRoom').GameRoom} room
+   * @returns {boolean}
+   */
+  static hasPendingItems(room) {
+    return Boolean(room.state.effectChronicle && room.state.effectChronicle.items.length > 0);
+  }
+}
+
+module.exports = { EffectChronicleService };

@@ -34,6 +34,12 @@ const { ResolveUndoCommand } = require("../commands/ResolveUndoCommand");
 const {
   SubmitDrawSequenceCommand,
 } = require("../commands/SubmitDrawSequenceCommand");
+const {
+  ResolveChronicleCommand,
+} = require("../commands/ResolveChronicleCommand");
+const {
+  CHRONICLE_MESSAGES,
+} = require("../../../shared/effectChronicleConstants");
 
 class CommandService {
   /**
@@ -59,8 +65,10 @@ class CommandService {
     room.dispatcher.register("requestUndo", RequestUndoCommand);
     room.dispatcher.register("resolveUndo", ResolveUndoCommand);
     room.dispatcher.register("submitDrawSequence", SubmitDrawSequenceCommand);
+    room.dispatcher.register(CHRONICLE_MESSAGES.RESOLVE_ITEM, ResolveChronicleCommand);
   }
 }
+
 
 
 module.exports = CommandService;

@@ -62,12 +62,19 @@ export class PhaseManager {
       state.drawStep !== DRAW_STEPS.NONE &&
       state.drawStep !== DRAW_STEPS.COMPLETED;
 
-    if (isDrawStepActive) {
+    const isChronicleActive = Boolean(
+      state?.effectChronicle &&
+      state.effectChronicle.items &&
+      state.effectChronicle.items.length > 0
+    );
+
+    if (isDrawStepActive || isChronicleActive) {
       log(
-        `[NEXT_PHASE] Blocked nextPhase click: draw step '${state.drawStep}' is active.`,
+        `[NEXT_PHASE] Blocked nextPhase click: draw step '${state?.drawStep}' or chronicle active (${state?.effectChronicle?.items?.length} items).`,
       );
       return;
     }
+
 
     log(
       "[NEXT_PHASE] 'nextPhaseButtonClicked' event received. Sending 'nextPhase' message to server.",
@@ -92,17 +99,22 @@ export class PhaseManager {
       this.ui.startPhaseChangeAnimation(newLayout);
     }
 
-    // --- Logik für den "Next Phase"-Button ---
+    this.updateNextPhaseButtonState(state);
+  }
+
+  /**
+   * Updates Next Phase button interactivity, hover, and disabled visual state.
+   */
+  public updateNextPhaseButtonState(state: RoomState): void {
     const nextPhaseButton = this.elementManager.staticElements.nextPhaseButton;
+    if (!nextPhaseButton) return;
+
     const arrow = nextPhaseButton.getByName(
       "arrow",
     ) as Phaser.GameObjects.Image;
 
-    // ✨ FIX: Visuellen Status (Hover/Glow) bei jedem Update zurücksetzen.
-    // Verhindert, dass der Button "gehighlighted" bleibt, wenn er neu erscheint.
     const baseScale = nextPhaseButton.getData("baseScale") || 1.0;
     nextPhaseButton.setScale(baseScale);
-    // Wir greifen hier noch auf 'arrow' zu, um Tints zu löschen, was okay ist für State-Resets.
     if (arrow) {
       arrow.clearTint();
     }
@@ -120,22 +132,27 @@ export class PhaseManager {
       state.drawStep !== DRAW_STEPS.NONE &&
       state.drawStep !== DRAW_STEPS.COMPLETED;
 
-    if (isDrawStepActive) {
+    const isChronicleActive = Boolean(
+      state?.effectChronicle &&
+      state.effectChronicle.items &&
+      state.effectChronicle.items.length > 0
+    );
+
+    if (isDrawStepActive || isChronicleActive) {
       isButtonEnabled = false;
     }
 
     nextPhaseButton.setVisible(isActive);
 
     if (isButtonEnabled) {
-      // Aktiv: Interaktivität einschalten, volle Deckkraft
       nextPhaseButton.setInteractive();
       nextPhaseButton.setAlpha(1.0);
     } else {
-      // Inaktiv: Interaktivität ausschalten (kein Hover), ausgegraut
       nextPhaseButton.disableInteractive();
       nextPhaseButton.setAlpha(0.5);
     }
   }
+
 
   /** Räumt den Event-Listener auf. */
   public destroy() {

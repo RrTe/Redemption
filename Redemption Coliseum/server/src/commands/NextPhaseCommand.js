@@ -18,6 +18,14 @@ class NextPhaseCommand extends BaseCommand {
       return;
     }
 
+    if (this.state.effectChronicle && this.state.effectChronicle.items.length > 0) {
+      logger.warn(
+        `[NextPhaseCommand] Blocked nextPhase: ${this.state.effectChronicle.items.length} items still pending in Effect Chronicle.`
+      );
+      return;
+    }
+
+
     let result = null;
     try {
       // ✨ NEU: Vor dem Phasenwechsel bereinigen wir ALLE Aktionen auf dem gesamten Board.

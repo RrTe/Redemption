@@ -2,6 +2,7 @@
 const { Schema, type, ArraySchema, MapSchema } = require("@colyseus/schema");
 const { Card } = require("./Card");
 const { PlayerState } = require("./PlayerState");
+const { EffectChronicleState } = require("./EffectChronicleState");
 
 /**
  * RoomState enthält alle Spieler + globalen Zonen.
@@ -34,6 +35,9 @@ class RoomState extends Schema {
     this.drawStep = "none";
     this.priorityPlayerId = "";
     this.activeSequenceCardIds = new ArraySchema();
+
+    // ✨ NEU: Effect Chronicle resolution queue
+    this.effectChronicle = new EffectChronicleState();
   }
 }
 
@@ -64,5 +68,9 @@ type("string")(RoomState.prototype, "drawStep");
 type("string")(RoomState.prototype, "priorityPlayerId");
 type(["string"])(RoomState.prototype, "activeSequenceCardIds");
 
+// ✨ NEU: Effect Chronicle resolution queue
+type(EffectChronicleState)(RoomState.prototype, "effectChronicle");
+
 module.exports = { RoomState };
+
 
