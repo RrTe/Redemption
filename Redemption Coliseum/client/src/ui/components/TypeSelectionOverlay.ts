@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { type CardData } from "../../../../shared/card";
 import { ViewportManager } from "../managers/ViewportManager";
 import { AnimationManager } from "../managers/AnimationManager";
+import { PULSE_CONFIG } from "../config/visualConfig";
 
 export interface TypeSelectionOption {
   id: string; // The type or alignment ID (e.g. "GE", "GoodDom", "Hero", "Evil Character")
@@ -119,7 +120,7 @@ export class TypeSelectionOverlay {
       iconContainer.setInteractive({ useHandCursor: true });
 
       // Start Pulse Animation for iconContainer
-      let pulseControl = this.animationManager.startPulseAnimation(this.scene, iconContainer, 0.1, 0.6);
+      let pulseControl = this.animationManager.startPulseAnimation(this.scene, iconContainer, PULSE_CONFIG.TYPE_SELECTION.AMPLITUDE, PULSE_CONFIG.TYPE_SELECTION.CYCLES_PER_SECOND);
       this.pulseControls.push(pulseControl);
 
       iconContainer.on("pointerover", () => {
@@ -154,7 +155,7 @@ export class TypeSelectionOverlay {
           ease: "Power2",
           onComplete: () => {
              // Restart pulse animation after zoom out
-             pulseControl = this.animationManager.startPulseAnimation(this.scene, iconContainer, 0.1, 0.6);
+             pulseControl = this.animationManager.startPulseAnimation(this.scene, iconContainer, PULSE_CONFIG.TYPE_SELECTION.AMPLITUDE, PULSE_CONFIG.TYPE_SELECTION.CYCLES_PER_SECOND);
              this.pulseControls.push(pulseControl);
           }
         });

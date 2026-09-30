@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { CardUI } from "../CardUI";
 import { SettingsManager } from "../../managers/SettingsManager";
+import { PULSE_CONFIG } from "../config/visualConfig";
 
 export class CardHoverEffect {
   private scene: Phaser.Scene;
@@ -130,8 +131,8 @@ export class CardHoverEffect {
   public startPulseAnimation(
     scene: Phaser.Scene,
     targets: Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[],
-    pulseAmplitude: number = 0.1,
-    pulsePerSecond: number = 0.6,
+    pulseAmplitude: number = PULSE_CONFIG.STAR.AMPLITUDE,
+    pulsePerSecond: number = PULSE_CONFIG.STAR.CYCLES_PER_SECOND,
   ): { stop: () => void } {
     const updatePulse = (time: number, delta: number) => {
       const pulse = 1 + pulseAmplitude * Math.sin((time * pulsePerSecond * 2 * Math.PI) / 1000);

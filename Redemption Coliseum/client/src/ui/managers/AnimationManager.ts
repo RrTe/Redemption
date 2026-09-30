@@ -4,6 +4,7 @@ import { SettingsManager } from "../../managers/SettingsManager";
 import { CardDrawEffect } from "../effects/CardDrawEffect";
 import { CardPlayEffect } from "../effects/CardPlayEffect";
 import { CardHoverEffect } from "../effects/CardHoverEffect";
+import { PULSE_CONFIG } from "../config/visualConfig";
 
 interface ActiveAnimationRecord {
   tween: Phaser.Tweens.Tween | null;
@@ -159,8 +160,8 @@ export class AnimationManager {
   public startPulseAnimation(
     scene: Phaser.Scene,
     targets: Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[],
-    pulseAmplitude: number = 0.1,
-    pulsePerSecond: number = 0.6,
+    pulseAmplitude: number = PULSE_CONFIG.STAR.AMPLITUDE,
+    pulsePerSecond: number = PULSE_CONFIG.STAR.CYCLES_PER_SECOND,
   ): { stop: () => void } {
     return this.cardHoverEffect.startPulseAnimation(scene, targets, pulseAmplitude, pulsePerSecond);
   }

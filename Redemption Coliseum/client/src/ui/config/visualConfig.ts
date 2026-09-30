@@ -23,6 +23,11 @@ export const ZONE_HIGHLIGHT_STYLE = {
   ALPHA: 0.3,
   CORNER_RADIUS: 15,
   HOVER_DELAY_MS: 500,
+  TEXT_PULSE_DURATION_MS: 1000,
+  TEXT_SCALE_MIN: 0.95,
+  TEXT_SCALE_MAX: 1.05,
+  TEXT_ALPHA_MIN: 0.8,
+  TEXT_ALPHA_MAX: 1.0,
 };
 
 export const CARD_PREVIEW_CONFIG = {
@@ -39,7 +44,7 @@ export const EFFECT_CHRONICLE_CONFIG = {
   ASSET_KEY: "chronicle_icon",
   ASSET_PATH: "assets/ui/icons/chronicle_icon_compressed.png",
   ASPECT_RATIO: 393 / 512, // ~0.7676 rectangular card-like ratio
-  PULSE_DURATION_MS: 1750,
+  PULSE_DURATION_MS: 2000,
   FLIGHT_DURATION_MS: 500,
   SHRINK_MIN_SCALE: 0.50,
   OFFSET_X_FROM_DECK: 15, // Distance to the left of the deck pile
@@ -50,5 +55,17 @@ export const EFFECT_CHRONICLE_CONFIG = {
   BUMP_SCALE_FACTOR: 1.25, // Stärke des Bumps beim Karteneinschlag (+25%)
   BUMP_DURATION_MS: 75,   // Dauer des Bumps in ms
 };
+
+export const PULSE_CONFIG = {
+  STAR: {
+    AMPLITUDE: 0.1,
+    CYCLES_PER_SECOND: 0.6,
+  },
+  TYPE_SELECTION: {
+    AMPLITUDE: 0.1,
+    CYCLES_PER_SECOND: 0.6,
+  },
+};
+
 
 

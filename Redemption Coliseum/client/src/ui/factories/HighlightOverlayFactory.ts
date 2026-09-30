@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { ZONE_HIGHLIGHT_STYLE } from "../config/visualConfig";
 
 /**
  * Creates and animates the global highlight overlay for active cards/phases.
@@ -17,9 +18,9 @@ export function createHighlightOverlay(scene: Phaser.Scene) {
 
   scene.tweens.add({
     targets: text,
-    alpha: { from: 0.8, to: 1.0 },
-    scale: { from: 0.95, to: 1.05 },
-    duration: 1000,
+    alpha: { from: ZONE_HIGHLIGHT_STYLE.TEXT_ALPHA_MIN, to: ZONE_HIGHLIGHT_STYLE.TEXT_ALPHA_MAX },
+    scale: { from: ZONE_HIGHLIGHT_STYLE.TEXT_SCALE_MIN, to: ZONE_HIGHLIGHT_STYLE.TEXT_SCALE_MAX },
+    duration: ZONE_HIGHLIGHT_STYLE.TEXT_PULSE_DURATION_MS,
     yoyo: true,
     repeat: -1,
     ease: "Sine.easeInOut",
