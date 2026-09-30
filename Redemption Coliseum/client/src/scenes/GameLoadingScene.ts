@@ -476,6 +476,14 @@ export class GameLoadingScene extends BaseLoadingScene {
       "ambience_place",
       "assets/sounds/ambience/wind-western-64661.mp3",
     );
+    this.load.audio(
+      "chronicle_whoosh",
+      "assets/sounds/effects/u_03zpxbws1q-transition-whoosh-523413_cut.mp3",
+    );
+    this.load.audio(
+      "chronicle_writing",
+      "assets/sounds/effects/kuzu420-writing-on-paper-263222_cut.mp3",
+    );
 
     this.load.bitmapFont(
       "wazoo",

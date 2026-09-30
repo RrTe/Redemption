@@ -121,6 +121,8 @@ export class EffectChronicleEffect {
       new Phaser.Math.Vector2(targetX, targetY)
     );
 
+    this._playFlightSound();
+
     const tweenObj = { t: 0 };
     this.scene.tweens.add({
       targets: tweenObj,
@@ -137,7 +139,6 @@ export class EffectChronicleEffect {
       onComplete: () => {
         tempSprite.destroy();
         this._playImpactPulse();
-        this._playArrivalSound();
         onComplete?.();
       },
     });
@@ -204,10 +205,14 @@ export class EffectChronicleEffect {
     });
   }
 
-  private _playArrivalSound(): void {
-    // Sound hook ready for sound asset
+  private _lastFlightSoundTime = 0;
+
+  private _playFlightSound(): void {
+    const now = Date.now();
+    if (now - this._lastFlightSoundTime < 200) return;
+    this._lastFlightSoundTime = now;
     if (this.scene.game?.events) {
-      this.scene.game.events.emit("playSound", "CHRONICLE_IMPACT");
+      this.scene.game.events.emit("playSound", "CHRONICLE_CARD_FLIGHT");
     }
   }
 
