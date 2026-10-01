@@ -46,14 +46,16 @@ export const EFFECT_CHRONICLE_CONFIG = {
   ASPECT_RATIO: 393 / 512, // ~0.7676 rectangular card-like ratio
   PULSE_DURATION_MS: 2000,
   FLIGHT_DURATION_MS: 500,
+  CARD_FLIGHT_STAGGER_MS: 80, // Stagger delay between multiple cards flying into chronicle
   SHRINK_MIN_SCALE: 0.50,
   OFFSET_X_FROM_DECK: 15, // Distance to the left of the deck pile
   RESOLVING_DELAY_MS: 250, // Delay for visual resolution feedback
   BADGE_COLOR: 0xffffff,
   BADGE_BG: 0x0f172a,
   BADGE_BORDER: 0xd4af37,
-  BUMP_SCALE_FACTOR: 1.25, // Stärke des Bumps beim Karteneinschlag (+25%)
-  BUMP_DURATION_MS: 75,   // Dauer des Bumps in ms
+  BUMP_SCALE_FACTOR: 1.30, // Stärke des Bumps beim Karteneinschlag (+30%)
+  BUMP_DURATION_MS: 120,  // Dauer des Bumps in ms
+  FLASH_COLOR: 0xfff4cc,  // Goldener Aufblitz-Farbton beim Einschlag
 };
 
 export const PULSE_CONFIG = {

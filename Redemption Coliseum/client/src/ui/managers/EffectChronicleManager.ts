@@ -3,10 +3,12 @@ import { type Room } from "colyseus.js";
 import { type RoomState, type ChronicleItemData } from "../../../../shared/types";
 
 import { type GameLayout } from "../layout";
+import { type CardRenderer } from "../renderers/CardRenderer";
 import { EffectChronicleEffect } from "../effects/EffectChronicleEffect";
 import { EffectChronicleFlyoutUI } from "../overlays/EffectChronicleFlyoutUI";
 import { EffectChronicleHandler } from "../handlers/EffectChronicleHandler";
 import { SettingsManager } from "../../managers/SettingsManager";
+import { EFFECT_CHRONICLE_CONFIG } from "../config/visualConfig";
 import { log } from "../../utils/logger";
 
 /**
@@ -21,18 +23,22 @@ export class EffectChronicleManager {
   private flyout: EffectChronicleFlyoutUI;
   private handler: EffectChronicleHandler;
   private settingsManager: SettingsManager;
+  private cardRenderer?: CardRenderer;
   private mySessionId: string;
   private currentLayout: GameLayout | null = null;
   private onPhaseLockCallback: ((locked: boolean) => void) | null = null;
+  private knownItemIds = new Set<string>();
 
   constructor(
     room: Room<RoomState>,
     scene: Phaser.Scene,
-    settingsManager: SettingsManager
+    settingsManager: SettingsManager,
+    cardRenderer?: CardRenderer
   ) {
     this.room = room;
     this.scene = scene;
     this.settingsManager = settingsManager;
+    this.cardRenderer = cardRenderer;
     this.mySessionId = room.sessionId;
 
     this.effect = new EffectChronicleEffect(scene);
@@ -116,14 +122,12 @@ export class EffectChronicleManager {
     }
   }
 
-
   private _initColyseusListeners(): void {
     this.room.onStateChange(() => {
       this._updateIconPosition();
       this._syncChronicleState();
     });
   }
-
 
   private _syncChronicleState(): void {
     const chronicle = this.room.state?.effectChronicle;
@@ -147,14 +151,34 @@ export class EffectChronicleManager {
     const hasPriority = chronicle.priorityPlayerId === this.mySessionId;
     const isSupport = this.settingsManager.isInGameSupportEnabled();
 
-    // 1. Update visual icon & badge count
+    // 1. Detect newly added items and animate opponent entries
+    let opponentStaggerIndex = 0;
+    chronicle.items.forEach((item) => {
+      if (!this.knownItemIds.has(item.id)) {
+        this.knownItemIds.add(item.id);
+        if (item.controllerId && item.controllerId !== this.mySessionId) {
+          this._animateOpponentItemFlight(item, opponentStaggerIndex * EFFECT_CHRONICLE_CONFIG.CARD_FLIGHT_STAGGER_MS);
+          opponentStaggerIndex++;
+        }
+      }
+    });
+
+    // Clean up known items no longer in chronicle
+    const activeIds = new Set(chronicle.items.map((it) => it.id));
+    for (const id of this.knownItemIds) {
+      if (!activeIds.has(id)) {
+        this.knownItemIds.delete(id);
+      }
+    }
+
+    // 2. Update visual icon & badge count
     if (isSupport) {
       this.effect.setCount(items.length);
     } else {
       this.effect.setCount(0); // Invisible in tournament mode
     }
 
-    // 2. Update flyout drawer
+    // 3. Update flyout drawer
     if (isSupport) {
       this.flyout.updateItems(items, hasPriority);
       if (items.length === 0 && this.flyout.isOpen()) {
@@ -166,9 +190,42 @@ export class EffectChronicleManager {
       }
     }
 
-    // 3. Update next phase button lock
+    // 4. Update next phase button lock
     this.onPhaseLockCallback?.(items.length > 0);
     log("EffectChronicleManager", `Synced ${items.length} items (hasPriority=${hasPriority}, isSupport=${isSupport})`);
+  }
+
+  private _animateOpponentItemFlight(item: ChronicleItemData, delayMs = 0): void {
+    const trigger = () => {
+      let x = 0;
+      let y = 0;
+      let width = this.currentLayout?.cardWidth ?? 70;
+      let height = this.currentLayout?.cardHeight ?? 100;
+      let rotation = 0;
+      let texture = "cardback";
+
+      const c = this.cardRenderer?.getCardUI(item.cardId);
+      if (c) {
+        const matrix = c.getWorldTransformMatrix();
+        x = matrix.tx;
+        y = matrix.ty;
+        width = (c.displayWidth && c.displayWidth > 0) ? c.displayWidth : (c.width * (c.scaleX || 1));
+        height = (c.displayHeight && c.displayHeight > 0) ? c.displayHeight : (c.height * (c.scaleY || 1));
+        rotation = c.rotation || 0;
+        texture = c.cardData.isFaceDown || !c.cardData.ImageFile ? "cardback" : `card-${c.cardData.ImageFile}`;
+      } else if (this.currentLayout) {
+        x = this.currentLayout.opponentHand.centerX;
+        y = this.currentLayout.opponentHand.centerY;
+      }
+
+      this.playCardFlight(x, y, texture, width, height, rotation);
+    };
+
+    if (delayMs > 0) {
+      this.scene.time.delayedCall(delayMs, trigger);
+    } else {
+      trigger();
+    }
   }
 
   private _updateIconPosition(): void {

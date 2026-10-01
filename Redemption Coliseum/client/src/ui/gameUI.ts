@@ -265,6 +265,7 @@ export class GameUI {
       this.room,
       this.scene,
       this.settingsManager,
+      this.cardRenderer,
     );
     this.effectChronicleManager.setOnPhaseLockCallback(() => {
       if (this.room.state) {

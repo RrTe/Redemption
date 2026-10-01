@@ -16,28 +16,20 @@ export class EffectChronicleEffect {
   private pulseTween: Phaser.Tweens.Tween | null = null;
   private onIconClickCallback: (() => void) | null = null;
   private isVisible: boolean = false;
+  private baseScale = 1;
+  private bumpTween: Phaser.Tweens.Tween | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.container = this.scene.add.container(0, 0);
-    this.container.setDepth(150);
-    this.container.setAlpha(0);
+    this.container = this.scene.add.container(0, 0).setDepth(150).setAlpha(0);
 
-    // Chronicle Icon Sprite
-    this.iconSprite = this.scene.add.sprite(0, 0, EFFECT_CHRONICLE_CONFIG.ASSET_KEY);
-    this.iconSprite.setInteractive({ useHandCursor: true });
-    this.iconSprite.on("pointerdown", () => {
-      this.onIconClickCallback?.();
-    });
+    this.iconSprite = this.scene.add.sprite(0, 0, EFFECT_CHRONICLE_CONFIG.ASSET_KEY).setInteractive({ useHandCursor: true });
+    this.iconSprite.on("pointerdown", () => this.onIconClickCallback?.());
 
-    // Badge Container
     this.badgeContainer = this.scene.add.container(0, 0);
     this.badgeBg = this.scene.add.graphics();
     this.badgeText = this.scene.add.text(0, 0, "0", {
-      fontSize: "14px",
-      fontStyle: "bold",
-      color: "#ffffff",
-      fontFamily: "Arial, sans-serif",
+      fontSize: "14px", fontStyle: "bold", color: "#ffffff", fontFamily: "Arial, sans-serif",
     }).setOrigin(0.5);
 
     this.badgeContainer.add([this.badgeBg, this.badgeText]);
@@ -59,31 +51,19 @@ export class EffectChronicleEffect {
   public updatePosition(deckRect: Phaser.Geom.Rectangle, isOpponent?: boolean): void {
     const targetHeight = deckRect.height * 0.85;
     const targetWidth = targetHeight * EFFECT_CHRONICLE_CONFIG.ASPECT_RATIO;
-    const scale = targetHeight / 512; // Base texture height is 512px
+    this.baseScale = targetHeight / 512;
+    this.iconSprite.setScale(this.baseScale);
 
-    this.iconSprite.setScale(scale);
-
-    const screenWidth = this.scene.scale?.width ?? 1000;
-    const isOpponentSide = isOpponent ?? (deckRect.centerX < screenWidth / 2);
-
+    const isOpponentSide = isOpponent ?? (deckRect.centerX < (this.scene.scale?.width ?? 1000) / 2);
     const x = isOpponentSide
       ? deckRect.right + (targetWidth / 2) + EFFECT_CHRONICLE_CONFIG.OFFSET_X_FROM_DECK
       : deckRect.left - (targetWidth / 2) - EFFECT_CHRONICLE_CONFIG.OFFSET_X_FROM_DECK;
-    const y = deckRect.centerY;
 
-    this.container.setPosition(x, y);
-
-    // Position badge at top-right corner of the icon
-    const badgeX = (targetWidth / 2) - 4;
-    const badgeY = -(targetHeight / 2) + 4;
-    this.badgeContainer.setPosition(badgeX, badgeY);
-
+    this.container.setPosition(x, deckRect.centerY);
+    this.badgeContainer.setPosition((targetWidth / 2) - 4, -(targetHeight / 2) + 4);
     this._drawBadge(14);
   }
 
-  /**
-   * Updates item count badge and visibility.
-   */
   public setCount(count: number): void {
     if (count > 0) {
       this.badgeText.setText(String(count));
@@ -93,9 +73,6 @@ export class EffectChronicleEffect {
     }
   }
 
-  /**
-   * Animates a card sprite flying along a quadratic bezier curve into the Chronicle icon.
-   */
   public playCardFlightAnimation(
     startX: number,
     startY: number,
@@ -105,22 +82,13 @@ export class EffectChronicleEffect {
     rotation = 0,
     onComplete?: () => void
   ): void {
-    const tempSprite = this.scene.add.sprite(startX, startY, cardTexture);
-    tempSprite.setDepth(200);
-    tempSprite.setRotation(rotation);
+    this._ensureVisible();
+    const tempSprite = this.scene.add.sprite(startX, startY, cardTexture).setDepth(200).setRotation(rotation);
+    if (width && height && width > 0 && height > 0) tempSprite.setDisplaySize(width, height);
 
-    if (width && height && width > 0 && height > 0) {
-      tempSprite.setDisplaySize(width, height);
-    }
-
-    const initialScaleX = tempSprite.scaleX;
-    const initialScaleY = tempSprite.scaleY;
-    const targetX = this.container.x;
-    const targetY = this.container.y;
-
-    // Control point for subtle arc towards board center
-    const screenWidth = this.scene.scale?.width ?? 1000;
-    const arcOffset = targetX < screenWidth / 2 ? 60 : -60;
+    const initX = tempSprite.scaleX, initY = tempSprite.scaleY;
+    const targetX = this.container.x, targetY = this.container.y;
+    const arcOffset = targetX < (this.scene.scale?.width ?? 1000) / 2 ? 60 : -60;
     const controlX = (startX + targetX) / 2 + arcOffset;
     const controlY = Math.min(startY, targetY) - 80;
 
@@ -141,8 +109,8 @@ export class EffectChronicleEffect {
       onUpdate: () => {
         const pos = path.getPoint(tweenObj.t);
         tempSprite.setPosition(pos.x, pos.y);
-        const scaleFactor = Phaser.Math.Linear(1.0, EFFECT_CHRONICLE_CONFIG.SHRINK_MIN_SCALE, tweenObj.t);
-        tempSprite.setScale(initialScaleX * scaleFactor, initialScaleY * scaleFactor);
+        const scale = Phaser.Math.Linear(1.0, EFFECT_CHRONICLE_CONFIG.SHRINK_MIN_SCALE, tweenObj.t);
+        tempSprite.setScale(initX * scale, initY * scale);
         tempSprite.setRotation(Phaser.Math.Linear(rotation, 0.1, tweenObj.t));
       },
       onComplete: () => {
@@ -153,24 +121,32 @@ export class EffectChronicleEffect {
     });
   }
 
-  /**
-   * Destroys all objects.
-   */
   public destroy(): void {
     this.pulseTween?.stop();
+    this.pulseTween = null;
+    this.bumpTween?.stop();
+    this.bumpTween = null;
     this.container.destroy();
+  }
+
+  private _ensureVisible(): void {
+    if (!this.isVisible || this.container.alpha < 1) {
+      this.isVisible = true;
+      this.scene.tweens.killTweensOf(this.container);
+      this.container.setAlpha(1);
+    }
   }
 
   private _show(): void {
     if (this.isVisible) return;
     this.isVisible = true;
-
+    this.scene.tweens.killTweensOf(this.container);
     this.scene.tweens.add({
       targets: this.container,
       alpha: 1,
       duration: 300,
       ease: "Power2",
-      onComplete: () => this._startBreathingPulse(),
+      onComplete: () => { if (!this.bumpTween) this._startBreathingPulse(); },
     });
   }
 
@@ -179,22 +155,18 @@ export class EffectChronicleEffect {
     this.isVisible = false;
     this.pulseTween?.stop();
     this.pulseTween = null;
-
-    this.scene.tweens.add({
-      targets: this.container,
-      alpha: 0,
-      duration: 300,
-      ease: "Power2",
-    });
+    this.bumpTween?.stop();
+    this.bumpTween = null;
+    this.scene.tweens.killTweensOf(this.container);
+    this.scene.tweens.add({ targets: this.container, alpha: 0, duration: 300, ease: "Power2" });
   }
 
   private _startBreathingPulse(): void {
     if (this.pulseTween || !this.isVisible) return;
-
     this.pulseTween = this.scene.tweens.add({
       targets: this.iconSprite,
-      scaleX: this.iconSprite.scaleX * 1.05,
-      scaleY: this.iconSprite.scaleY * 1.05,
+      scaleX: this.baseScale * 1.05,
+      scaleY: this.baseScale * 1.05,
       duration: EFFECT_CHRONICLE_CONFIG.PULSE_DURATION_MS / 2,
       yoyo: true,
       repeat: -1,
@@ -203,14 +175,31 @@ export class EffectChronicleEffect {
   }
 
   private _playImpactPulse(): void {
-    const baseScale = this.iconSprite.scaleX;
-    this.scene.tweens.add({
+    this._ensureVisible();
+    if (this.pulseTween) {
+      this.pulseTween.stop();
+      this.pulseTween = null;
+    }
+    if (this.bumpTween) {
+      this.bumpTween.stop();
+      this.bumpTween = null;
+    }
+    this.iconSprite.setTint(EFFECT_CHRONICLE_CONFIG.FLASH_COLOR);
+    this.iconSprite.setScale(this.baseScale * EFFECT_CHRONICLE_CONFIG.BUMP_SCALE_FACTOR);
+    this.bumpTween = this.scene.tweens.add({
       targets: this.iconSprite,
-      scaleX: baseScale * EFFECT_CHRONICLE_CONFIG.BUMP_SCALE_FACTOR,
-      scaleY: baseScale * EFFECT_CHRONICLE_CONFIG.BUMP_SCALE_FACTOR,
+      scaleX: this.baseScale,
+      scaleY: this.baseScale,
       duration: EFFECT_CHRONICLE_CONFIG.BUMP_DURATION_MS,
-      yoyo: true,
       ease: "Back.easeOut",
+      onComplete: () => {
+        this.bumpTween = null;
+        this.iconSprite.setScale(this.baseScale);
+        this.iconSprite.clearTint();
+        if (this.isVisible && !this.pulseTween) {
+          this._startBreathingPulse();
+        }
+      },
     });
   }
 
@@ -220,16 +209,11 @@ export class EffectChronicleEffect {
     const now = Date.now();
     if (now - this._lastFlightSoundTime < 200) return;
     this._lastFlightSoundTime = now;
-    if (this.scene.game?.events) {
-      this.scene.game.events.emit("playSound", "CHRONICLE_CARD_FLIGHT");
-    }
+    this.scene.game?.events?.emit("playSound", "CHRONICLE_CARD_FLIGHT");
   }
 
   private _drawBadge(radius: number): void {
-    this.badgeBg.clear();
-    this.badgeBg.fillStyle(EFFECT_CHRONICLE_CONFIG.BADGE_BG, 0.95);
-    this.badgeBg.fillCircle(0, 0, radius);
-    this.badgeBg.lineStyle(2, EFFECT_CHRONICLE_CONFIG.BADGE_BORDER, 1);
-    this.badgeBg.strokeCircle(0, 0, radius);
+    this.badgeBg.clear().fillStyle(EFFECT_CHRONICLE_CONFIG.BADGE_BG, 0.95).fillCircle(0, 0, radius);
+    this.badgeBg.lineStyle(2, EFFECT_CHRONICLE_CONFIG.BADGE_BORDER, 1).strokeCircle(0, 0, radius);
   }
 }

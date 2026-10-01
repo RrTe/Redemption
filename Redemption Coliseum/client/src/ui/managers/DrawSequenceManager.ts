@@ -1,4 +1,3 @@
-// client/src/ui/managers/DrawSequenceManager.ts
 import Phaser from "phaser";
 import { type TypedRoom } from "../gameUI";
 import { type CardRenderer } from "../renderers/CardRenderer";
@@ -8,6 +7,7 @@ import { DRAW_STEPS } from "../../../../shared/phases";
 import { ZONES } from "../../../../shared/zones";
 import { ActionType } from "../../../../shared/actions";
 import { type SettingsManager } from "../../managers/SettingsManager";
+import { EFFECT_CHRONICLE_CONFIG } from "../config/visualConfig";
 
 export class DrawSequenceManager {
   private scene: Phaser.Scene;
@@ -169,16 +169,19 @@ export class DrawSequenceManager {
   private onConfirmClicked() {
     if (this.selectedCardIds.length === 0) return;
     const showHelp = this.settingsManager?.isInGameSupportEnabled() ?? true;
-    this.selectedCardIds.forEach(id => {
+    this.selectedCardIds.forEach((id, index) => {
       const c = this.cardRenderer.getCardUI(id);
       if (c) {
         const matrix = c.getWorldTransformMatrix();
         const width = (c.displayWidth && c.displayWidth > 0) ? c.displayWidth : (c.width * (c.scaleX || 1));
         const height = (c.displayHeight && c.displayHeight > 0) ? c.displayHeight : (c.height * (c.scaleY || 1));
         const tex = c.cardData.isFaceDown || !c.cardData.ImageFile ? "cardback" : `card-${c.cardData.ImageFile}`;
-        this.scene.events.emit("playChronicleFlight", {
+        const delay = index * EFFECT_CHRONICLE_CONFIG.CARD_FLIGHT_STAGGER_MS;
+        const emitFlight = () => this.scene.events.emit("playChronicleFlight", {
           x: matrix.tx, y: matrix.ty, width, height, rotation: c.rotation || 0, texture: tex,
         });
+        if (delay > 0) this.scene.time.delayedCall(delay, emitFlight);
+        else emitFlight();
       }
     });
     this.room.send("submitDrawSequence", {
