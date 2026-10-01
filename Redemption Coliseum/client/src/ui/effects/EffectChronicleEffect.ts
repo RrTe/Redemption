@@ -52,16 +52,23 @@ export class EffectChronicleEffect {
   }
 
   /**
-   * Positions the Chronicle icon directly to the left of the active player's deck pile.
+   * Positions the Chronicle icon beside the deck pile (mirrored towards center for opponent).
+   * @param deckRect The rectangle of the deck pile to anchor beside.
+   * @param isOpponent Optional explicit flag; defaults to checking if deck is on the left half of the screen.
    */
-  public updatePosition(deckRect: Phaser.Geom.Rectangle): void {
+  public updatePosition(deckRect: Phaser.Geom.Rectangle, isOpponent?: boolean): void {
     const targetHeight = deckRect.height * 0.85;
     const targetWidth = targetHeight * EFFECT_CHRONICLE_CONFIG.ASPECT_RATIO;
     const scale = targetHeight / 512; // Base texture height is 512px
 
     this.iconSprite.setScale(scale);
 
-    const x = deckRect.x - (targetWidth / 2) - EFFECT_CHRONICLE_CONFIG.OFFSET_X_FROM_DECK;
+    const screenWidth = this.scene.scale?.width ?? 1000;
+    const isOpponentSide = isOpponent ?? (deckRect.centerX < screenWidth / 2);
+
+    const x = isOpponentSide
+      ? deckRect.right + (targetWidth / 2) + EFFECT_CHRONICLE_CONFIG.OFFSET_X_FROM_DECK
+      : deckRect.left - (targetWidth / 2) - EFFECT_CHRONICLE_CONFIG.OFFSET_X_FROM_DECK;
     const y = deckRect.centerY;
 
     this.container.setPosition(x, y);
@@ -112,7 +119,9 @@ export class EffectChronicleEffect {
     const targetY = this.container.y;
 
     // Control point for subtle arc towards board center
-    const controlX = (startX + targetX) / 2 - 60;
+    const screenWidth = this.scene.scale?.width ?? 1000;
+    const arcOffset = targetX < screenWidth / 2 ? 60 : -60;
+    const controlX = (startX + targetX) / 2 + arcOffset;
     const controlY = Math.min(startY, targetY) - 80;
 
     const path = new Phaser.Curves.QuadraticBezier(

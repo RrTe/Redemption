@@ -182,7 +182,7 @@ export class EffectChronicleManager {
       : this.currentLayout.playerDeckPile;
 
     if (targetDeckRect) {
-      this.effect.updatePosition(targetDeckRect);
+      this.effect.updatePosition(targetDeckRect, Boolean(isOpponentPriority));
     }
   }
 }
