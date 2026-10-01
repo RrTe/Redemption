@@ -6,13 +6,63 @@ const {
   MANAGED_TERRITORY_TYPES,
   MAX_HAND_SIZE,
 } = require("../../../shared/card-constants");
-const { ArraySchema } = require("@colyseus/schema");
+const { ArraySchema, $changes } = require("@colyseus/schema");
 const { PlayerState } = require("../state/PlayerState");
 const { generateCardId } = require("../../../shared/utils");
 const { ActionType } = require("../../../shared/actions");
 const { CardAction } = require("../../../shared/actionSchema");
 const { ACTION_DESCRIPTIONS } = require("../../../shared/actionStrings");
 const util = require("util");
+
+const CHANGES_SYMBOL = $changes || "~changes";
+
+/**
+ * Synchronizes parentIndex across all elements in an ArraySchema after
+ * an unshift, shift, or splice operation.
+ *
+ * @param {ArraySchema} zoneArr The zone collection.
+ */
+function _syncParentIndexes(zoneArr) {
+  if (!zoneArr || !zoneArr[CHANGES_SYMBOL]) return;
+  const changeTree = zoneArr[CHANGES_SYMBOL];
+  const root = changeTree.root;
+  for (let i = 0; i < zoneArr.length; i++) {
+    const item = zoneArr[i];
+    if (item && item[CHANGES_SYMBOL]) {
+      const itemChanges = item[CHANGES_SYMBOL];
+      if (itemChanges.hasParent && itemChanges.hasParent((p) => p && p[CHANGES_SYMBOL] === changeTree)) {
+        itemChanges.addParent(zoneArr, i);
+      } else if (itemChanges.setParent) {
+        itemChanges.setParent(zoneArr, root, i);
+      }
+    }
+  }
+}
+
+/**
+ * Unshifts a card to the beginning of a zone (e.g. top of DECK), fixing the
+ * @colyseus/schema ArraySchema bug where unshift does not attach the instance
+ * to the parent or root ChangeTree.
+ *
+ * @param {ArraySchema} zoneArr The target zone ArraySchema.
+ * @param {Card} card The card to unshift.
+ */
+function _unshiftToZone(zoneArr, card) {
+  const changeTree = zoneArr[CHANGES_SYMBOL];
+  zoneArr.unshift(card);
+  if (changeTree && card[CHANGES_SYMBOL]) {
+    card[CHANGES_SYMBOL].setParent(zoneArr, changeTree.root, 0);
+  }
+  _syncParentIndexes(zoneArr);
+  if (changeTree?.root) {
+    if (changeTree.filteredChanges !== undefined) {
+      changeTree.root.enqueueChangeTree(changeTree, "filteredChanges");
+    } else {
+      changeTree.root.enqueueChangeTree(changeTree, "changes");
+    }
+  }
+}
+
 
 /**
  * Helper function for human-readable zone names in the log.
@@ -306,6 +356,8 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
     }
   }
 
+  _syncParentIndexes(deck);
+
   return { validCards, divertedCards };
 }
 
@@ -433,6 +485,8 @@ function _moveCardById(
     `[MOVE_BY_ID] SPLICING: Card '${cardId}' at index ${cardIndex} from '${effectiveFromZone}'. Array length BEFORE: ${actualFromArr.length}`,
   );
   const [splicedCard] = actualFromArr.splice(cardIndex, 1);
+  _syncParentIndexes(actualFromArr);
+
   // ✨ CLONE FIX: Colyseus kann Race Conditions erzeugen, wenn dieselbe Referenz in ein 
   // anderes Array verschoben wird (onAdd feuert vor Property-Sync). Wir klonen die Karte.
   const movedCard = splicedCard.clone();
@@ -468,7 +522,7 @@ function _moveCardById(
     toArr.push(movedCard);
   } else if (to === ZONES.DECK) {
     logger.debug(`[MOVE_BY_ID] UNSHIFTING to top of ${to}.`);
-    toArr.unshift(movedCard);
+    _unshiftToZone(toArr, movedCard);
   } else {
     logger.debug(`[MOVE_BY_ID] PUSHING to ${to}. New length: ${toArr.length + 1}`);
     toArr.push(movedCard);
