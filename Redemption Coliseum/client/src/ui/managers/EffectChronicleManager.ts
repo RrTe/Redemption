@@ -145,6 +145,7 @@ export class EffectChronicleManager {
         status: item.status as any,
         order: item.order || index + 1,
         abilityId: item.abilityId,
+        isOptional: (item as any).isOptional ?? false,
       });
     });
 

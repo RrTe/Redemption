@@ -39,6 +39,7 @@ class EffectChronicleService {
           status: CHRONICLE_STATUS.PENDING,
           order: chronicle.items.length + 1,
           abilityId: card.abilityId || "",
+          isOptional: Boolean(card.isOptional || options.isOptional || false),
         });
         chronicle.items.push(item);
       });

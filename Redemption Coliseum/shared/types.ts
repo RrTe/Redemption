@@ -62,6 +62,7 @@ export interface ChronicleItemData {
   status: ChronicleItemStatus;
   order: number;
   abilityId?: string;
+  isOptional?: boolean;
 }
 
 export interface EffectChronicleStateData {

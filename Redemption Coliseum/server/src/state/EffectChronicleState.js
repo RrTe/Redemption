@@ -17,6 +17,7 @@ class ChronicleItem extends Schema {
     this.status = options.status || CHRONICLE_STATUS.PENDING;
     this.order = typeof options.order === "number" ? options.order : 1;
     this.abilityId = options.abilityId || "";
+    this.isOptional = Boolean(options.isOptional || false);
   }
 }
 
@@ -30,6 +31,7 @@ defineTypes(ChronicleItem, {
   status: "string",
   order: "number",
   abilityId: "string",
+  isOptional: "boolean",
 });
 
 /**

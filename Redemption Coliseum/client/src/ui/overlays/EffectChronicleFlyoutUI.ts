@@ -74,7 +74,7 @@ export class EffectChronicleFlyoutUI {
       this.listElement?.appendChild(row);
     });
 
-    this._renderFooter(hasPriority, items.length > 0, items[0]?.id);
+    this._renderFooter(hasPriority, items.length > 0, items[0]?.id, items[0]?.isOptional ?? false);
   }
 
   private _createItemRow(item: ChronicleItemData, isActive: boolean): HTMLDivElement {
@@ -120,7 +120,12 @@ export class EffectChronicleFlyoutUI {
     return row;
   }
 
-  private _renderFooter(hasPriority: boolean, hasItems: boolean, activeItemId?: string): void {
+  private _renderFooter(
+    hasPriority: boolean,
+    hasItems: boolean,
+    activeItemId?: string,
+    isOptional: boolean = false
+  ): void {
     if (!this.footerElement) return;
     this.footerElement.innerHTML = "";
 
@@ -143,14 +148,22 @@ export class EffectChronicleFlyoutUI {
     execBtn.onclick = () => this.onExecuteCallback?.(activeItemId);
 
     const passBtn = document.createElement("button");
-    passBtn.style.cssText = "flex:1;padding:8px 8px;background:#334155;color:#e2e8f0;border:none;border-radius:4px;cursor:pointer;";
+    const passCursor = isOptional ? "pointer" : "not-allowed";
+    const passOpacity = isOptional ? "1" : "0.35";
+    passBtn.style.cssText = `flex:1;padding:8px 8px;background:#334155;color:#e2e8f0;border:none;border-radius:4px;cursor:${passCursor};opacity:${passOpacity};`;
     passBtn.textContent = "Pass";
-    passBtn.onclick = () => this.onPassCallback?.(activeItemId);
+    passBtn.disabled = !isOptional;
+    passBtn.onclick = () => {
+      if (isOptional) this.onPassCallback?.(activeItemId);
+    };
 
     const passAllBtn = document.createElement("button");
-    passAllBtn.style.cssText = "flex:1;padding:8px 6px;background:#1e293b;border:1px solid #475569;color:#94a3b8;border-radius:4px;cursor:pointer;font-size:11px;";
+    passAllBtn.style.cssText = `flex:1;padding:8px 6px;background:#1e293b;border:1px solid #475569;color:#94a3b8;border-radius:4px;cursor:${passCursor};font-size:11px;opacity:${passOpacity};`;
     passAllBtn.textContent = "Pass All";
-    passAllBtn.onclick = () => this.onPassAllCallback?.();
+    passAllBtn.disabled = !isOptional;
+    passAllBtn.onclick = () => {
+      if (isOptional) this.onPassAllCallback?.();
+    };
 
     btnRow.appendChild(execBtn);
     btnRow.appendChild(passBtn);
