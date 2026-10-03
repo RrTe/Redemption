@@ -172,12 +172,8 @@ export class EffectChronicleManager {
       }
     }
 
-    // 2. Update visual icon & badge count
-    if (isSupport) {
-      this.effect.setCount(items.length);
-    } else {
-      this.effect.setCount(0); // Invisible in tournament mode
-    }
+    // 2. Update visual icon & badge count (visible in both modes when items > 0)
+    this.effect.setCount(items.length);
 
     // 3. Update flyout drawer
     if (isSupport) {
