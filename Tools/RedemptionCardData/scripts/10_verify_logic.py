@@ -7,6 +7,7 @@ the production-ready cards_logic.json file for the Colyseus rules engine.
 
 from __future__ import annotations
 import json
+import shutil
 import sys
 from pathlib import Path
 from typing import Dict, List, Any
@@ -16,9 +17,15 @@ sys.path.append(str(Path(__file__).resolve().parent))
 sys.path.append(str(BASE_DIR))
 
 from models.logic.card_logic import CardLogic
+from models.logic.target_selector import TargetSelector
+from models.logic.dynamic_value import DynamicValue
 from models.enums.selection_mode import SelectionMode
 from models.enums.zone import Zone
 from models.enums.action_verb import ActionVerb
+from models.enums.activation_mode import ActivationMode
+from models.enums.duration import Duration
+from models.enums.modifier_type import ModifierType
+from models.enums.condition_type import ConditionType
 from utils.card_linker import CardLinker, normalize_chained_targets
 from utils.card_helpers import get_card_name
 
@@ -28,6 +35,7 @@ with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
 
 INPUT_FILE = BASE_DIR / _config.get("card_abilities_raw", "data/card_abilities_raw.json")
 OUTPUT_LOGIC_FILE = BASE_DIR / _config.get("cards_logic_json", "data/dist/cards_logic.json")
+OUTPUT_CONSTANTS_FILE = BASE_DIR / "data" / "dist" / "ast_constants.json"
 REPORT_LOG = BASE_DIR / _config.get("logic_verification_report", "data/logic_verification_report.log")
 CARDS_EXT_FILE = BASE_DIR / _config.get("cards_extended_with_ordir_fuzzy", "data/cards_extended_with_ordir_fuzzy.json")
 
@@ -90,6 +98,23 @@ def verify_card_logic(
                 # Check contradictory duration on instant actions (e.g. discard with permanent duration)
                 if eff.action in (ActionVerb.DISCARD, ActionVerb.DRAW, ActionVerb.BANISH) and eff.duration == "permanent":
                     issues.append(f"Step {eff.step} has instant action '{eff.action}' but duration is 'permanent' in '{ability.ability_id}'")
+
+                # Sanitize and normalize DRAW semantics across rule-based and AI-generated ASTs
+                if eff.action == ActionVerb.DRAW:
+                    if eff.destination is None:
+                        eff.destination = Zone.HAND
+                    if eff.target is None:
+                        eff.target = TargetSelector(
+                            selection_mode=SelectionMode.AUTOMATIC_NEXT,
+                            zone_owner="controller",
+                            scope=Zone.DECK,
+                            count=DynamicValue.from_int(1)
+                        )
+                    else:
+                        if eff.target.scope in (Zone.BATTLE, None):
+                            eff.target.scope = Zone.DECK
+                        if eff.target.selection_mode == SelectionMode.AUTOMATIC_ALL:
+                            eff.target.selection_mode = SelectionMode.AUTOMATIC_NEXT
 
             # Check for completely empty ability clause
             if not ability.effects and not ability.costs and not ability.modifiers:
@@ -175,6 +200,17 @@ def run_logic_verifier() -> None:
     with OUTPUT_LOGIC_FILE.open("w", encoding="utf-8") as out:
         json.dump(verified_distribution_map, out, indent=2, ensure_ascii=False)
 
+    # Export canonical AST constants and enums as single source of truth
+    export_ast_constants(OUTPUT_CONSTANTS_FILE)
+
+    # Bundle complete production card databases into dist/
+    dist_dir = OUTPUT_LOGIC_FILE.parent
+    if CARDS_EXT_FILE.exists():
+        shutil.copy2(CARDS_EXT_FILE, dist_dir / "cards_extended_with_ordir_fuzzy.json")
+    raw_carddata = BASE_DIR / "data" / "carddata.json"
+    if raw_carddata.exists():
+        shutil.copy2(raw_carddata, dist_dir / "carddata.json")
+
     # Write audit log report
     with REPORT_LOG.open("w", encoding="utf-8") as rep:
         rep.write("# Redemption Ability Logic Verification Report\n")
@@ -197,6 +233,29 @@ def run_logic_verifier() -> None:
     print(f" - Total Issues Found:     {total_issues}")
     print(f" - Audit Report Written:   {REPORT_LOG}")
     print(f" - Production File Export: {OUTPUT_LOGIC_FILE}")
+    print(f" - AST Constants Export:   {OUTPUT_CONSTANTS_FILE}")
+    print(f" - Extended Cards Export:  {dist_dir / 'cards_extended_with_ordir_fuzzy.json'}")
+    print(f" - Card Data Export:       {dist_dir / 'carddata.json'}")
+
+
+def export_ast_constants(output_path: Path) -> None:
+    """Exports all official REG enums and valid AST values as a single source of truth JSON."""
+    constants = {
+        "version": "11.0.0",
+        "action_verbs": sorted([e.value for e in ActionVerb if e != ActionVerb.UNKNOWN]),
+        "activation_modes": [e.value for e in ActivationMode],
+        "durations": [e.value for e in Duration],
+        "selection_modes": [e.value for e in SelectionMode],
+        "zones": [e.value for e in Zone],
+        "modifier_types": [e.value for e in ModifierType],
+        "condition_types": [e.value for e in ConditionType],
+        "dependencies": ["always", "if_previous_successful", "if_you_do", "if_you_cannot", "otherwise"],
+        "zone_owners": ["controller", "opponent", "both", "either", "target_player"],
+        "destination_positions": ["top", "bottom", "random", "as_is"]
+    }
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(constants, f, indent=2, ensure_ascii=False)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,14 @@
 # Redemption Ability Logic Verification Report
-# Total Cards Evaluated: 1812
-# Clean Verified Cards:  1812 (100.0%)
-# Total Issues Found:    0
+# Total Cards Evaluated: 2915
+# Clean Verified Cards:  2911 (99.9%)
+# Total Issues Found:    4
 
-All evaluated cards passed semantic and structural validation without errors.
+## Issues Detected:
+- Card [331003027]:
+    * Step 1 has instant action 'ActionVerb.DISCARD' but duration is 'permanent' in 'opponent_discard_hand'
+- Card [-865345080]:
+    * Step 3 uses CHAINED_TARGET but ref_step is missing in 'ezra_release_interrupt_band'
+- Card [643974957]:
+    * Duplicate step index 2 in ability 'fortress_played_in_battle_bounce_or_banish' (shared)
+- Card [-638258126]:
+    * Step 3 uses CHAINED_TARGET but ref_step is missing in 'foolishness_of_five_virgins_ability'

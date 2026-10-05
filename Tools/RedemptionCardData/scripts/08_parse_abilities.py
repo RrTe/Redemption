@@ -298,9 +298,11 @@ def parse_deterministic_clause(
                     step=2,
                     action=ActionVerb.DRAW,
                     effect_type="instant",
+                    destination=Zone.HAND,
                     target=TargetSelector(
-                        selection_mode=SelectionMode.AUTOMATIC_ALL,
+                        selection_mode=SelectionMode.AUTOMATIC_NEXT,
                         zone_owner="controller",
+                        scope=Zone.DECK,
                         count=_build_count_value(draw_count_token)
                     ),
                     dependency="if_you_do"
@@ -323,9 +325,11 @@ def parse_deterministic_clause(
                     step=1,
                     action=ActionVerb.DRAW,
                     effect_type="instant",
+                    destination=Zone.HAND,
                     target=TargetSelector(
-                        selection_mode=SelectionMode.AUTOMATIC_ALL,
+                        selection_mode=SelectionMode.AUTOMATIC_NEXT,
                         zone_owner="controller",
+                        scope=Zone.DECK,
                         count=_build_count_value(cnt_token, limit_val)
                     )
                 )

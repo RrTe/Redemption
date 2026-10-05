@@ -32,13 +32,33 @@ REG_LEGACY_SYNONYMS: Dict[str, str] = {
     "render harmless": "negate",
 }
 
-# Regex patterns identifying player restrictions / prohibitions (ActionVerb: RESTRICT)
-RESTRICTION_PATTERNS = [
-    re.compile(r"\b(?:player|no\s+player|opponent|you)\s+(?:may\s+not|cannot|can\s+not)\s+(?!be\b)(\w+)", re.I),
-    re.compile(r"\b(?:may\s+not|cannot|can\s+not)\s+(?:draw|play|search|rescue|block|activate)\b", re.I),
-    re.compile(r"\bno\s+(\w+)\s+(?:card\s+)?may\s+be\s+played\b", re.I),
+# Head Judge Canonical Rules:
+# 1. "No [player] may [action]" -> ActionVerb.RESTRICT (player restriction)
+PLAYER_RESTRICTION_PATTERNS = [
+    re.compile(r"\b(?:player|no\s+player|opponent|opponents?|you|holder)\s+(?:may\s+not|cannot|can\s+not)\s+(?!be\b)(\w+)", re.I),
+    re.compile(r"\b(?:players?|opponents?|holder)\s+may\s+not\s+(?:make\s+a\s+)?(rescue\s+attempt|rescue|draw|play|search)\b", re.I),
+    re.compile(r"\brestrict\s+(?:players?|opponents?)\s+from\s+(\w+ing)\b", re.I),
+    re.compile(r"\brestrict\s+(?:good\s+|evil\s+)?(dominants?)\b", re.I),
     re.compile(r"\bskip\s+(?:the\s+)?(\w+)\s+phase\b", re.I),
 ]
+
+# 2. "No [card] may [action]" -> ActionVerb.PREVENT (card active prohibition)
+CARD_PREVENTION_PATTERNS = [
+    re.compile(r"\bno\s+(?!player\b)(\w+)\s+(?:may|can)\s+(?!be\b)(\w+)\b", re.I),
+    re.compile(r"\b(?:characters?|heroes?|evil\s+characters?|demons?|beasts?|cards?)\s+(?:may\s+not|cannot)\s+(?!be\b)(\w+)\b", re.I),
+    re.compile(r"\bprevents?\s+(?:heroes?|evil\s+characters?|characters?)\s+from\s+(\w+ing)\b", re.I),
+]
+
+# 3. "No [card] may be [action-ed]" -> ActionVerb.PROTECT (card passive protection)
+CARD_PROTECTION_PATTERNS = [
+    re.compile(r"\bno\s+(?!player\b)(\w+)\s+(?:may|can)\s+be\s+(\w+)\b", re.I),
+    re.compile(r"\b(?:cards?|characters?|heroes?|evil\s+characters?)\s+(?:cannot|may\s+not)\s+be\s+(\w+)\b", re.I),
+    re.compile(r"\bprotected\s+from\s+(\w+)\b", re.I),
+    re.compile(r"\bimmune\s+to\s+(\w+)\b", re.I),
+]
+
+# Combined restriction patterns for backward compatibility and general prohibition checks
+RESTRICTION_PATTERNS = PLAYER_RESTRICTION_PATTERNS + CARD_PREVENTION_PATTERNS
 
 # Regex patterns identifying battle entry prohibitions (ActionVerb: WITHDRAW per REG)
 BATTLE_ENTRY_PROHIBITIONS = [

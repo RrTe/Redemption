@@ -195,7 +195,8 @@ class TestAbilityModels(unittest.TestCase):
         # Activation mode normalization: manual_triggered -> manually_triggered
         ab_data = {
             "ability_id": "test_norm",
-            "activation_mode": "manual_triggered"
+            "activation_mode": "manual_triggered",
+            "effects": [{"step": 1, "action": "draw"}]
         }
         ab = Ability.model_validate(ab_data)
         self.assertEqual(ab.activation_mode, ActivationMode.MANUALLY_TRIGGERED)

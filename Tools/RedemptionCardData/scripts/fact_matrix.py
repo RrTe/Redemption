@@ -26,6 +26,8 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
     identifiers: Set[str] = set()
     target_types: Set[str] = set()
 
+    restrict_identifiers: Set[str] = set()
+
     for ab in side_logic.abilities:
         if not ab.is_negatable:
             modifiers.add("cannot_be_negated")
@@ -63,6 +65,8 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
                     target_types.add(str(eff.target.target_type).lower())
                 for ident in eff.target.identifiers:
                     identifiers.add(ident.lower())
+                    if act == "restrict":
+                        restrict_identifiers.add(ident.lower())
                 if eff.target.count and eff.target.count.fixed_value and isinstance(eff.target.count.fixed_value, int):
                     numbers.add(eff.target.count.fixed_value)
                 for t in eff.target.card_titles:
@@ -74,6 +78,7 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
         "modifiers": modifiers,
         "entities": entities,
         "identifiers": identifiers,
+        "restrict_identifiers": restrict_identifiers,
         "target_types": target_types
     }
 
@@ -118,9 +123,15 @@ def verify_fact_matrix(raw: str, ast_facts: Dict[str, Any]) -> Tuple[bool, List[
 
     # 3. Core action presence & REG vocabulary equivalences
     try:
-        from utils.reg_vocabulary import is_action_prohibited, is_action_in_trigger, REG_LEGACY_SYNONYMS, RESTRICTION_PATTERNS
+        from utils.reg_vocabulary import (
+            is_action_prohibited, is_action_in_trigger, REG_LEGACY_SYNONYMS,
+            PLAYER_RESTRICTION_PATTERNS, CARD_PREVENTION_PATTERNS, CARD_PROTECTION_PATTERNS
+        )
     except ImportError:
-        from scripts.utils.reg_vocabulary import is_action_prohibited, is_action_in_trigger, REG_LEGACY_SYNONYMS, RESTRICTION_PATTERNS
+        from scripts.utils.reg_vocabulary import (
+            is_action_prohibited, is_action_in_trigger, REG_LEGACY_SYNONYMS,
+            PLAYER_RESTRICTION_PATTERNS, CARD_PREVENTION_PATTERNS, CARD_PROTECTION_PATTERNS
+        )
 
     for legacy_term, canonical_act in REG_LEGACY_SYNONYMS.items():
         if f" {legacy_term} " in f" {raw_lower} ":
@@ -151,9 +162,28 @@ def verify_fact_matrix(raw: str, ast_facts: Dict[str, Any]) -> Tuple[bool, List[
             if not is_action_prohibited(raw, "discard") and not is_action_in_trigger(raw, "discard"):
                 issues.append("Missing primary action: 'discard'")
 
-    if any(p.search(raw_lower) for p in RESTRICTION_PATTERNS):
-        if not any(a in ast_facts["actions"] for a in ["restrict", "prevent", "ignore", "withdraw"]):
-            issues.append("Missing restriction action: 'restrict' or 'prevent'")
+    # Head Judge: 1. Restrict (Players)
+    if any(p.search(raw_lower) for p in PLAYER_RESTRICTION_PATTERNS):
+        if not any(a in ast_facts["actions"] for a in ["restrict", "prevent"]):
+            issues.append("Missing player restriction action: 'restrict'")
+        elif "restrict" in ast_facts["actions"]:
+            restrict_idents = " ".join(ast_facts.get("restrict_identifiers", set())).lower()
+            for p in PLAYER_RESTRICTION_PATTERNS:
+                for match in p.finditer(raw_lower):
+                    verb = match.group(1) if match.groups() else ""
+                    if verb and len(verb) > 2 and verb not in restrict_idents and verb not in ("opponent", "players", "player"):
+                        issues.append(f"Missing restricted action '{verb}' in target identifiers for 'restrict'")
+
+    # Head Judge: 2. Prevent (Cards acting)
+    if any(p.search(raw_lower) for p in CARD_PREVENTION_PATTERNS):
+        if not any(a in ast_facts["actions"] for a in ["prevent", "withdraw", "restrict"]):
+            issues.append("Missing card action prevention: 'prevent'")
+
+    # Head Judge: 3. Protect (Cards passive / acted upon)
+    if any(p.search(raw_lower) for p in CARD_PROTECTION_PATTERNS):
+        if not any(a in ast_facts["actions"] for a in ["protect", "prevent", "ignore"]):
+            if not any("cannot_be" in m for m in ast_facts["modifiers"]):
+                issues.append("Missing card protection action: 'protect'")
 
     # 4. Relational / Conceptual Identifiers (e.g. music, weapon, idol, curse, demon)
     all_target_facts = " ".join(
