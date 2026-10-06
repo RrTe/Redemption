@@ -48,6 +48,8 @@ from mappings.alias_engine import (
 from mappings.ordir_name_errata import GLOBAL_EXCEPTIONS
 from mappings.special_ordir_overrides import SPECIAL_ORDIR_OVERRIDES
 from utils.card_helpers import get_card_name, check_is_star_card
+import importlib
+_extract_shared_fields = importlib.import_module("scripts.03_extend_cards")._extract_shared_fields
 
 
 def load_data() -> tuple[list[dict], list[dict]]:
@@ -65,10 +67,80 @@ def load_data() -> tuple[list[dict], list[dict]]:
     return ordir_data, cards_data
 
 
+def _extract_normalized_forms(name: str, card: dict) -> list[str]:
+    """Extracts surgical and bare normalized name forms for a card name.
+
+    Args:
+        name: Name string to normalize.
+        card: Full card dictionary for set/year inspection.
+
+    Returns:
+        List of normalized name strings.
+    """
+    blocks = re.findall(r'[\(\[](.*?)[\)\]]', name)
+    content_to_strip = []
+    card_raw_sets = extract_all_raw_sets_from_card(card)
+
+    for block in blocks:
+        b_clean = block.strip()
+        should_strip = False
+        if b_clean in card_raw_sets:
+            should_strip = True
+        if not should_strip:
+            parts = [p.strip() for p in b_clean.split(",")]
+            if len(parts) > 1 and all(
+                p in card_raw_sets
+                or re.match(r'^(199\d|20\d\d)$', p)
+                or p.lower() in [
+                    "promo", "winner", "limited", "unlimited", "main",
+                    "state", "regional", "national", "district",
+                    "fundraiser", "rotation"
+                ]
+                for p in parts
+            ):
+                should_strip = True
+        if not should_strip:
+            y_match = re.search(r'\b(199\d|20\d\d)\b', b_clean)
+            if y_match and int(y_match.group(1)) >= 1995:
+                should_strip = True
+        if not should_strip:
+            metadata_terms = [
+                "promo", "winner", "limited", "unlimited", "main",
+                "state", "regional", "national", "district",
+                "fundraiser", "rotation"
+            ]
+            if any(t in b_clean.lower() for t in metadata_terms):
+                should_strip = True
+        if should_strip:
+            content_to_strip.append(re.escape(block))
+
+    n_surgical = name
+    for cts in content_to_strip:
+        n_surgical = re.sub(rf'[\(\[]\s*{cts}\s*[\)\]]', "", n_surgical)
+
+    forms = []
+    n_clean_surgical = normalize_name(
+        GLOBAL_EXCEPTIONS.get(n_surgical.strip(), n_surgical.strip())
+    )
+    if n_clean_surgical:
+        forms.append(n_clean_surgical)
+
+    n_bare = re.sub(r"\([^)]*\)", "", name)
+    n_bare = re.sub(r"\[[^\]]*\]", "", n_bare)
+    n_clean_bare = normalize_name(
+        GLOBAL_EXCEPTIONS.get(n_bare.strip(), n_bare.strip())
+    )
+    if n_clean_bare and n_clean_bare != n_clean_surgical:
+        forms.append(n_clean_bare)
+
+    return forms
+
+
 def build_card_lookup(cards_data: list[dict]) -> list[dict]:
     """Pre-processes and indexes the cards database.
 
     Creates both surgical and bare forms for matching, excluding tokens.
+    Tracks side origin (top, bottom, all) for per-side category mapping.
 
     Args:
         cards_data (list[dict]): Raw list of card dicts.
@@ -85,87 +157,35 @@ def build_card_lookup(cards_data: list[dict]) -> list[dict]:
         if "token" in raw_name.lower():
             continue
 
-        names_to_test = [raw_name]
+        name_side_pairs = []
+        sides = c.get("CardSides", {})
 
-        # Handle split cards or multi-names
-        if "/" in raw_name:
-            names_to_test.extend([n.strip() for n in raw_name.split("/")])
+        top_name = sides.get("top", {}).get("Name") if isinstance(sides.get("top"), dict) else None
+        bottom_name = sides.get("bottom", {}).get("Name") if isinstance(sides.get("bottom"), dict) else None
 
-        # Handle CardSides
-        if "CardSides" in c and c["CardSides"]:
-            for side_key, side_data in c["CardSides"].items():
-                if side_key == "shared":
-                    continue
-                if isinstance(side_data, dict) and "Name" in side_data:
-                    names_to_test.append(side_data["Name"])
+        if top_name and bottom_name and top_name != bottom_name:
+            name_side_pairs.append((top_name, "top"))
+            name_side_pairs.append((bottom_name, "bottom"))
+            name_side_pairs.append((f"{top_name} / {bottom_name}", "all"))
+        else:
+            name_side_pairs.append((raw_name, "all"))
 
+        side_by_norm = {}
         normalized_names = set()
-        for name in names_to_test:
-            # Form 1: Surgical stripping of print/year tags
-            blocks = re.findall(r'[\(\[](.*?)[\)\]]', name)
-            content_to_strip = []
-            card_raw_sets = extract_all_raw_sets_from_card(c)
 
-            for block in blocks:
-                b_clean = block.strip()
-                should_strip = False
-
-                if b_clean in card_raw_sets:
-                    should_strip = True
-
-                if not should_strip:
-                    parts = [p.strip() for p in b_clean.split(",")]
-                    if len(parts) > 1 and all(
-                        p in card_raw_sets
-                        or re.match(r'^(199\d|20\d\d)$', p)
-                        or p.lower() in [
-                            "promo", "winner", "limited", "unlimited", "main",
-                            "state", "regional", "national", "district",
-                            "fundraiser", "rotation"
-                        ]
-                        for p in parts
-                    ):
-                        should_strip = True
-
-                if not should_strip:
-                    y_match = re.search(r'\b(199\d|20\d\d)\b', b_clean)
-                    if y_match and int(y_match.group(1)) >= 1995:
-                        should_strip = True
-
-                if not should_strip:
-                    metadata_terms = [
-                        "promo", "winner", "limited", "unlimited", "main",
-                        "state", "regional", "national", "district",
-                        "fundraiser", "rotation"
-                    ]
-                    if any(t in b_clean.lower() for t in metadata_terms):
-                        should_strip = True
-
-                if should_strip:
-                    content_to_strip.append(re.escape(block))
-
-            n_surgical = name
-            for cts in content_to_strip:
-                n_surgical = re.sub(rf'[\(\[]\s*{cts}\s*[\)\]]', "", n_surgical)
-
-            n_clean_surgical = normalize_name(
-                GLOBAL_EXCEPTIONS.get(n_surgical.strip(), n_surgical.strip())
-            )
-            if n_clean_surgical:
-                normalized_names.add(n_clean_surgical)
-
-            # Form 2: Bare fallback (strip all brackets/parentheses)
-            n_bare = re.sub(r"\([^)]*\)", "", name)
-            n_bare = re.sub(r"\[[^\]]*\]", "", n_bare)
-            n_clean_bare = normalize_name(
-                GLOBAL_EXCEPTIONS.get(n_bare.strip(), n_bare.strip())
-            )
-            if n_clean_bare and n_clean_bare != n_clean_surgical:
-                normalized_names.add(n_clean_bare)
+        for name, side_target in name_side_pairs:
+            forms = _extract_normalized_forms(name, c)
+            for f in forms:
+                normalized_names.add(f)
+                if f not in side_by_norm:
+                    side_by_norm[f] = side_target
+                elif side_by_norm[f] != side_target:
+                    side_by_norm[f] = "all"
 
         lookup.append({
             "original_name": raw_name,
             "normalized_names": list(normalized_names),
+            "side_by_norm": side_by_norm,
             "raw_sets": extract_all_raw_sets_from_card(c),
             "ref": c
         })
@@ -184,6 +204,10 @@ def map_ordir_to_cards():
     # Initialize empty ORDIR arrays
     for c in cards_data:
         c["ORDIR"] = set()
+        sides = c.get("CardSides", {})
+        for sk in ["top", "bottom"]:
+            if sk in sides and isinstance(sides[sk], dict):
+                sides[sk]["ORDIR"] = set()
 
     # Pre-build choice mapping for the database cards
     choice_map = {}
@@ -265,7 +289,7 @@ def map_ordir_to_cards():
                 # Overrides point directly to a database canonical Name. Find it.
                 for idx, candidate in enumerate(lookup):
                     if candidate["original_name"].lower() == matched_override_name.lower():
-                        target_card_indices.append(idx)
+                        target_card_indices.append((idx, "all"))
                         matched = True
             elif isinstance(matched_override_name, dict):
                 # Legacy dict override, let's treat the key as matching itself or let exact match handle it
@@ -278,7 +302,8 @@ def map_ordir_to_cards():
                 candidate = lookup[idx]
                 if sets_intersect(o_set, candidate["raw_sets"]) or rarity_intersect(o_set, candidate["ref"]):
                     if not has_year_mismatch(o_set, candidate["ref"].get("Name", "")):
-                        target_card_indices.append(idx)
+                        side_target = candidate["side_by_norm"].get(clean_o_name, "all")
+                        target_card_indices.append((idx, side_target))
                         matched = True
 
         # --- C. Fuzzy Matching logic ---
@@ -301,20 +326,35 @@ def map_ordir_to_cards():
                     candidate = lookup[idx]
 
                     if o_set == "UNKNOWN" and score >= 98:
-                        target_card_indices.append(idx)
+                        side_target = candidate["side_by_norm"].get(match_str, "all")
+                        target_card_indices.append((idx, side_target))
                         matched = True
                         break
 
                     if sets_intersect(o_set, candidate["raw_sets"]) or rarity_intersect(o_set, candidate["ref"]):
                         if has_year_mismatch(o_set, candidate["ref"].get("Name", "")):
                             continue
-                        target_card_indices.append(idx)
+                        side_target = candidate["side_by_norm"].get(match_str, "all")
+                        target_card_indices.append((idx, side_target))
                         matched = True
 
         # Apply mapped categories to all matched database instances
         if matched and target_card_indices:
-            for idx in target_card_indices:
-                lookup[idx]["ref"]["ORDIR"].update(categories)
+            for idx, side_target in target_card_indices:
+                card = lookup[idx]["ref"]
+                card["ORDIR"].update(categories)
+
+                sides = card.get("CardSides", {})
+                if side_target in ("top", "bottom") and side_target in sides and isinstance(sides[side_target], dict):
+                    if "ORDIR" not in sides[side_target]:
+                        sides[side_target]["ORDIR"] = set()
+                    sides[side_target]["ORDIR"].update(categories)
+                else:
+                    for sk in ["top", "bottom"]:
+                        if sk in sides and isinstance(sides[sk], dict):
+                            if "ORDIR" not in sides[sk]:
+                                sides[sk]["ORDIR"] = set()
+                            sides[sk]["ORDIR"].update(categories)
             mapped_count += 1
         else:
             # Log unmatched entity with metadata
@@ -329,6 +369,15 @@ def map_ordir_to_cards():
     # Convert sets to sorted lists for JSON serialization and finalize IsStarCard
     for c in cards_data:
         c["ORDIR"] = sorted(list(c["ORDIR"]))
+
+        sides = c.get("CardSides", {})
+        for sk in ["top", "bottom"]:
+            if sk in sides and isinstance(sides[sk], dict) and "ORDIR" in sides[sk]:
+                sides[sk]["ORDIR"] = sorted(list(sides[sk]["ORDIR"]))
+                if not sides[sk]["ORDIR"]:
+                    del sides[sk]["ORDIR"]
+
+        c["CardSides"] = _extract_shared_fields(sides)
         c["IsStarCard"] = check_is_star_card(c)
 
     print(f"\nSuccessfully mapped {mapped_count} out of {total_refs} unique ORDIR entities.")

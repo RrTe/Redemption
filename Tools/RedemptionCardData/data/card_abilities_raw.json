@@ -2,7 +2,7 @@
   "-320853472": {
     "card_identifier": "-320853472",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -75,7 +75,7 @@
   "1533505619": {
     "card_identifier": "1533505619",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -129,7 +129,7 @@
   "-965274283": {
     "card_identifier": "-965274283",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -225,7 +225,7 @@
   "2006815944": {
     "card_identifier": "2006815944",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -321,7 +321,7 @@
   "585022171": {
     "card_identifier": "585022171",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -427,7 +427,7 @@
   "-472319402": {
     "card_identifier": "-472319402",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -508,49 +508,7 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_negate",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "negate",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "card",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
@@ -559,56 +517,14 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_negate",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "negate",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "card",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
   "3752659": {
     "card_identifier": "3752659",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -666,7 +582,7 @@
   "451922203": {
     "card_identifier": "451922203",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -717,7 +633,7 @@
   "1739073055": {
     "card_identifier": "1739073055",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -829,7 +745,7 @@
   "1854249209": {
     "card_identifier": "1854249209",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -924,7 +840,7 @@
   "1526851786": {
     "card_identifier": "1526851786",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -1019,7 +935,7 @@
   "-202604392": {
     "card_identifier": "-202604392",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -1080,7 +996,7 @@
   "484041916": {
     "card_identifier": "484041916",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -1140,7 +1056,7 @@
   "441513169": {
     "card_identifier": "441513169",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -1232,7 +1148,7 @@
   "-2078780843": {
     "card_identifier": "-2078780843",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -1303,7 +1219,7 @@
   "-956247686": {
     "card_identifier": "-956247686",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -1376,10 +1292,19 @@
       }
     }
   },
+  "-1080205892": {
+    "card_identifier": "-1080205892",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1221682584": {
     "card_identifier": "-1221682584",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -1430,7 +1355,7 @@
   "1980407980": {
     "card_identifier": "1980407980",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -1536,7 +1461,7 @@
   "298467607": {
     "card_identifier": "298467607",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -1631,7 +1556,7 @@
   "2080821029": {
     "card_identifier": "2080821029",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -1679,6 +1604,15 @@
       }
     }
   },
+  "-147999532": {
+    "card_identifier": "-147999532",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-327542159": {
     "card_identifier": "-327542159",
     "sides": {
@@ -1700,7 +1634,7 @@
   "860962302": {
     "card_identifier": "860962302",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -1752,6 +1686,24 @@
             "choice_group": null
           }
         ]
+      }
+    }
+  },
+  "-1195788911": {
+    "card_identifier": "-1195788911",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "350288796": {
+    "card_identifier": "350288796",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
       }
     }
   },
@@ -1927,7 +1879,7 @@
   "1530836638": {
     "card_identifier": "1530836638",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -1990,7 +1942,7 @@
   "-1620306302": {
     "card_identifier": "-1620306302",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -2043,7 +1995,7 @@
   "-1536176816": {
     "card_identifier": "-1536176816",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -2097,7 +2049,7 @@
   "-1678661726": {
     "card_identifier": "-1678661726",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -2160,7 +2112,7 @@
   "810692584": {
     "card_identifier": "810692584",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -2210,6 +2162,15 @@
       }
     }
   },
+  "-1302640813": {
+    "card_identifier": "-1302640813",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1429088192": {
     "card_identifier": "-1429088192",
     "sides": {
@@ -2222,7 +2183,7 @@
   "699978370": {
     "card_identifier": "699978370",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -2276,7 +2237,7 @@
   "710324287": {
     "card_identifier": "710324287",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -2371,7 +2332,7 @@
   "-879153454": {
     "card_identifier": "-879153454",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -2452,7 +2413,7 @@
   "588672863": {
     "card_identifier": "588672863",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -2549,7 +2510,7 @@
   "1899453056": {
     "card_identifier": "1899453056",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -2654,7 +2615,7 @@
   "-1010694665": {
     "card_identifier": "-1010694665",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -2715,7 +2676,7 @@
   "-1052853386": {
     "card_identifier": "-1052853386",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -3533,7 +3494,7 @@
   "887006037": {
     "card_identifier": "887006037",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -3630,7 +3591,7 @@
   "-1374005963": {
     "card_identifier": "-1374005963",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -3727,7 +3688,7 @@
   "-860343615": {
     "card_identifier": "-860343615",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -3833,7 +3794,7 @@
   "50459986": {
     "card_identifier": "50459986",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -3915,7 +3876,7 @@
   "2126062127": {
     "card_identifier": "2126062127",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -3978,7 +3939,7 @@
   "1643970910": {
     "card_identifier": "1643970910",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -4079,7 +4040,7 @@
   "-846611474": {
     "card_identifier": "-846611474",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -4132,7 +4093,7 @@
   "1567829470": {
     "card_identifier": "1567829470",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -4195,7 +4156,7 @@
   "627751541": {
     "card_identifier": "627751541",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -4276,7 +4237,7 @@
   "-1495867283": {
     "card_identifier": "-1495867283",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -4332,7 +4293,7 @@
   "1213569981": {
     "card_identifier": "1213569981",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -4404,7 +4365,7 @@
   "-1539089914": {
     "card_identifier": "-1539089914",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "instead",
@@ -4467,7 +4428,7 @@
   "1991486315": {
     "card_identifier": "1991486315",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -4567,7 +4528,7 @@
   "53575090": {
     "card_identifier": "53575090",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -4623,7 +4584,7 @@
   "1524873106": {
     "card_identifier": "1524873106",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -4722,7 +4683,7 @@
   "-348062423": {
     "card_identifier": "-348062423",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -4860,7 +4821,7 @@
   "207201852": {
     "card_identifier": "207201852",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -4920,7 +4881,7 @@
   "1627190585": {
     "card_identifier": "1627190585",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -5034,7 +4995,7 @@
   "184107184": {
     "card_identifier": "184107184",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -5148,7 +5109,7 @@
   "590591310": {
     "card_identifier": "590591310",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -5262,7 +5223,7 @@
   "1963060894": {
     "card_identifier": "1963060894",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -5310,6 +5271,24 @@
       }
     }
   },
+  "-1646887871": {
+    "card_identifier": "-1646887871",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1686809378": {
+    "card_identifier": "1686809378",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-327411208": {
     "card_identifier": "-327411208",
     "sides": {
@@ -5322,7 +5301,7 @@
   "-162479201": {
     "card_identifier": "-162479201",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -5416,10 +5395,19 @@
       }
     }
   },
+  "-27859788": {
+    "card_identifier": "-27859788",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "104064416": {
     "card_identifier": "104064416",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -5494,56 +5482,14 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_interrupt",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "interrupt",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "and redirect an enhancement played by an opponent",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
   "-569738386": {
     "card_identifier": "-569738386",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -5613,6 +5559,15 @@
       }
     }
   },
+  "126690624": {
+    "card_identifier": "126690624",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-768984537": {
     "card_identifier": "-768984537",
     "sides": {
@@ -5678,10 +5633,19 @@
       }
     }
   },
+  "-1812037992": {
+    "card_identifier": "-1812037992",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1709932408": {
     "card_identifier": "-1709932408",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -5776,7 +5740,7 @@
   "-144776856": {
     "card_identifier": "-144776856",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -5830,7 +5794,7 @@
   "1779801769": {
     "card_identifier": "1779801769",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -5927,7 +5891,7 @@
   "-1451328642": {
     "card_identifier": "-1451328642",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -6041,7 +6005,7 @@
   "372116892": {
     "card_identifier": "372116892",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -6092,7 +6056,7 @@
   "-1682844256": {
     "card_identifier": "-1682844256",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -6188,7 +6152,7 @@
   "-1528536552": {
     "card_identifier": "-1528536552",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -6262,7 +6226,7 @@
   "-362163018": {
     "card_identifier": "-362163018",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -6318,7 +6282,7 @@
   "1823858421": {
     "card_identifier": "1823858421",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -6376,7 +6340,7 @@
   "-779962015": {
     "card_identifier": "-779962015",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -6427,7 +6391,7 @@
   "-1977011042": {
     "card_identifier": "-1977011042",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -6478,7 +6442,7 @@
   "-2000221345": {
     "card_identifier": "-2000221345",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -6551,7 +6515,7 @@
   "1645250253": {
     "card_identifier": "1645250253",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -6671,7 +6635,7 @@
   "-1763353505": {
     "card_identifier": "-1763353505",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -6748,7 +6712,7 @@
   "-388451145": {
     "card_identifier": "-388451145",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -6825,7 +6789,7 @@
   "418791172": {
     "card_identifier": "418791172",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -6873,6 +6837,33 @@
             "choice_group": null
           }
         ]
+      }
+    }
+  },
+  "383853753": {
+    "card_identifier": "383853753",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1981238520": {
+    "card_identifier": "-1981238520",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1706395755": {
+    "card_identifier": "-1706395755",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
       }
     }
   },
@@ -7266,7 +7257,7 @@
   "-1512320695": {
     "card_identifier": "-1512320695",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -7361,7 +7352,7 @@
   "771229035": {
     "card_identifier": "771229035",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -7456,7 +7447,7 @@
   "2025810049": {
     "card_identifier": "2025810049",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -7519,7 +7510,7 @@
   "1940353964": {
     "card_identifier": "1940353964",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -7599,7 +7590,7 @@
   "-724773504": {
     "card_identifier": "-724773504",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -7679,7 +7670,7 @@
   "1277819177": {
     "card_identifier": "1277819177",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -7733,7 +7724,7 @@
   "140036053": {
     "card_identifier": "140036053",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -7830,7 +7821,7 @@
   "-191144895": {
     "card_identifier": "-191144895",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -7921,6 +7912,42 @@
             "choice_group": null
           }
         ]
+      }
+    }
+  },
+  "704610103": {
+    "card_identifier": "704610103",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-55716512": {
+    "card_identifier": "-55716512",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "907050288": {
+    "card_identifier": "907050288",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "623427653": {
+    "card_identifier": "623427653",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
       }
     }
   },
@@ -8026,10 +8053,19 @@
       }
     }
   },
+  "83234752": {
+    "card_identifier": "83234752",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1929409743": {
     "card_identifier": "1929409743",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -8077,10 +8113,19 @@
       }
     }
   },
+  "-1899241932": {
+    "card_identifier": "-1899241932",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-2112250308": {
     "card_identifier": "-2112250308",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -8134,7 +8179,7 @@
   "-606746606": {
     "card_identifier": "-606746606",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -8238,7 +8283,7 @@
   "-918226508": {
     "card_identifier": "-918226508",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -8397,7 +8442,7 @@
   "-627242579": {
     "card_identifier": "-627242579",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -8493,7 +8538,7 @@
   "-1729265264": {
     "card_identifier": "-1729265264",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -8590,7 +8635,7 @@
   "680971487": {
     "card_identifier": "680971487",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -8643,7 +8688,7 @@
   "-387058477": {
     "card_identifier": "-387058477",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -9196,7 +9241,7 @@
   "-1469396009": {
     "card_identifier": "-1469396009",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -9259,7 +9304,7 @@
   "741405629": {
     "card_identifier": "741405629",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -9358,7 +9403,7 @@
   "-2057957472": {
     "card_identifier": "-2057957472",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -9412,7 +9457,7 @@
   "-1023109912": {
     "card_identifier": "-1023109912",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -9466,7 +9511,7 @@
   "-1761888345": {
     "card_identifier": "-1761888345",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -9539,10 +9584,19 @@
       }
     }
   },
+  "-480272549": {
+    "card_identifier": "-480272549",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1883622458": {
     "card_identifier": "1883622458",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -9593,10 +9647,28 @@
       }
     }
   },
+  "-629032128": {
+    "card_identifier": "-629032128",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1904511548": {
+    "card_identifier": "-1904511548",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1161413925": {
     "card_identifier": "1161413925",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -9659,7 +9731,7 @@
   "349223989": {
     "card_identifier": "349223989",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -9779,7 +9851,7 @@
   "-2109987655": {
     "card_identifier": "-2109987655",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -9926,7 +9998,7 @@
   "-388635859": {
     "card_identifier": "-388635859",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -10029,6 +10101,150 @@
   },
   "-1301525377": {
     "card_identifier": "-1301525377",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-811903860": {
+    "card_identifier": "-811903860",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-784756194": {
+    "card_identifier": "-784756194",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "973131797": {
+    "card_identifier": "973131797",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1635012002": {
+    "card_identifier": "-1635012002",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "2120349932": {
+    "card_identifier": "2120349932",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1782881223": {
+    "card_identifier": "-1782881223",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1750024669": {
+    "card_identifier": "-1750024669",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "233383136": {
+    "card_identifier": "233383136",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1993223610": {
+    "card_identifier": "1993223610",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "593859726": {
+    "card_identifier": "593859726",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1381610582": {
+    "card_identifier": "1381610582",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-2071886612": {
+    "card_identifier": "-2071886612",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "2020698611": {
+    "card_identifier": "2020698611",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1288512959": {
+    "card_identifier": "-1288512959",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-395463156": {
+    "card_identifier": "-395463156",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "2047453172": {
+    "card_identifier": "2047453172",
     "sides": {
       "shared": {
         "modifiers": [],
@@ -10187,58 +10403,14 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_protect",
-            "activation_mode": "static",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "protect",
-                "effect_type": "ongoing",
-                "duration": "permanent",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "your priests",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [
-                    "the house of Eleazar from discard abilities on evil cards"
-                  ],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
   "659862620": {
     "card_identifier": "659862620",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -10299,7 +10471,7 @@
   "1098103883": {
     "card_identifier": "1098103883",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -10349,6 +10521,15 @@
             "choice_group": null
           }
         ]
+      }
+    }
+  },
+  "-1953554392": {
+    "card_identifier": "-1953554392",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
       }
     }
   },
@@ -10462,7 +10643,7 @@
   "1279824202": {
     "card_identifier": "1279824202",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -10538,7 +10719,7 @@
   "1785777451": {
     "card_identifier": "1785777451",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -10596,10 +10777,19 @@
       }
     }
   },
+  "-1594853387": {
+    "card_identifier": "-1594853387",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-2121643818": {
     "card_identifier": "-2121643818",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -10657,7 +10847,7 @@
   "-261204308": {
     "card_identifier": "-261204308",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -10774,6 +10964,15 @@
       }
     }
   },
+  "-2051511431": {
+    "card_identifier": "-2051511431",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1659509519": {
     "card_identifier": "-1659509519",
     "sides": {
@@ -10786,7 +10985,7 @@
   "1795063715": {
     "card_identifier": "1795063715",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -10840,7 +11039,7 @@
   "-536388040": {
     "card_identifier": "-536388040",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -10897,10 +11096,19 @@
       }
     }
   },
+  "424010749": {
+    "card_identifier": "424010749",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1329224722": {
     "card_identifier": "1329224722",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -10995,7 +11203,7 @@
   "-1330560095": {
     "card_identifier": "-1330560095",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -11090,7 +11298,7 @@
   "1079071395": {
     "card_identifier": "1079071395",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -11182,10 +11390,19 @@
       }
     }
   },
+  "-1261527088": {
+    "card_identifier": "-1261527088",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1094361024": {
     "card_identifier": "1094361024",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -11265,7 +11482,7 @@
   "772901406": {
     "card_identifier": "772901406",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -11375,7 +11592,7 @@
   "-1793757620": {
     "card_identifier": "-1793757620",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -11503,7 +11720,7 @@
   "382317118": {
     "card_identifier": "382317118",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -11580,7 +11797,7 @@
   "1261080613": {
     "card_identifier": "1261080613",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -11631,10 +11848,19 @@
       }
     }
   },
+  "-2060527099": {
+    "card_identifier": "-2060527099",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1711656519": {
     "card_identifier": "-1711656519",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -11755,7 +11981,7 @@
   "-1860684958": {
     "card_identifier": "-1860684958",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -11809,7 +12035,7 @@
   "-1183424107": {
     "card_identifier": "-1183424107",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -11878,10 +12104,19 @@
       }
     }
   },
+  "-1353929142": {
+    "card_identifier": "-1353929142",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1018182271": {
     "card_identifier": "-1018182271",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -11942,7 +12177,7 @@
   "475692466": {
     "card_identifier": "475692466",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -11996,7 +12231,7 @@
   "370139695": {
     "card_identifier": "370139695",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -12087,7 +12322,7 @@
   "-1936222030": {
     "card_identifier": "-1936222030",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -12138,10 +12373,19 @@
       }
     }
   },
+  "1885969141": {
+    "card_identifier": "1885969141",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1129204366": {
     "card_identifier": "-1129204366",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -12191,10 +12435,19 @@
       }
     }
   },
+  "168335151": {
+    "card_identifier": "168335151",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1324527282": {
     "card_identifier": "1324527282",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -12337,7 +12590,7 @@
   "-1729315544": {
     "card_identifier": "-1729315544",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -12409,7 +12662,7 @@
   "79493633": {
     "card_identifier": "79493633",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -12504,7 +12757,7 @@
   "605659052": {
     "card_identifier": "605659052",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -12555,7 +12808,7 @@
   "-1358260013": {
     "card_identifier": "-1358260013",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -12606,6 +12859,15 @@
       }
     }
   },
+  "460780034": {
+    "card_identifier": "460780034",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1547544393": {
     "card_identifier": "1547544393",
     "sides": {
@@ -12627,7 +12889,7 @@
   "-868391415": {
     "card_identifier": "-868391415",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -12678,7 +12940,7 @@
   "451313347": {
     "card_identifier": "451313347",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -12754,7 +13016,7 @@
   "284994205": {
     "card_identifier": "284994205",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -12857,7 +13119,7 @@
   "1802847580": {
     "card_identifier": "1802847580",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -12908,7 +13170,7 @@
   "-531949783": {
     "card_identifier": "-531949783",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -13003,7 +13265,7 @@
   "-794691969": {
     "card_identifier": "-794691969",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -13098,7 +13360,7 @@
   "1044987670": {
     "card_identifier": "1044987670",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -13156,7 +13418,7 @@
   "1422634872": {
     "card_identifier": "1422634872",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -13275,7 +13537,7 @@
   "742076246": {
     "card_identifier": "742076246",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -13403,7 +13665,7 @@
   "1248373945": {
     "card_identifier": "1248373945",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -13464,7 +13726,7 @@
   "2124598120": {
     "card_identifier": "2124598120",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -13515,6 +13777,15 @@
       }
     }
   },
+  "444556450": {
+    "card_identifier": "444556450",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "253510800": {
     "card_identifier": "253510800",
     "sides": {
@@ -13529,56 +13800,14 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_negate",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "negate",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "card of a different alignment",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
   "-475193880": {
     "card_identifier": "-475193880",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -13650,7 +13879,7 @@
   "1466925664": {
     "card_identifier": "1466925664",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -13706,7 +13935,7 @@
   "-1298942680": {
     "card_identifier": "-1298942680",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -13762,7 +13991,7 @@
   "1040851794": {
     "card_identifier": "1040851794",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -13857,7 +14086,7 @@
   "-1492787218": {
     "card_identifier": "-1492787218",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -13952,7 +14181,7 @@
   "-550089661": {
     "card_identifier": "-550089661",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -14006,7 +14235,7 @@
   "2041723113": {
     "card_identifier": "2041723113",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -14060,7 +14289,7 @@
   "-442341791": {
     "card_identifier": "-442341791",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -14155,7 +14384,7 @@
   "798028487": {
     "card_identifier": "798028487",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -14209,7 +14438,7 @@
   "-2066689549": {
     "card_identifier": "-2066689549",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -14263,7 +14492,7 @@
   "991483641": {
     "card_identifier": "991483641",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -14367,7 +14596,7 @@
   "-264654708": {
     "card_identifier": "-264654708",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -14420,7 +14649,7 @@
   "-457397300": {
     "card_identifier": "-457397300",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -14480,7 +14709,7 @@
   "-1401412837": {
     "card_identifier": "-1401412837",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -14538,7 +14767,7 @@
   "697508955": {
     "card_identifier": "697508955",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -14658,7 +14887,7 @@
   "-1163128322": {
     "card_identifier": "-1163128322",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -14711,7 +14940,7 @@
   "-175529066": {
     "card_identifier": "-175529066",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -14819,7 +15048,7 @@
   "-245175274": {
     "card_identifier": "-245175274",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -14870,7 +15099,7 @@
   "1339015948": {
     "card_identifier": "1339015948",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -14943,7 +15172,7 @@
   "423643170": {
     "card_identifier": "423643170",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15042,7 +15271,7 @@
   "-235687488": {
     "card_identifier": "-235687488",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15108,10 +15337,37 @@
       }
     }
   },
+  "208816133": {
+    "card_identifier": "208816133",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "2135651385": {
+    "card_identifier": "2135651385",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-2143727880": {
+    "card_identifier": "-2143727880",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "805224832": {
     "card_identifier": "805224832",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15178,49 +15434,7 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_negate",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "negate",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "card",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
@@ -15229,49 +15443,7 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_negate",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "negate",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "card",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
@@ -15305,7 +15477,7 @@
   "-1602862514": {
     "card_identifier": "-1602862514",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15359,7 +15531,7 @@
   "251275518": {
     "card_identifier": "251275518",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15435,7 +15607,7 @@
   "1036722107": {
     "card_identifier": "1036722107",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15530,7 +15702,7 @@
   "1973441378": {
     "card_identifier": "1973441378",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15663,7 +15835,7 @@
   "-365514354": {
     "card_identifier": "-365514354",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15717,7 +15889,7 @@
   "-1890405924": {
     "card_identifier": "-1890405924",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15771,7 +15943,7 @@
   "421128868": {
     "card_identifier": "421128868",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15847,7 +16019,7 @@
   "565251303": {
     "card_identifier": "565251303",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15923,7 +16095,7 @@
   "-909258684": {
     "card_identifier": "-909258684",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -15999,7 +16171,7 @@
   "1439988652": {
     "card_identifier": "1439988652",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -16120,7 +16292,7 @@
   "3885597": {
     "card_identifier": "3885597",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -16234,7 +16406,7 @@
   "192245947": {
     "card_identifier": "192245947",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -16310,7 +16482,7 @@
   "1792087826": {
     "card_identifier": "1792087826",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -16404,7 +16576,7 @@
   "5106201": {
     "card_identifier": "5106201",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -16458,7 +16630,7 @@
   "-1704625549": {
     "card_identifier": "-1704625549",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -16534,7 +16706,7 @@
   "1484341440": {
     "card_identifier": "1484341440",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -16603,10 +16775,28 @@
       }
     }
   },
+  "-2033677341": {
+    "card_identifier": "-2033677341",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-428609774": {
+    "card_identifier": "-428609774",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-778442880": {
     "card_identifier": "-778442880",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -16896,7 +17086,7 @@
   "167552291": {
     "card_identifier": "167552291",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -16956,7 +17146,7 @@
   "912329086": {
     "card_identifier": "912329086",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -17016,7 +17206,7 @@
   "-703265880": {
     "card_identifier": "-703265880",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -17064,6 +17254,15 @@
       }
     }
   },
+  "1009895008": {
+    "card_identifier": "1009895008",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1898904270": {
     "card_identifier": "1898904270",
     "sides": {
@@ -17076,7 +17275,7 @@
   "-957515391": {
     "card_identifier": "-957515391",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -17158,7 +17357,7 @@
   "-1222327077": {
     "card_identifier": "-1222327077",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -17278,7 +17477,7 @@
   "-1343760959": {
     "card_identifier": "-1343760959",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -17422,64 +17621,30 @@
       }
     }
   },
+  "1316410190": {
+    "card_identifier": "1316410190",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1014428160": {
+    "card_identifier": "-1014428160",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1010454351": {
     "card_identifier": "1010454351",
     "sides": {
       "shared": {
-        "modifiers": [
-          {
-            "modifier_type": "cannot_be_prevented",
-            "applies_to": "this_side",
-            "limit_params": null,
-            "replacement_params": null
-          }
-        ],
-        "abilities": [
-          {
-            "ability_id": "ab_1_discard",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": false,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "discard",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "card of opposite alignment",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 1,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": "discard_pile",
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "modifiers": [],
+        "abilities": []
       }
     }
   },
@@ -17504,7 +17669,7 @@
   "-2019087133": {
     "card_identifier": "-2019087133",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -17621,7 +17786,7 @@
   "1591885714": {
     "card_identifier": "1591885714",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -17884,10 +18049,19 @@
       }
     }
   },
+  "1168904300": {
+    "card_identifier": "1168904300",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1703822322": {
     "card_identifier": "-1703822322",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -17938,7 +18112,7 @@
   "-707570042": {
     "card_identifier": "-707570042",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18016,7 +18190,7 @@
   "-356203837": {
     "card_identifier": "-356203837",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18070,7 +18244,7 @@
   "2002026320": {
     "card_identifier": "2002026320",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18144,7 +18318,7 @@
   "-173623488": {
     "card_identifier": "-173623488",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18192,6 +18366,15 @@
       }
     }
   },
+  "-503097167": {
+    "card_identifier": "-503097167",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "365889706": {
     "card_identifier": "365889706",
     "sides": {
@@ -18219,54 +18402,21 @@
       }
     }
   },
+  "1358990652": {
+    "card_identifier": "1358990652",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "589121472": {
     "card_identifier": "589121472",
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_interrupt",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "interrupt",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "and redirect an opposing enhancement",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
@@ -18300,7 +18450,7 @@
   "-2073929177": {
     "card_identifier": "-2073929177",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18395,7 +18545,7 @@
   "-816099963": {
     "card_identifier": "-816099963",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18490,7 +18640,7 @@
   "1903932223": {
     "card_identifier": "1903932223",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18575,7 +18725,7 @@
   "490683812": {
     "card_identifier": "490683812",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18629,7 +18779,7 @@
   "-1130191928": {
     "card_identifier": "-1130191928",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18683,7 +18833,7 @@
   "328540351": {
     "card_identifier": "328540351",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18797,6 +18947,15 @@
       }
     }
   },
+  "136493824": {
+    "card_identifier": "136493824",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-869321376": {
     "card_identifier": "-869321376",
     "sides": {
@@ -18815,10 +18974,19 @@
       }
     }
   },
+  "2049328725": {
+    "card_identifier": "2049328725",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "2045131202": {
     "card_identifier": "2045131202",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18872,7 +19040,7 @@
   "405528526": {
     "card_identifier": "405528526",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -18926,7 +19094,7 @@
   "-2107881011": {
     "card_identifier": "-2107881011",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -19016,7 +19184,7 @@
   "-1896831850": {
     "card_identifier": "-1896831850",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -19216,7 +19384,7 @@
   "591659459": {
     "card_identifier": "591659459",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -19329,7 +19497,7 @@
   "1340013057": {
     "card_identifier": "1340013057",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -19380,10 +19548,19 @@
       }
     }
   },
+  "1451961918": {
+    "card_identifier": "1451961918",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1304409445": {
     "card_identifier": "1304409445",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -19443,7 +19620,7 @@
   "-362312925": {
     "card_identifier": "-362312925",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -19626,155 +19803,10 @@
       }
     }
   },
-  "-616877550": {
-    "card_identifier": "-616877550",
-    "sides": {
-      "top": {
-        "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_discard",
-            "activation_mode": "triggered",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "discard",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "evil card",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 1,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": "discard_pile",
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
-      },
-      "bottom": {
-        "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_protect",
-            "activation_mode": "static",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "protect",
-                "effect_type": "ongoing",
-                "duration": "permanent",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "lost souls",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [
-                    "evil cards"
-                  ],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          },
-          {
-            "ability_id": "ab_2_band",
-            "activation_mode": "immediate",
-            "is_optional": true,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "band",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "territory",
-                  "target_type": null,
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [
-                    "Gospel Hero, or you may take a good Gospel card from Reserve"
-                  ],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
-      }
-    }
-  },
   "383769216": {
     "card_identifier": "383769216",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -19836,7 +19868,7 @@
   "-1770332283": {
     "card_identifier": "-1770332283",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -19971,7 +20003,7 @@
   "1988815454": {
     "card_identifier": "1988815454",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -20085,7 +20117,7 @@
   "-1919833213": {
     "card_identifier": "-1919833213",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -20169,7 +20201,7 @@
   "2044316160": {
     "card_identifier": "2044316160",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -20258,7 +20290,7 @@
   "1318886741": {
     "card_identifier": "1318886741",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -20327,7 +20359,7 @@
   "1778001013": {
     "card_identifier": "1778001013",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -20442,7 +20474,7 @@
   "-1406803971": {
     "card_identifier": "-1406803971",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "instead",
@@ -20514,7 +20546,7 @@
   "-1787396553": {
     "card_identifier": "-1787396553",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -20567,7 +20599,7 @@
   "-951162973": {
     "card_identifier": "-951162973",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -20695,7 +20727,7 @@
   "-1709612981": {
     "card_identifier": "-1709612981",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -20743,6 +20775,15 @@
             "choice_group": null
           }
         ]
+      }
+    }
+  },
+  "-745068395": {
+    "card_identifier": "-745068395",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
       }
     }
   },
@@ -20820,7 +20861,7 @@
   "2082354923": {
     "card_identifier": "2082354923",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -20871,7 +20912,7 @@
   "1695022339": {
     "card_identifier": "1695022339",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -20944,6 +20985,24 @@
       }
     }
   },
+  "-1368702301": {
+    "card_identifier": "-1368702301",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1106506489": {
+    "card_identifier": "1106506489",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1431260263": {
     "card_identifier": "1431260263",
     "sides": {
@@ -20965,7 +21024,7 @@
   "-1557246335": {
     "card_identifier": "-1557246335",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -21063,7 +21122,7 @@
   "41105014": {
     "card_identifier": "41105014",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -21183,115 +21242,6 @@
       }
     }
   },
-  "350485427": {
-    "card_identifier": "350485427",
-    "sides": {
-      "top": {
-        "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_topdeck",
-            "activation_mode": "triggered",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "topdeck",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "deck",
-                  "target_type": null,
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [
-                    "evil card from Reserve"
-                  ],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 1,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": "deck",
-                "destination_position": "top",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
-      },
-      "bottom": {
-        "modifiers": [
-          {
-            "modifier_type": "cannot_be_prevented",
-            "applies_to": "this_side",
-            "limit_params": null,
-            "replacement_params": null
-          }
-        ],
-        "abilities": [
-          {
-            "ability_id": "ab_1_interrupt",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": false,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "interrupt",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "the battle and underdeck a good card",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
-      }
-    }
-  },
   "93531431": {
     "card_identifier": "93531431",
     "sides": {
@@ -21313,7 +21263,7 @@
   "1770832454": {
     "card_identifier": "1770832454",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -21416,10 +21366,91 @@
       }
     }
   },
+  "875482976": {
+    "card_identifier": "875482976",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-253407072": {
+    "card_identifier": "-253407072",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-409366366": {
+    "card_identifier": "-409366366",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1837804672": {
+    "card_identifier": "1837804672",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-902357984": {
+    "card_identifier": "-902357984",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-142994480": {
+    "card_identifier": "-142994480",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-2136707136": {
+    "card_identifier": "-2136707136",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-595114592": {
+    "card_identifier": "-595114592",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1838302592": {
+    "card_identifier": "1838302592",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-969854144": {
     "card_identifier": "-969854144",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -21482,7 +21513,7 @@
   "1476585688": {
     "card_identifier": "1476585688",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -21554,10 +21585,19 @@
       }
     }
   },
+  "-1977529248": {
+    "card_identifier": "-1977529248",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1545526752": {
     "card_identifier": "1545526752",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -21627,7 +21667,7 @@
   "-1112574744": {
     "card_identifier": "-1112574744",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -21681,7 +21721,7 @@
   "902002979": {
     "card_identifier": "902002979",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -21734,7 +21774,7 @@
   "-1273494393": {
     "card_identifier": "-1273494393",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -21788,7 +21828,7 @@
   "-1844524929": {
     "card_identifier": "-1844524929",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -21939,7 +21979,7 @@
   "-380664223": {
     "card_identifier": "-380664223",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22010,7 +22050,7 @@
   "-1787516759": {
     "card_identifier": "-1787516759",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22063,7 +22103,7 @@
   "584200035": {
     "card_identifier": "584200035",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22277,7 +22317,7 @@
   "-1994098764": {
     "card_identifier": "-1994098764",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22331,7 +22371,7 @@
   "199439873": {
     "card_identifier": "199439873",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22407,7 +22447,7 @@
   "1928091208": {
     "card_identifier": "1928091208",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22469,7 +22509,7 @@
   "683467761": {
     "card_identifier": "683467761",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22522,7 +22562,7 @@
   "-1623333406": {
     "card_identifier": "-1623333406",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22584,7 +22624,7 @@
   "-1073601728": {
     "card_identifier": "-1073601728",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22671,6 +22711,24 @@
       }
     }
   },
+  "684551618": {
+    "card_identifier": "684551618",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-94361206": {
+    "card_identifier": "-94361206",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-909166425": {
     "card_identifier": "-909166425",
     "sides": {
@@ -22689,10 +22747,19 @@
       }
     }
   },
+  "1959882489": {
+    "card_identifier": "1959882489",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "199100320": {
     "card_identifier": "199100320",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22745,7 +22812,7 @@
   "-282584472": {
     "card_identifier": "-282584472",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22841,7 +22908,7 @@
   "-793924482": {
     "card_identifier": "-793924482",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -22889,10 +22956,19 @@
       }
     }
   },
+  "-1917555023": {
+    "card_identifier": "-1917555023",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1815379056": {
     "card_identifier": "-1815379056",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -22998,7 +23074,7 @@
   "605854204": {
     "card_identifier": "605854204",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -23056,51 +23132,7 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_protect",
-            "activation_mode": "static",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "protect",
-                "effect_type": "ongoing",
-                "duration": "permanent",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "all heroes in players territory",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [
-                    "harm or negative effect"
-                  ],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
@@ -23261,7 +23293,7 @@
   "1391584815": {
     "card_identifier": "1391584815",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -23512,10 +23544,19 @@
       }
     }
   },
+  "-636306929": {
+    "card_identifier": "-636306929",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "536198834": {
     "card_identifier": "536198834",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -23566,7 +23607,7 @@
   "2066054541": {
     "card_identifier": "2066054541",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -23620,7 +23661,7 @@
   "-209639176": {
     "card_identifier": "-209639176",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -23674,7 +23715,7 @@
   "-588475073": {
     "card_identifier": "-588475073",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -23728,7 +23769,7 @@
   "1482299327": {
     "card_identifier": "1482299327",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -23778,10 +23819,19 @@
       }
     }
   },
+  "409835075": {
+    "card_identifier": "409835075",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1902386816": {
     "card_identifier": "-1902386816",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -23837,7 +23887,7 @@
   "-679171301": {
     "card_identifier": "-679171301",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -23888,7 +23938,7 @@
   "-1308525993": {
     "card_identifier": "-1308525993",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -23942,7 +23992,7 @@
   "-223206899": {
     "card_identifier": "-223206899",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -23992,6 +24042,24 @@
       }
     }
   },
+  "852945638": {
+    "card_identifier": "852945638",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-889283811": {
+    "card_identifier": "-889283811",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "9023971": {
     "card_identifier": "9023971",
     "sides": {
@@ -24015,52 +24083,7 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_discard",
-            "activation_mode": "immediate",
-            "is_optional": true,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "discard",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "this card to withdraw an opposing character or negate and underdeck an artifact",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 1,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": "discard_pile",
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
@@ -24069,59 +24092,14 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_discard",
-            "activation_mode": "immediate",
-            "is_optional": true,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "discard",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "this card to withdraw an opposing character or negate and underdeck an artifact",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 1,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": "discard_pile",
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
   "-393048385": {
     "card_identifier": "-393048385",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -24219,7 +24197,7 @@
   "-615026210": {
     "card_identifier": "-615026210",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -24273,7 +24251,7 @@
   "-978550881": {
     "card_identifier": "-978550881",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -24726,7 +24704,7 @@
   "-2044521143": {
     "card_identifier": "-2044521143",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -24786,7 +24764,7 @@
   "1855457802": {
     "card_identifier": "1855457802",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -24843,6 +24821,24 @@
       }
     }
   },
+  "-1759889104": {
+    "card_identifier": "-1759889104",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1985448165": {
+    "card_identifier": "-1985448165",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-2132054474": {
     "card_identifier": "-2132054474",
     "sides": {
@@ -24855,7 +24851,7 @@
   "1675558400": {
     "card_identifier": "1675558400",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -24909,7 +24905,7 @@
   "-1967642917": {
     "card_identifier": "-1967642917",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -24963,7 +24959,7 @@
   "-1315353557": {
     "card_identifier": "-1315353557",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -25023,7 +25019,7 @@
   "1058456344": {
     "card_identifier": "1058456344",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -25142,7 +25138,7 @@
   "-839792347": {
     "card_identifier": "-839792347",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -25195,7 +25191,7 @@
   "-86382191": {
     "card_identifier": "-86382191",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -25249,7 +25245,7 @@
   "1171447577": {
     "card_identifier": "1171447577",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -25359,7 +25355,7 @@
   "-954470221": {
     "card_identifier": "-954470221",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -25433,49 +25429,7 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_withdraw",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "withdraw",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "opposing characters to take a site from opponent",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
@@ -25506,10 +25460,19 @@
       }
     }
   },
+  "-559013149": {
+    "card_identifier": "-559013149",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-2063513066": {
     "card_identifier": "-2063513066",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -25567,6 +25530,15 @@
       }
     }
   },
+  "-1901151319": {
+    "card_identifier": "-1901151319",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-547985000": {
     "card_identifier": "-547985000",
     "sides": {
@@ -25579,7 +25551,7 @@
   "390226218": {
     "card_identifier": "390226218",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "instead",
@@ -25643,7 +25615,7 @@
   "1437823639": {
     "card_identifier": "1437823639",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "instead",
@@ -25707,7 +25679,7 @@
   "1946336576": {
     "card_identifier": "1946336576",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -25783,7 +25755,7 @@
   "1304164234": {
     "card_identifier": "1304164234",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -25903,6 +25875,15 @@
   },
   "2129756361": {
     "card_identifier": "2129756361",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1751063397": {
+    "card_identifier": "-1751063397",
     "sides": {
       "shared": {
         "modifiers": [],
@@ -27072,7 +27053,7 @@
   "-1008430175": {
     "card_identifier": "-1008430175",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -27125,7 +27106,7 @@
   "-1716481681": {
     "card_identifier": "-1716481681",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -27214,7 +27195,7 @@
   "1400695121": {
     "card_identifier": "1400695121",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -27318,7 +27299,7 @@
   "-2036074571": {
     "card_identifier": "-2036074571",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -27371,7 +27352,7 @@
   "-1933052425": {
     "card_identifier": "-1933052425",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -27447,7 +27428,7 @@
   "-812772902": {
     "card_identifier": "-812772902",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -27524,6 +27505,15 @@
             "choice_group": null
           }
         ]
+      }
+    }
+  },
+  "-289030944": {
+    "card_identifier": "-289030944",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
       }
     }
   },
@@ -27624,163 +27614,10 @@
       }
     }
   },
-  "-1626571963": {
-    "card_identifier": "-1626571963",
-    "sides": {
-      "top": {
-        "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_topdeck",
-            "activation_mode": "triggered",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "topdeck",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "deck",
-                  "target_type": null,
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [
-                    "nativity Hero"
-                  ],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 1,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": "deck",
-                "destination_position": "top",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
-      },
-      "bottom": {
-        "modifiers": [
-          {
-            "modifier_type": "cannot_be_prevented",
-            "applies_to": "this_side",
-            "limit_params": null,
-            "replacement_params": null
-          }
-        ],
-        "abilities": [
-          {
-            "ability_id": "ab_1_draw",
-            "activation_mode": "immediate",
-            "is_optional": true,
-            "is_preventable": false,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "draw",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_next",
-                  "zone_owner": "controller",
-                  "scope": "deck",
-                  "target_type": null,
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 2,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": "hand",
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          },
-          {
-            "ability_id": "ab_2_negate",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": false,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "negate",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "evil cards with toughness x or greater",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
-      }
-    }
-  },
   "1315964705": {
     "card_identifier": "1315964705",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -27836,7 +27673,7 @@
   "27009089": {
     "card_identifier": "27009089",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -27891,6 +27728,15 @@
   },
   "115102928": {
     "card_identifier": "115102928",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1278285816": {
+    "card_identifier": "1278285816",
     "sides": {
       "shared": {
         "modifiers": [],
@@ -28054,6 +27900,24 @@
       }
     }
   },
+  "-160263637": {
+    "card_identifier": "-160263637",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1396441364": {
+    "card_identifier": "1396441364",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-818080354": {
     "card_identifier": "-818080354",
     "sides": {
@@ -28099,10 +27963,28 @@
       }
     }
   },
+  "-997963719": {
+    "card_identifier": "-997963719",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-962237058": {
+    "card_identifier": "-962237058",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1033903012": {
     "card_identifier": "1033903012",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -28153,7 +28035,7 @@
   "1540021126": {
     "card_identifier": "1540021126",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -28207,7 +28089,7 @@
   "1709886188": {
     "card_identifier": "1709886188",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -28261,7 +28143,7 @@
   "689915219": {
     "card_identifier": "689915219",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -28394,114 +28276,15 @@
     "card_identifier": "-789817333",
     "sides": {
       "shared": {
-        "modifiers": [
-          {
-            "modifier_type": "cannot_be_negated",
-            "applies_to": "this_side",
-            "limit_params": null,
-            "replacement_params": null
-          }
-        ],
-        "abilities": [
-          {
-            "ability_id": "ab_1_context_scope",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": false,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [
-              {
-                "condition_type": "zone_check",
-                "selector": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "daniel hero or babylonian",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "operator": ">=",
-                "value": 1
-              }
-            ],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "reveal",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "deck",
-                  "target_type": null,
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 3,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": true,
-                "dependency": "always"
-              },
-              {
-                "step": 2,
-                "action": "discard",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "context_scope",
-                  "target_type": null,
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 1,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": "discard_pile",
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "modifiers": [],
+        "abilities": []
       }
     }
   },
   "1435488864": {
     "card_identifier": "1435488864",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -28564,7 +28347,7 @@
   "1641962238": {
     "card_identifier": "1641962238",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -28649,7 +28432,7 @@
   "1388398848": {
     "card_identifier": "1388398848",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -28702,7 +28485,7 @@
   "-1595709424": {
     "card_identifier": "-1595709424",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -28801,7 +28584,7 @@
   "658029742": {
     "card_identifier": "658029742",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -28907,7 +28690,7 @@
   "-345990395": {
     "card_identifier": "-345990395",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -29013,7 +28796,7 @@
   "-717902303": {
     "card_identifier": "-717902303",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -29064,7 +28847,7 @@
   "-1763494615": {
     "card_identifier": "-1763494615",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -29172,7 +28955,7 @@
   "-1639494110": {
     "card_identifier": "-1639494110",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -29257,7 +29040,7 @@
   "-1025137228": {
     "card_identifier": "-1025137228",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -29310,7 +29093,7 @@
   "1101736337": {
     "card_identifier": "1101736337",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -29370,7 +29153,7 @@
   "518143325": {
     "card_identifier": "518143325",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -29421,7 +29204,7 @@
   "-915339771": {
     "card_identifier": "-915339771",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -29516,7 +29299,7 @@
   "-1861302300": {
     "card_identifier": "-1861302300",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -29611,7 +29394,7 @@
   "-1072206777": {
     "card_identifier": "-1072206777",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -29706,7 +29489,7 @@
   "1707842764": {
     "card_identifier": "1707842764",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -29759,7 +29542,7 @@
   "-1237754444": {
     "card_identifier": "-1237754444",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -30018,10 +29801,19 @@
       }
     }
   },
+  "-1082275220": {
+    "card_identifier": "-1082275220",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "5075200": {
     "card_identifier": "5075200",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -30074,7 +29866,7 @@
   "46418901": {
     "card_identifier": "46418901",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -30136,7 +29928,7 @@
   "-2045602558": {
     "card_identifier": "-2045602558",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -30235,7 +30027,7 @@
   "-433165408": {
     "card_identifier": "-433165408",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -30328,6 +30120,15 @@
       }
     }
   },
+  "-1439406385": {
+    "card_identifier": "-1439406385",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1449872965": {
     "card_identifier": "-1449872965",
     "sides": {
@@ -30340,7 +30141,7 @@
   "896048959": {
     "card_identifier": "896048959",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -30413,7 +30214,7 @@
   "1944000336": {
     "card_identifier": "1944000336",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -30464,7 +30265,7 @@
   "-27986015": {
     "card_identifier": "-27986015",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": []
       }
@@ -30473,7 +30274,7 @@
   "-1786415345": {
     "card_identifier": "-1786415345",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -30565,10 +30366,19 @@
       }
     }
   },
+  "-2061419535": {
+    "card_identifier": "-2061419535",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1185897921": {
     "card_identifier": "-1185897921",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -30624,7 +30434,7 @@
   "-1355802455": {
     "card_identifier": "-1355802455",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -30680,7 +30490,7 @@
   "1168789952": {
     "card_identifier": "1168789952",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -30731,152 +30541,6 @@
       }
     }
   },
-  "-1479883486": {
-    "card_identifier": "-1479883486",
-    "sides": {
-      "top": {
-        "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_negate",
-            "activation_mode": "triggered",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "negate",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "lost souls until end of turn",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
-      },
-      "bottom": {
-        "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_discard",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "discard",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "evil card",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 1,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": "discard_pile",
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          },
-          {
-            "ability_id": "ab_2_topdeck",
-            "activation_mode": "immediate",
-            "is_optional": true,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "topdeck",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "deck",
-                  "target_type": null,
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [
-                    "good card from deck (or take it if opponent has hand advantage)"
-                  ],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 1,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": "deck",
-                "destination_position": "top",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
-      }
-    }
-  },
   "-1625191773": {
     "card_identifier": "-1625191773",
     "sides": {
@@ -30889,7 +30553,7 @@
   "-68322314": {
     "card_identifier": "-68322314",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -31042,6 +30706,15 @@
       }
     }
   },
+  "-805782778": {
+    "card_identifier": "-805782778",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "34423495": {
     "card_identifier": "34423495",
     "sides": {
@@ -31056,95 +30729,7 @@
     "sides": {
       "shared": {
         "modifiers": [],
-        "abilities": [
-          {
-            "ability_id": "ab_1_withdraw",
-            "activation_mode": "immediate",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "withdraw",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": "opposing characters",
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          },
-          {
-            "ability_id": "ab_2_topdeck",
-            "activation_mode": "immediate",
-            "is_optional": true,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": true,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "topdeck",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "deck",
-                  "target_type": null,
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [
-                    "Ruth card from Reserve"
-                  ],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 1,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": "deck",
-                "destination_position": "top",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
+        "abilities": []
       }
     }
   },
@@ -31169,7 +30754,7 @@
   "-664501434": {
     "card_identifier": "-664501434",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -31267,7 +30852,7 @@
   "758912005": {
     "card_identifier": "758912005",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -31321,7 +30906,7 @@
   "-1837458535": {
     "card_identifier": "-1837458535",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -31465,7 +31050,7 @@
   "1400966924": {
     "card_identifier": "1400966924",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -31520,10 +31105,19 @@
       }
     }
   },
+  "-1235799952": {
+    "card_identifier": "-1235799952",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1560182682": {
     "card_identifier": "1560182682",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -31577,7 +31171,7 @@
   "658730208": {
     "card_identifier": "658730208",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -31669,6 +31263,15 @@
       }
     }
   },
+  "-814326091": {
+    "card_identifier": "-814326091",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1667179379": {
     "card_identifier": "-1667179379",
     "sides": {
@@ -31708,7 +31311,7 @@
   "568714050": {
     "card_identifier": "568714050",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -31809,7 +31412,7 @@
   "-2098344744": {
     "card_identifier": "-2098344744",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -31906,10 +31509,19 @@
       }
     }
   },
+  "-1563001018": {
+    "card_identifier": "-1563001018",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1274974808": {
     "card_identifier": "1274974808",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -31963,7 +31575,7 @@
   "555383020": {
     "card_identifier": "555383020",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -32026,7 +31638,7 @@
   "1512961036": {
     "card_identifier": "1512961036",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -32079,7 +31691,7 @@
   "1609452489": {
     "card_identifier": "1609452489",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -32132,7 +31744,7 @@
   "1642070511": {
     "card_identifier": "1642070511",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -32185,7 +31797,7 @@
   "-1339931472": {
     "card_identifier": "-1339931472",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -32265,7 +31877,7 @@
   "1015125926": {
     "card_identifier": "1015125926",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -32327,7 +31939,7 @@
   "-1424763233": {
     "card_identifier": "-1424763233",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -32383,7 +31995,7 @@
   "1381592137": {
     "card_identifier": "1381592137",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -32439,7 +32051,7 @@
   "1682928387": {
     "card_identifier": "1682928387",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -32534,7 +32146,7 @@
   "1167725569": {
     "card_identifier": "1167725569",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -32629,7 +32241,7 @@
   "393348768": {
     "card_identifier": "393348768",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -32904,7 +32516,7 @@
   "674948204": {
     "card_identifier": "674948204",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "regardless",
@@ -32993,7 +32605,7 @@
   "-1662250557": {
     "card_identifier": "-1662250557",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -33051,7 +32663,7 @@
   "261901431": {
     "card_identifier": "261901431",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -33124,10 +32736,19 @@
       }
     }
   },
+  "1932162880": {
+    "card_identifier": "1932162880",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1278294591": {
     "card_identifier": "-1278294591",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -33210,7 +32831,7 @@
   "-557944514": {
     "card_identifier": "-557944514",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -33293,7 +32914,7 @@
   "-935364512": {
     "card_identifier": "-935364512",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -33486,7 +33107,7 @@
   "495678912": {
     "card_identifier": "495678912",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -33540,7 +33161,7 @@
   "155520193": {
     "card_identifier": "155520193",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -33594,7 +33215,7 @@
   "2074643393": {
     "card_identifier": "2074643393",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -33669,7 +33290,7 @@
   "-1638870204": {
     "card_identifier": "-1638870204",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -33737,6 +33358,15 @@
       }
     }
   },
+  "-1096863773": {
+    "card_identifier": "-1096863773",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1768840819": {
     "card_identifier": "-1768840819",
     "sides": {
@@ -33785,7 +33415,7 @@
   "1060967904": {
     "card_identifier": "1060967904",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -33836,7 +33466,7 @@
   "1840887203": {
     "card_identifier": "1840887203",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -33930,7 +33560,7 @@
   "474470443": {
     "card_identifier": "474470443",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -33986,7 +33616,7 @@
   "440994378": {
     "card_identifier": "440994378",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -34042,7 +33672,7 @@
   "1903659146": {
     "card_identifier": "1903659146",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -34125,7 +33755,7 @@
   "785084795": {
     "card_identifier": "785084795",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -34179,7 +33809,7 @@
   "-159411235": {
     "card_identifier": "-159411235",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -34233,7 +33863,7 @@
   "676518560": {
     "card_identifier": "676518560",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -34284,7 +33914,7 @@
   "-1185600472": {
     "card_identifier": "-1185600472",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -34381,7 +34011,7 @@
   "-1931729365": {
     "card_identifier": "-1931729365",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -34440,10 +34070,19 @@
       }
     }
   },
+  "1896425282": {
+    "card_identifier": "1896425282",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1379864418": {
     "card_identifier": "-1379864418",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -34538,7 +34177,7 @@
   "-1706997424": {
     "card_identifier": "-1706997424",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -34751,8 +34390,26 @@
       }
     }
   },
+  "1879814433": {
+    "card_identifier": "1879814433",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1173429681": {
     "card_identifier": "-1173429681",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "2106348283": {
+    "card_identifier": "2106348283",
     "sides": {
       "shared": {
         "modifiers": [],
@@ -34790,7 +34447,7 @@
   "489205031": {
     "card_identifier": "489205031",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -34869,7 +34526,7 @@
   "1075451603": {
     "card_identifier": "1075451603",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -34942,10 +34599,19 @@
       }
     }
   },
+  "-892531779": {
+    "card_identifier": "-892531779",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-2085776658": {
     "card_identifier": "-2085776658",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -34996,7 +34662,7 @@
   "1698848896": {
     "card_identifier": "1698848896",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35046,10 +34712,19 @@
       }
     }
   },
+  "1373984512": {
+    "card_identifier": "1373984512",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "2063852732": {
     "card_identifier": "2063852732",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35102,7 +34777,7 @@
   "1264728886": {
     "card_identifier": "1264728886",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35156,7 +34831,7 @@
   "-1604924578": {
     "card_identifier": "-1604924578",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35228,7 +34903,7 @@
   "1145597161": {
     "card_identifier": "1145597161",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35279,8 +34954,26 @@
       }
     }
   },
+  "574430533": {
+    "card_identifier": "574430533",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "430950491": {
     "card_identifier": "430950491",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-915012251": {
+    "card_identifier": "-915012251",
     "sides": {
       "shared": {
         "modifiers": [],
@@ -35291,7 +34984,7 @@
   "1295716417": {
     "card_identifier": "1295716417",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35370,7 +35063,7 @@
   "1656096201": {
     "card_identifier": "1656096201",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35439,7 +35132,7 @@
   "-1187452512": {
     "card_identifier": "-1187452512",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -35522,7 +35215,7 @@
   "-193361123": {
     "card_identifier": "-193361123",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35617,7 +35310,7 @@
   "259520081": {
     "card_identifier": "259520081",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35712,7 +35405,7 @@
   "-1793688695": {
     "card_identifier": "-1793688695",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -35772,7 +35465,7 @@
   "-1161755043": {
     "card_identifier": "-1161755043",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35854,7 +35547,7 @@
   "1728779844": {
     "card_identifier": "1728779844",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35907,7 +35600,7 @@
   "173692830": {
     "card_identifier": "173692830",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -35960,7 +35653,7 @@
   "1226092643": {
     "card_identifier": "1226092643",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -36013,7 +35706,7 @@
   "-358918557": {
     "card_identifier": "-358918557",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -36066,7 +35759,7 @@
   "-1256199960": {
     "card_identifier": "-1256199960",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -36219,6 +35912,15 @@
       }
     }
   },
+  "1713428197": {
+    "card_identifier": "1713428197",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1443817516": {
     "card_identifier": "1443817516",
     "sides": {
@@ -36267,7 +35969,7 @@
   "200372648": {
     "card_identifier": "200372648",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -36361,7 +36063,7 @@
   "-285141433": {
     "card_identifier": "-285141433",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -36463,7 +36165,7 @@
   "-2097085070": {
     "card_identifier": "-2097085070",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -36517,7 +36219,7 @@
   "16180984": {
     "card_identifier": "16180984",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -36571,7 +36273,7 @@
   "-568605181": {
     "card_identifier": "-568605181",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -36624,7 +36326,7 @@
   "1061691471": {
     "card_identifier": "1061691471",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -36684,7 +36386,7 @@
   "550281601": {
     "card_identifier": "550281601",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -36746,10 +36448,19 @@
       }
     }
   },
+  "282150766": {
+    "card_identifier": "282150766",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "639284769": {
     "card_identifier": "639284769",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -36812,7 +36523,7 @@
   "-1182558005": {
     "card_identifier": "-1182558005",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -36978,7 +36689,7 @@
   "-851721503": {
     "card_identifier": "-851721503",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -37029,7 +36740,7 @@
   "2005096803": {
     "card_identifier": "2005096803",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -37082,7 +36793,7 @@
   "569155335": {
     "card_identifier": "569155335",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -37149,7 +36860,7 @@
   "-262101197": {
     "card_identifier": "-262101197",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -37200,7 +36911,7 @@
   "-1931130363": {
     "card_identifier": "-1931130363",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -37260,7 +36971,7 @@
   "-1410701426": {
     "card_identifier": "-1410701426",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -37320,7 +37031,7 @@
   "-792843136": {
     "card_identifier": "-792843136",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -37424,7 +37135,7 @@
   "-296081895": {
     "card_identifier": "-296081895",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -37521,7 +37232,7 @@
   "6238458": {
     "card_identifier": "6238458",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -37574,7 +37285,7 @@
   "-2028110933": {
     "card_identifier": "-2028110933",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -37627,7 +37338,7 @@
   "-1816351558": {
     "card_identifier": "-1816351558",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -37729,10 +37440,46 @@
       }
     }
   },
+  "-978971521": {
+    "card_identifier": "-978971521",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "742385919": {
+    "card_identifier": "742385919",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1156590708": {
+    "card_identifier": "-1156590708",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-383981383": {
+    "card_identifier": "-383981383",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1194197495": {
     "card_identifier": "-1194197495",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -38229,7 +37976,7 @@
   "2141179500": {
     "card_identifier": "2141179500",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -38459,7 +38206,7 @@
   "1278903528": {
     "card_identifier": "1278903528",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -38513,7 +38260,7 @@
   "-1761575095": {
     "card_identifier": "-1761575095",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -38564,10 +38311,28 @@
       }
     }
   },
+  "1211833271": {
+    "card_identifier": "1211833271",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "556239847": {
+    "card_identifier": "556239847",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "2098039680": {
     "card_identifier": "2098039680",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -38670,7 +38435,7 @@
   "276063578": {
     "card_identifier": "276063578",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -38830,7 +38595,7 @@
   "1175663917": {
     "card_identifier": "1175663917",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -38881,7 +38646,7 @@
   "157409819": {
     "card_identifier": "157409819",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -38944,7 +38709,7 @@
   "1970110837": {
     "card_identifier": "1970110837",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -38998,7 +38763,7 @@
   "-2124633287": {
     "card_identifier": "-2124633287",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -39049,6 +38814,15 @@
       }
     }
   },
+  "777438563": {
+    "card_identifier": "777438563",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1115976407": {
     "card_identifier": "-1115976407",
     "sides": {
@@ -39070,7 +38844,7 @@
   "255628321": {
     "card_identifier": "255628321",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -39123,7 +38897,7 @@
   "-724231552": {
     "card_identifier": "-724231552",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -39174,7 +38948,7 @@
   "645511748": {
     "card_identifier": "645511748",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -40138,7 +39912,7 @@
   "482883220": {
     "card_identifier": "482883220",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -40196,7 +39970,7 @@
   "-441178484": {
     "card_identifier": "-441178484",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -40250,7 +40024,7 @@
   "381335490": {
     "card_identifier": "381335490",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -40301,7 +40075,7 @@
   "1848696836": {
     "card_identifier": "1848696836",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -40352,7 +40126,7 @@
   "-2062360603": {
     "card_identifier": "-2062360603",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -40406,7 +40180,7 @@
   "66332337": {
     "card_identifier": "66332337",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -40482,7 +40256,7 @@
   "-811778029": {
     "card_identifier": "-811778029",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -40603,7 +40377,7 @@
   "2111694035": {
     "card_identifier": "2111694035",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -40701,7 +40475,7 @@
   "-588621901": {
     "card_identifier": "-588621901",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -40858,7 +40632,7 @@
   "-93152474": {
     "card_identifier": "-93152474",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -40909,7 +40683,7 @@
   "-1171724358": {
     "card_identifier": "-1171724358",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -41161,7 +40935,7 @@
   "-627605698": {
     "card_identifier": "-627605698",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -41257,7 +41031,7 @@
   "-965367853": {
     "card_identifier": "-965367853",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -41380,7 +41154,7 @@
   "-1720088799": {
     "card_identifier": "-1720088799",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -41440,7 +41214,7 @@
   "1186217632": {
     "card_identifier": "1186217632",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -41494,7 +41268,7 @@
   "1000654": {
     "card_identifier": "1000654",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -41576,7 +41350,7 @@
   "-201495696": {
     "card_identifier": "-201495696",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -41657,7 +41431,7 @@
   "557940707": {
     "card_identifier": "557940707",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -41711,7 +41485,7 @@
   "1206590329": {
     "card_identifier": "1206590329",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -41765,7 +41539,7 @@
   "1005696911": {
     "card_identifier": "1005696911",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -41832,7 +41606,7 @@
   "-1381553327": {
     "card_identifier": "-1381553327",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -41942,7 +41716,7 @@
   "-271156015": {
     "card_identifier": "-271156015",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -42070,7 +41844,7 @@
   "1380393402": {
     "card_identifier": "1380393402",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -42207,10 +41981,19 @@
       }
     }
   },
+  "920915608": {
+    "card_identifier": "920915608",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "475842079": {
     "card_identifier": "475842079",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -42308,7 +42091,7 @@
   "1214285091": {
     "card_identifier": "1214285091",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -42426,6 +42209,24 @@
       }
     }
   },
+  "-101318748": {
+    "card_identifier": "-101318748",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1999869087": {
+    "card_identifier": "-1999869087",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1106962974": {
     "card_identifier": "1106962974",
     "sides": {
@@ -42435,146 +42236,10 @@
       }
     }
   },
-  "-476621636": {
-    "card_identifier": "-476621636",
-    "sides": {
-      "shared": {
-        "modifiers": [
-          {
-            "modifier_type": "cannot_be_negated",
-            "applies_to": "this_side",
-            "limit_params": null,
-            "replacement_params": null
-          }
-        ],
-        "abilities": [
-          {
-            "ability_id": "oak_angel_draw_exchange",
-            "activation_mode": "immediate",
-            "is_optional": true,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": false,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "draw",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": null,
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 2,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              },
-              {
-                "step": 2,
-                "action": "exchange",
-                "effect_type": "instant",
-                "duration": "instant",
-                "target": {
-                  "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
-                  "scope": "territory",
-                  "target_type": "hero",
-                  "brigades": [
-                    "Gold"
-                  ],
-                  "alignment": null,
-                  "identifiers": [
-                    "Judge"
-                  ],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "count": {
-                    "fixed_value": 1,
-                    "dynamic": null
-                  },
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          },
-          {
-            "ability_id": "oak_angel_protect_gideon",
-            "activation_mode": "static",
-            "is_optional": false,
-            "is_preventable": true,
-            "is_interruptible": true,
-            "is_negatable": false,
-            "trigger_event": null,
-            "trigger_filter": null,
-            "conditions": [],
-            "costs": [],
-            "effects": [
-              {
-                "step": 1,
-                "action": "protect",
-                "effect_type": "ongoing",
-                "duration": "permanent",
-                "target": {
-                  "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
-                  "scope": "battle",
-                  "target_type": null,
-                  "brigades": [],
-                  "alignment": null,
-                  "identifiers": [],
-                  "card_titles": [
-                    "Gideon"
-                  ],
-                  "target_card_ids": [],
-                  "count": null,
-                  "ref_step": null
-                },
-                "destination": null,
-                "destination_position": "as_is",
-                "strength_mod": null,
-                "toughness_mod": null,
-                "creates_context_scope": false,
-                "dependency": "always"
-              }
-            ],
-            "modifiers": [],
-            "choice_group": null
-          }
-        ]
-      }
-    }
-  },
   "366210466": {
     "card_identifier": "366210466",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -42644,7 +42309,7 @@
   "759065707": {
     "card_identifier": "759065707",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -43134,6 +42799,24 @@
       }
     }
   },
+  "-1930446405": {
+    "card_identifier": "-1930446405",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "72469100": {
+    "card_identifier": "72469100",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-760793616": {
     "card_identifier": "-760793616",
     "sides": {
@@ -43261,7 +42944,7 @@
   "-972102560": {
     "card_identifier": "-972102560",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -43312,10 +42995,19 @@
       }
     }
   },
+  "-949708643": {
+    "card_identifier": "-949708643",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-83046465": {
     "card_identifier": "-83046465",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -43388,7 +43080,7 @@
   "-776447716": {
     "card_identifier": "-776447716",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -43485,7 +43177,7 @@
   "1095034305": {
     "card_identifier": "1095034305",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -43543,7 +43235,7 @@
   "1548114790": {
     "card_identifier": "1548114790",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -43591,10 +43283,19 @@
       }
     }
   },
+  "-1277344350": {
+    "card_identifier": "-1277344350",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-244650906": {
     "card_identifier": "-244650906",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -43654,7 +43355,7 @@
   "1480931908": {
     "card_identifier": "1480931908",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -43724,7 +43425,7 @@
   "-1372011793": {
     "card_identifier": "-1372011793",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -43784,7 +43485,7 @@
   "1959048211": {
     "card_identifier": "1959048211",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -43866,7 +43567,7 @@
   "-62956844": {
     "card_identifier": "-62956844",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -43917,7 +43618,7 @@
   "337078346": {
     "card_identifier": "337078346",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -43968,7 +43669,7 @@
   "1628250609": {
     "card_identifier": "1628250609",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -44022,7 +43723,7 @@
   "402804480": {
     "card_identifier": "402804480",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -44083,7 +43784,7 @@
   "-110618490": {
     "card_identifier": "-110618490",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -44141,7 +43842,7 @@
   "-1570873357": {
     "card_identifier": "-1570873357",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -44199,7 +43900,7 @@
   "166084292": {
     "card_identifier": "166084292",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -44295,7 +43996,7 @@
   "1724845694": {
     "card_identifier": "1724845694",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -44397,8 +44098,53 @@
       }
     }
   },
+  "278140191": {
+    "card_identifier": "278140191",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1514466594": {
+    "card_identifier": "1514466594",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-2147002055": {
     "card_identifier": "-2147002055",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "961662311": {
+    "card_identifier": "961662311",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1038819888": {
+    "card_identifier": "1038819888",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1642381556": {
+    "card_identifier": "1642381556",
     "sides": {
       "shared": {
         "modifiers": [],
@@ -44409,7 +44155,7 @@
   "1521970089": {
     "card_identifier": "1521970089",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -44463,7 +44209,7 @@
   "-1310421941": {
     "card_identifier": "-1310421941",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -44511,6 +44257,24 @@
             "choice_group": null
           }
         ]
+      }
+    }
+  },
+  "1340323454": {
+    "card_identifier": "1340323454",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1276443836": {
+    "card_identifier": "1276443836",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
       }
     }
   },
@@ -44738,7 +44502,7 @@
   "-580187681": {
     "card_identifier": "-580187681",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -44792,7 +44556,7 @@
   "1847816742": {
     "card_identifier": "1847816742",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -44853,7 +44617,7 @@
   "-597322890": {
     "card_identifier": "-597322890",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -44947,7 +44711,7 @@
   "-945474984": {
     "card_identifier": "-945474984",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -45044,7 +44808,7 @@
   "423941708": {
     "card_identifier": "423941708",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -45111,10 +44875,19 @@
       }
     }
   },
+  "-1853270681": {
+    "card_identifier": "-1853270681",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "425415957": {
     "card_identifier": "425415957",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -45215,7 +44988,7 @@
   "-782245780": {
     "card_identifier": "-782245780",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -45268,7 +45041,7 @@
   "787071978": {
     "card_identifier": "787071978",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -45318,10 +45091,37 @@
       }
     }
   },
+  "1920186199": {
+    "card_identifier": "1920186199",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "107920505": {
+    "card_identifier": "107920505",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-272516890": {
+    "card_identifier": "-272516890",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-2064390913": {
     "card_identifier": "-2064390913",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -45375,7 +45175,7 @@
   "-1675807482": {
     "card_identifier": "-1675807482",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "instead",
@@ -45463,7 +45263,7 @@
   "-858146344": {
     "card_identifier": "-858146344",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -45681,7 +45481,7 @@
   "1349149475": {
     "card_identifier": "1349149475",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -45742,7 +45542,7 @@
   "958781266": {
     "card_identifier": "958781266",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -45837,7 +45637,7 @@
   "1039897147": {
     "card_identifier": "1039897147",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -45900,7 +45700,7 @@
   "-1157221944": {
     "card_identifier": "-1157221944",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -45976,7 +45776,7 @@
   "1608536718": {
     "card_identifier": "1608536718",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -46027,7 +45827,7 @@
   "1860354509": {
     "card_identifier": "1860354509",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -46081,7 +45881,7 @@
   "-1903754661": {
     "card_identifier": "-1903754661",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -46193,6 +45993,51 @@
   },
   "865687777": {
     "card_identifier": "865687777",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1326534368": {
+    "card_identifier": "-1326534368",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-2093869999": {
+    "card_identifier": "-2093869999",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-2010961368": {
+    "card_identifier": "-2010961368",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "2057201180": {
+    "card_identifier": "2057201180",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-792156637": {
+    "card_identifier": "-792156637",
     "sides": {
       "shared": {
         "modifiers": [],
@@ -46400,10 +46245,28 @@
       }
     }
   },
+  "802111712": {
+    "card_identifier": "802111712",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-140086689": {
+    "card_identifier": "-140086689",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1556730440": {
     "card_identifier": "1556730440",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -46552,7 +46415,7 @@
   "-611709181": {
     "card_identifier": "-611709181",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -46742,7 +46605,7 @@
   "-931890752": {
     "card_identifier": "-931890752",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -46840,7 +46703,7 @@
   "-1441749645": {
     "card_identifier": "-1441749645",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -46950,7 +46813,7 @@
   "185756363": {
     "card_identifier": "185756363",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -47069,7 +46932,7 @@
   "-390106904": {
     "card_identifier": "-390106904",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -47260,7 +47123,7 @@
   "-1689148820": {
     "card_identifier": "-1689148820",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -47314,7 +47177,7 @@
   "-1570414894": {
     "card_identifier": "-1570414894",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -47368,7 +47231,7 @@
   "-1144988221": {
     "card_identifier": "-1144988221",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -47419,10 +47282,28 @@
       }
     }
   },
+  "-583006450": {
+    "card_identifier": "-583006450",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "926811108": {
+    "card_identifier": "926811108",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1777510845": {
     "card_identifier": "-1777510845",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -47498,7 +47379,7 @@
   "-102842892": {
     "card_identifier": "-102842892",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -47604,7 +47485,7 @@
   "899241422": {
     "card_identifier": "899241422",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -47729,7 +47610,7 @@
   "53915851": {
     "card_identifier": "53915851",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -47832,6 +47713,15 @@
             "choice_group": null
           }
         ]
+      }
+    }
+  },
+  "-1093610407": {
+    "card_identifier": "-1093610407",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
       }
     }
   },
@@ -47979,10 +47869,28 @@
       }
     }
   },
+  "1543657928": {
+    "card_identifier": "1543657928",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1789821770": {
+    "card_identifier": "-1789821770",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-657958635": {
     "card_identifier": "-657958635",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -48083,7 +47991,7 @@
   "-1847459701": {
     "card_identifier": "-1847459701",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -48199,7 +48107,7 @@
   "-1875797773": {
     "card_identifier": "-1875797773",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -48300,7 +48208,7 @@
   "991506751": {
     "card_identifier": "991506751",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -48403,7 +48311,7 @@
   "-2038923257": {
     "card_identifier": "-2038923257",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -48579,10 +48487,46 @@
       }
     }
   },
+  "1905130050": {
+    "card_identifier": "1905130050",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-2041878896": {
+    "card_identifier": "-2041878896",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1326680392": {
+    "card_identifier": "-1326680392",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "823924275": {
+    "card_identifier": "823924275",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "680979905": {
     "card_identifier": "680979905",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -48643,7 +48587,7 @@
   "-1021601550": {
     "card_identifier": "-1021601550",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -48747,7 +48691,7 @@
   "426092500": {
     "card_identifier": "426092500",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "regardless",
@@ -48849,7 +48793,7 @@
   "298605738": {
     "card_identifier": "298605738",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -48953,7 +48897,7 @@
   "1170100559": {
     "card_identifier": "1170100559",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -49006,7 +48950,7 @@
   "413205518": {
     "card_identifier": "413205518",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -49095,7 +49039,7 @@
   "-1785747256": {
     "card_identifier": "-1785747256",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -49199,7 +49143,7 @@
   "386636309": {
     "card_identifier": "386636309",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -49297,7 +49241,7 @@
   "-1856845616": {
     "card_identifier": "-1856845616",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -49498,10 +49442,19 @@
       }
     }
   },
+  "-2029239357": {
+    "card_identifier": "-2029239357",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "-1211561420": {
     "card_identifier": "-1211561420",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -49629,6 +49582,15 @@
       }
     }
   },
+  "-69666009": {
+    "card_identifier": "-69666009",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "1266025145": {
     "card_identifier": "1266025145",
     "sides": {
@@ -49734,10 +49696,46 @@
       }
     }
   },
+  "631928264": {
+    "card_identifier": "631928264",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "1290473530": {
+    "card_identifier": "1290473530",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-1266701550": {
+    "card_identifier": "-1266701550",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
+  "-458015241": {
+    "card_identifier": "-458015241",
+    "sides": {
+      "shared": {
+        "modifiers": [],
+        "abilities": []
+      }
+    }
+  },
   "2038276137": {
     "card_identifier": "2038276137",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -49798,7 +49796,7 @@
   "251002000": {
     "card_identifier": "251002000",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -49902,7 +49900,7 @@
   "1979070070": {
     "card_identifier": "1979070070",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "regardless",
@@ -50004,7 +50002,7 @@
   "1798610392": {
     "card_identifier": "1798610392",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -50108,7 +50106,7 @@
   "305797467": {
     "card_identifier": "305797467",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -50161,7 +50159,7 @@
   "1165333236": {
     "card_identifier": "1165333236",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -50250,7 +50248,7 @@
   "-433506814": {
     "card_identifier": "-433506814",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -50354,7 +50352,7 @@
   "319860053": {
     "card_identifier": "319860053",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -50452,7 +50450,7 @@
   "-102969619": {
     "card_identifier": "-102969619",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -50657,7 +50655,7 @@
   "-1111873701": {
     "card_identifier": "-1111873701",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_interrupted",
@@ -50761,7 +50759,7 @@
   "2020291165": {
     "card_identifier": "2020291165",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -50815,7 +50813,7 @@
   "-1206026139": {
     "card_identifier": "-1206026139",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -50869,7 +50867,7 @@
   "80403388": {
     "card_identifier": "80403388",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -50930,7 +50928,7 @@
   "-1210997914": {
     "card_identifier": "-1210997914",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -50981,7 +50979,7 @@
   "756938473": {
     "card_identifier": "756938473",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -51032,7 +51030,7 @@
   "184251851": {
     "card_identifier": "184251851",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -51152,7 +51150,7 @@
   "-35316932": {
     "card_identifier": "-35316932",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -51249,7 +51247,7 @@
   "-1179159713": {
     "card_identifier": "-1179159713",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -51346,7 +51344,7 @@
   "-269222088": {
     "card_identifier": "-269222088",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -51504,7 +51502,7 @@
   "-1246227899": {
     "card_identifier": "-1246227899",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -51565,7 +51563,7 @@
   "-1116236349": {
     "card_identifier": "-1116236349",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -51626,7 +51624,7 @@
   "488760983": {
     "card_identifier": "488760983",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_negated",
@@ -51684,7 +51682,7 @@
   "-1330096623": {
     "card_identifier": "-1330096623",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -51747,7 +51745,7 @@
   "1501337366": {
     "card_identifier": "1501337366",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -51845,7 +51843,7 @@
   "-1718834182": {
     "card_identifier": "-1718834182",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -51906,7 +51904,7 @@
   "-577191314": {
     "card_identifier": "-577191314",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -51988,7 +51986,7 @@
   "1201973028": {
     "card_identifier": "1201973028",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -52087,7 +52085,7 @@
   "-1310328748": {
     "card_identifier": "-1310328748",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -52185,7 +52183,7 @@
   "1148583110": {
     "card_identifier": "1148583110",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -52239,7 +52237,7 @@
   "1121429453": {
     "card_identifier": "1121429453",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -52290,7 +52288,7 @@
   "-988266568": {
     "card_identifier": "-988266568",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -52351,7 +52349,7 @@
   "-1448785977": {
     "card_identifier": "-1448785977",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -52448,7 +52446,7 @@
   "1802570890": {
     "card_identifier": "1802570890",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -52553,7 +52551,7 @@
   "-2096334604": {
     "card_identifier": "-2096334604",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -52614,7 +52612,7 @@
   "-338219551": {
     "card_identifier": "-338219551",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -52860,7 +52858,7 @@
   "-1508600521": {
     "card_identifier": "-1508600521",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -52921,7 +52919,7 @@
   "-479044786": {
     "card_identifier": "-479044786",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [
           {
             "modifier_type": "cannot_be_prevented",
@@ -52982,7 +52980,7 @@
   "-780858275": {
     "card_identifier": "-780858275",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -53087,7 +53085,7 @@
   "-383267304": {
     "card_identifier": "-383267304",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -53184,7 +53182,7 @@
   "-2116794941": {
     "card_identifier": "-2116794941",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -53238,7 +53236,7 @@
   "-1319032354": {
     "card_identifier": "-1319032354",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -53289,7 +53287,7 @@
   "2010801316": {
     "card_identifier": "2010801316",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {
@@ -53531,7 +53529,7 @@
   "-381105238": {
     "card_identifier": "-381105238",
     "sides": {
-      "shared": {
+      "top": {
         "modifiers": [],
         "abilities": [
           {

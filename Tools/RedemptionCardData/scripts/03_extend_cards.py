@@ -47,49 +47,95 @@ BRIGADE_ALIGNMENT_MAP = {
     "Mult": "Shared"
 }
 
+DUAL_CARD_TYPES = {
+    "Hero/Evil Character", "GE/EE", "Evil Character/Fortress", "Hero/Site",
+    "Evil Character/EE", "Hero/GE", "GE/Hero", "Evil Character/Site",
+    "Hero/Fortress", "Artifact/EE", "GE/Artifact", "Hero/EE", "Curse/GE",
+    "Covenant/Curse", "EE/GE"
+}
+
+LEGACY_DUALS = {
+    "Abram/Abraham": ("Abram", "Abraham"),
+    "Saul/Paul": ("Saul", "Paul"),
+    "Banks of the Nile/Pharaoh's Court": ("Banks of the Nile", "Pharaoh's Court"),
+    "Magicians' Staves/Magicians' Snakes": ("Magicians' Staves", "Magicians' Snakes")
+}
+
+def split_flip_name(name: str) -> tuple[str, str] | None:
+    """Splits a dual card name into top and bottom side names if appropriate.
+
+    Args:
+        name: Raw card name string.
+
+    Returns:
+        Tuple of (top_name, bottom_name) or None if name should not be split.
+    """
+    if not name or name.startswith("Lost Soul"):
+        return None
+    if name in LEGACY_DUALS:
+        return LEGACY_DUALS[name]
+
+    import re
+    base = re.sub(r'[\(\[].*?[\)\]]', '', name).strip()
+    if ' / ' not in base:
+        return None
+
+    m = re.search(r'\s*(\([^\)]+\)|\[[^\]]+\])$', name)
+    suffix = m.group(1).strip() if m else ''
+    clean_full = name[:m.start()].strip() if m else name.strip()
+
+    parts = [p.strip() for p in clean_full.split(' / ')]
+    if len(parts) == 2:
+        top = f"{parts[0]} {suffix}".strip()
+        bot = f"{parts[1]} {suffix}".strip()
+        return top, bot
+    return None
+
 def normalize_brigade(b: str) -> str:
     return b.strip()
 
-def split_dual_brigades(brigades: list[str], top_align: str, bottom_align: str) -> tuple[list[str], list[str]]:
-    brigades = [normalize_brigade(b) for b in brigades]
+def is_dual_sided(raw: dict) -> bool:
+    """Determines whether a card is genuinely dual-sided (flip or dual-alignment)."""
+    name = raw.get("Name", "")
+    card_type = raw.get("Type", "")
+    strength = raw.get("Strength", "")
+    toughness = raw.get("Toughness", "")
+    brigade = raw.get("Brigade", "")
+    special = raw.get("SpecialAbility", "")
+    align = raw.get("Alignment", "")
     
-    if top_align == "Neutral":
-        return [], brigades
-    if bottom_align == "Neutral":
-        return brigades, []
+    # Check 1: Slash in Name (flip cards), excluding Lost Soul citations
+    import re
+    base_name = re.sub(r'[\(\[].*?[\)\]]', '', name).strip()
+    if "/" in base_name and not name.startswith("Lost Soul"):
+        return True
         
-    if len(brigades) == 2 and {top_align, bottom_align} == {"Good", "Evil"}:
-        if top_align == "Good":
-            return [brigades[0]], [brigades[1]]
-        else:
-            return [brigades[1]], [brigades[0]]
-
-    strict_good = {"White", "Red", "Blue", "Green", "Teal", "Silver", "Purple", "Clay"}
-    strict_evil = {"Brown", "Gray", "Orange", "Black", "Crimson", "Pale Green"}
-    
-    valid_indices = []
-    n = len(brigades)
-    for k in range(n + 1):
-        cond1 = all(brigades[i] not in strict_evil for i in range(k))
-        cond2 = all(brigades[i] not in strict_good for i in range(k, n))
-        if cond1 and cond2:
-            valid_indices.append(k)
-            
-    if valid_indices:
-        best_k = min(reversed(valid_indices), key=lambda k: abs(k - (n - k)))
-    else:
-        best_k = n // 2
+    # Check 2: Parentheses or slash in stats
+    if "(" in strength or "(" in toughness:
+        return True
+    if "/" in strength and all(part.strip().lstrip("-").isdigit() for part in strength.split("/") if part.strip()):
+        return True
+    if "/" in toughness and all(part.strip().lstrip("-").isdigit() for part in toughness.split("/") if part.strip()):
+        return True
         
-    good_list = brigades[:best_k]
-    evil_list = brigades[best_k:]
-    
-    if top_align == "Good" and bottom_align == "Evil":
-        return good_list, evil_list
-    elif top_align == "Evil" and bottom_align == "Good":
-        return evil_list, good_list
-    else:
-        split = len(brigades) // 2
-        return brigades[:split], brigades[split:]
+    # Check 3: Parentheses in Brigade (e.g. 'Purple (Clay)')
+    if "(" in brigade and ")" in brigade:
+        return True
+        
+    # Check 4: Explicit dual card types (e.g. GE/EE, Hero/Evil Character)
+    types = [t.strip() for t in card_type.split("/") if t.strip()]
+    if len(types) >= 2 and card_type in DUAL_CARD_TYPES:
+        return True
+        
+    # Check 5: Alignment is Good/Evil
+    if "/" in align:
+        return True
+        
+    # Check 6: Explicit TOP: and BOTTOM: in SpecialAbility
+    if re.search(r'(?:^|[\s/])TOP:\s*', special, re.IGNORECASE) and re.search(r'(?:^|[\s/])BOTTOM:\s*', special, re.IGNORECASE):
+        return True
+        
+    return False
 
 def parse_flip_types(type_str: str) -> dict:
     if not type_str:
@@ -101,7 +147,7 @@ def parse_flip_types(type_str: str) -> dict:
         return {"top": parts[0]}
     return {}
 
-def parse_brigades(raw: dict, types: list[str]) -> dict:
+def parse_brigades(raw: dict, types: list[str], is_dual: bool = False) -> dict:
     raw_brigade = raw.get("Brigade", "")
     if not raw_brigade:
         return {}
@@ -110,60 +156,83 @@ def parse_brigades(raw: dict, types: list[str]) -> dict:
     
     # Typo corrections
     s = raw_brigade.replace("Teal Gold", "Teal/Gold")
-    
-    # Normalize splitting by / and " and "
     import re
     s = re.sub(r'\s+and\s+', '/', s, flags=re.IGNORECASE)
     s = re.sub(r'\s+&\s+', '/', s)
     
-    alignments = parse_flip_alignment(raw.get("Alignment", ""))
-    top_align = alignments.get("top").value if alignments.get("top") else raw.get("Alignment", "")
-    bottom_align = alignments.get("bottom").value if alignments.get("bottom") else None
-    
+    # 1. Parentheses in brigade: "Top (Bottom)"
     if "(" in raw_brigade and ")" in raw_brigade:
         top_str, bottom_str = raw_brigade.split("(", 1)
         bottom_str = bottom_str.rstrip(")")
         top_list = [normalize_brigade(b) for b in top_str.split("/") if normalize_brigade(b) in ALL_BRIGADES]
         bottom_list = [normalize_brigade(b) for b in bottom_str.split("/") if normalize_brigade(b) in ALL_BRIGADES]
-    else:
-        all_brigades = [normalize_brigade(b) for b in s.split("/") if normalize_brigade(b) in ALL_BRIGADES]
+        result["top"] = top_list
+        if bottom_list:
+            result["bottom"] = bottom_list
+        return result
         
-        if bottom_align is not None:
-            top_list, bottom_list = split_dual_brigades(all_brigades, top_align, bottom_align)
-        else:
-            top_list = all_brigades
-            bottom_list = []
-            
-    result["top"] = top_list
-    result["bottom"] = bottom_list
+    all_brigades = [normalize_brigade(b) for b in s.split("/") if normalize_brigade(b) in ALL_BRIGADES]
     
-    if len(types) > 1:
-        raw_types_order = [t.strip() for t in raw.get("Type", "").split("/")]
+    # If not a dual-sided card, all brigades belong to top
+    if not is_dual:
+        result["top"] = all_brigades
+        return result
         
-        if bottom_align is not None and len(raw_types_order) >= 2:
-            top_type = raw_types_order[0]
-            bottom_type = raw_types_order[1]
-            
-            for t in types:
-                if t == top_type:
-                    result[t] = top_list if t in TYPES_WITH_BRIGADES else []
-                elif t == bottom_type:
-                    result[t] = bottom_list if t in TYPES_WITH_BRIGADES else []
-                else:
-                    result[t] = []
-        else:
-            all_brigades = [normalize_brigade(b) for b in s.split("/") if normalize_brigade(b) in ALL_BRIGADES]
-            split = len(all_brigades) // len(raw_types_order) if len(raw_types_order) > 0 else len(all_brigades)
-            type_to_brigades = {}
-            for i, t in enumerate(raw_types_order):
-                type_to_brigades[t] = all_brigades[i*split:(i+1)*split]
+    align = raw.get("Alignment", "")
+    card_type = raw.get("Type", "")
+    
+    # Single shared brigade on dual card (e.g. 'Multi' or 'Brown')
+    if len(all_brigades) == 1:
+        result["top"] = all_brigades
+        result["bottom"] = all_brigades
+        return result
+        
+    # Dual brigade pair: exactly 2 brigades separated by slash -> Top gets first, Bottom gets second
+    if len(all_brigades) == 2:
+        result["top"] = [all_brigades[0]]
+        result["bottom"] = [all_brigades[1]]
+        return result
+        
+    # 3 brigades with Clay on GoC Disciples (e.g. Purple/Clay/Green -> Top: [Purple, Green], Bottom: [Clay])
+    if len(all_brigades) == 3 and "Clay" in all_brigades:
+        result["top"] = [b for b in all_brigades if b != "Clay"]
+        result["bottom"] = ["Clay"]
+        return result
+        
+    # Dual alignment split (Good vs Evil)
+    is_good_evil = (
+        ("Good" in align and "Evil" in align) or
+        ("Hero" in card_type and "Evil Character" in card_type) or
+        ("GE" in card_type and "EE" in card_type) or
+        ("Hero" in card_type and "EE" in card_type) or
+        ("Curse" in card_type and "GE" in card_type)
+    )
+    if is_good_evil:
+        types_raw = [t.strip() for t in card_type.split("/") if t.strip()]
+        first_is_evil = types_raw and types_raw[0] in ("Curse", "EE", "Evil Character")
+        
+        strict_good = {"White", "Red", "Blue", "Green", "Teal", "Silver", "Purple", "Clay"}
+        strict_evil = {"Brown", "Gray", "Orange", "Black", "Crimson", "Pale Green"}
+        good_b = [b for b in all_brigades if b in strict_good or b == "Silver"]
+        evil_b = [b for b in all_brigades if b in strict_evil or b in ("Gold", "Orange", "Crimson", "Pale Green", "Black", "Gray", "Brown")]
+        
+        for b in all_brigades:
+            if b == "Gold" and not evil_b and good_b:
+                evil_b.append("Gold")
+            elif b == "Gold" and not good_b and evil_b:
+                good_b.append("Gold")
                 
-            for t in types:
-                if t in type_to_brigades:
-                    result[t] = type_to_brigades[t] if t in TYPES_WITH_BRIGADES else []
-                else:
-                    result[t] = []
-                    
+        if first_is_evil:
+            result["top"] = evil_b
+            result["bottom"] = good_b
+        else:
+            result["top"] = good_b
+            result["bottom"] = evil_b
+        return result
+        
+    split = len(all_brigades) // 2
+    result["top"] = all_brigades[:split]
+    result["bottom"] = all_brigades[split:]
     return result
 
 def parse_flip_int(value: str) -> dict:
@@ -177,8 +246,21 @@ def parse_flip_int(value: str) -> dict:
             return {"top": int(top.strip()), "bottom": int(bottom.strip())}
         except ValueError:
             return {}
+    if "/" in value:
+        parts = [p.strip() for p in value.split("/")]
+        try:
+            if len(parts) == 2:
+                res = {}
+                if parts[0].lstrip("-").isdigit():
+                    res["top"] = int(parts[0])
+                if parts[1].lstrip("-").isdigit():
+                    res["bottom"] = int(parts[1])
+                return res
+        except ValueError:
+            pass
     try:
-        return {"top": int(value)}
+        val = int(value)
+        return {"top": val, "bottom": val}
     except ValueError:
         return {}
 
@@ -246,26 +328,20 @@ def _extract_shared_fields(sides: dict) -> dict:
 
 
 def build_card_sides(raw: dict, types: list[str]) -> dict:
+    name = raw.get("Name", "")
+    if not types:
+        print(f"[WARN] Karte '{name}' hat keine Typen -> CardSides wird leer.")
+        return {}
 
-    brigades = parse_brigades(raw, types)
+    has_bottom = is_dual_sided(raw)
+    brigades = parse_brigades(raw, types, is_dual=has_bottom)
     strengths = parse_flip_int(raw.get("Strength", ""))
     toughnesses = parse_flip_int(raw.get("Toughness", ""))
     alignments = parse_flip_alignment(raw.get("Alignment", ""))
     classes = parse_classes(raw.get("Class", ""))
     abilities = raw.get("SpecialAbility", "")
-    name = raw.get("Name", "")
 
     sides = {}
-
-    if not types:
-        print(f"[WARN] Karte '{name}' hat keine Typen -> CardSides wird leer.")
-        return sides
-
-    has_bottom = any(
-        isinstance(d, dict) and "bottom" in d
-        for d in [brigades, strengths, toughnesses, alignments]
-    )
-
     is_multi_type = len(types) > 1
     flip_types = parse_flip_types(raw.get("Type", ""))
     star_ability = None
@@ -282,6 +358,11 @@ def build_card_sides(raw: dict, types: list[str]) -> dict:
             sides_info.append({"key": side, "type": t, "alignment": align_str})
 
         side_abilities, star_ability = split_card_abilities(abilities, sides_info)
+        names = split_flip_name(name)
+        side_names = {
+            "top": names[0] if names else name,
+            "bottom": names[1] if names else name
+        }
 
         for side in ["top", "bottom"]:
             t = flip_types.get(side)
@@ -293,7 +374,7 @@ def build_card_sides(raw: dict, types: list[str]) -> dict:
             toughness = toughnesses.get(side) if t in TYPES_WITH_STATS else None
 
             sides[side] = CardSide(
-                Name=name,
+                Name=side_names.get(side, name),
                 Type=t,
                 Alignment=alignment,
                 Brigades=brigade,
