@@ -8,6 +8,7 @@ class Card extends Schema {
     // ✨ KORREKTUR: Jedes im Schema definierte Feld muss im Konstruktor initialisiert werden,
     // um eine zuverlässige Synchronisation zu gewährleisten.
     this.id = "";
+    this.templateId = ""; // Authoritative Card ID from dataset
     this.controllerId = "";
     this.originalOwnerId = ""; // ✨ SCHRITT 1.1: Neues, unveränderliches Feld für den Besitzer.
     this.Name = "";
@@ -29,6 +30,7 @@ class Card extends Schema {
     this.IsCharacter = false; // Boolean: true if card is a character
     this.IsEnhancement = false; // Boolean: true if card is an enhancement
     this.IsGospel = false; // Boolean: true if card belongs to the Gospel
+    this.IsStarCard = false; // Boolean: true if card is a Star Card
     this.Testament = "";
     this.isTapped = false;
     this.isFaceDown = false;
@@ -49,6 +51,7 @@ class Card extends Schema {
 }
 
 type("string")(Card.prototype, "id");
+type("string")(Card.prototype, "templateId");
 type("string")(Card.prototype, "controllerId"); // ✨ SCHRITT 3: Umbenannt von ownerId, repräsentiert den aktuellen Controller.
 type("string")(Card.prototype, "originalOwnerId"); // ✨ SCHRITT 1.1: Das neue, unveränderliche Feld für den Besitzer.
 type("string")(Card.prototype, "Name");
@@ -70,6 +73,7 @@ type("string")(Card.prototype, "Legality");
 type("boolean")(Card.prototype, "IsCharacter");
 type("boolean")(Card.prototype, "IsEnhancement");
 type("boolean")(Card.prototype, "IsGospel");
+type("boolean")(Card.prototype, "IsStarCard");
 type("string")(Card.prototype, "Testament");
 type("boolean")(Card.prototype, "isTapped");
 type("boolean")(Card.prototype, "isFaceDown");

@@ -330,10 +330,20 @@ export class CardVisuals {
 
   public updateBadge() {
     const { cardData } = this.cardUI;
-    const isDualCard = cardData.inGameType && cardData.inGameType !== cardData.Type;
+    const isDualType = Boolean(cardData.inGameType && cardData.inGameType !== cardData.Type);
+    const isDualAlignment = Boolean(
+      cardData.inGameAlignment && (
+        (Array.isArray(cardData.Alignment) && cardData.Alignment.length > 1) ||
+        (typeof cardData.Alignment === "string" && cardData.Alignment.includes("/"))
+      )
+    );
+    const isDualCard = isDualType || isDualAlignment;
 
     if (isDualCard && !this.cardUI.isCurrentlyFaceDown()) {
-      const iconId = this.getIconForType(cardData.inGameType);
+      const typeForLookup = (cardData.inGameType === "Dominant" || cardData.inGameType === "Fortress") && cardData.inGameAlignment
+        ? `${cardData.inGameAlignment} ${cardData.inGameType}`
+        : (cardData.inGameType || cardData.Type);
+      const iconId = this.getIconForType(typeForLookup);
       if (iconId) {
         const textureKey = `${iconId}_small`;
         if (this.scene.textures.exists(textureKey)) {

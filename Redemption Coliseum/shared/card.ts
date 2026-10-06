@@ -15,9 +15,11 @@ export interface CardData {
   Sound: string;
   Alignment: string;
   Legality: string;
+  Id?: string;
   IsCharacter: boolean;
   IsEnhancement: boolean;
   IsGospel: boolean;
+  IsStarCard?: boolean;
   Testament: string;
   CardSides?: {
     shared?: any;

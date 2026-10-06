@@ -64,17 +64,22 @@ Dieses Dokument erfasst alle identifizierten architektonischen Schwachstellen, C
 - [ ] `DeckDragDropHandler.ts` (308 Zeilen), `PlaceBackground.ts` (297 Zeilen), `AnimationManager.ts` (297 Zeilen).
 - [ ] `IconToggleGroup.ts` (278 Zeilen), `QuantitySelectionDialogScene.ts` (277 Zeilen), `DesktopDeckScanner.ts` (257 Zeilen), `OverlayManager.ts` (254 Zeilen), `DeckCatacombsScene.ts` (254 Zeilen).
 
+### 8. Dual Dominants UI im `TypeSelectionOverlay` (`DragDropHandler.ts`)
+- [x] **Alignment-spezifische Option-Erzeugung für Dual Cards**:
+  - In `DragDropHandler.ts` (Dual Card Interception): Wenn mehrere Kartenseiten denselben `Type` teilen (wie bei Dual Dominants `Type: "Dominant"`, aber `Alignment: "Good"` vs. `"Evil"`), darf nicht `type || alignment` verwendet werden. Aktuell führt dies zu identischen Labels (`"Dominant"`) und dem Lupe-Fallback-Icon (`icon_search`).
+  - **Soll-Zustand**: Alignment mit einbeziehen (`${alignment} ${type}` bzw. `Good Dominant` / `Evil Dominant`), sodass die Buttons eindeutig beschriftet sind und die bereits existierenden Texturen `GoodDom` und `EvilDom` geladen werden.
+
 ---
 
 ## 🟢 Low Priority (Server-Architektur & Typisierung)
 
-### 8. Colyseus Server Room-Isolierung (`GameRoom.js`)
+### 9. Colyseus Server Room-Isolierung (`GameRoom.js`)
 - [ ] Entkopplung von Room-Lifecycle und Geschäftslogik: 100% aller State-Mutationen strikt über den `CommandDispatcher` leiten.
 
-### 9. Server TypeScript Migration (`server/src/`)
+### 10. Server TypeScript Migration (`server/src/`)
 - [ ] Umstellung der Server-Dateien (`.js` ➔ `.ts`).
 - [ ] Gemeinsame Nutzung der TypeScript-Typdefinitionen (`DeckMetadata`, `CardData`) zwischen Client und Server.
 
 ---
 
-*Letztes Update: 29.07.2026*
+*Letztes Update: 03.10.2026*

@@ -1,6 +1,9 @@
 # Dependencies (Server & Client)
 node_modules/
 
+# KI-Agent-Konfigurationen und lokale Skills
+.agents/
+
 # Environment Variables (Sicherheit!)
 .env
 .env.local
@@ -45,4 +48,8 @@ standalone_deck_ediitor/
 # Lokale Spezifikationen & Entwürfe
 docs/action_queue_specification.md
 docs/ast_engine_specification.md
+docs/ast_engine_kickoff.md
 docs/assets/
+
+docs/ORDIR_PDF_7.0.0.txt
+docs/REG_PDF_11.0.0.txt

@@ -1,5 +1,4 @@
 const { BaseCommand } = require("./BaseCommand");
-const { generateCardId } = require("../../../shared/utils");
 const logger = require("../utils/logger");
 
 class UpdateCardStateCommand extends BaseCommand {
@@ -16,6 +15,7 @@ class UpdateCardStateCommand extends BaseCommand {
     }
 
     this.cardId = cardId;
+    this.templateId = card.templateId || card.ImageFile;
     this.cardName = card.Name;
     this.imageFile = card.ImageFile;
     this.set = card.Set;
@@ -58,7 +58,7 @@ class UpdateCardStateCommand extends BaseCommand {
     }
 
     const player = this.state.players.get(this.client.sessionId);
-    const templateId = generateCardId(this.imageFile, this.set, this.cardName);
+    const templateId = this.templateId || this.cardName;
     const logMsg = `[UNDO] ${player ? player.name : "Player"} reverted state of {{${templateId}|${this.cardName}}}.`;
     this.room.broadcastGameLog(logMsg);
   }

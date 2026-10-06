@@ -110,7 +110,7 @@ class DrawPhaseStepService {
         if (!card.availableActions || card.availableActions.length === 0) return false;
         return card.availableActions.some(
           a => a.type === ActionType.ACTIVATE_STAR_ABILITY ||
-               (a.type === ActionType.ACTIVATE_ABILITY && card.Class && card.Class.includes("Star"))
+               (a.type === ActionType.ACTIVATE_ABILITY && (card.IsStarCard || (card.Class && (card.Class.includes("Star") || card.Class.includes("star")))))
         );
       });
     }

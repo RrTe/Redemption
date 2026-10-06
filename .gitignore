@@ -4,3 +4,29 @@ Redemption Coliseum/examples/
 Tools/RedemptionCardData/data/KonzeptUmsetzungCardAbilities.md
 Tools/RedemptionCardData/data/implementation_plan.md
 Redemption Coliseum/shared/cards_extended_with_ordir_fuzzy_new.json
+Bots/RedemptionRuleBot/list_groq_models.py
+Bots/RedemptionRuleBot/list_google_models.py
+Bots/RedemptionRuleBot/scripts/core/test_groq_model.py
+Bots/RedemptionRuleBot/direkt_test.py
+Bots/RedemptionRuleBot/test_groq.py
+Bots/RedemptionRuleBot/test_groq_model.py
+Bots/RedemptionRuleBot/test_ruling_command.py
+Bots/RedemptionRuleBot/pagination_progress.json
+Tools/RedemptionCardData/Erklärung_Terminal_Ausführung.md
+Tools/RedemptionCardData/Erklärung_Terminal_Ausführung.txt
+Tools/RedemptionCardData/game_ast_interpreter_handover_guide.md
+Tools/RedemptionCardData/debug_output.txt
+Tools/RedemptionCardData/live_test_log.txt
+
+# Scratch and Temporary Files
+**/scratch/
+**/scratch_*
+
+# Logs and Tool Configs
+*.log
+**/*.log
+**/.roorules
+**/.rooignore
+Redemption Coliseum/.agents/
+Redemption Coliseum/.agents/skills/git-pushing/SKILL.md
+Redemption Coliseum/.agents/skills/git-pushing/scripts/smart_commit.sh

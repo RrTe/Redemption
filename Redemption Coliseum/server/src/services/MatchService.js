@@ -133,7 +133,7 @@ class MatchService {
 
         // ✨ NEU: Star-Fähigkeit für gezogene Star-Karten in der Start-Hand aktivieren
         movedCards.forEach(card => {
-          if (card.Class && (card.Class.includes("Star") || card.Class.includes("star"))) {
+          if (card.IsStarCard || (card.Class && (card.Class.includes("Star") || card.Class.includes("star")))) {
             const action = new CardAction();
             action.id = `star_${Date.now()}_${card.id}`;
             action.type = ActionType.ACTIVATE_STAR_ABILITY;

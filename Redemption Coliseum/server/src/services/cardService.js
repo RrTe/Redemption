@@ -8,7 +8,6 @@ const {
 } = require("../../../shared/card-constants");
 const { ArraySchema, $changes } = require("@colyseus/schema");
 const { PlayerState } = require("../state/PlayerState");
-const { generateCardId } = require("../../../shared/utils");
 const { ActionType } = require("../../../shared/actions");
 const { CardAction } = require("../../../shared/actionSchema");
 const { ACTION_DESCRIPTIONS } = require("../../../shared/actionStrings");
@@ -498,7 +497,7 @@ function _moveCardById(
 
   // ✨ NEU: Token werden vollständig aufgelöst, wenn sie in Discard oder Banish verschoben werden.
   if (movedCard.isToken && (to === ZONES.DISCARD || to === ZONES.BANISH)) {
-    const templateId = generateCardId(movedCard.ImageFile, movedCard.Set, movedCard.Name);
+    const templateId = movedCard.templateId || movedCard.ImageFile;
     cardLookup.delete(cardId);
     if (state._clientViews) {
       const oldView = state._clientViews.get(controllerId);
@@ -549,7 +548,7 @@ function _moveCardById(
   }
 
   let logEntry = "";
-  const templateId = generateCardId(movedCard.ImageFile, movedCard.Set, movedCard.Name);
+  const templateId = movedCard.templateId || movedCard.ImageFile;
   
   // Special logging for Lost Souls being moved to Land of Bondage
   if (movedCard && movedCard.Type === CARD_TYPES.LOST_SOUL && to === ZONES.LAND_OF_BONDAGE) {

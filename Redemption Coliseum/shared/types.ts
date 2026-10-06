@@ -5,6 +5,8 @@ import type { CardAction } from "./actionSchema";
 
 export interface CardState extends CardData {
   id: string;
+  templateId: string;
+  IsStarCard: boolean;
   controllerId: string; // ✨ HIER IST DIE KORREKTUR
   originalOwnerId: string; // ✨ HIER IST DIE KORREKTUR
   zone: Zone;

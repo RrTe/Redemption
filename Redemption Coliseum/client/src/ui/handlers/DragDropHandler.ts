@@ -456,9 +456,10 @@ export class DragDropHandler {
       const isFieldMove = [ZONES.BATTLEFIELD, ZONES.TERRITORY, ZONES.LAND_OF_BONDAGE, ZONES.SET_ASIDE].includes(toZone);
       
       const staticData = staticCardData.cards.find((c: any) => 
-        c.Name === gameObject.cardData.Name && 
+        (gameObject.cardData.templateId && c.id === gameObject.cardData.templateId) ||
+        (c.Name === gameObject.cardData.Name && 
         c.ImageFile === gameObject.cardData.ImageFile && 
-        c.Set === gameObject.cardData.Set
+        c.Set === gameObject.cardData.Set)
       );
 
       if (isFieldMove && staticData && staticData.sides && staticData.sides.length > 1) {
@@ -487,6 +488,14 @@ export class DragDropHandler {
             iconKey = "Art";
             label = "Artifact";
             id = "Artifact";
+          } else if (typeUpper === "DOMINANT") {
+            label = alignment ? `${alignment} Dominant` : "Dominant";
+            iconKey = alignment.toUpperCase() === "GOOD" ? "GoodDom" : (alignment.toUpperCase() === "EVIL" ? "EvilDom" : "GoodDom");
+            id = label;
+          } else if (typeUpper === "FORTRESS") {
+            label = alignment ? `${alignment} Fortress` : "Fortress";
+            iconKey = alignment.toUpperCase() === "GOOD" ? "GoodFort" : (alignment.toUpperCase() === "EVIL" ? "EvilFort" : "GoodFort");
+            id = label;
           }
 
           if (!options.some(opt => opt.inGameType === inGameType && opt.inGameAlignment === inGameAlignment)) {

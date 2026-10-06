@@ -89,8 +89,8 @@ class NextPhaseCommand extends BaseCommand {
     // ✨ NEU: Star-Fähigkeit für gezogene Star-Karten in der Draw-Phase aktivieren
     if (this.state.currentPhase === PHASES.DRAW) {
       movedCards.forEach(card => {
-        // Prüfe, ob die Karte die Klasse "Star" hat (Groß/Kleinschreibung beachten, meistens "Star")
-        if (card.Class && (card.Class.includes("Star") || card.Class.includes("star"))) {
+        // Prüfe, ob die Karte eine Star-Karte ist (IsStarCard Flag oder Klasse "Star")
+        if (card.IsStarCard || (card.Class && (card.Class.includes("Star") || card.Class.includes("star")))) {
           const action = new CardAction();
           action.id = `star_${Date.now()}_${card.id}`;
           action.type = ActionType.ACTIVATE_STAR_ABILITY;

@@ -74,7 +74,7 @@ export function normalizeCard(card) {
   const name = topSide.Name;
   const imageFile = card.ImageFile || "";
   const set = card.Set || "";
-  const id = generateCardId(imageFile, set, name);
+  const id = String(card.Id !== undefined && card.Id !== null ? card.Id : (card.id !== undefined && card.id !== null ? card.id : ""));
 
   return {
     id,
@@ -90,6 +90,7 @@ export function normalizeCard(card) {
     IsCharacter: !!card.IsCharacter,
     IsEnhancement: !!card.IsEnhancement,
     IsGospel: !!card.IsGospel,
+    IsStarCard: !!card.IsStarCard,
     Name: name,
     SpecialAbility: topSide.SpecialAbility,
     Alignment: allAlignments,

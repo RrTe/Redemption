@@ -1,22 +1,16 @@
 const logger = require("../utils/logger");
 const { cardDatabase } = require("../data/cardDatabase");
 const { shuffle } = require("./cardService");
-const { hash, generateCardId } = require("../../../shared/utils");
 const { CardRepository } = require("../../../shared/CardRepository.js");
 
 class DeckService {
   /**
-   * Initializes the card database with consistent hash IDs.
+   * Initializes the card database with consistent dataset IDs.
    */
   static initDatabase() {
     cardDatabase.forEach((c) => {
       if (!c.id) {
-        if (typeof generateCardId === "function") {
-          c.id = generateCardId(c.ImageFile, c.Set, c.Name);
-        } else {
-          const key = (c.ImageFile || "") + (c.Set || "") + (c.Name || "");
-          c.id = Buffer.from(key).toString("base64");
-        }
+        c.id = String(c.Id !== undefined && c.Id !== null ? c.Id : "");
       }
     });
     CardRepository.initialize(cardDatabase);

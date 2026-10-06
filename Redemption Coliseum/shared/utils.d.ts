@@ -26,6 +26,7 @@ export interface NormalizedCard {
   IsCharacter: boolean;
   IsEnhancement: boolean;
   IsGospel: boolean;
+  IsStarCard: boolean;
   Name: string;
   SpecialAbility: string;
   Alignment: string[];

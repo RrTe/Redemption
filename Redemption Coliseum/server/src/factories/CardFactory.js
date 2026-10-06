@@ -13,9 +13,11 @@ class CardFactory {
   static createCard(cardData, ownerId, instanceId, zone, controllerId = null) {
     const card = new Card();
     card.id = instanceId;
+    card.templateId = String(cardData.id || cardData.Id || "");
     card.originalOwnerId = ownerId;
     card.controllerId = controllerId || ownerId;
     card.zone = zone;
+    card.IsStarCard = !!cardData.IsStarCard;
 
     // Map properties from DB, but protect the unique instance ID
     Object.entries(cardData).forEach(([key, value]) => {
