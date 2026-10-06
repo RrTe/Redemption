@@ -22,9 +22,11 @@ from utils.ability_patterns import (
     extract_star_trigger,
     extract_condition_prefix,
     parse_target_zone_suffix,
+    build_target_selector,
     protect_abbreviations,
     restore_abbreviations
 )
+
 from mappings.special_ability_overrides import SPECIAL_ABILITY_OVERRIDES
 
 from models.logic.card_logic import CardLogic, CardSideLogic
@@ -59,7 +61,7 @@ DRAW_PATTERN = re.compile(
     re.IGNORECASE
 )
 DISCARD_PATTERN = re.compile(
-    r'^(?:you\s+may\s+|holder\s+may\s+)?discard\s+(one|\d+|x|all|an?)?\s*([a-zA-Z\s\(\)]+?)(?:\s*\(\s*limit\s+(\d+)\s*\))?(?:\s+(?:from|in)\s+.*)?\.?$',
+    r'^(?:you\s+may\s+|holder\s+may\s+)?discard\s+(one|\d+|x|all|an?)?\s*([a-zA-Z\s\(\)\'\-]+?)(?:\s*\(\s*limit\s+(\d+)\s*\))?\.?$',
     re.IGNORECASE
 )
 NEGATE_PATTERN = re.compile(
@@ -101,7 +103,7 @@ FIRST_STRIKE_PATTERN = re.compile(
 
 # Compound action pattern (e.g. Negate and discard)
 COMPOUND_DUAL_PATTERN = re.compile(
-    r'^(?:you\s+may\s+|holder\s+may\s+)?(negate|interrupt)\s+and\s+discard\s+(?:an?\s+|all\s+)?([a-zA-Z\s\(\)]+)\b\.?$',
+    r'^(?:you\s+may\s+|holder\s+may\s+)?(negate|interrupt)\s+and\s+discard\s+(?:an?\s+|all\s+)?([a-zA-Z\s\(\)\'\-]+)\b\.?$',
     re.IGNORECASE
 )
 
@@ -249,11 +251,7 @@ def parse_deterministic_clause(
                     step=1,
                     action=first_action,
                     effect_type="instant",
-                    target=TargetSelector(
-                        selection_mode=SelectionMode.MANUAL_CONTROLLER,
-                        scope=Zone.BATTLE,
-                        target_type=target_str.lower()
-                    )
+                    target=build_target_selector(target_str)
                 ),
                 ActionEffect(
                     step=2,
@@ -340,7 +338,6 @@ def parse_deterministic_clause(
     discard_match = DISCARD_PATTERN.match(cleaned)
     if discard_match:
         raw_target = discard_match.group(2).strip()
-        clean_target, scope_zone, zone_owner = parse_target_zone_suffix(raw_target)
         cnt_token = discard_match.group(1) or "1"
         limit_val = int(discard_match.group(3)) if discard_match.group(3) else None
 
@@ -355,13 +352,7 @@ def parse_deterministic_clause(
                     action=ActionVerb.DISCARD,
                     effect_type="instant",
                     destination=Zone.DISCARD_PILE,
-                    target=TargetSelector(
-                        selection_mode=SelectionMode.AUTOMATIC_ALL if cnt_token.lower() == "all" else SelectionMode.MANUAL_CONTROLLER,
-                        scope=scope_zone,
-                        zone_owner=zone_owner,
-                        target_type=clean_target.lower(),
-                        count=_build_count_value(cnt_token, limit_val)
-                    )
+                    target=build_target_selector(raw_target, cnt_token, limit_val)
                 )
             ]
         )

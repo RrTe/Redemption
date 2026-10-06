@@ -19,16 +19,12 @@ sys.path.append(str(BASE_DIR))
 from models.logic.card_logic import CardLogic
 from models.logic.target_selector import TargetSelector
 from models.logic.dynamic_value import DynamicValue
-from models.enums.selection_mode import SelectionMode
-from models.enums.zone import Zone
-from models.enums.action_verb import ActionVerb
-from models.enums.activation_mode import ActivationMode
-from models.enums.duration import Duration
-from models.enums.modifier_type import ModifierType
-from models.enums.condition_type import ConditionType
+from models.enums import (
+    SelectionMode, Zone, ActionVerb, ActivationMode, Duration, ModifierType, ConditionType
+)
 from utils.card_linker import CardLinker, normalize_chained_targets
 from utils.card_helpers import get_card_name
-
+from utils.ast_constants_exporter import export_ast_constants
 CONFIG_FILE = BASE_DIR / "config.json"
 with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
     _config = json.load(_cf)
@@ -115,6 +111,22 @@ def verify_card_logic(
                             eff.target.scope = Zone.DECK
                         if eff.target.selection_mode == SelectionMode.AUTOMATIC_ALL:
                             eff.target.selection_mode = SelectionMode.AUTOMATIC_NEXT
+
+                # Sanitize and normalize DISCARD semantics across rule-based and AI-generated ASTs
+                if eff.action == ActionVerb.DISCARD:
+                    if eff.destination is None:
+                        eff.destination = Zone.DISCARD_PILE
+                    if eff.target:
+                        if eff.target.target_type == "evil card":
+                            eff.target.target_type = "card"
+                            if not eff.target.alignment:
+                                eff.target.alignment = "evil"
+                        elif eff.target.target_type == "good card":
+                            eff.target.target_type = "card"
+                            if not eff.target.alignment:
+                                eff.target.alignment = "good"
+                        if eff.target.alignment == "evil" and eff.target.zone_owner == "controller":
+                            eff.target.zone_owner = "either"
 
             # Check for completely empty ability clause
             if not ability.effects and not ability.costs and not ability.modifiers:
@@ -213,10 +225,9 @@ def run_logic_verifier() -> None:
 
     # Write audit log report
     with REPORT_LOG.open("w", encoding="utf-8") as rep:
-        rep.write("# Redemption Ability Logic Verification Report\n")
-        rep.write(f"# Total Cards Evaluated: {total_cards}\n")
-        rep.write(f"# Clean Verified Cards:  {clean_cards} ({clean_cards / max(1, total_cards):.1%})\n")
-        rep.write(f"# Total Issues Found:    {total_issues}\n\n")
+        rep.write(f"# Redemption Ability Logic Verification Report\n# Total Cards Evaluated: {total_cards}\n"
+                  f"# Clean Verified Cards:  {clean_cards} ({clean_cards / max(1, total_cards):.1%})\n"
+                  f"# Total Issues Found:    {total_issues}\n\n")
 
         if issue_report:
             rep.write("## Issues Detected:\n")
@@ -227,36 +238,10 @@ def run_logic_verifier() -> None:
         else:
             rep.write("All evaluated cards passed semantic and structural validation without errors.\n")
 
-    print(f"\nStage 10 Complete:")
-    print(f" - Evaluated Cards:        {total_cards}")
-    print(f" - Clean Verified Cards:   {clean_cards} ({clean_cards / max(1, total_cards):.1%})")
-    print(f" - Total Issues Found:     {total_issues}")
-    print(f" - Audit Report Written:   {REPORT_LOG}")
-    print(f" - Production File Export: {OUTPUT_LOGIC_FILE}")
-    print(f" - AST Constants Export:   {OUTPUT_CONSTANTS_FILE}")
-    print(f" - Extended Cards Export:  {dist_dir / 'cards_extended_with_ordir_fuzzy.json'}")
-    print(f" - Card Data Export:       {dist_dir / 'carddata.json'}")
-
-
-def export_ast_constants(output_path: Path) -> None:
-    """Exports all official REG enums and valid AST values as a single source of truth JSON."""
-    constants = {
-        "version": "11.0.0",
-        "action_verbs": sorted([e.value for e in ActionVerb if e != ActionVerb.UNKNOWN]),
-        "activation_modes": [e.value for e in ActivationMode],
-        "durations": [e.value for e in Duration],
-        "selection_modes": [e.value for e in SelectionMode],
-        "zones": [e.value for e in Zone],
-        "modifier_types": [e.value for e in ModifierType],
-        "condition_types": [e.value for e in ConditionType],
-        "dependencies": ["always", "if_previous_successful", "if_you_do", "if_you_cannot", "otherwise"],
-        "zone_owners": ["controller", "opponent", "both", "either", "target_player"],
-        "destination_positions": ["top", "bottom", "random", "as_is"]
-    }
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with output_path.open("w", encoding="utf-8") as f:
-        json.dump(constants, f, indent=2, ensure_ascii=False)
-
+    print(f"\nStage 10 Complete:\n - Evaluated Cards:        {total_cards}\n"
+          f" - Clean Verified Cards:   {clean_cards} ({clean_cards / max(1, total_cards):.1%})\n"
+          f" - Total Issues Found:     {total_issues}\n - Production File Export: {OUTPUT_LOGIC_FILE}\n"
+          f" - AST Constants Export:   {OUTPUT_CONSTANTS_FILE}")
 
 if __name__ == "__main__":
     run_logic_verifier()

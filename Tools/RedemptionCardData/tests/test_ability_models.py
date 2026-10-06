@@ -211,6 +211,27 @@ class TestAbilityModels(unittest.TestCase):
         target_all = TargetSelector.model_validate({"zone_owner": "all"})
         self.assertEqual(target_all.zone_owner, "both")
 
+    def test_target_parsing_and_classification(self):
+        """Tests REG v11 target zone, owner, and alignment resolution."""
+        from scripts.utils.target_parser import build_target_selector
+        t1 = build_target_selector("an evil card")
+        self.assertEqual(t1.scope, Zone.IN_PLAY)
+        self.assertEqual(t1.zone_owner, "either")
+        self.assertEqual(t1.alignment, "evil")
+        self.assertEqual(t1.target_type, "card")
+        self.assertEqual(t1.count.fixed_value, 1)
+
+        t2 = build_target_selector("all Demons in Play", cnt_token="all")
+        self.assertEqual(t2.scope, Zone.IN_PLAY)
+        self.assertEqual(t2.zone_owner, "both")
+        self.assertEqual(t2.alignment, "evil")
+        self.assertEqual(t2.target_type, "demon")
+
+        t3 = build_target_selector("an evil card from opponent's hand")
+        self.assertEqual(t3.scope, Zone.HAND)
+        self.assertEqual(t3.zone_owner, "opponent")
+
 
 if __name__ == "__main__":
     unittest.main()
+

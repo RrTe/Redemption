@@ -42,11 +42,21 @@ STAR_PATTERN = re.compile(
     re.IGNORECASE
 )
 
-# Zone Suffixes
-ZONE_SUFFIX_PATTERN = re.compile(
-    r'\s+(?:from|in)\s+(each\s+opponent\'s|opponent\'s|your|the)?\s*(territory|hand|deck|discard pile|set-aside area|land of bondage|battle|field of battle|field of play|play)\b',
-    re.IGNORECASE
-)
+try:
+    from utils.target_parser import (
+        ZONE_SUFFIX_PATTERN,
+        parse_target_zone_suffix,
+        parse_target_classification,
+        build_target_selector,
+    )
+except ImportError:
+    from scripts.utils.target_parser import (
+        ZONE_SUFFIX_PATTERN,
+        parse_target_zone_suffix,
+        parse_target_classification,
+        build_target_selector,
+    )
+
 
 # Condition Prefixes
 COND_IF_USED_BY = re.compile(r'^\s*if\s+used\s+by\s+(?:an?\s+)?([a-zA-Z\s/\.\{\}]+?)(?:,\s*|\s+(?=(?:holder|you)\b))\s*(.*)$', re.IGNORECASE)
@@ -206,41 +216,4 @@ def extract_condition_prefix(text: str) -> Tuple[str, Optional[ConditionExpressi
     return text, None
 
 
-def parse_target_zone_suffix(text: str) -> Tuple[str, Zone, Literal["controller", "opponent", "both"]]:
-    """Extracts trailing zone descriptions (e.g. 'from opponent's territory').
 
-    Args:
-        text: Target text chunk.
-
-    Returns:
-        Tuple of (clean_target_text, Zone, zone_owner).
-    """
-    m = ZONE_SUFFIX_PATTERN.search(text)
-    if not m:
-        return text.strip(), Zone.BATTLE, "controller"
-
-    owner_str = (m.group(1) or "").lower().strip()
-    zone_str = m.group(2).lower().strip()
-
-    zone = Zone.BATTLE
-    if "territory" in zone_str:
-        zone = Zone.TERRITORY
-    elif "hand" in zone_str:
-        zone = Zone.HAND
-    elif "deck" in zone_str:
-        zone = Zone.DECK
-    elif "discard" in zone_str:
-        zone = Zone.DISCARD_PILE
-    elif "set-aside" in zone_str:
-        zone = Zone.SET_ASIDE
-    elif "bondage" in zone_str:
-        zone = Zone.LAND_OF_BONDAGE
-    elif "play" in zone_str:
-        zone = Zone.IN_PLAY
-
-    owner: Literal["controller", "opponent", "both"] = "controller"
-    if "each opponent" in owner_str or "opponent" in owner_str:
-        owner = "opponent"
-
-    clean_target = ZONE_SUFFIX_PATTERN.sub("", text).strip()
-    return clean_target, zone, owner
