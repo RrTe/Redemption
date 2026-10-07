@@ -1,5 +1,5 @@
-# Unparsed Abilities Log - Generated 4405 unparsed sides
-# Total Sides: 5994 | Parsed: 1589 (26.5%)
+# Unparsed Abilities Log - Generated 4510 unparsed sides
+# Total Sides: 5872 | Parsed: 1362 (23.2%)
 
 [525918818] (top) A Mighty Blow
   Ability: This card is worth 10/0 if a demon is in battle.
@@ -161,10 +161,6 @@
   Ability: Protect evil priests from the next good Enhancement played. If 2 or more good brigades are in battle, you may reserve a good card in a territory.
   Reason:  Unmatched clause: 'If 2 or more good brigades are in battle, you may reserve a good card in a territory'
 
-[-1625110030] (top) Abihud, the Progeny (LoC)
-  Ability: You may banish an evil card from a discard pile to discard an evil card from a Reserve. May band to a meek gold Hero.
-  Reason:  Unmatched clause: 'You may banish an evil card from a discard pile to discard an evil card from a Reserve'
-
 [1330205561] (top) Abijah, son of Samuel
   Ability: Each time opponent plays an Enhancement in battle, you may draw a card.
   Reason:  Unmatched clause: 'Each time opponent plays an Enhancement in battle, you may draw a card'
@@ -257,6 +253,10 @@
   Ability: You may release a captured Hero to negate and discard a single-color Site, Artifact or evil card. Cannot be interrupted by O.T. Evil Characters.
   Reason:  Unmatched clause: 'You may release a captured Hero to negate and discard a single-color Site, Artifact or evil card'
 
+[-1080205892] (shared) Abram
+  Ability: Hero starts as Abram.  After he makes a successful rescue, he becomes Abraham and can interrupt and prevent all special abilities on all Lost Soul cards except the Proverbs 22:14 Lost Souls card.
+  Reason:  Unmatched clause: 'Hero starts as Abram'
+
 [730143821] (top) Absalom (Ki)
   Ability: May band with any Evil Character with a reference from 2 Samuel 14-18.  While Absalom is in play, David cannot enter battle.
   Reason:  Unmatched clause: 'May band with any Evil Character with a reference from 2 Samuel 14-18'
@@ -293,9 +293,9 @@
   Ability: STAR: Topdeck an O.T. card from a Reserve.
   Reason:  Unmatched clause: 'Topdeck an O.T. card from a Reserve'
 
-[1482900311] (top) Achim, the Compiler (LoC)
-  Ability: While you control a meek Hero, negate opponents' neutral cards. If attacking, you may draw X (limit 3).
-  Reason:  Unmatched clause: 'While you control a meek Hero, negate opponents' neutral cards'
+[-147999532] (shared) Acts of Manasseh (LoC)
+  Ability: Place in territory: You may discard this card to negate and discard an Enhancement or the last Enhancement played. Cannot be negated if used by a dual icon character.
+  Reason:  Unmatched clause: 'Place in territory: You may discard this card to negate and discard an Enhancement or the last Enhancement played'
 
 [-671936352] (top) Acts of Uzziah
   Ability: Discard Household Idols.  Return all Evil Characters in set aside areas to owner's territory at face value.
@@ -308,10 +308,6 @@
 [-381378507] (top) Adam (FoM)
   Ability: Protect Adam from non-humans. You may topdeck an antediluvian human or a Genesis 1-7 Enhancement from Reserve. May band to Eve. Cannot be interrupted by a human.
   Reason:  Unmatched clause: 'Protect Adam from non-humans'
-
-[-795518689] (top) Adam, the Exile (LoC)
-  Ability: You may take a * human from deck. May band to an antediluvian or a meek blue Hero. Cannot be interrupted.
-  Reason:  Unmatched clause: 'You may take a * human from deck'
 
 [1633621557] (top) Adino (Ki)
   Ability: If Adino is holding a spear he gains 3/3 and prevents all special abilities except banding on non-weapon class enhancements.
@@ -344,6 +340,14 @@
 [241633187] (top) Afflicting Spirit (GoC)
   Ability: You may exchange a Hero in battle with opponent's Hero. After battle, you may place this card on a good card: Negate that card (and paralyze it if it is a Hero).
   Reason:  Unmatched clause: 'You may exchange a Hero in battle with opponent's Hero'
+
+[-1195788911] (shared) Affliction of Job (RoJ AB)
+  Ability: Search deck or discard pile for Dust and Ashes. If used during battle, decrease an opposing character X/X.
+  Reason:  Unmatched clause: 'Search deck or discard pile for Dust and Ashes'
+
+[350288796] (shared) Affliction of Job (RoJ)
+  Ability: Search deck or discard pile for Dust and Ashes. If used during battle, decrease an opposing character X/X.
+  Reason:  Unmatched clause: 'Search deck or discard pile for Dust and Ashes'
 
 [-1305841430] (top) Agabus (PC)
   Ability: Negate O.T. Artifacts. You may reveal a hand: if it contains a card with a capture or decrease ability, search discard pile for an Enhancement with one of those abilities.
@@ -449,11 +453,11 @@
   Ability: If Hero(s) in battle returns to territory without making a successful rescue, Hero(s) may not enter battle until healed.
   Reason:  Unmatched clause: 'If Hero(s) in battle returns to territory without making a successful rescue, Hero(s) may not enter battle until healed'
 
-[-1284193921] (top) 
+[-1284193921] (top) All the Curses (LoC)
   Ability: Negate opponents' neutral cards.
   Reason:  Unmatched clause: 'Negate opponents' neutral cards'
 
-[-1284193921] (bottom) 
+[-1284193921] (bottom) All the Curses (LoC)
   Ability: Capture all Heroes in battle to a player.
   Reason:  Unmatched clause: 'Capture all Heroes in battle to a player'
 
@@ -537,10 +541,6 @@
   Ability: STAR: Give this card to opponent's territory. EC: Negate discard abilities on your evil cards. Each upkeep, you must discard another evil O.T.  human in territory.
   Reason:  Unmatched clause: 'Give this card to opponent's territory'
 
-[-622696180] (top) Amminadab, the Generous (LoC)
-  Ability: If a meek Hero is in play, you may play a Lost Soul from a deck or bounce an evil card. Cannot be prevented.
-  Reason:  Unmatched clause: 'If a meek Hero is in play, you may play a Lost Soul from a deck or bounce an evil card'
-
 [-115429966] (top) Amon, the Forsaken (LoC)
   Ability: STAR: Topdeck a brown Enhancement from discard pile. EC: Negate other characters and Lost Souls in territories. If blocking, you may play an idol from deck.
   Reason:  Unmatched clause: 'EC: Negate other characters and Lost Souls in territories'
@@ -568,6 +568,10 @@
 [-1202935501] (top) Ananias of Damascus (EC)
   Ability: Negate Sites. Once per game, you may search deck or discard pile for N.T. Saul, play and convert him. Protect Paul from opponents' cards while he is in territory. Cannot be interrupted.
   Reason:  Unmatched clause: 'Once per game, you may search deck or discard pile for N.T. Saul, play and convert him'
+
+[-1302640813] (shared) Andrew, First Called (GoC)
+  Ability: You may reveal a good Dominant from hand to negate characters (except disciples). You may convert this card to meek to negate Enhancements.
+  Reason:  Unmatched clause: 'You may reveal a good Dominant from hand to negate characters (except disciples)'
 
 [-1180192172] (top) Angel at Jerusalem (Pi)
   Ability: This Hero has access to any Site.  If King Hezekiah is in play or set aside, discard a warrior-class Assyrian.
@@ -757,7 +761,7 @@
   Ability: Selected Hero (until discarded) gains 7 ability points to be distributed as holder chooses.  Distribution must be announced when played.
   Reason:  Unmatched clause: 'Selected Hero (until discarded) gains 7 ability points to be distributed as holder chooses'
 
-[-953497044] (bottom) 
+[-953497044] (bottom) Anthropophobia
   Ability: Negate and discard an opponent's human (or Enhancement).
   Reason:  Unmatched clause: 'Negate and discard an opponent's human (or Enhancement)'
 
@@ -889,10 +893,6 @@
   Ability: Interrupt the battle. Hero may band to up to 3 angel warriors. Cannot be negated if used by a Joshua angel.
   Reason:  Unmatched clause: 'Hero may band to up to 3 angel warriors'
 
-[1134744551] (top) Arpachshad, the Curtailed (LoC)
-  Ability: You may decrease an Evil Character X/X. Cannot be prevented.
-  Reason:  Unmatched clause: 'You may decrease an Evil Character X/X'
-
 [184024256] (top) Arrest in Gethsemane
   Ability: Place this card in a territory: Judas and Sadducees cannot be ignored. Protect all Lost Souls from rescue, except by human Heroes. Discard this card after 3 turns.
   Reason:  Unmatched clause: 'Place this card in a territory: Judas and Sadducees  Protect all Lost Souls from rescue, except by human Heroes'
@@ -908,10 +908,6 @@
 [82821452] (top) Arrogance
   Ability: Holder may play as many evil enhancements as desired.  Initiative passes when holder is done playing enhancements.
   Reason:  Unmatched clause: 'Holder may play as many evil enhancements as desired'
-
-[-381985217] (top) Asa, the Upright (LoC)
-  Ability: You may reserve an evil male with a band ability or an evil royal female. If you control a meek Hero, you may draw 2.
-  Reason:  Unmatched clause: 'You may reserve an evil male with a band ability or an evil royal female'
 
 [-901535226] (top) Asa's Good Reign
   Ability: Place this card on your good King for 3 turns. While this remains, your O.T. Heroes are immune to warrior class Evil Characters.
@@ -961,7 +957,7 @@
   Ability: While you are blocking with an Assyrian, negate all special abilities on Enhancements and Heroes. Cannot be negated during the battle phase. May be used twice per game.
   Reason:  Unmatched clause: 'While you are blocking with an Assyrian, negate all special abilities on Enhancements and Heroes'
 
-[1278274305] (bottom) 
+[1278274305] (bottom) Assyrian Affliction (LoC)
   Ability: Capture all Heroes in battle to a player.
   Reason:  Unmatched clause: 'Capture all Heroes in battle to a player'
 
@@ -981,11 +977,11 @@
   Ability: Protect Assyrian Evil Characters in your territory from discard, conversion, and capture unless King Hezekiah is in play or set aside.
   Reason:  Unmatched clause: 'Protect Assyrian Evil Characters in your territory from discard, conversion, and capture unless King Hezekiah is in play or set aside'
 
-[-1270964017] (top) 
+[-1270964017] (top) Assyrian Camp (LoC)
   Ability: Prevent multi-brigade Enhancements used by Heroes (except meek Heroes).
   Reason:  Unmatched clause: 'Prevent multi-brigade Enhancements used by Heroes (except meek Heroes)'
 
-[-1270964017] (bottom) 
+[-1270964017] (bottom) Assyrian Camp (LoC)
   Ability: While an Assyrian is in play, negate characters in territories and Lost Souls.
   Reason:  Unmatched clause: 'While an Assyrian is in play, negate characters in territories and Lost Souls'
 
@@ -1053,7 +1049,7 @@
   Ability: Remove an Evil Character from the game. Topdeck a Hero from your discard pile.
   Reason:  Unmatched clause: 'Remove an Evil Character from the game'
 
-[1328614388] (bottom) 
+[1328614388] (bottom) Avenged!
   Ability: You may take an evil O.T. Fortress from deck. Capture a Hero in battle.
   Reason:  Unmatched clause: 'You may take an evil O.T. Fortress from deck'
 
@@ -1068,10 +1064,6 @@
 [1195855047] (bottom) Azariah, the Strong (LoC)
   Ability: You may bounce an Artifact. Negate up to X good or neutral cards.
   Reason:  Unmatched clause: 'You may bounce an Artifact'
-
-[-358090054] (top) Azor, the Recusant (LoC)
-  Ability: Negate pale green humans. You may banish 3 evil cards from discard pile to discard an idol, Site or evil Fortress.
-  Reason:  Unmatched clause: 'You may banish 3 evil cards from discard pile to discard an idol, Site or evil Fortress'
 
 [345944305] (top) Baal Worship
   Ability: Evil Characters may not repent this turn.
@@ -1277,10 +1269,6 @@
   Ability: You may bounce a Hero. Opponent may banish a card of matching brigade from hand instead. May band to Esau. Cannot be negated if opponent used a search ability this turn.
   Reason:  Unmatched clause: 'You may bounce a Hero'
 
-[-984858917] (top) Bathsheba, the Helper (LoC)
-  Ability: If your lone David or Solomon attacks, you may convert this card to meek to choose an evil human to block.
-  Reason:  Unmatched clause: 'If your lone David or Solomon attacks, you may convert this card to meek to choose an evil human to block'
-
 [-884616693] (top) Battering Ram
   Ability: If three or more Evil Character's are in battle, discard one O.T. Fortress site.  Ability cannot be prevented or negated.
   Reason:  Unmatched clause: 'If three or more Evil Character's are in battle, discard one O.T. Fortress site'
@@ -1397,6 +1385,14 @@
   Ability: Discard a Hero, a token or a captured character. If played in battle, you may banish that card instead. Cannot be prevented if John the Forerunner is in play.
   Reason:  Unmatched clause: 'Discard a Hero, a token or a captured character'
 
+[-1646887871] (shared) Behemoth (RoJ AB)
+  Ability: Negate an opponent's card. Protect this character from capture. Cannot be prevented by a human Hero.
+  Reason:  Unmatched clause: 'Negate an opponent's card'
+
+[1686809378] (shared) Behemoth (RoJ)
+  Ability: Negate an opponent's card. Protect this character from capture. Cannot be prevented by a human Hero.
+  Reason:  Unmatched clause: 'Negate an opponent's card'
+
 [-1332492180] (top) Behold the Lamb
   Ability: Interrupt the battle and reveal a Lamb icon card in your hand to discard up to 3 Evil Enhancements and/or Curses.  Cannot be negated.
   Reason:  Unmatched clause: 'Interrupt the battle and reveal a Lamb icon card in your hand to discard up to 3 Evil Enhancements and/or Curses'
@@ -1461,11 +1457,15 @@
   Ability: If blocking, take a male, human Evil Character to your territory and convert it to evil gold. Its owner may withdraw a Hero instead. May band to Herod Agrippa I.
   Reason:  Unmatched clause: 'take a male, human Evil Character to your territory and convert it to evil gold'
 
-[1246708144] (top) 
+[-27859788] (shared) Besieged
+  Ability: Banding abilities used by human Evil Characters cannot be negated by good cards or Artifacts.  If 3 or more human Evil Characters are in battle while this card is active, you may discard this card to discard an O.T.  Fortress in play.
+  Reason:  Unmatched clause: 'Banding abilities used by human Evil Characters   If 3 or more human Evil Characters are in battle while this card is active, you may discard this card to discard an O.T.  Fortress in play'
+
+[1246708144] (top) Besieged (PoC)
   Ability: If an opponent uses a search ability, you may take an evil human or skull icon card from Reserve. Cannot be negated.
   Reason:  Unmatched clause: 'If an opponent uses a search ability, you may take an evil human or skull icon card from Reserve'
 
-[1246708144] (bottom) 
+[1246708144] (bottom) Besieged (PoC)
   Ability: Discard a Hero, Site and/or Fortress.
   Reason:  Unmatched clause: 'Discard a Hero, Site and/or Fortress'
 
@@ -1525,11 +1525,11 @@
   Ability: Search deck for Isaac, Samson, John the Baptist, or Son of God. Protect cards with those titles from opponents' cards this turn.
   Reason:  Unmatched clause: 'Protect cards with those titles from opponents' cards this turn'
 
-[-1273229763] (top) 
+[-1273229763] (top) Birthing Pains
   Ability: If an opponent puts a human in play, they must discard a card from hand. Limit once per round per player.
   Reason:  Unmatched clause: 'If an opponent puts a human in play, they must discard a card from hand'
 
-[-1273229763] (bottom) 
+[-1273229763] (bottom) Birthing Pains
   Ability: Opponent must discard X of their cards from hand and/or battle.
   Reason:  Unmatched clause: 'Opponent must discard X of their cards from hand and/or battle'
 
@@ -1581,6 +1581,14 @@
   Ability: Convert your N.T. Evil Character to a Hero in any brigade. While it remains in your territory, that Hero is protected from opponents.
   Reason:  Unmatched clause: 'Convert your N.T. Evil Character to a Hero in any brigade'
 
+[126690624] (shared) Blindness
+  Ability: While an evil card is on a Hero, your demons are immune to that Hero.
+  Reason:  Unmatched clause: 'While an evil card is on a Hero, your demons are immune to that Hero'
+
+[-1812037992] (shared) Blood Avenger
+  Ability: You may draw 2. If this character is discarded, you may discard a character of opposite alignment.
+  Reason:  Unmatched clause: 'If this character is discarded, you may discard a character of opposite alignment'
+
 [1787706276] (top) Blood of the Lamb (RoJ AB)
   Ability: Negate an evil card. If used by a martyr, you may draw 3. You may play an Enhancement.
   Reason:  Unmatched clause: 'If used by a martyr, you may draw 3'
@@ -1616,10 +1624,6 @@
 [-115965648] (top) Boaz (Pa)
   Ability: Ruth, Naomi, and Boaz are immune to Hunger and Without Food while Boaz is in play.
   Reason:  Unmatched clause: 'Ruth, Naomi, and Boaz are immune to Hunger and Without Food while Boaz is in play'
-
-[-210517488] (top) Boaz, the Redeemer (LoC)
-  Ability: May band to Ruth, or you may take a good Ruth card from deck (or Reserve if Ruth is in play). Cannot be negated.
-  Reason:  Unmatched clause: 'May band to Ruth, or you may take a good Ruth card from deck (or Reserve if Ruth is in play)'
 
 [-893807779] (top) Boaz' Offspring (LoC)
   Ability: STAR: Reveal hand: If there is no Hero, take one from deck. GE: You may take a Ruth Hero from deck (or Reserve if used by a meek Hero). If played in battle, bounce up to X humans.
@@ -1769,21 +1773,33 @@
   Ability: Place in an opponent's territory. Negate draw abilities used by that player. All Heroes in that territory are decreased by 0/X.
   Reason:  Unmatched clause: 'Place in an opponent's territory'
 
+[383853753] (shared) Broken Covenant
+  Ability: On activation, you may discard an evil card from hand or a random card from deck. If you do, discard a Covenant or a good Enhancement, or draw X (limit 3).
+  Reason:  Unmatched clause: 'On activation, you may discard an evil card from hand or a random card from deck'
+
+[-1981238520] (shared) Broken Covenant (CoW AB)
+  Ability: On activation, you may discard an evil card from hand or a random card from deck. If you do, discard a Covenant or a good Enhancement, or draw X (limit 3).
+  Reason:  Unmatched clause: 'On activation, you may discard an evil card from hand or a random card from deck'
+
 [773830287] (top) Bronze Cymbals
   Ability: Prevent the special ability of the next evil Enhancement played this battle.
   Reason:  Unmatched clause: 'Prevent the special ability of the next evil Enhancement played this battle'
 
-[1237646714] (top) 
+[1237646714] (top) Brother's Conflict
   Ability: Begin a side battle between 2 Evil Characters.
   Reason:  Unmatched clause: 'Begin a side battle between 2 Evil Characters'
 
-[1237646714] (bottom) 
+[1237646714] (bottom) Brother's Conflict
   Ability: Begin a side battle between 2 Heroes.
   Reason:  Unmatched clause: 'Begin a side battle between 2 Heroes'
 
 [-1364276124] (top) Brother's Reunion
   Ability: Hero is immune to gold brigade.  Search draw pile for Goshen and put in play.
   Reason:  Unmatched clause: 'Hero is immune to gold brigade'
+
+[-1706395755] (shared) Brothers Reunited  (LoC)
+  Ability: If opponent has played an Enhancement in battle, end the battle.
+  Reason:  Unmatched clause: 'If opponent has played an Enhancement in battle, end the battle'
 
 [-1879988445] (top) Brothers' Envy
   Ability: Negate and discard all Coat of Many Colors in play including any on Joseph.  If an unoccupied Pit of Dothan is in play, capture Joseph and place there.
@@ -1853,7 +1869,7 @@
   Ability: Negate and discard an Artifact, an evil Enhancement or an evil Fortress.
   Reason:  Unmatched clause: 'Negate and discard an Artifact, an evil Enhancement or an evil Fortress'
 
-[1544587192] (bottom) 
+[1544587192] (bottom) Burning Fire
   Ability: Discard your evil O.T. priest to protect Lost Souls from rescue.
   Reason:  Unmatched clause: 'Discard your evil O.T. priest to protect Lost Souls from rescue'
 
@@ -2013,6 +2029,22 @@
   Ability: You may capture this Hero to opponent's Land of Bondage to take an idol and add your priest from hand, deck, territory or Reserve to battle.
   Reason:  Unmatched clause: 'You may capture this Hero to opponent's Land of Bondage to take an idol and add your priest from hand, deck, territory or Reserve to battle'
 
+[704610103] (shared) Captive Princes
+  Ability: You may capture this character to opponent's Land of Bondage to look at opponent's hand or Reserve add a human of matching brigade to battle.
+  Reason:  Unmatched clause: 'You may capture this character to opponent's Land of Bondage to look at opponent's hand or Reserve add a human of matching brigade to battle'
+
+[-55716512] (shared) Capture and Seize
+  Ability: If Isaiah or an Assyrian is in play, capture an opposing character and take an Artifact.
+  Reason:  Unmatched clause: 'If Isaiah or an Assyrian is in play, capture an opposing character and take an Artifact'
+
+[907050288] (shared) Captured Ark
+  Ability: Upon activation, each opponent must select one active Artifact in own territory and shuffle it back into their draw pile. Each shuffled Artifact is negated. May be used twice.
+  Reason:  Unmatched clause: 'Upon activation, each opponent must select one active Artifact in own territory and shuffle it back into their draw pile'
+
+[623427653] (shared) Captured Ark (FoM)
+  Ability: Each opponent must shuffle an active Artifact in their territory. Negate those Artifacts. Limit twice.
+  Reason:  Unmatched clause: 'Each opponent must shuffle an active Artifact in their territory'
+
 [-1206252778] (top) Captured by Assyria
   Ability: Capture a human (or two humans if used by an Assyrian).
   Reason:  Unmatched clause: 'Capture a human (or two humans if used by an Assyrian)'
@@ -2033,13 +2065,21 @@
   Ability: Capture an evil human (or 2 if used by a judge).
   Reason:  Unmatched clause: 'Capture an evil human (or 2 if used by a judge)'
 
-[-1904374322] (bottom) 
+[83234752] (shared) Carcasses
+  Ability: If a warrior class Evil Character is in battle, discard abilities on evil Enhancements cannot be negated.  May be used for two rounds.
+  Reason:  Unmatched clause: 'If a warrior class Evil Character is in battle, discard abilities on evil Enhancements   May be used for two rounds'
+
+[-1904374322] (bottom) Carcasses (PoC)
   Ability: Discard a human. Cannot be negated if it is a multi-brigade or dual icon card.
   Reason:  Unmatched clause: 'Cannot be negated if it is a multi-brigade or dual icon card'
 
 [1708698410] (top) Carried into Exile
   Ability: Capture a human (or two humans if used by a Babylonian).
   Reason:  Unmatched clause: 'Capture a human (or two humans if used by a Babylonian)'
+
+[-1899241932] (shared) Cast into Lion's Den
+  Ability: Capture a character in battle. If used by a Daniel Hero or Persian, this ability gains regardless of protection
+  Reason:  Unmatched clause: 'Capture a character in battle'
 
 [-1516235439] (top) Casting Lots (Ap)
   Ability: Pick one Artifact pile, turn face down and shuffle.  Replace Artifact pile.  Flip over top Artifact.  That Artifact is now active.  Effect of previous Artifact is negated.
@@ -2273,7 +2313,7 @@
   Ability: Selected Hero may use enhancement cards from any good brigade until end of current battle.
   Reason:  Unmatched clause: 'Selected Hero may use enhancement cards from any good brigade until end of current battle'
 
-[-1883218476] (top) 
+[-1883218476] (top) Coat of Many Colors (FoM)
   Ability: Take a good O.T. Enhancement from Reserve. If used by O.T. Joseph, return this card to hand after battle.
   Reason:  Unmatched clause: 'Take a good O.T. Enhancement from Reserve'
 
@@ -2345,6 +2385,10 @@
   Ability: All Evil Characters in play with banding abilities may not band for the rest of the game.  Any already banded must return to their territory.
   Reason:  Unmatched clause: 'All Evil Characters in play with banding abilities may not band for the rest of the game'
 
+[-480272549] (shared) Confused Languages (FoM)
+  Ability: If used by an O.T. character, place in territory: Prevent and ignore opponent's characters of opposite alignment (except those of matching brigade to another character that player controls).
+  Reason:  Unmatched clause: 'place in territory: Prevent and ignore opponent's characters of opposite alignment (except those of matching brigade to another character that player controls)'
+
 [1440047856] (top) Confusion
   Ability: Owner may look through one opponent's draw pile, discard one card and shuffle remaining cards.
   Reason:  Unmatched clause: 'Owner may look through one opponent's draw pile, discard one card and shuffle remaining cards'
@@ -2360,6 +2404,14 @@
 [1883622458] (top) Confusion (Roots)
   Ability: Discard a card from opponent's hand, deck or Reserve.
   Reason:  Unmatched clause: 'Discard a card from opponent's hand, deck or Reserve'
+
+[-629032128] (shared) Confusion of Mind
+  Ability: Negate all special abilities on opponents' Heroes.  An opponent may discard two good Enhancements (or a good Dominant) from hand to discard this card.  Cannot be negated.
+  Reason:  Unmatched clause: 'Negate all special abilities on opponents' Heroes'
+
+[-1904511548] (shared) Confusion of Mind (PoC)
+  Ability: Negate opponents' Heroes. An opponent may discard 2 good Enhancements (or a good Dominant) from hand to discard this card. Cannot be negated.
+  Reason:  Unmatched clause: 'Negate opponents' Heroes'
 
 [-945112256] (top) Conqueror over Death
   Ability: Return all Heroes in your Potter's Field to the field of play.  This ability cannot be negated.
@@ -2497,21 +2549,77 @@
   Ability: You may take a Covenant from deck or Reserve. O.T. Enhancements used by this card cannot be prevented.
   Reason:  Unmatched clause: 'O.T. Enhancements used by this card'
 
-[-605054389] (top) 
+[-811903860] (shared) Covenant of Abraham
+  Ability: Use as an enhancement or an Artifact.  No Evil Character may be set aside while this card is in play.
+  Reason:  Unmatched clause: 'Use as an enhancement or an Artifact'
+
+[-784756194] (shared) Covenant of Eden
+  Ability: Use as an enhancement or an Artifact.  No character may be removed from the game.  Instead discard the character targeted for removal.
+  Reason:  Unmatched clause: 'Use as an enhancement or an Artifact'
+
+[973131797] (shared) Covenant of Eden (PoC)
+  Ability: HE: Take a Genesis human from deck (or Reserve if used by Adam or Eve). ART: Negate other dual icon cards. If you play another one, discard this card.
+  Reason:  Unmatched clause: 'HE: Take a Genesis human from deck (or Reserve if used by Adam or Eve)'
+
+[-1635012002] (shared) Covenant of Noah
+  Ability: Use as an enhancement or an Artifact.  Interrupt and prevent one evil enhancement.  Discard after use.
+  Reason:  Unmatched clause: 'Use as an enhancement or an Artifact'
+
+[2120349932] (shared) Covenant of Palestine
+  Ability: Use as an enhancement or an Artifact.  Return all Heroes in all Lands of Bondage to owner's territories.  Capture of Heroes is prevented.
+  Reason:  Unmatched clause: 'Use as an enhancement or an Artifact'
+
+[-1782881223] (shared) Covenant of Palestine (PoC)
+  Ability: HE: Release all captured Heroes to discard up to X evil cards. ART: Discard an evil card from Reserve to take a Site or City and play it.
+  Reason:  Unmatched clause: 'HE: Release all captured Heroes to discard up to X evil cards'
+
+[-605054389] (top) Covenant of Peace
   Ability: You may reserve an O.T. clay card from hand to take one from deck.
   Reason:  Unmatched clause: 'You may reserve an O.T. clay card from hand to take one from deck'
 
-[-605054389] (bottom) 
+[-605054389] (bottom) Covenant of Peace
   Ability: If used by a priest, negate an evil card. Bounce an Evil Character.
   Reason:  Unmatched clause: 'Bounce an Evil Character'
 
-[-1265515809] (bottom) 
+[-1750024669] (shared) Covenant of Prayer (RoJ AB)
+  Ability: You may banish this card to add to hand your card that was banished by an opponent or a card from Reserve.
+  Reason:  Unmatched clause: 'You may banish this card to add to hand your card that was banished by an opponent or a card from Reserve'
+
+[233383136] (shared) Covenant of Prayer (RoJ)
+  Ability: You may banish this card to add to hand your card that was banished by an opponent or a card from Reserve.
+  Reason:  Unmatched clause: 'You may banish this card to add to hand your card that was banished by an opponent or a card from Reserve'
+
+[1993223610] (shared) Covenant of Salt
+  Ability: Use as an enhancement or an Artifact.  All O.T. Heroes in play gain 2/2.
+  Reason:  Unmatched clause: 'Use as an enhancement or an Artifact'
+
+[-1265515809] (bottom) Covenant with Abraham (PoC)
   Ability: Convert an evil human in battle. Underdeck an evil non-human in battle.
   Reason:  Unmatched clause: 'Convert an evil human in battle'
 
-[-830843448] (top) 
+[593859726] (shared) Covenant with Adam
+  Ability: Use as an enhancement or an Artifact.  All human Evil Characters in battle decrease 0/3 until end of battle.
+  Reason:  Unmatched clause: 'Use as an enhancement or an Artifact'
+
+[1381610582] (shared) Covenant with Adam (PoC)
+  Ability: HE: Negate an evil card. You may reveal a good Dominant from hand to return this card to hand after battle. ART: Decrease blocking characters 0/3.
+  Reason:  Unmatched clause: 'HE: Negate an evil card'
+
+[-2071886612] (shared) Covenant with David
+  Ability: Use as an enhancement or an Artifact.  Household Idols is negated.
+  Reason:  Unmatched clause: 'Use as an enhancement or an Artifact'
+
+[2020698611] (shared) Covenant with David (PoC)
+  Ability: HE: You may play a Site or good Fortress from deck (or Reserve if used by David). ART: If you do not control a king, you may take a king from deck.
+  Reason:  Unmatched clause: 'HE: You may play a Site or good Fortress from deck (or Reserve if used by David)'
+
+[-830843448] (top) Covenant with David [K]
   Ability: You may underdeck a I Samuel Hero from discard pile or Reserve.
   Reason:  Unmatched clause: 'You may underdeck a I Samuel Hero from discard pile or Reserve'
+
+[-1288512959] (shared) Covenant with Death (FooF)
+  Ability: Negate characters. Restrict players from playing Enhancements unless a character is opposed in battle. Cannot be negated.
+  Reason:  Unmatched clause: 'Restrict players from playing Enhancements unless a character is opposed in battle'
 
 [-694352529] (top) Covenant with Death (Pr)
   Ability: Set Evil Character aside. Character gains 1/1 for every turn Character is set aside.
@@ -2521,11 +2629,19 @@
   Ability: Your Priests have access to all Sites.  If your Priest rescues a Lost Soul from a Site, you may place an Evil Character or Enhancement beneath owner's draw pile.
   Reason:  Unmatched clause: 'Your Priests have access to all Sites'
 
-[716514973] (top) 
+[-395463156] (shared) Covenant with Moses
+  Ability: Use as an enhancement or an Artifact.  Burial Shroud, Unholy Writ, Thirty Pieces of Silver, and Household Idols are negated for one round.  May be used twice.
+  Reason:  Unmatched clause: 'Use as an enhancement or an Artifact'
+
+[2047453172] (shared) Covenant with Moses (PoC)
+  Ability: HE: Draw up to X (limit 3 unless played in battle). Cannot be prevented. ART: You may take a Tabernacle Artifact from deck or a Curse from Reserve.
+  Reason:  Unmatched clause: 'HE: Draw up to X (limit 3 unless played in battle)'
+
+[716514973] (top) Covenant with Moses [L]
   Ability: You may underdeck an Exodus Hero from discard pile or Reserve.
   Reason:  Unmatched clause: 'You may underdeck an Exodus Hero from discard pile or Reserve'
 
-[-1993428788] (top) 
+[-1993428788] (top) Covenant with Philistia (LoC)
   Ability: Each player may take an animal from their Reserve. If you do, you may draw 2.
   Reason:  Unmatched clause: 'Each player may take an animal from their Reserve'
 
@@ -2560,6 +2676,10 @@
 [747025152] (top) Cross Beams of the Cross
   Ability: No beast may block while this Artifact is in play.
   Reason:  Unmatched clause: 'No beast may block while this Artifact is in play'
+
+[-1953554392] (shared) Crowd's Choice (GoC)
+  Ability: LAMB: You may take a good card from deck or Reserve. REAPER: You may take an evil card from deck or Reserve.
+  Reason:  Unmatched clause: 'LAMB: You may take a good card from deck or Reserve'
 
 [-289468978] (top) Crown of Thorns
   Ability: All Evil Characters in play decrease 0/3 while this card is in play.
@@ -2617,13 +2737,17 @@
   Ability: (Star) Play this character. (EC) If played from hand, you may reserve a card from hand to activate a gold Curse from Reserve on this card.
   Reason:  Unmatched clause: '(Star) Play this character'
 
-[-417021506] (top) 
+[-417021506] (top) Cursed for Us (GoC)
   Ability: Place an orange Gospel Enhancement from discard pile on a Hero for 1 turn: Restrict good Dominants.
   Reason:  Unmatched clause: 'Place an orange Gospel Enhancement from discard pile on a Hero for 1 turn: Restrict good Dominants'
 
-[-417021506] (bottom) 
+[-417021506] (bottom) Cursed for Us (GoC)
   Ability: You may reserve a good Dominant from a hand or territory. Discard a Hero.
   Reason:  Unmatched clause: 'You may reserve a good Dominant from a hand or territory'
+
+[-1594853387] (shared) Cursed Ground
+  Ability: CURSE: If attacked and you control no evil humans, you may underdeck this card to take an evil human from deck or Reserve.EE: Decrease opponent's humans X/X.
+  Reason:  Unmatched clause: 'CURSE: If attacked and you control no evil humans, you may underdeck this card to take an evil human from deck or Reserve.EE: Decrease opponent's humans X/X'
 
 [1237773781] (top) Cut Off
   Ability: STAR: Look at the bottom 6 cards of a deck: Topdeck an evil card. EE: Discard a Hero or a good Fortress.
@@ -2660,6 +2784,10 @@
 [1122978069] (top) Dance of Death (GoC)
   Ability: Name a Hero. Discard all copies of the named Hero. If a Herod is in play, discard all copies of the named Hero from opponent's hand, deck and Reserve.
   Reason:  Unmatched clause: 'Name a Hero'
+
+[-2051511431] (shared) Dancing Wives
+  Ability: Take a female of opposite alignment from a territory or an opponent's Reserve to territory and convert it to a brigade you control. It gains the ability "May band to a male human of matching brigade."
+  Reason:  Unmatched clause: 'Take a female of opposite alignment from a territory or an opponent's Reserve to territory and convert it to a brigade you control'
 
 [737058433] (top) Dangerous Road
   Ability: Evil cards on this site are protected from DragonRaid.
@@ -2733,6 +2861,10 @@
   Ability: You may take an O.T. brown card from Reserve. Prevent the next good card played in battle.
   Reason:  Unmatched clause: 'You may take an O.T. brown card from Reserve'
 
+[424010749] (shared) Daughter's Grief
+  Ability: Set aside all females in battle and all opposing characters for 2 turns. Cannot be negated if opposed by a female.
+  Reason:  Unmatched clause: 'Set aside all females in battle and all opposing characters for 2 turns'
+
 [1974135304] (top) Daughters of Midian (1st Print - L)
   Ability: You may play a Lost Soul from a deck or draw 1.
   Reason:  Unmatched clause: 'You may play a Lost Soul from a deck or draw 1'
@@ -2777,21 +2909,9 @@
   Ability: STAR: Play a meek Hero from Reserve.
   Reason:  Unmatched clause: 'Play a meek Hero from Reserve'
 
-[839349964] (top) David, Heart After God (LoC Plus)
-  Ability: You may convert this card to meek to take a good O.T. card from deck. May band to a meek Hero. Cannot be prevented.
-  Reason:  Unmatched clause: 'You may convert this card to meek to take a good O.T. card from deck'
-
 [1216723836] (shared) David, Heart After God (LoC)
   Ability: STAR: Play a meek Hero from Reserve.
   Reason:  Unmatched clause: 'Play a meek Hero from Reserve'
-
-[1216723836] (top) David, Heart After God (LoC)
-  Ability: You may convert this card to meek to take a good O.T. card from deck. May band to a meek Hero. Cannot be prevented.
-  Reason:  Unmatched clause: 'You may convert this card to meek to take a good O.T. card from deck'
-
-[-1668007546] (top) David, Outcasts' Refuge (LoC)
-  Ability: May band to an O.T. red warrior from hand, Reserve or a territory, or you may draw X (limit 3). Cannot be negated.
-  Reason:  Unmatched clause: 'May band to an O.T. red warrior from hand, Reserve or a territory, or you may draw X (limit 3)'
 
 [-1087322590] (top) David, the Psalmist (CoW AB)
   Ability: Look at the top three cards of deck: you may underdeck them. If David's Harp is active, you may play an Enhancement involving music. Cannot be negated.
@@ -2800,6 +2920,10 @@
 [-1819336121] (top) David, the Shepherd (CoW AB)
   Ability: You may search deck for The Throne of David or an O.T. red warrior class Hero and put it in play. Cannot be interrupted.
   Reason:  Unmatched clause: 'You may search deck for The Throne of David or an O.T. red warrior class Hero and put it in play'
+
+[-1261527088] (shared) David's Census
+  Ability: Select 1: Discard a human controlled by each opponent, discard a card (except a character) in each opponent's territory, or each opponent must underdeck a Dominant from hand.
+  Reason:  Unmatched clause: 'Select 1: Discard a human controlled by each opponent, discard a card (except a character) in each opponent's territory, or each opponent must underdeck a Dominant from hand'
 
 [-328585832] (top) David's Descendant (LoC)
   Ability: STAR: Reveal hand: If there is no Hero, take one from deck. GE: You may take a good O.T. Fortress from deck or Reserve. If played in battle, discard up to X Evil Characters.
@@ -2929,11 +3053,15 @@
   Ability: Negate and discard the last good Enhancement played this battle.  You may treat this card as an Evil Character until the end of this battle.
   Reason:  Unmatched clause: 'You may treat this card as an Evil Character until the end of this battle'
 
+[-2060527099] (shared) Deafening Spirit (GoC)
+  Ability: If put in play (or if played from a territory), negate a good card this turn. If it is an Enhancement, discard it. You may convert this Enhancement to an Evil Character.
+  Reason:  Unmatched clause: 'If put in play (or if played from a territory), negate a good card this turn'
+
 [-1803618932] (top) Death & Hades
   Ability: Reduce opponent's hand to 7 cards until this character is discarded (or 9 cards if rescuer has Tables of the Law activated).
   Reason:  Unmatched clause: 'Reduce opponent's hand to 7 cards until this character is discarded (or 9 cards if rescuer has Tables of the Law activated)'
 
-[-1186992571] (top) 
+[-1186992571] (top) Death of Family
   Ability: Place in territory: If your male Hero is discarded, you may discard this card to add your female Hero to battle.
   Reason:  Unmatched clause: 'Place in territory: If your male Hero is discarded, you may discard this card to add your female Hero to battle'
 
@@ -2965,6 +3093,10 @@
   Ability: Interrupt the battle. Hero may band to up to 3 O.T. human Heroes. Cannot be negated if used by Deborah.
   Reason:  Unmatched clause: 'Hero may band to up to 3 O.T. human Heroes'
 
+[-1353929142] (shared) Deceit & Vengeance
+  Ability: Set aside opponent's males in battle and all evil males in opponent's territory for 3 turns. On return, if this is used by a son of Jacob, discard those males.
+  Reason:  Unmatched clause: 'Set aside opponent's males in battle and all evil males in opponent's territory for 3 turns'
+
 [2049176747] (top) Deceitful Sin
   Ability: If you have not used a search ability this turn, end the battle.
   Reason:  Unmatched clause: 'If you have not used a search ability this turn, end the battle'
@@ -2993,11 +3125,15 @@
   Ability: Opponent must immediately discard a card from hand without using it.
   Reason:  Unmatched clause: 'Opponent must immediately discard a card from hand without using it'
 
-[-1385853887] (top) 
+[1885969141] (shared) Defenestrated!
+  Ability: If you have a King of Israel in play, you may remove an Evil Chartacter from the game. Cannot be prevented if King Jehu is in play.
+  Reason:  Unmatched clause: 'If you have a King of Israel in play, you may remove an Evil Chartacter from the game'
+
+[-1385853887] (top) Defenestrated! (Roots)
   Ability: Banish an Evil Character.
   Reason:  Unmatched clause: 'Banish an Evil Character'
 
-[-1385853887] (bottom) 
+[-1385853887] (bottom) Defenestrated! (Roots)
   Ability: Human may band to an Evil Character.
   Reason:  Unmatched clause: 'Human may band to an Evil Character'
 
@@ -3024,6 +3160,10 @@
 [-766928600] (top) Deliverance
   Ability: Release to owner's territory any Hero being held at any site that has the word Prison in the title.
   Reason:  Unmatched clause: 'Release to owner's territory any Hero being held at any site that has the word Prison in the title'
+
+[168335151] (shared) Delivered
+  Ability: STAR: Discard the top card of each opponent's deck. GE/EE: Activate an Artifact from deck (or Reserve if you control an Egyptian).
+  Reason:  Unmatched clause: 'GE/EE: Activate an Artifact from deck (or Reserve if you control an Egyptian)'
 
 [-839619162] (top) Demanding Miracles (GoC)
   Ability: You may take a good Enhancement from opponent's hand. If you control a meek Lost Soul, opponent must topdeck a good Dominant from hand. Cannot be interrupted.
@@ -3105,11 +3245,11 @@
   Ability: No good banding card can be played this turn.  All heroes banded into battle must return to their territories.
   Reason:  Unmatched clause: 'No good banding card can be played this turn'
 
-[1829220668] (top) 
+[1829220668] (top) Deserving Scorn
   Ability: You may reserve this card to underdeck a Hero.
   Reason:  Unmatched clause: 'You may reserve this card to underdeck a Hero'
 
-[1829220668] (bottom) 
+[1829220668] (bottom) Deserving Scorn
   Ability: Banish a Hero. You may take an O.T. brown Enhancement from deck.
   Reason:  Unmatched clause: 'Banish a Hero'
 
@@ -3144,6 +3284,10 @@
 [1095065390] (top) Destruction of Nehushtan
   Ability: Discard one active Artifact in play.  Artifact's ability is negated.
   Reason:  Unmatched clause: 'Artifact's ability is negated'
+
+[460780034] (shared) Destruction of Nehushtan (PoC)
+  Ability: LAMB: Negate and discard a Curse or all opponents' active Artifacts (except Tabernacle and Temple Artifacts). REAPER: Negate and discard a Covenant or Artifact.
+  Reason:  Unmatched clause: 'LAMB: Negate and discard a Curse or all opponents' active Artifacts (except Tabernacle and Temple Artifacts)'
 
 [-640065073] (top) Destructive Sin
   Ability: Place on a Hero. While this card remains, negate special abilities on that Hero and its owner's good Fortresses and Covenants.
@@ -3345,6 +3489,10 @@
   Ability: Take an O.T. male human Hero from deck, discard pile, or hand and put it in territory. Place this card on that Hero. Protect that Hero from evil discard abilities.
   Reason:  Unmatched clause: 'Take an O.T. male human Hero from deck, discard pile, or hand and put it in territory'
 
+[444556450] (shared) Drawn Sword (FooF)
+  Ability: If Ezekiel or a Babylonian is in play, you may discard an opponent's character in the field of battle. Cannot be prevented.
+  Reason:  Unmatched clause: 'If Ezekiel or a Babylonian is in play, you may discard an opponent's character in the field of battle'
+
 [24896498] (top) Drawn Water
   Ability: Set Hero aside for the number of turns equal to the number of Evil Characters one opponent has in play.  Hero returns with abilities increased by that amount.
   Reason:  Unmatched clause: 'Set Hero aside for the number of turns equal to the number of Evil Characters one opponent has in play'
@@ -3413,10 +3561,6 @@
   Ability: Selected evil King decreases 0/4 per turn.  If character reaches */0 or less, discard character.
   Reason:  Unmatched clause: 'Selected evil King decreases 0/4 per turn'
 
-[-1608155346] (top) Eber, the Unwilling (LoC)
-  Ability: You may bounce an Artifact or play a Lost Soul from a deck. Cannot be negated if you control a meek Hero.
-  Reason:  Unmatched clause: 'You may bounce an Artifact or play a Lost Soul from a deck'
-
 [-1144106222] (top) Edge of the Sword (Ki)
   Ability: Discard a single color Lost Soul Site from on opponent's territory.  The Lost Soul(s) remains in play.
   Reason:  Unmatched clause: 'The Lost Soul(s) remains in play'
@@ -3425,11 +3569,11 @@
   Ability: Discard one site from one opponent's territory.  The Lost Soul(s) remains in play.
   Reason:  Unmatched clause: 'The Lost Soul(s) remains in play'
 
-[-1898184372] (top) 
+[-1898184372] (top) Edomite Camp (LoC)
   Ability: While blocking, negate Heroes with toughness X or less.
   Reason:  Unmatched clause: 'While blocking, negate Heroes with toughness X or less'
 
-[-1898184372] (bottom) 
+[-1898184372] (bottom) Edomite Camp (LoC)
   Ability: If your Edomite blocks and you have 6 or fewer cards in hand, you may draw 2.
   Reason:  Unmatched clause: 'If your Edomite blocks and you have 6 or fewer cards in hand, you may draw 2'
 
@@ -3561,10 +3705,6 @@
   Ability: You may underdeck a good Exodus Enhancement from discard pile or Reserve.
   Reason:  Unmatched clause: 'You may underdeck a good Exodus Enhancement from discard pile or Reserve'
 
-[-2000128500] (top) Eleazar, the Potentate (LoC)
-  Ability: While alone, toss all Enhancements with strength X or less. May band to an O.T. human warrior or a meek Hero.
-  Reason:  Unmatched clause: 'While alone, toss all Enhancements with strength X or less'
-
 [-1825485405] (top) Eleazar's Sword
   Ability: Holder's Heroes are immune to male Philistines.
   Reason:  Unmatched clause: 'Holder's Heroes are immune to male Philistines'
@@ -3600,10 +3740,6 @@
 [607734591] (shared) Eliakim, the Expatriate (LoC)
   Ability: STAR: If you control a meek Hero, draw 1.
   Reason:  Unmatched clause: 'If you control a meek Hero, draw 1'
-
-[607734591] (top) Eliakim, the Expatriate (LoC)
-  Ability: Negate brown humans. You may take an Ezra card from Reserve (or deck if an evil card is in opponent's banish pile).
-  Reason:  Unmatched clause: 'You may take an Ezra card from Reserve (or deck if an evil card is in opponent's banish pile)'
 
 [-449832969] (top) Eliashib the High Priest
   Ability: You may search draw pile or discard pile for Wall of Protection or Jerusalem Tower and put it in play.
@@ -3656,10 +3792,6 @@
 [2102612098] (top) Elishama the Priest
   Ability: If Jehoshaphat is in play, you may place an O.T.  Enhancement from hand or discard pile on a human Hero of matching brigade in your territory.  The next time that Hero enters battle, that Enhancement activates and is discarded immediately.
   Reason:  Unmatched clause: 'If Jehoshaphat is in play, you may place an O.T.  Enhancement from hand or discard pile on a human Hero of matching brigade in your territory'
-
-[-562674708] (top) Eliud, the Revolutionary (LoC)
-  Ability: If a meek postexilic Hero is in play, opponent must discard an evil card from hand or territory. Cannot be prevented.
-  Reason:  Unmatched clause: 'If a meek postexilic Hero is in play, opponent must discard an evil card from hand or territory'
 
 [1703765536] (top) Elizabeth (GoC)
   Ability: While another nativity Hero is in play, negate opponents' evil cards in territories. While attacking, protect nativity Heroes from evil cards with strength X or greater.
@@ -3793,14 +3925,6 @@
   Ability: Protect Enoch from discard abilities. Your good Dominants can target Enoch as if he were a Lost Soul in opponent's Land of Bondage. While in battle, negate band abilities.
   Reason:  Unmatched clause: 'Your good Dominants can target Enoch as if he were a Lost Soul in opponent's Land of Bondage'
 
-[-739788422] (top) Enoch, the Pure (LoC)
-  Ability: Protect this card and meek blue Heroes from banish, capture and discard abilities. May band to Methuselah.
-  Reason:  Unmatched clause: 'Protect this card and meek blue Heroes from banish, capture and discard abilities'
-
-[-1004752518] (top) Enosh, the Worshiper (LoC)
-  Ability: While you control a meek Hero, negate opponents' neutral cards. If attacking, you may draw X (limit 3).
-  Reason:  Unmatched clause: 'While you control a meek Hero, negate opponents' neutral cards'
-
 [-1407061728] (top) Enslaved by Egypt
   Ability: If used by an Egyptian, capture a hero.  Cannot be negated by a good card if the Egypt site is in play.
   Reason:  Unmatched clause: 'capture a hero'
@@ -3885,6 +4009,14 @@
   Ability: If alone, protect Lost Souls and O.T. human Heroes from evil cards. If opponent plays an evil card with "negated" in the special ability, discard an evil human.
   Reason:  Unmatched clause: 'If alone, protect Lost Souls and O.T. human Heroes from evil cards'
 
+[208816133] (shared) Eternal Covenant
+  Ability: On activation, search discard pile for a human Hero and put it in play.
+  Reason:  Unmatched clause: 'On activation, search discard pile for a human Hero and put it in play'
+
+[2135651385] (shared) Eternal Covenant (CoW AB)
+  Ability: On activation, search discard pile for a human Hero and put it in play.
+  Reason:  Unmatched clause: 'On activation, search discard pile for a human Hero and put it in play'
+
 [51482923] (top) Eternal Inheritance
   Ability: If rescuing, a Covenant is active and your Hero is opposed, remove this from the game to rescue a Lost Soul. Battle continues as a battle challenge. Opponent may play an Enhancement.
   Reason:  Unmatched clause: 'If rescuing, a Covenant is active and your Hero is opposed, remove this from the game to rescue a Lost Soul'
@@ -3892,6 +4024,10 @@
 [-1941987598] (top) Eternal Inheritance (CoW AB)
   Ability: If rescuing, a Covenant is active and your Hero is opposed, remove this from the game to rescue a Lost Soul. Battle continues as a battle challenge. Opponent may play an Enhancement.
   Reason:  Unmatched clause: 'If rescuing, a Covenant is active and your Hero is opposed, remove this from the game to rescue a Lost Soul'
+
+[-2143727880] (shared) Eternal Judgment
+  Ability: Place in territory: You may give this card to a player to negate and discard their Enhancement or the last Enhancement they played. Cannot be negated if used by a Daniel character.
+  Reason:  Unmatched clause: 'Place in territory: You may give this card to a player to negate and discard their Enhancement or the last Enhancement they played'
 
 [-17268831] (top) Ethiopian Treasurer (Ap)
   Ability: Search own draw pile or discard pile for one Bible icon with no special abilities.  Holder may play the next enhancement card.
@@ -4413,17 +4549,9 @@
   Ability: STAR: Play a meek red Hero from deck.
   Reason:  Unmatched clause: 'Play a meek red Hero from deck'
 
-[2095158997] (top) Father Abraham (LoC Plus)
-  Ability: You may activate this card's * ability and/or draw X (limit 3). If you do, convert this card to meek. Cannot be negated.
-  Reason:  Unmatched clause: 'You may activate this card's * ability and/or draw X (limit 3)'
-
 [1132337925] (shared) Father Abraham (LoC)
   Ability: STAR: Play a meek red Hero from deck.
   Reason:  Unmatched clause: 'Play a meek red Hero from deck'
-
-[1132337925] (top) Father Abraham (LoC)
-  Ability: You may activate this card's * ability and/or draw X (limit 3). If you do, convert this card to meek. Cannot be negated.
-  Reason:  Unmatched clause: 'You may activate this card's * ability and/or draw X (limit 3)'
 
 [-1121067520] (top) Fear of Danger
   Ability: Place this card on a Hero in a territory.  Hero cannot enter battle until this card is removed.
@@ -4493,19 +4621,19 @@
   Ability: You may discard a crimson card from hand to withdraw and paralyze all humans in battle. Poison those humans: Each upkeep, decrease them 0/3.
   Reason:  Unmatched clause: 'Poison those humans: Each upkeep, decrease them 0/3'
 
-[1780757756] (top) 
+[1780757756] (top) Fifth Seal (Justice Seekers) (RoJ AB)
   Ability: Search deck or Reserve for a good N.T. Enhancement.
   Reason:  Unmatched clause: 'Search deck or Reserve for a good N.T. Enhancement'
 
-[1780757756] (bottom) 
+[1780757756] (bottom) Fifth Seal (Justice Seekers) (RoJ AB)
   Ability: If an opponent uses an evil discard ability, you may discard this Hero to discard an evil card in a territory.
   Reason:  Unmatched clause: 'If an opponent uses an evil discard ability, you may discard this Hero to discard an evil card in a territory'
 
-[1269811648] (top) 
+[1269811648] (top) Fifth Seal, Justice Seekers (RoJ)
   Ability: Search deck or Reserve for a good N.T. Enhancement.
   Reason:  Unmatched clause: 'Search deck or Reserve for a good N.T. Enhancement'
 
-[1269811648] (bottom) 
+[1269811648] (bottom) Fifth Seal, Justice Seekers (RoJ)
   Ability: If an opponent uses an evil discard ability, you may discard this Hero to discard an evil card in a territory.
   Reason:  Unmatched clause: 'If an opponent uses an evil discard ability, you may discard this Hero to discard an evil card in a territory'
 
@@ -4516,6 +4644,14 @@
 [-1200806671] (top) Filthy Garments
   Ability: Selected Hero's abilities decrease 4/4 for remainder of turn.
   Reason:  Unmatched clause: 'Selected Hero's abilities decrease 4/4 for remainder of turn'
+
+[-2033677341] (shared) Fire Foxes
+  Ability: Shuffle a Site. If opponent used a special ability to draw, exchange, or search this turn, protect Lost Souls from opponent. If used by Samson, remove a male and a female Evil Character from the game.
+  Reason:  Unmatched clause: 'Shuffle a Site'
+
+[-428609774] (shared) Fire Foxes (CoW AB)
+  Ability: Shuffle a Site. If opponent used a special ability to draw, exchange, or search this turn, protect Lost Souls from opponent. If used by Samson, remove a male and a female Evil Character from the game.
+  Reason:  Unmatched clause: 'Shuffle a Site'
 
 [1283140281] (top) Fire From Heaven (RoJ AB)
   Ability: If a Job character is in play, negate and underdeck a card (except a Lost Soul).
@@ -4537,19 +4673,19 @@
   Ability: Underdeck an opponent's card, or underdeck up to X cards in opponent's territory. Cannot be Negated if used by Abaddon.
   Reason:  Unmatched clause: 'Underdeck an opponent's card, or underdeck up to X cards in opponent's territory'
 
-[-960159097] (top) 
+[-960159097] (top) First Bowl of Wrath (RoJ AB)
   Ability: Decrease opponents' Evil Characters 6/6.
   Reason:  Unmatched clause: 'Decrease opponents' Evil Characters 6/6'
 
-[-960159097] (bottom) 
+[-960159097] (bottom) First Bowl of Wrath (RoJ AB)
   Ability: You may search deck, discard pile or Reserve for an idol and activate it.
   Reason:  Unmatched clause: 'You may search deck, discard pile or Reserve for an idol and activate it'
 
-[505426906] (top) 
+[505426906] (top) First Bowl of Wrath (RoJ)
   Ability: Decrease opponents' Evil Characters 6/6.
   Reason:  Unmatched clause: 'Decrease opponents' Evil Characters 6/6'
 
-[505426906] (bottom) 
+[505426906] (bottom) First Bowl of Wrath (RoJ)
   Ability: You may search deck, discard pile or Reserve for an idol and activate it.
   Reason:  Unmatched clause: 'You may search deck, discard pile or Reserve for an idol and activate it'
 
@@ -4585,7 +4721,11 @@
   Ability: The effect of the last Enhancement Card played is interrupted and prevented.
   Reason:  Unmatched clause: 'The effect of the last Enhancement Card played is interrupted and prevented'
 
-[1824885318] (bottom) 
+[1009895008] (shared) Flee from Enemies
+  Ability: If your warrior class Evil Character is in battle, negate good banding abilities.
+  Reason:  Unmatched clause: 'If your warrior class Evil Character is in battle, negate good banding abilities'
+
+[1824885318] (bottom) Flee from Enemies [IR]
   Ability: Withdraw all Heroes. You may reserve this card.
   Reason:  Unmatched clause: 'You may reserve this card'
 
@@ -4609,11 +4749,11 @@
   Ability: Selected N.T. Hero and all number enhancements played on Hero this turn are worth half their value.
   Reason:  Unmatched clause: 'Selected N.T. Hero and all number enhancements played on Hero this turn are worth half their value'
 
-[-249279131] (top) 
+[-249279131] (top) Flying Scroll (PoC)
   Ability: You may banish this card to take a multi-brigade or territory class character.
   Reason:  Unmatched clause: 'You may banish this card to take a multi-brigade or territory class character'
 
-[-249279131] (bottom) 
+[-249279131] (bottom) Flying Scroll (PoC)
   Ability: Reserve a Hero in battle and a good card from opponent's hand.
   Reason:  Unmatched clause: 'Reserve a Hero in battle and a good card from opponent's hand'
 
@@ -4653,19 +4793,19 @@
   Ability: Convert any Red Brigade Hero to an Evil Character for remainder of current battle.
   Reason:  Unmatched clause: 'Convert any Red Brigade Hero to an Evil Character for remainder of current battle'
 
-[1588492735] (top) 
+[1588492735] (top) Forbidden Fruit (FoM)
   Ability: Look at opponent's hand and take an O.T. Enhancement from Reserve.
   Reason:  Unmatched clause: 'Look at opponent's hand and take an O.T. Enhancement from Reserve'
 
-[1588492735] (bottom) 
+[1588492735] (bottom) Forbidden Fruit (FoM)
   Ability: Convert all Heroes in battle to pale green this turn.
   Reason:  Unmatched clause: 'Convert all Heroes in battle to pale green this turn'
 
-[702211849] (top) 
+[702211849] (top) Forbidden Marriage (LoC)
   Ability: You may discard an Enhancement. If you do not, negate Lost Souls.
   Reason:  Unmatched clause: 'If you do not, negate Lost Souls'
 
-[702211849] (bottom) 
+[702211849] (bottom) Forbidden Marriage (LoC)
   Ability: Underdeck a Hero in play and a good card from opponent's hand.
   Reason:  Unmatched clause: 'Underdeck a Hero in play and a good card from opponent's hand'
 
@@ -4697,6 +4837,10 @@
   Ability: You may negate a good card. If you do not, you may discard this card to discard a good card in a territory.
   Reason:  Unmatched clause: 'If you do not, you may discard this card to discard a good card in a territory'
 
+[1316410190] (shared) Foreign Sword
+  Ability: Negate an opponent's evil or neutral card. If used by a Canaanite or Philistine, you may return that card to the top of owner's deck.
+  Reason:  Unmatched clause: 'Negate an opponent's evil or neutral card'
+
 [-1586877809] (top) Foreign Wives
   Ability: Search discard pile for Household Idols. If opponent has draw 5 or more cards this turn, protect Foreign Wives from cards used by opponent. Cannot be negated.
   Reason:  Unmatched clause: 'If opponent has draw 5 or more cards this turn, protect Foreign Wives from cards used by opponent'
@@ -4704,6 +4848,10 @@
 [1871219067] (top) Foreign Wives (2022 - Side Event)
   Ability: Take Household Idols from discard pile. If opponent has drawn 5 or more cards this turn, protect this card from cards used by opponent. Cannot be negated.
   Reason:  Unmatched clause: 'If opponent has drawn 5 or more cards this turn, protect this card from cards used by opponent'
+
+[-1014428160] (shared) Forest Fire (FooF)
+  Ability: If Ezekiel or a Babylonian is in play, negate and discard a single color Site, Artifact, or evil card in play or set aside area. Cannot be prevented.
+  Reason:  Unmatched clause: 'If Ezekiel or a Babylonian is in play, negate and discard a single color Site, Artifact, or evil card in play or set aside area'
 
 [-530253458] (top) Forest Fire (Pr)
   Ability: Hero ignores Pale Green Brigade.
@@ -4749,6 +4897,10 @@
   Ability: During battle, you may discard contents to add your evil N.T. human warrior to battle.
   Reason:  Unmatched clause: 'During battle, you may discard contents to add your evil N.T. human warrior to battle'
 
+[1168904300] (shared) Forty Years
+  Ability: Each player may protect a Hero (and an Evil Character) they control from underdeck abilities. Underdeck all characters and all Artifacts.
+  Reason:  Unmatched clause: 'Each player may protect a Hero (and an Evil Character) they control from underdeck abilities'
+
 [403110565] (top) Fountain of Living Water (PoC)
   Ability: STAR: Set aside a Hero from hand for 2 turns. On return, draw 2. GE: You may take a * card from Reserve. You may add it to battle.
   Reason:  Unmatched clause: 'Set aside a Hero from hand for 2 turns'
@@ -4785,11 +4937,11 @@
   Ability: Protect hand, deck and Reserve from opponents. While Peter is in play, you may discard this card to draw 4.
   Reason:  Unmatched clause: 'Protect hand, deck and Reserve from opponents'
 
-[728351436] (top) 
+[728351436] (top) Fourth Bowl of Wrath (RoJ AB)
   Ability: Banish an evil human in play and an evil card from opponent's hand.
   Reason:  Unmatched clause: 'Banish an evil human in play and an evil card from opponent's hand'
 
-[1833481075] (top) 
+[1833481075] (top) Fourth Bowl of Wrath (RoJ)
   Ability: Banish an evil human in play and an evil card from opponent's hand.
   Reason:  Unmatched clause: 'Banish an evil human in play and an evil card from opponent's hand'
 
@@ -4797,11 +4949,11 @@
   Ability: Set your Hero aside for the remainder of the game.  While that Hero is set aside, protect your silver brigade Heroes with strength 9 or less from capture.
   Reason:  Unmatched clause: 'Set your Hero aside for the remainder of the game'
 
-[1545506899] (top) 
+[1545506899] (top) Fourth Seal (Death) (RoJ AB)
   Ability: Discard an Evil Character (or 2 Evil Characters in a territory).
   Reason:  Unmatched clause: 'Discard an Evil Character (or 2 Evil Characters in a territory)'
 
-[1545506899] (bottom) 
+[1545506899] (bottom) Fourth Seal (Death) (RoJ AB)
   Ability: Reduce opponents' hand size by 1. Cannot be negated if an animal is in play.
   Reason:  Unmatched clause: 'Reduce opponents' hand size by 1'
 
@@ -4888,6 +5040,10 @@
 [1595301646] (top) Gad, the Retaliator
   Ability: If an opponent draws because of an ability they control, they must underdeck a random card from hand. If attacking, you may take a Genesis Artifact from Reserve.
   Reason:  Unmatched clause: 'If an opponent draws because of an ability they control, they must underdeck a random card from hand'
+
+[-503097167] (shared) Gamaliel's Speech
+  Ability: Place this in your territory: You may discard this card to negate and discard the last Enhancement played by an opponent or any other Enhancement in play.
+  Reason:  Unmatched clause: 'Place this in your territory: You may discard this card to negate and discard the last Enhancement played by an opponent or any other Enhancement in play'
 
 [-337379795] (top) Gates of Jerusalem
   Ability: Protect evil Kings and Queens of Judah in your territory from opponent's cards. If one blocks, its special ability cannot be negated and you may draw a card.
@@ -4976,6 +5132,10 @@
 [-2069786261] (top) Gentleness (EC)
   Ability: Place on your clay or red Hero: While that Hero is in battle, protect N.T. Humans from discard abilities and negate play abilities.
   Reason:  Unmatched clause: 'Place on your clay or red Hero: While that Hero is in battle, protect N.T. Humans from discard abilities and negate play abilities'
+
+[1358990652] (shared) Gibeonite Curse
+  Ability: Capture your black Canaanite and remove a Dominant in an opponent's discard pile from the game to search his deck for a card with the same icon and discard it.
+  Reason:  Unmatched clause: 'Capture your black Canaanite and remove a Dominant in an opponent's discard pile from the game to search his deck for a card with the same icon and discard it'
 
 [2108070068] (top) Gibeonite Delegates
   Ability: Protected from discard abilities. If defeated, capture this card to opponent's Land of Bondage. May band to Gibeonite Delegates. Cannot be prevented.
@@ -5101,17 +5261,25 @@
   Ability: You may bounce any number of Heroes. Cannot be prevented if used by a Philistine.
   Reason:  Unmatched clause: 'You may bounce any number of Heroes'
 
-[-743540627] (top) 
+[136493824] (shared) Go Into Captivity
+  Ability: If your warrior class Evil Character is in battle, you may discard this card to capture a Hero.
+  Reason:  Unmatched clause: 'If your warrior class Evil Character is in battle, you may discard this card to capture a Hero'
+
+[-743540627] (top) Go Into Captivity [IR]
   Ability: You may discard this card to capture a Hero and draw 1.
   Reason:  Unmatched clause: 'You may discard this card to capture a Hero and draw 1'
 
-[-743540627] (bottom) 
+[-743540627] (bottom) Go Into Captivity [IR]
   Ability: Negate a good card. Capture a character.
   Reason:  Unmatched clause: 'Capture a character'
 
 [1354790397] (top) God's Generosity
   Ability: Search draw pile or discard pile for Promised Land site and put in play.
   Reason:  Unmatched clause: 'Search draw pile or discard pile for Promised Land site and put in play'
+
+[2049328725] (shared) God's Mercy (Jonah's Anger)
+  Ability: Place in territory: You may discard this card to negate and discard the last Enhancement of opposite alignment played or an Enhancement of opposite alignment. Cannot be negated if used by Jonah.
+  Reason:  Unmatched clause: 'Place in territory: You may discard this card to negate and discard the last Enhancement of opposite alignment played or an Enhancement of opposite alignment'
 
 [655449307] (top) God's Provision
   Ability: Hero gains (*/*) to bring Hero to equal abilities (*/*) with Evil Character at this point in the battle.  Hero gains first strike ability.
@@ -5189,7 +5357,7 @@
   Ability: Bearer is immune to purple brigade. Cannot be negated.
   Reason:  Unmatched clause: 'Bearer is immune to purple brigade'
 
-[2047205818] (top) 
+[2047205818] (top) Goliath's Curse [L]
   Ability: Underdeck this card to underdeck a good card in a territory.
   Reason:  Unmatched clause: 'Underdeck this card to underdeck a good card in a territory'
 
@@ -5200,6 +5368,10 @@
 [-836397942] (top) Goliath's Spear (Wa)
   Ability: Worth 8/10 if used by a giant.
   Reason:  Unmatched clause: 'Worth 8/10 if used by a giant'
+
+[1451961918] (shared) Goliath's Sword (LoC)
+  Ability: Negate a card of a different alignment. If bearer is discarded during battle, opponent may take this card from your discard pile.
+  Reason:  Unmatched clause: 'If bearer is discarded during battle, opponent may take this card from your discard pile'
 
 [1200380214] (top) Gomer (Wo)
   Ability: Character may band with any male Evil Character each turn.
@@ -5745,10 +5917,6 @@
   Ability: You may take Dance of Death from discard pile or Reserve. If blocking, you may reserve a good card in a territory and/or exchange this card with a Herod from territory or Reserve.
   Reason:  Unmatched clause: 'If blocking, you may reserve a good card in a territory and/or exchange this card with a Herod from territory or Reserve'
 
-[2093826024] (top) Hezekiah, the Devout (LoC)
-  Ability: You may convert this card to meek to take an O.T. Artifact, O.T. Site or a good O.T. Fortress from deck.
-  Reason:  Unmatched clause: 'You may convert this card to meek to take an O.T. Artifact, O.T. Site or a good O.T. Fortress from deck'
-
 [-1787161312] (top) Hezekiah's Signet Ring
   Ability: No opponent may search any draw pile or discard pile.
   Reason:  Unmatched clause: 'No opponent may search any draw pile or discard pile'
@@ -5764,6 +5932,10 @@
 [-703296473] (top) Hidden Treasures (Roots)
   Ability: If you control an O.T. green prophet, you may look at a hand. If your green prophet attacks, you may discard an evil Enhancement from a deck.
   Reason:  Unmatched clause: 'If you control an O.T. green prophet, you may look at a hand'
+
+[-745068395] (shared) Hiding Joseph's Cup
+  Ability: You may take Joseph's Silver Cup from deck or Reserve. Place this card on a character of opposite alignment: Negate that character. Canont be prevented.
+  Reason:  Unmatched clause: 'You may take Joseph's Silver Cup from deck or Reserve'
 
 [-697163251] (top) High Places
   Ability: During your preparation and discard phases, you may play evil Enhancements that contain the word place in the special ability. If you capture a Hero in a territory, discard this card.
@@ -5837,19 +6009,19 @@
   Ability: Select a Temple Priest.  Special abilities on that Hero and Enhancements used by that Hero cannot be negated this turn.
   Reason:  Unmatched clause: 'Select a Temple Priest'
 
-[1010954033] (top) 
+[1010954033] (top) His Sacrifice (GoC UR+)
   Ability: You may negate and discard a Curse, an evil Enhancement or an evil Dominant.
   Reason:  Unmatched clause: 'You may negate and discard a Curse, an evil Enhancement or an evil Dominant'
 
-[1010954033] (bottom) 
+[1010954033] (bottom) His Sacrifice (GoC UR+)
   Ability: Convert all evil humans in battle. Negate and banish all evil non-humans in battle. Cannot be interrupted by a demon.
   Reason:  Unmatched clause: 'Convert all evil humans in battle'
 
-[581501800] (top) 
+[581501800] (top) His Sacrifice (GoC)
   Ability: You may negate and discard a Curse, an evil Enhancement or an evil Dominant.
   Reason:  Unmatched clause: 'You may negate and discard a Curse, an evil Enhancement or an evil Dominant'
 
-[581501800] (bottom) 
+[581501800] (bottom) His Sacrifice (GoC)
   Ability: Convert all evil humans in battle. Negate and banish all evil non-humans in battle. Cannot be interrupted by a demon.
   Reason:  Unmatched clause: 'Convert all evil humans in battle'
 
@@ -5901,11 +6073,19 @@
   Ability: If used by a priest, shuffle all Evil Characters.
   Reason:  Unmatched clause: 'shuffle all Evil Characters'
 
-[-336576341] (top) 
+[-1368702301] (shared) Honey from a Lion (CoW AB)
+  Ability: Once per turn, while you are being attacked and an animal is in your discard pile, look at the top 6 cards of deck: Add an evil card to hand. Underdeck the rest.
+  Reason:  Unmatched clause: 'Once per turn, while you are being attacked and an animal is in your discard pile, look at the top 6 cards of deck: Add an evil card to hand'
+
+[1106506489] (shared) Honey from a Lion (CoW)
+  Ability: Once per turn, while you are being attacked and an animal is in your discard pile, look at the top 6 cards of deck: Add an evil card to hand. Underdeck the rest.
+  Reason:  Unmatched clause: 'Once per turn, while you are being attacked and an animal is in your discard pile, look at the top 6 cards of deck: Add an evil card to hand'
+
+[-336576341] (top) Honor Thy Enemy
   Ability: Set aside all Evil Characters in battle for 2 turns.
   Reason:  Unmatched clause: 'Set aside all Evil Characters in battle for 2 turns'
 
-[-336576341] (bottom) 
+[-336576341] (bottom) Honor Thy Enemy
   Ability: If used by a Persian, end the battle.
   Reason:  Unmatched clause: 'end the battle'
 
@@ -5913,7 +6093,7 @@
   Ability: You may capture a king of Judah (or a character if played in battle) to a player. If used by a blocking Assyrian, you may reserve this card after battle.
   Reason:  Unmatched clause: 'You may capture a king of Judah (or a character if played in battle) to a player'
 
-[1765230277] (top) 
+[1765230277] (top) Hope
   Ability: You may take Joy, Peace or The Holy Spirit from deck, discard pile or Reserve.
   Reason:  Unmatched clause: 'You may take Joy, Peace or The Holy Spirit from deck, discard pile or Reserve'
 
@@ -6029,11 +6209,15 @@
   Ability: Underdeck a Hero.
   Reason:  Unmatched clause: 'Underdeck a Hero'
 
-[1187229467] (top) 
+[875482976] (shared) I am Creator
+  Ability: If you do not have a Hero in your territory, or set-aside area, then search draw pile for a Hero and put it in your territory.  Cannot be interrupted. Limit once during each of your turns.
+  Reason:  Unmatched clause: 'If you do not have a Hero in your territory, or set-aside area, then search draw pile for a Hero and put it in your territory'
+
+[1187229467] (top) I Am Creator (Roots)
   Ability: Draw 1 and discard this card. If you do, each player may shuffle their hand to draw X.
   Reason:  Unmatched clause: 'Draw 1 and discard this card'
 
-[1187229467] (bottom) 
+[1187229467] (bottom) I Am Creator (Roots)
   Ability: Bounce all evil cards in battle.
   Reason:  Unmatched clause: 'Bounce all evil cards in battle'
 
@@ -6049,29 +6233,61 @@
   Ability: STAR: Look at a hand or a Reserve. GE: You may reveal a good Dominant from hand to protect Lost Souls from evil cards and disciples from harm this turn.
   Reason:  Unmatched clause: 'Look at a hand or a Reserve'
 
+[-253407072] (shared) I am Healing
+  Ability: Holder may heal all of holder's Heroes in play.  May be used twice.
+  Reason:  Unmatched clause: 'Holder may heal all of holder's Heroes in play'
+
+[-409366366] (shared) I am Holy
+  Ability: Upon activation, holder may discard a good card from hand to make an opponent discard an evil card from hand.  If opponent has no evil cards in hand, opponent must reveal hand.
+  Reason:  Unmatched clause: 'Upon activation, holder may discard a good card from hand to make an opponent discard an evil card from hand'
+
+[1837804672] (shared) I am Justice
+  Ability: If an Evil Character discards your Hero this battle, you may discard that Evil Character at the end of the turn.  Limit two discards per game.
+  Reason:  Unmatched clause: 'If an Evil Character discards your Hero this battle, you may discard that Evil Character at the end of the turn'
+
 [-426755618] (shared) I am Love
   Ability: If a human Evil Character (except warrior class) is blocking your Hero, interrupt the battle and search discard pile for a white brigade enhancement with "ignores" in the special ability and play it. Limit once per turn.
   Reason:  Unmatched clause: 'If a human Evil Character (except warrior class) is blocking your Hero, interrupt the battle and search discard pile for a white brigade enhancement with "ignores" in the special ability and play it'
+
+[-902357984] (shared) I am Mercy
+  Ability: Protect holder's hand and draw pile from discard abilities on evil cards.
+  Reason:  Unmatched clause: 'Protect holder's hand and draw pile from discard abilities on evil cards'
 
 [-1517285156] (shared) I am Patience
   Ability: At the end of your turn, if your rescue attempt failed you may convert one human Evil Character (except warrior class) to a green brigade Hero.
   Reason:  Unmatched clause: 'At the end of your turn, if your rescue attempt failed you may convert one human Evil Character (except warrior class) to a green brigade Hero'
 
-[-38771558] (top) 
+[-142994480] (shared) I am Redemption
+  Ability: Return your captured Heroes to your territory.  Cannot be negated by an evil card.
+  Reason:  Unmatched clause: 'Return your captured Heroes to your territory'
+
+[-38771558] (top) I Am Redemption (Roots)
   Ability: Negate Lost Souls. Release all captured Heroes.
   Reason:  Unmatched clause: 'Release all captured Heroes'
 
-[-38771558] (bottom) 
+[-38771558] (bottom) I Am Redemption (Roots)
   Ability: Convert all evil humans in battle. Discard all evil non-humans in battle.
   Reason:  Unmatched clause: 'Convert all evil humans in battle'
 
-[-1756683039] (top) 
+[-2136707136] (shared) I am Salvation
+  Ability: Negate all special abilities on Lost Soul cards (except the 'Lost Souls' card).  May be used twice.
+  Reason:  Unmatched clause: 'Negate all special abilities on Lost Soul cards (except the 'Lost Souls' card)'
+
+[-595114592] (shared) I am Sustainer
+  Ability: Protect holder's Heroes from having their abilities reduced.  Restore all of holder's Heroes to full abilities.
+  Reason:  Unmatched clause: 'Protect holder's Heroes from having their abilities reduced'
+
+[-1756683039] (top) I Am Sustainer (Roots)
   Ability: Your single-brigade O.T. Heroes cannot be prevented in battle.
   Reason:  Unmatched clause: 'Your single-brigade O.T. Heroes'
 
-[-1756683039] (bottom) 
+[-1756683039] (bottom) I Am Sustainer (Roots)
   Ability: Banish an evil card.
   Reason:  Unmatched clause: 'Banish an evil card'
+
+[1838302592] (shared) I am Truth
+  Ability: Good enhancements with "ignore" in the special ability cannot be negated by evil cards.
+  Reason:  Unmatched clause: 'Good enhancements with "ignore" in the special ability'
 
 [-710906756] (top) Ibzan
   Ability: Good Enhancements with a Judges reference cannot be negated.
@@ -6153,7 +6369,11 @@
   Ability: If used by a wilderness Hero, negate other Enhancements. You may take up to 2 wilderness Heroes from deck.
   Reason:  Unmatched clause: 'You may take up to 2 wilderness Heroes from deck'
 
-[532621179] (bottom) 
+[-1977529248] (shared) Incurable
+  Ability: Protect Heroes in territories from healing.  An opponent may discard two good Enhancements from hand to discard this card.
+  Reason:  Unmatched clause: 'An opponent may discard two good Enhancements from hand to discard this card'
+
+[532621179] (bottom) Incurable (PoC)
   Ability: Withdraw all Heroes. Paralyze them for 3 turns.
   Reason:  Unmatched clause: 'Paralyze them for 3 turns'
 
@@ -6240,10 +6460,6 @@
 [184059231] (top) Isaac Deceived
   Ability: Return any Hero in battle to owner's territory.
   Reason:  Unmatched clause: 'Return any Hero in battle to owner's territory'
-
-[-1995764510] (top) Isaac, Willing Sacrifice (LoC)
-  Ability: You may play Jacob and/or Esau from deck or Reserve. If an animal or a meek Hero is in play, you may draw 2.
-  Reason:  Unmatched clause: 'You may play Jacob and/or Esau from deck or Reserve'
 
 [139226334] (top) Isaiah
   Ability: (Star) Topdeck an Isaiah card from Reserve. (Hero) You may activate Isaiah's * ability. If Isaiah uses a * card, you may activate its * ability. * cards cannot be negated.
@@ -6348,10 +6564,6 @@
 [-390912493] (shared) Jacob, Disgruntled Subject (LoC)
   Ability: STAR: Banish an evil Enhancement.
   Reason:  Unmatched clause: 'Banish an evil Enhancement'
-
-[-390912493] (top) Jacob, Disgruntled Subject (LoC)
-  Ability: Negate evil gold humans and band abilities on evil cards (except Romans). May band to a postexilic Hero.
-  Reason:  Unmatched clause: 'Negate evil gold humans and band abilities on evil cards (except Romans)'
 
 [783343378] (top) Jacob, the Wrestler (Roots)
   Ability: If you control a son of Jacob, you may draw 2. May band to an O.T. angel.
@@ -6489,10 +6701,6 @@
   Ability: STAR: Resurrect a meek blue Hero.
   Reason:  Unmatched clause: 'Resurrect a meek blue Hero'
 
-[-237281499] (top) Jared, the Beholder (LoC)
-  Ability: You may convert this card to meek to take a blue Enhancement from Reserve. May band to a Cloud Hero.
-  Reason:  Unmatched clause: 'You may convert this card to meek to take a blue Enhancement from Reserve'
-
 [792572575] (top) Jashobeam (Ki)
   Ability: All Red Brigade Heroes gain 1/1 while Jashobeam is in battle.
   Reason:  Unmatched clause: 'All Red Brigade Heroes gain 1/1 while Jashobeam is in battle'
@@ -6552,10 +6760,6 @@
 [-1015417031] (top) Jehoram, the Abhorred (LoC)
   Ability: STAR: Discard a good Enhancement. EC: If blocking, you may discard a brown card from hand. If you do, underdeck a meek Lost Soul or banish a royal human (except a meek Hero).
   Reason:  Unmatched clause: 'EC: If blocking, you may discard a brown card from hand'
-
-[-1728643123] (top) Jehoshaphat, the Seeker (LoC)
-  Ability: Bounce a human in a territory. May band to a musician, a warrior, a priest or a meek Hero. Cannot be prevented.
-  Reason:  Unmatched clause: 'Bounce a human in a territory'
 
 [-1065933121] (top) Jehu's Sword
   Ability: Evil Character cannot be converted.
@@ -6649,10 +6853,6 @@
   Ability: If a good card you own is topdecked, you may draw 1. If attacking, may band to a postexilic Hero or you may play a good O.T. Fortress from deck or Reserve. Cannot be negated in battle.
   Reason:  Unmatched clause: 'If a good card you own is topdecked, you may draw 1'
 
-[95785677] (top) Jesse, the Ephrathite (LoC)
-  Ability: While you control a meek Hero, negate characters in opponents' territories. May band to David or a meek Ruth Hero.
-  Reason:  Unmatched clause: 'While you control a meek Hero, negate characters in opponents' territories'
-
 [-1927034885] (top) Jesus Appears (GoC)
   Ability: STAR: Resurrect a Hero. GE: If used by a N.T. Hero, set aside all Evil Characters for X turns. Each player may draw X.
   Reason:  Unmatched clause: 'Resurrect a Hero'
@@ -6689,6 +6889,14 @@
   Ability: Convert a Hero in a territory to an Evil Character of any brigade this turn. Your Evil Character may band to that Evil Character. Cannot be negated if an idol is in play.
   Reason:  Unmatched clause: 'Convert a Hero in a territory to an Evil Character of any brigade this turn'
 
+[684551618] (shared) Joab (CoW AB)
+  Ability: Protect Joab from underdeck. After battle, you may discard a warrior class Evil Character. May band to an O.T. warrior class character matching Joab's brigade.
+  Reason:  Unmatched clause: 'After battle, you may discard a warrior class Evil Character'
+
+[-94361206] (shared) Joab (CoW)
+  Ability: Protect Joab from underdeck. After battle, you may discard a warrior class Evil Character. May band to an O.T. warrior class character matching Joab's brigade.
+  Reason:  Unmatched clause: 'After battle, you may discard a warrior class Evil Character'
+
 [65394445] (top) Joab (Promo)
   Ability: Joab may band to any red brigade Hero mentioned in I and II Samuel.
   Reason:  Unmatched clause: 'Joab may band to any red brigade Hero mentioned in I and II Samuel'
@@ -6696,6 +6904,10 @@
 [100324668] (top) Joanna (Di)
   Ability: Discard Herod's Dungeon.  Immune to Herods.  Negate special abilities on Evil Character Characters with toughness 2 or less.
   Reason:  Unmatched clause: 'Immune to Herods'
+
+[1959882489] (shared) Joanna, the Generous (GoC)
+  Ability: If blocked from hand, toss the next evil Enhancement played in battle. You may convert this card to meek to draw 2 (or take a good N.T. card from Reserve).
+  Reason:  Unmatched clause: 'If blocked from hand, toss the next evil Enhancement played in battle'
 
 [-1545433795] (top) Joash, Child King (LoC)
   Ability: Protect Lost Souls from evil cards. You may take an O.T. Artifact from Reserve.
@@ -6877,6 +7089,10 @@
   Ability: May search deck for The Garden Tomb or Burial Shroud. May band to Nicodemus.
   Reason:  Unmatched clause: 'May search deck for The Garden Tomb or Burial Shroud'
 
+[-1917555023] (shared) Joseph of Arimathea (GoC)
+  Ability: If an opponent uses a search ability, you may bounce a character in a territory. If attacking, you may convert this card to meek to choose an evil human to block.
+  Reason:  Unmatched clause: 'If an opponent uses a search ability, you may bounce a character in a territory'
+
 [-603501058] (top) Joseph the Carpenter
   Ability: If Joseph is about to be discarded, he may be placed instead in holder's Goshen for 2 turns, then returned to holder's territory.
   Reason:  Unmatched clause: 'in holder's Goshen for 2 turns, then returned to holder's territory'
@@ -6888,10 +7104,6 @@
 [-221631095] (top) Joseph, the Dreamer
   Ability: (Star) Look at the bottom 6 cards of deck: Topdeck a Genesis card. (Hero) You may take a Genesis 37-50 card from deck. Cannot be negated.
   Reason:  Unmatched clause: '(Star) Look at the bottom 6 cards of deck: Topdeck a Genesis card'
-
-[-638801332] (top) Joseph, the Righteous (LoC)
-  Ability: You may exchange this card with a meek Hero from deck or Reserve and increase that Hero 10/10 this turn.
-  Reason:  Unmatched clause: 'You may exchange this card with a meek Hero from deck or Reserve and increase that Hero 10/10 this turn'
 
 [-1817737330] (top) Joseph's Brothers' Scheme
   Ability: Select two human Heroes in play to fight each other.  The loser is placed in holder's Land of Bondage and is treated as a Lost Soul.
@@ -6948,14 +7160,6 @@
 [488545691] (top) Joshua's Spear
   Ability: If used by a red Hero, negate Evil Characters with toughness 5 or less. If your gold Hero is blocked, you may discard this card to decrease a blocking Evil Character 5/5.
   Reason:  Unmatched clause: 'negate Evil Characters with toughness 5 or less'
-
-[1855457059] (top) Josiah, the Restorer (LoC)
-  Ability: You may discard an evil Fortress, an idol or a Curse. If a meek Hero is in play, you may play a Lost Soul from a deck.
-  Reason:  Unmatched clause: 'You may discard an evil Fortress, an idol or a Curse'
-
-[834499932] (top) Jotham, the Mighty (LoC)
-  Ability: You may convert this card to meek to take a good card from Reserve. May band to a meek Hero. Cannot be negated.
-  Reason:  Unmatched clause: 'You may convert this card to meek to take a good card from Reserve'
 
 [-1092429248] (top) Journey to Egypt
   Ability: Set Hero aside for one turn.  Upon return, Hero has access to any Lost Soul site and ignores Egyptians.
@@ -7017,11 +7221,11 @@
   Ability: Underdeck a good Jude Enhancement from discard pile. Once per game, you may choose a heretic to block
   Reason:  Unmatched clause: 'Underdeck a good Jude Enhancement from discard pile'
 
-[-1678445088] (top) 
+[-1678445088] (top) Judean Garrison (LoC)
   Ability: You may equip a second weapon to this card. Cannot be negated.
   Reason:  Unmatched clause: 'You may equip a second weapon to this card'
 
-[-1678445088] (bottom) 
+[-1678445088] (bottom) Judean Garrison (LoC)
   Ability: Protect O.T. red warriors and weapons in territory from opponents.
   Reason:  Unmatched clause: 'Protect O.T. red warriors and weapons in territory from opponents'
 
@@ -7088,6 +7292,10 @@
 [2080881219] (top) King Abijah
   Ability: Opponent must give holder an unoccupied single color Site, or discard a card from hand without using it.
   Reason:  Unmatched clause: 'Opponent must give holder an unoccupied single color Site, or discard a card from hand without using it'
+
+[-636306929] (shared) King Abijam
+  Ability: If you control a priest or Temple Artifact, negate Sites. If your rescue attempt is successful, take an opponent's Site. If blocking, decrease a Hero X/X.
+  Reason:  Unmatched clause: 'If you control a priest or Temple Artifact, negate Sites'
 
 [1535124413] (top) King Achish
   Ability: If another Philistine is in play and no evil Enhancement is in battle, you may draw 2 or play an O.T. evil Enhancement. Cannot be negated if David is in play.
@@ -7249,6 +7457,10 @@
   Ability: Discard King Joram, King Ahaziah of Judah, Jezebel, or Prophets of Baal.  Strength (*/) is equal to the number of Evil Characters in play.
   Reason:  Unmatched clause: 'Discard King Joram, King Ahaziah of Judah, Jezebel, or Prophets of Baal'
 
+[409835075] (shared) King Jehu (FoM)
+  Ability: You may exchange Jehu with a non-royal human in territory to discard an evil royal human. Once per battle, if Jehu uses an O.T. Enhancement, opponent must discard an evil card from hand or territory.
+  Reason:  Unmatched clause: 'You may exchange Jehu with a non-royal human in territory to discard an evil royal human'
+
 [1416526278] (top) King Jeroboam I
   Ability: Search your draw pile or discard pile for one evil set-aside enhancement and add it to your hand.
   Reason:  Unmatched clause: 'Search your draw pile or discard pile for one evil set-aside enhancement and add it to your hand'
@@ -7357,6 +7569,14 @@
   Ability: May band to Abner or Michal (not both).
   Reason:  Unmatched clause: 'May band to Abner or Michal (not both)'
 
+[852945638] (shared) King Saul (CoW AB)
+  Ability: You may draw 1. May band to a I Samuel character matching King Saul's brigade, or you may toss the next evil Enhancement you play in battle. Cannot be interrupted.
+  Reason:  Unmatched clause: 'May band to a I Samuel character matching King Saul's brigade, or you may toss the next evil Enhancement you play in battle'
+
+[-889283811] (shared) King Saul (CoW)
+  Ability: You may draw 1. May band to a I Samuel character matching King Saul's brigade, or you may toss the next evil Enhancement you play in battle. Cannot be interrupted.
+  Reason:  Unmatched clause: 'May band to a I Samuel character matching King Saul's brigade, or you may toss the next evil Enhancement you play in battle'
+
 [245708396] (top) King Saul's Doubt
   Ability: Return one good King in battle or set-aside area to owner's territory.
   Reason:  Unmatched clause: 'Return one good King in battle or set-aside area to owner's territory'
@@ -7457,6 +7677,14 @@
   Ability: If this Hero is successful in battle, restrict opponents from playing evil Dominants until the end of your next turn. Cannot be negated by an evil card.
   Reason:  Unmatched clause: 'If this Hero is successful in battle, restrict opponents from playing evil Dominants until the end of your next turn'
 
+[-1759889104] (shared) Kinsmen's Agreement
+  Ability: Place in territory: You may discard this card to negate and discard the last Enhancement of opposite alignment played or an Enhancement of opposite alignment in play.
+  Reason:  Unmatched clause: 'Place in territory: You may discard this card to negate and discard the last Enhancement of opposite alignment played or an Enhancement of opposite alignment in play'
+
+[-1985448165] (shared) Kinsmen's Agreement (CoW AB)
+  Ability: Place in territory: You may discard this card to negate and discard the last Enhancement of opposite alignment played or an Enhancement of opposite alignment in play.
+  Reason:  Unmatched clause: 'Place in territory: You may discard this card to negate and discard the last Enhancement of opposite alignment played or an Enhancement of opposite alignment in play'
+
 [991303143] (top) Kir (TxP)
   Ability: If an opponent makes you use an Evil Character not your own, you may discard that Evil Character to search deck for an O.T. human Evil Character and add it to battle.
   Reason:  Unmatched clause: 'If an opponent makes you use an Evil Character not your own, you may discard that Evil Character to search deck for an O.T. human Evil Character and add it to battle'
@@ -7520,10 +7748,6 @@
 [-1872632617] (top) Lamb's Righteousness (RoJ)
   Ability: If rescuing and your Hero is opposed, you may rescue a captured Hero in opponent's territory. If you do, restrict yourself from rescuing additional cards this turn.
   Reason:  Unmatched clause: 'If rescuing and your Hero is opposed, you may rescue a captured Hero in opponent's territory'
-
-[-1982747578] (top) Lamech, Rest Seeker (LoC)
-  Ability: You may take Noah (or topdeck a * Hero) from deck. You may reserve your meek Hero to discard a Curse.
-  Reason:  Unmatched clause: 'You may take Noah (or topdeck a * Hero) from deck'
 
 [1447095340] (top) Lamenting
   Ability: David's Harp and all good enhancements involving music are negated this turn.
@@ -7601,10 +7825,6 @@
   Ability: If Jacob is in play or set-aside, search deck for a child of Leah.
   Reason:  Unmatched clause: 'If Jacob is in play or set-aside, search deck for a child of Leah'
 
-[251756403] (top) Leah, Weary-Eyed (LoC)
-  Ability: You may bounce a Genesis Hero and/or resurrect a patriarch (or a meek blue Hero). May band to Jacob.
-  Reason:  Unmatched clause: 'You may bounce a Genesis Hero and/or resurrect a patriarch (or a meek blue Hero)'
-
 [1431435909] (top) Leaves for Healing (L)
   Ability: Heal a Hero from the Purple Brigade that is about to be discarded.
   Reason:  Unmatched clause: 'Heal a Hero from the Purple Brigade that is about to be discarded'
@@ -7681,6 +7901,10 @@
   Ability: All effects of all enhancements with ship in the title are negated.  Leviathan cannot be captured.
   Reason:  Unmatched clause: 'All effects of all enhancements with ship in the title are negated'
 
+[-559013149] (shared) Leviathan (FoM)
+  Ability: If your Job character blocks, you may take an evil Job card from Reserve. If your animal blocks, you may take an animal from deck. Protect Job animals from opponents' Dominants. Cannot be negated.
+  Reason:  Unmatched clause: 'If your Job character blocks, you may take an evil Job card from Reserve'
+
 [-477051848] (top) Lewd Men
   Ability: Repel all female Heroes.
   Reason:  Unmatched clause: 'Repel all female Heroes'
@@ -7708,6 +7932,10 @@
 [1199256965] (top) Light in the Darkness
   Ability: STAR: Look at the top 3 cards of a deck. GE: Banish a demon, regardless of protect abilities. Convert an evil human. You may underdeck this card.
   Reason:  Unmatched clause: 'Look at the top 3 cards of a deck'
+
+[-1901151319] (shared) Lingering in Sodom
+  Ability: You may play a City from deck. If played in battle, capture opponent's character of opposite alignment to an unoccupied Genesis Site. Cannot be prevented.
+  Reason:  Unmatched clause: 'You may play a City from deck'
 
 [674633266] (top) Lion Dwelling with the Calf
   Ability: Blocking Evil Character refuses to block.  Opponent must present a new blocker or rescue is successful.
@@ -7752,6 +7980,10 @@
 [1833503090] (top) Lord of Armies [K]
   Ability: O.T. human may band to up to 3 I Samuel Heroes.
   Reason:  Unmatched clause: 'O.T. human may band to up to 3 I Samuel Heroes'
+
+[-1751063397] (shared) Lost Anointing
+  Ability: Discard a version of any character that has been successful in battle. If used by an O.T. human, regardless of protect abilities. If played in battle, cannot be prevented.
+  Reason:  Unmatched clause: 'If used by an O.T. human,  of protect abilities'
 
 [1004847472] (top) Lost Child Found (GoC)
   Ability: STAR: Play a Lost Soul from a deck. / GE: If used by a nativity Hero, interrupt the battle. Bounce up to 3 other cards (except Dominants).
@@ -8421,11 +8653,15 @@
   Ability: All Evil Enhancements with abilities of less than */3 are worth triple their face value until end of battle.
   Reason:  Unmatched clause: 'All Evil Enhancements with abilities of less than */3 are worth triple their face value until end of battle'
 
-[-2076278585] (top) 
+[-289030944] (shared) Madness
+  Ability: If opponent's Hero is in battle, you may convert this card to an orange brigade Evil Character and add it to battle.  Cannot be interrupted.
+  Reason:  Unmatched clause: 'If opponent's Hero is in battle, you may convert this card to an orange brigade Evil Character and add it to battle'
+
+[-2076278585] (top) Madness [IR]
   Ability: You may reserve this card to reserve a Hero.
   Reason:  Unmatched clause: 'You may reserve this card to reserve a Hero'
 
-[-2076278585] (bottom) 
+[-2076278585] (bottom) Madness [IR]
   Ability: Bounce a Hero. You may discard a random card from a Reserve.
   Reason:  Unmatched clause: 'Bounce a Hero'
 
@@ -8452,10 +8688,6 @@
 [-1626571963] (top) Magnifying Multitude (GoC)
   Ability: STAR: Topdeck a nativity Hero from deck. / H: You may draw 2. Negate evil cards with toughness X or greater. Cannot be prevented.
   Reason:  Unmatched clause: '/ H: You may draw 2'
-
-[925319454] (top) Mahalalel, the Interpreter (LoC)
-  Ability: If you control a meek antediluvian, you may play a Lost Soul from a deck. Protect Lost Souls from evil cards.
-  Reason:  Unmatched clause: 'If you control a meek antediluvian, you may play a Lost Soul from a deck'
 
 [-1915434775] (top) Maharai (Ki)
   Ability: May band with any warrior class Hero with a reference from I Chronicles or II Samuel.
@@ -8485,6 +8717,10 @@
   Ability: STAR: Underdeck a meek Lost Soul. EC: ​​You may capture this card to a player to add a Sadducee from territory or Reserve to battle. Cannot be prevented if you control a meek Lost Soul.
   Reason:  Unmatched clause: 'Underdeck a meek Lost Soul'
 
+[1278285816] (shared) Man with Withered Hand (GoC)
+  Ability: You may reveal your hand. If you do, N.T. Enhancements used by this character cannot be negated.
+  Reason:  Unmatched clause: 'You may reveal your hand'
+
 [1718959310] (top) Manasseh, the Calming (Roots)
   Ability: Opponent may underdeck an evil card from hand. If they do not, negate Evil Characters.
   Reason:  Unmatched clause: 'Opponent may underdeck an evil card from hand'
@@ -8509,15 +8745,23 @@
   Ability: Protected from capture. May use Mark enhancements regardless of brigade. You may search discard pile for a good Mark Enhancement and underdeck it.
   Reason:  Unmatched clause: 'Protected from capture'
 
+[-160263637] (shared) Mark of the Beast (RoJ AB)
+  Ability: If opponent uses a good ability to draw or search, you may search deck for an evil card. If played during battle and you control a Revelation beast, you may discard this card to discard a Hero.
+  Reason:  Unmatched clause: 'If opponent uses a good ability to draw or search, you may search deck for an evil card'
+
+[1396441364] (shared) Mark of the Beast (RoJ)
+  Ability: If opponent uses a good ability to draw or search, you may search deck for an evil card. If played during battle and you control a Revelation Beast, you may discard this card to discard a Hero.
+  Reason:  Unmatched clause: 'If opponent uses a good ability to draw or search, you may search deck for an evil card'
+
 [2059617750] (top) Marketplace
   Ability: Each time an opponent uses a discard ability, you may exchange a card in hand with a generic N.T. human Evil Character Character of matching brigade in discard pile.
   Reason:  Unmatched clause: 'Each time an opponent uses a discard ability, you may exchange a card in hand with a generic N.T. human Evil Character Character of matching brigade in discard pile'
 
-[2000355037] (top) 
+[2000355037] (top) Marriage Covenant (LoC)
   Ability: Resurrect a Ruth Hero.
   Reason:  Unmatched clause: 'Resurrect a Ruth Hero'
 
-[2000355037] (bottom) 
+[2000355037] (bottom) Marriage Covenant (LoC)
   Ability: Interrupt the battle. Hero may band to any number of O.T. humans. Cannot be negated if used by a meek Hero.
   Reason:  Unmatched clause: 'Hero may band to any number of O.T. humans'
 
@@ -8561,13 +8805,17 @@
   Ability: May band to Salome, Mary Magdalene, and/or Joanna. Cannot be negated if The Garden Tomb is in play.
   Reason:  Unmatched clause: 'May band to Salome, Mary Magdalene, and/or Joanna'
 
-[-761110214] (top) Mary, Faithful Servant (LoC)
-  Ability: While you do not control a good Enhancement in battle, protect your meek Heroes from harm.
-  Reason:  Unmatched clause: 'While you do not control a good Enhancement in battle, protect your meek Heroes from harm'
-
 [135440967] (top) Mary, Holy Virgin (GoC)
   Ability: You may negate and reserve an evil or neutral card in a territory. You may take a * card from Reserve. You may convert this card to meek. Cannot be negated.
   Reason:  Unmatched clause: 'You may take a * card from Reserve'
+
+[-997963719] (shared) Mary, Mother of James (GoC)
+  Ability: If blocked from hand, good Gospel Enhancements cannot be negated. You may convert this card to meek to band to any number of empty tomb females.
+  Reason:  Unmatched clause: 'If blocked from hand, good Gospel Enhancements  You may convert this card to meek to band to any number of empty tomb females'
+
+[-962237058] (shared) Mary, the Restored (GoC)
+  Ability: If blocked from hand, you may take a good N.T. card from deck. You may convert this card to meek to negate characters (except empty tomb Heroes) and Enhancements.
+  Reason:  Unmatched clause: 'If blocked from hand, you may take a good N.T. card from deck'
 
 [561449839] (top) Mary's Prophetic Act
   Ability: Search any draw pile for one evil Dominant card and discard it.
@@ -8645,10 +8893,6 @@
   Ability: STAR: Resurrect a postexilic Hero.
   Reason:  Unmatched clause: 'Resurrect a postexilic Hero'
 
-[-77479964] (top) Matthan, the Defender (LoC)
-  Ability: Negate gray humans. You may play a Lost Soul from a deck or draw X (limit 3). Cannot be negated.
-  Reason:  Unmatched clause: 'You may play a Lost Soul from a deck or draw X (limit 3)'
-
 [-1737520111] (top) Matthew (Levi) (Ap)
   Ability: Hero has first strike ability.
   Reason:  Unmatched clause: 'Hero has first strike ability'
@@ -8673,7 +8917,7 @@
   Ability: Search deck or discard pile for The Holy Spirit and play it. May use purple N.T. Enhancements. Cannot be negated.
   Reason:  Unmatched clause: 'Search deck or discard pile for The Holy Spirit and play it'
 
-[747788731] (top) 
+[747788731] (top) Matthias (GoC)
   Ability: You may convert this card to meek to bounce a character. You may reveal a good Dominant from hand to look at the top X cards of deck: Take up to 1 and underdeck the rest.
   Reason:  Unmatched clause: 'You may convert this card to meek to bounce a character'
 
@@ -8812,10 +9056,6 @@
 [-2011652411] (top) Messenger of Satan (EC)
   Ability: You may draw X from the bottom of your deck. May band to a human Evil Character. Cannot be prevented.
   Reason:  Unmatched clause: 'You may draw X from the bottom of your deck'
-
-[-177770695] (top) Methuselah, the Wise (LoC)
-  Ability: If blocked, select X random cards from hand: You may convert this card to meek to add a selected Genesis card to battle.
-  Reason:  Unmatched clause: 'If blocked, select X random cards from hand: You may convert this card to meek to add a selected Genesis card to battle'
 
 [364800589] (top) Micah
   Ability: Search discard pile for X O.T. green Enhancement with toughness */4 or less and shuffle into deck.
@@ -8993,11 +9233,11 @@
   Ability: You may topdeck and O.T gray card from Reserve (or take it if you control another Moabite). May band to a generic Moabite. Cannot be interrupted.
   Reason:  Unmatched clause: 'You may topdeck and O.T gray card from Reserve (or take it if you control another Moabite)'
 
-[1655419918] (top) 
+[1655419918] (top) Moabite Camp (LoC)
   Ability: Look at opponent's hand: Underdeck a good card. If it is red, you may draw 1.
   Reason:  Unmatched clause: 'If it is red, you may draw 1'
 
-[1655419918] (bottom) 
+[1655419918] (bottom) Moabite Camp (LoC)
   Ability: Each upkeep, you may topdeck an O.T. gray card from Reserve.
   Reason:  Unmatched clause: 'Each upkeep, you may topdeck an O.T. gray card from Reserve'
 
@@ -9177,6 +9417,10 @@
   Ability: O.T. Enhancements used by Naaman cannot be negated. The first time Namaan is about to be discarded, heal him and convert him to a red brigade Hero.
   Reason:  Unmatched clause: 'O.T. Enhancements used by Naaman  The first time Namaan is about to be discarded, heal him and convert him to a red brigade Hero'
 
+[-1082275220] (shared) Naaman (PoC)
+  Ability: If Naaman is discarded, heal and convert him to a red Hero. Limit once. O.T. Enhancements used by Naaman cannot be negaed.
+  Reason:  Unmatched clause: 'If Naaman is discarded, heal and convert him to a red Hero'
+
 [1090268706] (top) Naaman's Horses (Roots)
   Ability: You may draw X (limit 2). If opponent controls a good O.T. prophet, you may play an O.T. gray Enhancement.
   Reason:  Unmatched clause: 'If opponent controls a good O.T. prophet, you may play an O.T. gray Enhancement'
@@ -9208,10 +9452,6 @@
 [394306278] (shared) Nahshon, the Blacksmith (LoC)
   Ability: STAR: Topdeck a * card from Reserve.
   Reason:  Unmatched clause: 'Topdeck a * card from Reserve'
-
-[394306278] (top) Nahshon, the Blacksmith (LoC)
-  Ability: You may underdeck an Artifact or activate an Artifact. May band to an Exodus or meek Hero.
-  Reason:  Unmatched clause: 'You may underdeck an Artifact or activate an Artifact'
 
 [-1354726854] (top) Nahum
   Ability: Negate all special abilities on pale green Evil Characters. Nahum has access to all sites.
@@ -9256,6 +9496,10 @@
 [-706286019] (top) Nazareth (Roots)
   Ability: Protect decks, discard piles and Reserves from look and search abilities.
   Reason:  Unmatched clause: 'Protect decks, discard piles and Reserves from look and search abilities'
+
+[-1439406385] (shared) Nebuchadnezzar (PoC)
+  Ability: If a Daniel Hero is in play, you may convert this character to a Hero after battle. May band to a Babylonian, or you may toss the next Enhancement played by opponent. Cannot be negated.
+  Reason:  Unmatched clause: 'If a Daniel Hero is in play, you may convert this character to a Hero after battle'
 
 [743107851] (top) Nebuchadnezzar (TxP)
   Ability: If no Daniel Hero is in play, search deck for an O.T. crimson card and add it to hand or battle. Cannot be negated.
@@ -9325,19 +9569,19 @@
   Ability: HE: Convert an evil human. After battle, you may underdeck this card. ART: Discard an evil card from a player's Reserve to resurrect their human Hero.
   Reason:  Unmatched clause: 'HE: Convert an evil human'
 
-[220260134] (top) 
+[220260134] (top) New Covenant (Isaiah)
   Ability: Underdeck this card and a good O.T. Enhancement from each discard pile.
   Reason:  Unmatched clause: 'Underdeck this card and a good O.T. Enhancement from each discard pile'
 
-[220260134] (bottom) 
+[220260134] (bottom) New Covenant (Isaiah)
   Ability: Convert an evil human in battle. Convert this card to an inactive Artifact.
   Reason:  Unmatched clause: 'Convert an evil human in battle'
 
-[1653324896] (top) 
+[1653324896] (top) New Covenant (Jeremiah)
   Ability: Shuffle this card: Your human Hero gains "May band to a human." this turn.
   Reason:  Unmatched clause: 'Shuffle this card: Your human Hero gains "May band to a human." this turn'
 
-[1653324896] (bottom) 
+[1653324896] (bottom) New Covenant (Jeremiah)
   Ability: Convert all evil humans in battle. You may draw 1 and topdeck this card.
   Reason:  Unmatched clause: 'Convert all evil humans in battle'
 
@@ -9429,6 +9673,10 @@
   Ability: SITE: If a Lost Soul is put here, take a Jonah character from deck or Reserve. FORT: While your Assyrian is blocking, restrict players from playing Dominants.
   Reason:  Unmatched clause: 'SITE: If a Lost Soul is put here, take a Jonah character from deck or Reserve'
 
+[-2061419535] (shared) Ninevites
+  Ability: You may exchange a card from hand with an O.T. Enhancement matching this card's brigade from Reserve. After battle, you may convert Ninevites to a Hero. Cannot be negated if a prophet is in play.
+  Reason:  Unmatched clause: 'You may exchange a card from hand with an O.T. Enhancement matching this card's brigade from Reserve'
+
 [-275093965] (top) Ninevites Repent
   Ability: Convert all Evil Characters in battle. Cannot be negated if opposed by an Assyrian.
   Reason:  Unmatched clause: 'Convert all Evil Characters in battle'
@@ -9445,11 +9693,11 @@
   Ability: Decrease a Hero from each opponent X/X.
   Reason:  Unmatched clause: 'Decrease a Hero from each opponent X/X'
 
-[-1919412335] (top) 
+[-1919412335] (top) No Salvation
   Ability: Take an O.T. Curse from Reserve. O.T. Curses cannot be prevented.
   Reason:  Unmatched clause: 'Take an O.T. Curse from Reserve'
 
-[-1919412335] (bottom) 
+[-1919412335] (bottom) No Salvation
   Ability: You may take an Enhancement from opponent's hand.
   Reason:  Unmatched clause: 'You may take an Enhancement from opponent's hand'
 
@@ -9472,10 +9720,6 @@
 [-1619215158] (top) Noah (CoW)
   Ability: You may exchange a card in hand or territory with a human of matching brigade (or 2 flood survivors) in deck or discard pile. May band to a flood survivor. Cannot be interrupted.
   Reason:  Unmatched clause: 'You may exchange a card in hand or territory with a human of matching brigade (or 2 flood survivors) in deck or discard pile'
-
-[1605436872] (top) Noah, the Righteous (LoC)
-  Ability: You may convert this card to meek to prevent cards. You may shuffle a card (except a human). May band to Shem.
-  Reason:  Unmatched clause: 'You may convert this card to meek to prevent cards'
 
 [750324935] (top) Noah's Ark (Ark of Salvation)
   Ability: STAR: Topdeck a Covenant from Reserve. FORT: Protect Heroes in territory from harm. If your flood survivor attacks, you may topdeck a Genesis card from Reserve.
@@ -9533,11 +9777,11 @@
   Ability: STAR: Negate Lost Souls until end of turn. / GE: Discard an evil card. You may topdeck a good card from deck (or take it if opponent has hand advantage).
   Reason:  Unmatched clause: '/ GE: Discard an evil card'
 
-[-911951144] (top) 
+[-911951144] (top) Oath of Purity (LoC)
   Ability: Bounce up to 2 humans in a territory.
   Reason:  Unmatched clause: 'Bounce up to 2 humans in a territory'
 
-[-911951144] (bottom) 
+[-911951144] (bottom) Oath of Purity (LoC)
   Ability: Interrupt the battle. Hero may band to all O.T. humans. Cannot be interrupted.
   Reason:  Unmatched clause: 'Hero may band to all O.T. humans'
 
@@ -9556,10 +9800,6 @@
 [766216542] (top) Obed-Edom the Gittite
   Ability: If you have Ark of the Covenant or Tables of the Law activated, you may draw 2 cards.
   Reason:  Unmatched clause: 'If you have Ark of the Covenant or Tables of the Law activated, you may draw 2 cards'
-
-[-1395471304] (top) Obed, the Servant (LoC)
-  Ability: While you control a meek Hero, negate opponents' neutral cards. If attacking, you may draw X (limit 3).
-  Reason:  Unmatched clause: 'While you control a meek Hero, negate opponents' neutral cards'
 
 [-1344991706] (top) Obedience of Noah (B)
   Ability: Holder may choose the Evil Character that his opponent uses to block his rescue attempt.
@@ -9677,6 +9917,10 @@
   Ability: Site access. If you control another Ephesus Hero, you may draw up to X (limit 3). Cannot be interrupted.
   Reason:  Unmatched clause: 'Site access'
 
+[-805782778] (shared) Oppressed and Robbed
+  Ability: While your human Evil Character is blocking, special abilities that discard cards from draw piles cannot be negated.
+  Reason:  Unmatched clause: 'While your human Evil Character is blocking, special abilities that discard cards from draw piles'
+
 [-1915321846] (top) Ordained as a Disciple
   Ability: Set one of Jesus' 12 Disciples aside for one turn.  That Hero gains the ability, 'Heal a Hero in play or place a demon in play beneath owner's draw pile.'
   Reason:  Unmatched clause: 'Set one of Jesus' 12 Disciples aside for one turn'
@@ -9761,11 +10005,11 @@
   Ability: Discard a Hero. If used by a Philistine, discard all Heroes in battle and you may draw 1.
   Reason:  Unmatched clause: 'If used by a Philistine, discard all Heroes in battle and you may draw 1'
 
-[1674947050] (top) 
+[1674947050] (top) Overtaken
   Ability: If a Hero with "negated" in the special ability enters battle, your evil humans cannot be negated.
   Reason:  Unmatched clause: 'If a Hero with "negated" in the special ability enters battle, your evil humans'
 
-[1674947050] (bottom) 
+[1674947050] (bottom) Overtaken
   Ability: Underdeck a card with "negated" in the special ability.
   Reason:  Unmatched clause: 'Underdeck a card with "negated" in the special ability'
 
@@ -9773,7 +10017,7 @@
   Ability: Underdeck all Evil Characters in battle.
   Reason:  Unmatched clause: 'Underdeck all Evil Characters in battle'
 
-[158685369] (top) 
+[158685369] (top) Pact with Death (Roots)
   Ability: Negate characters. Prevent Enhancements unless a character is opposed.
   Reason:  Unmatched clause: 'Prevent Enhancements unless a character is opposed'
 
@@ -9901,6 +10145,10 @@
   Ability: Negate neutral cards (except Acts cards). Protect N.T. Lost Souls from evil cards. If there is another Hero in battle, you may draw 2. Cannot be negated.
   Reason:  Unmatched clause: 'Negate neutral cards (except Acts cards)'
 
+[-1235799952] (shared) Paul's Belt (PC)
+  Ability: Capture your Hero or a Hero in battle to opponent's Land of Bondage.
+  Reason:  Unmatched clause: 'Capture your Hero or a Hero in battle to opponent's Land of Bondage'
+
 [-954025615] (top) Paul's Books and Parchments
   Ability: Hero may band to any N.T. Hero in gold, white, or blue brigade.
   Reason:  Unmatched clause: 'Hero may band to any N.T. Hero in gold, white, or blue brigade'
@@ -9965,10 +10213,6 @@
   Ability: STAR: Negate other * abilities in hands.
   Reason:  Unmatched clause: 'Negate other * abilities in hands'
 
-[966842735] (top) Peleg, the Divider (LoC)
-  Ability: Negate evil multi-brigade and evil territory class cards. May band to a meek Genesis Hero.
-  Reason:  Unmatched clause: 'Negate evil multi-brigade and evil territory class cards'
-
 [1367455904] (top) Pentecost
   Ability: Set aside all of your human Heroes for one turn.  On return, you may draw three cards.
   Reason:  Unmatched clause: 'Set aside all of your human Heroes for one turn'
@@ -9976,10 +10220,6 @@
 [266493890] (top) Pentecost (FoM)
   Ability: Set aside all of your human Heroes for one turn. On return, you may draw 3.
   Reason:  Unmatched clause: 'Set aside all of your human Heroes for one turn'
-
-[-648062009] (top) Perez, the Younger (LoC)
-  Ability: You may bounce a character with strength greater than 2. May band to Hezron or a meek Hero.
-  Reason:  Unmatched clause: 'You may bounce a character with strength greater than 2'
 
 [1721325920] (top) Pergamum
   Ability: While this Site is occupied, Dragon Raid cannot enter battle.
@@ -10025,11 +10265,15 @@
   Ability: Once per round you may heal another clay Hero. If Peter is captured, search deck for an Acts angel. Good Acts Enhancements played on Peter cannot be negated.
   Reason:  Unmatched clause: 'Once per round you may heal another clay Hero'
 
-[-1119420400] (top) 
+[-814326091] (shared) Peter's Curse
+  Ability: Place on a Hero or good Fortress: Negate that card's special ability. When you play a good Dominant, discard this Curse. Cannot be negated.
+  Reason:  Unmatched clause: 'Place on a Hero or good Fortress: Negate that card's special ability'
+
+[-1119420400] (top) Peter's Curse (GoC)
   Ability: Restrict good Dominants. Cannot be negated. Limit 3 rounds.
   Reason:  Unmatched clause: 'Restrict good Dominants'
 
-[-1119420400] (bottom) 
+[-1119420400] (bottom) Peter's Curse (GoC)
   Ability: Reserve a Hero. Cannot be negated by a disciple.
   Reason:  Unmatched clause: 'Reserve a Hero'
 
@@ -10097,13 +10341,17 @@
   Ability: You may discard the top card of a deck. You may banish this card to resurrect a Genesis Egyptian and add your Egyptian to battle.
   Reason:  Unmatched clause: 'You may banish this card to resurrect a Genesis Egyptian and add your Egyptian to battle'
 
-[1524299152] (top) 
+[1524299152] (top) Pharaoh's Curse
   Ability: Underdeck this card to underdeck a good card in a territory.
   Reason:  Unmatched clause: 'Underdeck this card to underdeck a good card in a territory'
 
 [-695342366] (top) Pharaoh's Daughter
   Ability: Character has access to Pharaoh's Prison and Egypt Sites.
   Reason:  Unmatched clause: 'Character has access to Pharaoh's Prison and Egypt Sites'
+
+[-1563001018] (shared) Pharaoh's Daughter (FoM)
+  Ability: You may take Moses from deck or Reserve. Your Exodus characters of matching alignment and Exodus Enhancements used by them cannot be prevented. Cannot be interrupted.
+  Reason:  Unmatched clause: 'Your Exodus characters of matching alignment and Exodus Enhancements used by them'
 
 [-628968540] (top) Pharaoh's Dream
   Ability: You may discard your evil Egyptian to protect Lost Souls from rescue. If you do not, you may discard the top 3 cards of a deck.
@@ -10205,7 +10453,7 @@
   Ability: Immune to lone Heroes.
   Reason:  Unmatched clause: 'Immune to lone Heroes'
 
-[287616455] (bottom) 
+[287616455] (bottom) Philistine Garrison (LoC)
   Ability: While no Evil Character is in battle, you may reserve this card to add your evil Philistine to battle.
   Reason:  Unmatched clause: 'While no Evil Character is in battle, you may reserve this card to add your evil Philistine to battle'
 
@@ -10321,11 +10569,11 @@
   Ability: O.T. human may band to up to 3 Exodus Heroes.
   Reason:  Unmatched clause: 'O.T. human may band to up to 3 Exodus Heroes'
 
-[1112923276] (top) 
+[1112923276] (top) Pillar of Salt
   Ability: Banish an Evil Character in battle.
   Reason:  Unmatched clause: 'Banish an Evil Character in battle'
 
-[1112923276] (bottom) 
+[1112923276] (bottom) Pillar of Salt
   Ability: Take an O.T. black Enhancement or a Canaanite Site from Reserve.
   Reason:  Unmatched clause: 'Take an O.T. black Enhancement or a Canaanite Site from Reserve'
 
@@ -10416,6 +10664,10 @@
 [-1797315263] (top) Plagued Congregation
   Ability: If opponent has used a draw ability this turn, negate a good brigade. You may bounce or reserve an O.T. Curse.
   Reason:  Unmatched clause: 'If opponent has used a draw ability this turn, negate a good brigade'
+
+[1932162880] (shared) Plagued with Diseases
+  Ability: Decrease all opponents' Heroes by 0/2 (or 0/3 if you have the fewest Redeemed Souls).
+  Reason:  Unmatched clause: 'Decrease all opponents' Heroes by 0/2 (or 0/3 if you have the fewest Redeemed Souls)'
 
 [1937092816] (top) Pleading for the City
   Ability: Set aside a Hero for one turn. On return, you may search deck for up to 2 silver Heroes and put them in hand, and search opponent's discard pile for all Lost Souls and place in his territory.
@@ -10757,6 +11009,10 @@
   Ability: Place on any site with the word prison on it.  Each Evil Character gains 4/4 until end of turn when blocking a rescue at that site.
   Reason:  Unmatched clause: 'Place on any site with the word prison on it'
 
+[-1096863773] (shared) Prisoner at Gaza
+  Ability: You may capture this character to opponent's Land of Bondage to take an O.T. card of matching brigade from Reserve and add your human of matching brigade to battle.
+  Reason:  Unmatched clause: 'You may capture this character to opponent's Land of Bondage to take an O.T. card of matching brigade from Reserve and add your human of matching brigade to battle'
+
 [-1003026674] (top) Prisoner Transfer
   Ability: Transfer a captured Hero from one player to another, or exchange two Lost Souls.
   Reason:  Unmatched clause: 'Transfer a captured Hero from one player to another, or exchange two Lost Souls'
@@ -10933,10 +11189,6 @@
   Ability: Protect Joshua Heroes in territory from harm. Joshua Heroes have Site access. If Spy enters battle, search a deck for a Lost Soul. Scarlet Line cannot be negated.
   Reason:  Unmatched clause: 'Joshua Heroes have Site access'
 
-[-179161689] (top) Rahab, the Defender (LoC)
-  Ability: You may bounce up to 2 Heroes. If one of them was meek, negate an evil card.
-  Reason:  Unmatched clause: 'You may bounce up to 2 Heroes'
-
 [-1375264757] (top) Raiders' Camp
   Ability: If your human Evil Character captures a Hero, place it here.  When opponent makes a successful rescue attempt or battle challenge, instead of surrendering a Lost Soul, release all Heroes from here back to owner.  Does not count as redeemed soul.
   Reason:  Unmatched clause: 'If your human Evil Character captures a Hero, place it here'
@@ -10949,11 +11201,15 @@
   Ability: If attacked, you may release contents to shuffle a Lost Soul.
   Reason:  Unmatched clause: 'If attacked, you may release contents to shuffle a Lost Soul'
 
-[830374852] (top) 
+[1896425282] (shared) Rain Becomes Dust
+  Ability: All cards that an opponent draws because of a special ability used by that opponent are revealed instead.  Place all revealed Lost Souls in opponent's territory.  Discard the rest.
+  Reason:  Unmatched clause: 'All cards that an opponent draws because of a special ability used by that opponent are revealed instead'
+
+[830374852] (top) Rain Becomes Dust [IR]
   Ability: If a player draws cards because of an ability they control, they must discard the drawn cards.
   Reason:  Unmatched clause: 'If a player draws cards because of an ability they control, they must discard the drawn cards'
 
-[830374852] (bottom) 
+[830374852] (bottom) Rain Becomes Dust [IR]
   Ability: Reserve all cards in battle.
   Reason:  Unmatched clause: 'Reserve all cards in battle'
 
@@ -10997,6 +11253,14 @@
   Ability: Discard a captured Hero to discard the top card of each opponent's deck (or top 2 if used by a Herod). Put Lost Souls in play instead.
   Reason:  Unmatched clause: 'Discard a captured Hero to discard the top card of each opponent's deck (or top 2 if used by a Herod)'
 
+[1879814433] (shared) Razor (FooF)
+  Ability: If Isaiah or an Assyrian is in play, discard an opponent's character in battle, or negate and discard a single color Site, Artifact, or evil card in a territory.
+  Reason:  Unmatched clause: 'If Isaiah or an Assyrian is in play, discard an opponent's character in battle, or negate and discard a single color Site, Artifact, or evil card in a territory'
+
+[2106348283] (shared) Razor (Roots)
+  Ability: Discard an evil card, an opposing character or an Artifact. Cannot be prevented.
+  Reason:  Unmatched clause: 'Discard an evil card, an opposing character or an Artifact'
+
 [-232274715] (top) Reach of Desperation (GoC)
   Ability: You may interrupt the battle, draw 3 and play an Enhancement.
   Reason:  Unmatched clause: 'You may interrupt the battle, draw 3 and play an Enhancement'
@@ -11028,10 +11292,6 @@
 [-1886479894] (top) Rebekah meets Isaac
   Ability: Rebekah and Isaac may band together for the rest of the game.
   Reason:  Unmatched clause: 'Rebekah and Isaac may band together for the rest of the game'
-
-[-110106135] (top) Rebekah, the Bride (LoC)
-  Ability: You may convert your patriarch to meek to draw 2. You may exchange this card with Jacob from hand or territory.
-  Reason:  Unmatched clause: 'You may convert your patriarch to meek to draw 2'
 
 [-1288836256] (top) Rebellious
   Ability: Place this card on a Hero.  While this card remains, negate the Hero's special ability and decrease that Hero 0/1 per turn.  Treat as a disease.
@@ -11125,6 +11385,10 @@
   Ability: If used by a Luke Hero, convert a human Evil Character to a gold brigade Hero. Cannot be negated by an evil card. If rescue attempt is successful, opponent must draw four cards.
   Reason:  Unmatched clause: 'convert a human Evil Character to a gold brigade Hero'
 
+[-892531779] (shared) Reprimand (GoC)
+  Ability: Negate a card. Withdraw up to 2 opposing characters.
+  Reason:  Unmatched clause: 'Withdraw up to 2 opposing characters'
+
 [1864837258] (top) Repudiating Rulers (GoC)
   Ability: STAR: Play a Lost Soul from each deck. EC: Bounce a character in a territory. You may take an evil N.T. gray card from Reserve (or deck if you control a meek Lost Soul).
   Reason:  Unmatched clause: 'Play a Lost Soul from each deck'
@@ -11181,10 +11445,6 @@
   Ability: STAR: Bounce a meek blue Hero.
   Reason:  Unmatched clause: 'Bounce a meek blue Hero'
 
-[-310437833] (top) Reu, the Shepherd (LoC)
-  Ability: If a good Genesis card you own is topdecked, you may draw 1. May band to a meek Genesis Hero.
-  Reason:  Unmatched clause: 'If a good Genesis card you own is topdecked, you may draw 1'
-
 [-850003692] (top) Reuben, the Preeminent
   Ability: You may take a good Genesis card from Reserve. If alone, you may choose an evil O.T. human to block.
   Reason:  Unmatched clause: 'If alone, you may choose an evil O.T. human to block'
@@ -11229,11 +11489,15 @@
   Ability: All Heroes in play are immune to Crimson Brigade until end of current turn.
   Reason:  Unmatched clause: 'All Heroes in play are immune to Crimson Brigade until end of current turn'
 
-[362699795] (top) 
+[1373984512] (shared) Ride on Victoriously (LoC)
+  Ability: RoV: If an Evil Character is blocking, add a meek Hero to battle. Limit once per game. AT: Play an Enhancement on your meek Hero in battle. Limit once per game.
+  Reason:  Unmatched clause: 'RoV: If an Evil Character is blocking, add a meek Hero to battle'
+
+[362699795] (top) Ridicule (GoC)
   Ability: Paralyze opponents' Heroes with a draw ability for 1 round.
   Reason:  Unmatched clause: 'Paralyze opponents' Heroes with a draw ability for 1 round'
 
-[362699795] (bottom) 
+[362699795] (bottom) Ridicule (GoC)
   Ability: Negate a Hero. Hero's controller must reserve the top 2 cards of their deck or bounce that Hero. Cannot be negated.
   Reason:  Unmatched clause: 'Hero's controller must reserve the top 2 cards of their deck or bounce that Hero'
 
@@ -11249,6 +11513,10 @@
   Ability: Add a Hero from your hand to the battle.
   Reason:  Unmatched clause: 'Add a Hero from your hand to the battle'
 
+[574430533] (shared) Roman Citizenship
+  Ability: If used by a Roman, place on your non-Roman N.T. human: Character is Roman. If character enters battle, each player must discard 1 from hand.
+  Reason:  Unmatched clause: 'place on your non-Roman N.T. human: Character is Roman'
+
 [-1210237250] (top) Roman Horses (Roots)
   Ability: You may draw X (limit 2). If opponent has hand advantage, you may play a N.T. gray Enhancement.
   Reason:  Unmatched clause: 'If opponent has hand advantage, you may play a N.T. gray Enhancement'
@@ -11260,6 +11528,10 @@
 [-1415707219] (top) Roman Prison (Pi)
   Ability: If you use a Roman soldier or emperor to block a rescue attempt at this Site, you may draw a card or reveal opponent's hand.
   Reason:  Unmatched clause: 'If you use a Roman soldier or emperor to block a rescue attempt at this Site, you may draw a card or reveal opponent's hand'
+
+[-915012251] (shared) Roman Spear
+  Ability: Character has first strike. Protect captured characters from opponents. You may discard this card to decrease a human of opposite alignment 0/5
+  Reason:  Unmatched clause: 'Character has first strike'
 
 [-944615143] (top) Roman Spearmen
   Ability: If you control only Roman Spearmen in battle, toss all Enhancements that are played this battle. Cannot be interrupted.
@@ -11321,10 +11593,6 @@
   Ability: STAR: If a meek Ruth Hero is in play, draw 1.
   Reason:  Unmatched clause: 'If a meek Ruth Hero is in play, draw 1'
 
-[1806262526] (top) Ruth, the Redeemed (LoC)
-  Ability: Protect Ruth Heroes from banish, discard and withdraw abilities. Good Ruth Enhancements cannot be negated.
-  Reason:  Unmatched clause: 'Protect Ruth Heroes from banish, discard and withdraw abilities'
-
 [1111637441] (top) Ruth's Vow (LoC)
   Ability: Interrupt the battle. Protect all Heroes in battle from abilities (except discard abilities) on evil cards. Cannot be prevented if used by Ruth.
   Reason:  Unmatched clause: 'Protect all Heroes in battle from abilities (except discard abilities) on evil cards'
@@ -11381,13 +11649,13 @@
   Ability: STAR: Topdeck an O.T. Fortress from deck.
   Reason:  Unmatched clause: 'Topdeck an O.T. Fortress from deck'
 
-[1058287901] (top) Salmon, the Cloaked (LoC)
-  Ability: You may exchange a card from hand with a good Ruth card from Reserve. May band to up to X Ruth Heroes.
-  Reason:  Unmatched clause: 'You may exchange a card from hand with a good Ruth card from Reserve'
-
 [-261698222] (top) Salome (RoA)
   Ability: Search deck for The Garden Tomb or a N.T. Covenant and put it in hand. Hero ignores Evil Characters holding weapons.
   Reason:  Unmatched clause: 'Search deck for The Garden Tomb or a N.T. Covenant and put it in hand'
+
+[1713428197] (shared) Salome the Sorrowful (GoC)
+  Ability: If blocked from hand, protect Lost Souls and this card from evil cards. Good Enhancements are regardless of protect abilities if you convert this card to meek.
+  Reason:  Unmatched clause: 'If blocked from hand, protect Lost Souls and this card from evil cards'
 
 [859819185] (shared) Samaria
   Ability: SITE: You may take an evil king of Israel or Gates of Samaria from deck. FORT: If your evil king of Israel blocks, you may take a brown card from Reserve.
@@ -11537,7 +11805,7 @@
   Ability: If used by a High Priest, remove this card from the game to negate and discard all evil Enhancements and Curses in play.  Cannot be negated.
   Reason:  Unmatched clause: 'remove this card from the game to negate and discard all evil Enhancements and Curses in play'
 
-[-53616200] (bottom) 
+[-53616200] (bottom) Scapegoat (PoC)
   Ability: At any time, you may banish this character from territory to restrict each player from attacking on their next turn.
   Reason:  Unmatched clause: 'At any time, you may banish this character from territory to restrict each player from attacking on their next turn'
 
@@ -11569,27 +11837,31 @@
   Ability: Search discard pile for an O.T. Enhancement and place it beneath deck.  Negate ignore abilities.  May band to a Pharisee or Sadducee.
   Reason:  Unmatched clause: 'Search discard pile for an O.T. Enhancement and place it beneath deck'
 
+[282150766] (shared) Scroll of Isaiah
+  Ability: Good convert enhancements cannot be negated. When an Evil Character is converted its owner may discard 2 cards of matching brigade from hand instead.
+  Reason:  Unmatched clause: 'Good convert enhancements  When an Evil Character is converted its owner may discard 2 cards of matching brigade from hand instead'
+
 [805744445] (top) Search ( C)
   Ability: Holder may look through his draw pile, select a card, and place in his hand.  Shuffle draw pile.
   Reason:  Unmatched clause: 'Holder may look through his draw pile, select a card, and place in his hand'
 
-[1138586902] (top) 
+[1138586902] (top) Second Bowl of Wrath (RoJ AB)
   Ability: Discard an Evil Character (or 2 animals).
   Reason:  Unmatched clause: 'Discard an Evil Character (or 2 animals)'
 
-[-1850265351] (top) 
+[-1850265351] (top) Second Seal (War) (RoJ AB)
   Ability: Begin a side battle between 2 Evil Characters.
   Reason:  Unmatched clause: 'Begin a side battle between 2 Evil Characters'
 
-[-1850265351] (bottom) 
+[-1850265351] (bottom) Second Seal (War) (RoJ AB)
   Ability: You may discard an Enhancement or search deck, discard pile or Reserve for an evil weapon.
   Reason:  Unmatched clause: 'You may discard an Enhancement or search deck, discard pile or Reserve for an evil weapon'
 
-[523544979] (top) 
+[523544979] (top) Second Seal, War (RoJ)
   Ability: Begin a side battle between 2 Evil Characters.
   Reason:  Unmatched clause: 'Begin a side battle between 2 Evil Characters'
 
-[523544979] (bottom) 
+[523544979] (bottom) Second Seal, War (RoJ)
   Ability: You may discard an enhancement or search deck, discard pile or Reserve for an evil weapon.
   Reason:  Unmatched clause: 'You may discard an enhancement or search deck, discard pile or Reserve for an evil weapon'
 
@@ -11665,11 +11937,11 @@
   Ability: Interrupt the battle. Human may band to any number of Egyptians. You may discard the top card of a deck.
   Reason:  Unmatched clause: 'Human may band to any number of Egyptians'
 
-[-1196272502] (top) 
+[-1196272502] (top) Send the Helper (GoC)
   Ability: You may bounce a clay Hero in territory. If your meek clay Hero attacks, you may take a good card from Reserve.
   Reason:  Unmatched clause: 'You may bounce a clay Hero in territory'
 
-[-1196272502] (bottom) 
+[-1196272502] (bottom) Send the Helper (GoC)
   Ability: Banish up to X evil cards.
   Reason:  Unmatched clause: 'Banish up to X evil cards'
 
@@ -11705,17 +11977,13 @@
   Ability: You may discard an evil card in territory to take an O.T. good Enhancement from deck. May band to an Isaiah Hero.
   Reason:  Unmatched clause: 'You may discard an evil card in territory to take an O.T. good Enhancement from deck'
 
-[1354481255] (top) 
+[1354481255] (top) Serpent's Curse
   Ability: While you control an animal, reduce each opponent's hand size by 1.
   Reason:  Unmatched clause: 'While you control an animal, reduce each opponent's hand size by 1'
 
-[1354481255] (bottom) 
+[1354481255] (bottom) Serpent's Curse
   Ability: Animals ignore Heroes. Cannot be negated if used by The Serpent.
   Reason:  Unmatched clause: 'Animals ignore Heroes'
-
-[745842231] (top) Serug, the Branch (LoC)
-  Ability: Prevent the next Enhancement played, unless it is used by a meek character. May band to a meek blue Hero.
-  Reason:  Unmatched clause: 'Prevent the next Enhancement played, unless it is used by a meek character'
 
 [689280832] (top) Servant Angel
   Ability: Holder may draw a card.
@@ -11741,15 +12009,11 @@
   Ability: Place in a player's territory.  Each upkeep, that player must discard a single-color Site or O.T.  Fortress from his territory or set-aside area.  When none of those remain, discard this card.
   Reason:  Unmatched clause: 'Place in a player's territory'
 
-[-1111320381] (top) Seth, Son of Adam (LoC)
-  Ability: If Abel (or a meek Hero) is discarded, you may add this card or your meek Hero to battle. Limit once. May band to Enosh.
-  Reason:  Unmatched clause: 'If Abel (or a meek Hero) is discarded, you may add this card or your meek Hero to battle'
-
-[-1300032700] (top) 
+[-1300032700] (top) Seven Cows
   Ability: You may take a good card from deck or protect O.T. Heroes from harm.
   Reason:  Unmatched clause: 'You may take a good card from deck or protect O.T. Heroes from harm'
 
-[-1300032700] (bottom) 
+[-1300032700] (bottom) Seven Cows
   Ability: Underdeck up to 2 good cards.
   Reason:  Unmatched clause: 'Underdeck up to 2 good cards'
 
@@ -11780,6 +12044,22 @@
 [-1292624512] (top) Seven Wicked Spirits
   Ability: You may interrupt all Fortresses and exchange this Evil Character with any other Evil Character in play or set-aside area.
   Reason:  Unmatched clause: 'You may interrupt all Fortresses and exchange this Evil Character with any other Evil Character in play or set-aside area'
+
+[-978971521] (shared) Seven Years of Famine
+  Ability: If used by a Genesis character, place in your territory for 7 turns: Negate draw and ignore abilities. During each player's upkeep, if their hand is 7 or more, they must discard 1.
+  Reason:  Unmatched clause: 'place in your territory for 7 turns: Negate draw and ignore abilities'
+
+[742385919] (shared) Seven Years of Plenty
+  Ability: Search deck for a Genesis or Exodus Fortress. Place this card in your territory for 7 turns: Each upkeep, if you control a Genesis character, you may draw 1.
+  Reason:  Unmatched clause: 'Place this card in your territory for 7 turns: Each upkeep, if you control a Genesis character, you may draw 1'
+
+[-1156590708] (shared) Seventh Seal (RoJ AB)
+  Ability: You may search deck or Reserve for a card with "Trumpet" or "Trumpets" in the title. At any time, you may discard this card to withdraw all non-human characters.
+  Reason:  Unmatched clause: 'You may search deck or Reserve for a card with "Trumpet" or "Trumpets" in the title'
+
+[-383981383] (shared) Seventh Seal (RoJ)
+  Ability: You may search deck or Reserve for a card with "Trumpet or Trumpets in the title. At any time, you may discard this card to withdraw all non-human characters.
+  Reason:  Unmatched clause: 'You may search deck or Reserve for a card with "Trumpet or Trumpets in the title'
 
 [-1407369682] (top) Seventh Trumpet
   Ability: Convert one human Evil Character to a white brigade Hero.
@@ -11848,10 +12128,6 @@
 [345712946] (top) Shechem (RoA)
   Ability: If another Canaanite is in play, you may capture a female Hero or transfer a captured character to opponent's Land of Bondage. Cannot be prevented.
   Reason:  Unmatched clause: 'If another Canaanite is in play, you may capture a female Hero or transfer a captured character to opponent's Land of Bondage'
-
-[-1458206843] (top) Shelah, the Subsumed (LoC)
-  Ability: If you control a meek Lost Soul, you may topdeck an evil card. Cannot be prevented if you control a meek Hero.
-  Reason:  Unmatched clause: 'If you control a meek Lost Soul, you may topdeck an evil card'
 
 [527986626] (top) Shelemiah the Priest
   Ability: You may use O.T.  Enhancements from Storehouse as if played from hand.
@@ -11957,9 +12233,17 @@
   Ability: All of holder's Evil Characters in play and all of opponent's Heroes in play must join the battle.
   Reason:  Unmatched clause: 'All of holder's Evil Characters in play and all of opponent's Heroes in play must join the battle'
 
+[1211833271] (shared) Siegeworks (FooF)
+  Ability: If you control Isaiah or an Assyrian, place all opposing characters beneath deck and place this card on a Site or Fortress: Negate that card.
+  Reason:  Unmatched clause: 'If you control Isaiah or an Assyrian, place all opposing characters beneath deck and place this card on a Site or Fortress: Negate that card'
+
 [-1506589614] (top) Siegeworks (Pa)
   Ability: If total abilities (*/*) of Evil Character(s) in battle reach 20/* discard one O.T. Fortress site.
   Reason:  Unmatched clause: 'If total abilities (*/*) of Evil Character(s) in battle reach 20/* discard one O.T. Fortress site'
+
+[556239847] (shared) Siegeworks (Roots)
+  Ability: Underdeck a Fortress and all opposing characters.
+  Reason:  Unmatched clause: 'Underdeck a Fortress and all opposing characters'
 
 [-812698732] (top) Sign of Jonah
   Ability: STAR: Look at the top or bottom 3 cards of deck: Take a good Dominant. GE: Negate an evil card, resurrect a Hero or shuffle an evil Fortress.
@@ -12049,7 +12333,7 @@
   Ability: Interrupt the battle. You may play a N.T. orange Enhancement from Reserve. Each player may draw 1 from bottom of deck.
   Reason:  Unmatched clause: 'You may play a N.T. orange Enhancement from Reserve'
 
-[1951912774] (top) 
+[1951912774] (top) Sin and Justice
   Ability: Interrupt the battle. Banish your female Hero to discard all evil males.
   Reason:  Unmatched clause: 'Banish your female Hero to discard all evil males'
 
@@ -12117,27 +12401,27 @@
   Ability: Return up to 3 Canaanites in opponent's territory and/or captured Canaanites to owner's hand. Set aside X characters for X turns. Cannot be prevented.
   Reason:  Unmatched clause: 'Return up to 3 Canaanites in opponent's territory and/or captured Canaanites to owner's hand'
 
-[-394793140] (top) 
+[-394793140] (top) Sixth Bowl of Wrath (RoJ AB)
   Ability: If used during battle, opponent must discard 2 evil cards from hand.
   Reason:  Unmatched clause: 'If used during battle, opponent must discard 2 evil cards from hand'
 
-[-394793140] (bottom) 
+[-394793140] (bottom) Sixth Bowl of Wrath (RoJ AB)
   Ability: Place in territory: You may banish this card to add an evil human King to battle.
   Reason:  Unmatched clause: 'Place in territory: You may banish this card to add an evil human King to battle'
 
-[429631403] (top) 
+[429631403] (top) Sixth Bowl of Wrath (RoJ)
   Ability: If used during battle, opponent must discard 2 evil cards from hand.
   Reason:  Unmatched clause: 'If used during battle, opponent must discard 2 evil cards from hand'
 
-[429631403] (bottom) 
+[429631403] (bottom) Sixth Bowl of Wrath (RoJ)
   Ability: Place in territory: You may banish this card to add an evil human King to battle.
   Reason:  Unmatched clause: 'Place in territory: You may banish this card to add an evil human King to battle'
 
-[514471354] (top) 
+[514471354] (top) Sixth Seal (Terror) (RoJ AB)
   Ability: Discard a Site. Return all human Evil Characters in battle to owner's hand.
   Reason:  Unmatched clause: 'Return all human Evil Characters in battle to owner's hand'
 
-[514471354] (bottom) 
+[514471354] (bottom) Sixth Seal (Terror) (RoJ AB)
   Ability: If an opponent's special ability discards your evil human, you may underdeck it instead.
   Reason:  Unmatched clause: 'If an opponent's special ability discards your evil human, you may underdeck it instead'
 
@@ -12156,6 +12440,10 @@
 [1132135457] (top) Slave Trade
   Ability: Capture a Hero and place in your Land of Bondage.  Hero is treated as a Lost Soul.
   Reason:  Unmatched clause: 'Capture a Hero and place in your Land of Bondage'
+
+[777438563] (shared) Slaves in Egypt
+  Ability: You may capture this character to opponent's Land of Bondage to take an Exodus Fortress from deck or Reserve and add an Exodus character to battle.
+  Reason:  Unmatched clause: 'You may capture this character to opponent's Land of Bondage to take an Exodus Fortress from deck or Reserve and add an Exodus character to battle'
 
 [-1543715041] (top) Slayer's Glee (RoJ AB)
   Ability: Place on your Canaanite or Egyptian: Negate resurrect abilities. At any time, you may discard this card and its bearer to underdeck a Hero (or 2 N.T. Heroes).
@@ -12417,7 +12705,7 @@
   Ability: Place on a Fortress in play.  Negate the special ability on that Fortress.  All cards in that Fortress are returned to owner's hand.  After four turns, discard this card to discard that Fortress.
   Reason:  Unmatched clause: 'Place on a Fortress in play'
 
-[-306006462] (top) 
+[-306006462] (top) Sprinkled Blood
   Ability: You may discard this card to take an O.T. white card from Reserve.
   Reason:  Unmatched clause: 'You may discard this card to take an O.T. white card from Reserve'
 
@@ -12505,7 +12793,7 @@
   Ability: Selected opponent may not draw cards during opponent's next draw phase.
   Reason:  Unmatched clause: 'Selected opponent may not draw cards during opponent's next draw phase'
 
-[-1741825981] (top) 
+[-1741825981] (top) Stolen Blessing (LoC)
   Ability: You may play an Enhancement from opponent's hand regardless of brigade.
   Reason:  Unmatched clause: 'You may play an Enhancement from opponent's hand  of brigade'
 
@@ -12853,10 +13141,6 @@
   Ability: STAR: Look at a hand or a Reserve.
   Reason:  Unmatched clause: 'Look at a hand or a Reserve'
 
-[1693574528] (top) Tamar, the Widow (LoC)
-  Ability: After battle, discard an evil male. May band to Judah and/or you may play meek Perez from deck or Reserve.
-  Reason:  Unmatched clause: 'After battle, discard an evil male'
-
 [-560458496] (top) Tartaros
   Ability: All demons that holder captures, discards, or has in Land of Bondage are placed in Tartaros.  Release one demon to holder's territory from Tartaros when one of holder's demons wins in battle.
   Reason:  Unmatched clause: 'All demons that holder captures, discards, or has in Land of Bondage are placed in Tartaros'
@@ -12945,13 +13229,17 @@
   Ability: All male Heroes must withdraw from battle.  Opponent must place a female Hero into battle or rescue attempt fails.
   Reason:  Unmatched clause: 'All male Heroes must withdraw from battle'
 
-[454416128] (top) 
+[454416128] (top) Temptation in the Wilderness (GoC)
   Ability: Place in territory: While a character is blocking, you may banish this card to add your Gospel angel to battle.
   Reason:  Unmatched clause: 'Place in territory: While a character is blocking, you may banish this card to add your Gospel angel to battle'
 
-[454416128] (bottom) 
+[454416128] (bottom) Temptation in the Wilderness (GoC)
   Ability: Place on a unique demon: If you block with it, you may choose a Hero to attack.
   Reason:  Unmatched clause: 'Place on a unique demon: If you block with it, you may choose a Hero to attack'
+
+[920915608] (shared) Ten Virgins (GoC)
+  Ability: Opponent may reserve the top 5 cards of their deck. If they do not, while your N.T. character is in battle, restrict opponent from playing Enhancements. Cannot be negated.
+  Reason:  Unmatched clause: 'Opponent may reserve the top 5 cards of their deck'
 
 [1799715491] (top) Tenants Kill the Son (GoC)
   Ability: Interrupt the battle. Character may band to an evil human and you may discard a Hero. Cannot be prevented if you control a meek Lost Soul.
@@ -12961,13 +13249,17 @@
   Ability: STAR: Play a Lost Soul from a deck.
   Reason:  Unmatched clause: 'Play a Lost Soul from a deck'
 
-[611498000] (top) Terah, the Delayed (LoC)
-  Ability: You may reserve your meek Hero to discard an Artifact or evil Enhancement. You may bounce a patriarch in a territory.
-  Reason:  Unmatched clause: 'You may reserve your meek Hero to discard an Artifact or evil Enhancement'
-
 [1118083613] (top) Tested by Joseph
   Ability: If you control a son of Jacob, you may draw 2. Reveal the top 5 cards of each deck: Play a revealed Lost Soul from each deck.
   Reason:  Unmatched clause: 'If you control a son of Jacob, you may draw 2'
+
+[-101318748] (shared) Testing of Job (RoJ AB)
+  Ability: Search deck or discard pile for Job. Place this card in territory: Decrease your Job 0/X (limit 11). Each upkeep, you may underdeck your character or Enhancement.
+  Reason:  Unmatched clause: 'Search deck or discard pile for Job'
+
+[-1999869087] (shared) Testing of Job (RoJ)
+  Ability: Search deck or discard pile for Job. Place this card in territory: Decrease your Job 0/X (limit 11). Each upkeep, you may underdeck your character or Enhancement.
+  Reason:  Unmatched clause: 'Search deck or discard pile for Job'
 
 [-1480682267] (top) Testing Solomon (Roots)
   Ability: Underdeck an evil card in battle and an evil card from opponent's hand. Regardless of protect abilities.
@@ -13293,11 +13585,11 @@
   Ability: If an Evil Character is converted, it gains clay brigade and the same church identifier as this Hero. You may take it to your territory.
   Reason:  Unmatched clause: 'If an Evil Character is converted, it gains clay brigade and the same church identifier as this Hero'
 
-[229528396] (top) 
+[229528396] (top) The Fall of Man
   Ability: While you are rescuing or blocking, restrict players from playing Dominants.
   Reason:  Unmatched clause: 'While you are rescuing or blocking, restrict players from playing Dominants'
 
-[229528396] (bottom) 
+[229528396] (bottom) The Fall of Man
   Ability: Negate Heroes. Convert a male and a female Hero to brown this turn.
   Reason:  Unmatched clause: 'Convert a male and a female Hero to brown this turn'
 
@@ -13340,6 +13632,14 @@
 [-1751972372] (top) The First Trumpet
   Ability: All Pale Green Brigade Evil Characters in play decrease 6/6 for remainder of turn.  If result is */0 or less, discard character(s).
   Reason:  Unmatched clause: 'All Pale Green Brigade Evil Characters in play decrease 6/6 for remainder of turn'
+
+[-1930446405] (shared) The Flood
+  Ability: If used by a flood survivor or evil antediluvian, remove this card from the game to discard all cards in the Field of Battle (except flood survivors) and evil cards in play and set-aside areas.
+  Reason:  Unmatched clause: 'remove this card from the game to discard all cards in the Field of Battle (except flood survivors) and evil cards in play and set-aside areas'
+
+[72469100] (shared) The Flood (CoW AB)
+  Ability: If used by a flood survivor or evil antediluvian, remove this card from the game to discard all cards in the Field of Battle (except flood survivors) and evil cards in play and set-aside areas.
+  Reason:  Unmatched clause: 'remove this card from the game to discard all cards in the Field of Battle (except flood survivors) and evil cards in play and set-aside areas'
 
 [-2083783734] (top) The Foretelling Angel (PC)
   Ability: Protect deck from discard. Play with top card of deck face up: While it's a Daniel card, Daniel characters cannot be negated. If it's a Daniel card, you may add it to hand. Cannot be negated.
@@ -13429,7 +13729,7 @@
   Ability: If used by a meek Hero, interrupt the battle. Select up to X Evil Characters. Convert the selected humans and shuffle the selected non-humans.
   Reason:  Unmatched clause: 'Select up to X Evil Characters'
 
-[1428602472] (bottom) 
+[1428602472] (bottom) The Great Fish
   Ability: Negate up to X cards. You may set aside a Hero for 3 turns. If you do, shuffle this card after battle.
   Reason:  Unmatched clause: 'You may set aside a Hero for 3 turns'
 
@@ -13520,6 +13820,10 @@
 [-1464940548] (top) The King of Edom (LoC)
   Ability: You may banish up to X good cards from a discard pile. If another Edomite is in play, you may take an O.T. crimson Enhancement from Reserve. May band to an Edomite. Cannot be interrupted.
   Reason:  Unmatched clause: 'You may banish up to X good cards from a discard pile'
+
+[-949708643] (shared) The King of Nineveh
+  Ability: You may play Nineveh from deck. If opponent has board advantage, they must discard X cards from territory. If Jonah is in play, convert this character to a Hero after battle. Cannot be negated.
+  Reason:  Unmatched clause: 'You may play Nineveh from deck'
 
 [-1004594621] (top) The Long Day (Ki)
   Ability: If holder's rescue attempt this turn fails, holder may make an additional rescue attempt this turn.
@@ -13617,7 +13921,11 @@
   Ability: Set this fortress aside.  If you have initiative, you may interrupt the battle and place your Hero on this fortress.  Hero is protected from effect.   Each time you rescue a Lost Soul, return one Hero to your territory.  This fortress is protected from discard.
   Reason:  Unmatched clause: 'Set this fortress aside'
 
-[-1149883521] (bottom) 
+[-1277344350] (shared) The New Covenant
+  Ability: At any time, you may place this card beneath your deck to heal all N.T. Heroes, return all captured N.T. Heroes to territory, or discard all Evil Character cards on N.T. Heroes.
+  Reason:  Unmatched clause: 'At any time, you may place this card beneath your deck to heal all N.T. Heroes, return all captured N.T. Heroes to territory, or discard all Evil Character cards on N.T. Heroes'
+
+[-1149883521] (bottom) The New Covenant (I/J+)
   Ability: Hero may band to any number of N.T. Heroes.
   Reason:  Unmatched clause: 'Hero may band to any number of N.T. Heroes'
 
@@ -13673,11 +13981,11 @@
   Ability: Bounce a character. You may add a N.T. Hero to battle.
   Reason:  Unmatched clause: 'Bounce a character'
 
-[-638806408] (top) 
+[-638806408] (top) The Prodigal Son (GoC)
   Ability: You may underdeck an evil card from hand to draw 2. Cannot be interrupted.
   Reason:  Unmatched clause: 'You may underdeck an evil card from hand to draw 2'
 
-[-638806408] (bottom) 
+[-638806408] (bottom) The Prodigal Son (GoC)
   Ability: You may underdeck a good card from hand to draw 2. Cannot be prevented.
   Reason:  Unmatched clause: 'You may underdeck a good card from hand to draw 2'
 
@@ -13725,7 +14033,7 @@
   Ability: Negate and discard the last good Enhancement played. If used by an Assyrian, prevent the next Enhancement played by opponent.
   Reason:  Unmatched clause: 'If used by an Assyrian, prevent the next Enhancement played by opponent'
 
-[1881886731] (bottom) 
+[1881886731] (bottom) The Rainbow
   Ability: Negate and discard an evil card. Cannot be negated if a Hero is in Noah's Ark.
   Reason:  Unmatched clause: 'Cannot be negated if a Hero is in Noah's Ark'
 
@@ -14065,11 +14373,11 @@
   Ability: STAR: Topdeck a thief from Reserve. / EE: If used by a thief, you may play an Enhancement from a Reserve (or from opponent's hand) regardless of brigade.
   Reason:  Unmatched clause: '/ EE: If used by a thief, you may play an Enhancement from a Reserve (or from opponent's hand)  of brigade'
 
-[2047073001] (bottom) 
+[2047073001] (bottom) Third Bowl of Wrath (RoJ AB)
   Ability: Discard a Hero (or 2 martyrs).
   Reason:  Unmatched clause: 'Discard a Hero (or 2 martyrs)'
 
-[-1668352246] (bottom) 
+[-1668352246] (bottom) Third Bowl of Wrath (RoJ)
   Ability: Discard a Hero (or 2 martyrs).
   Reason:  Unmatched clause: 'Discard a Hero (or 2 martyrs)'
 
@@ -14077,11 +14385,11 @@
   Ability: Holder may look at defender's hand, pick one evil card, and shuffle it back into defender's draw pile.
   Reason:  Unmatched clause: 'Holder may look at defender's hand, pick one evil card, and shuffle it back into defender's draw pile'
 
-[-1967514634] (top) 
+[-1967514634] (top) Third Seal (Famine) (RoJ AB)
   Ability: Opponent must topdeck and/or underdeck 3 evil cards from hand.
   Reason:  Unmatched clause: 'Opponent must topdeck and/or underdeck 3 evil cards from hand'
 
-[-1967514634] (bottom) 
+[-1967514634] (bottom) Third Seal (Famine) (RoJ AB)
   Ability: Discard the top card of all opponents' deck. Decrease a Hero X/X.
   Reason:  Unmatched clause: 'Decrease a Hero X/X'
 
@@ -14117,6 +14425,14 @@
   Ability: Place this card on a Hero.  It cannot be removed by a Healing card.  Each time holder's demon blocks that Hero, holder discards a card at random from opponent's hand.
   Reason:  Unmatched clause: 'Place this card on a Hero'
 
+[278140191] (shared) Thorns and Thistles (CoW AB)
+  Ability: Deactivate all but one Artifact in each territory (except Thorns and Thistles). Negate characters in territories. Restrict players to one active Artifact.
+  Reason:  Unmatched clause: 'Deactivate all but one Artifact in each territory (except Thorns and Thistles)'
+
+[1514466594] (shared) Thorns and Thistles (CoW)
+  Ability: Deactivate all but one Artifact in each territory (except Thorns and Thistles). Negate characters in territories. Restrict players to one active Artifact.
+  Reason:  Unmatched clause: 'Deactivate all but one Artifact in each territory (except Thorns and Thistles)'
+
 [1188203967] (top) Threatened Lives
   Ability: Place a site and its contents beneath owner's draw pile.  Opponent may withdraw a Hero from battle to negate this.
   Reason:  Unmatched clause: 'Place a site and its contents beneath owner's draw pile'
@@ -14132,6 +14448,18 @@
 [74450194] (top) Three Nails (GoC)
   Ability: If opponent has board advantage, you may banish this card. If you do, shuffle all cards in play, set-aside areas and hands and each player must draw 8. Regardless of protect abilities. Cannot be negated.
   Reason:  Unmatched clause: 'If opponent has board advantage, you may banish this card'
+
+[961662311] (shared) Three Woes (RoJ AB)
+  Ability: Place in territory: Negate a card of a different alignment than this card for one round. Each upkeep, you may negate a card of a different alignment than this card for one round.
+  Reason:  Unmatched clause: 'Place in territory: Negate a card of a different alignment than this card for one round'
+
+[1038819888] (shared) Three Woes (RoJ)
+  Ability: Place in territory: Negate a card of a different alignment than this card for one round. Each upkeep, you may negate a card of a different alignment than this card for one round.
+  Reason:  Unmatched clause: 'Place in territory: Negate a card of a different alignment than this card for one round'
+
+[1642381556] (shared) Three Woes [Fundraiser]
+  Ability: Place in territory: Negate a card of a different alignment than this card for one round. Each upkeep, you may negate a card of a different alignment than this card for one round.
+  Reason:  Unmatched clause: 'Place in territory: Negate a card of a different alignment than this card for one round'
 
 [-2125626348] (top) Threshing Floor (LoC)
   Ability: Protect meek and Ruth Heroes in territory from harm. If your lone meek or Ruth Hero attacks, you may look at the top X cards of deck: Take up to 1. Topdeck or underdeck the rest.
@@ -14192,6 +14520,14 @@
 [36733885] (top) To Each His Own
   Ability: Each player may search his discard pile for an evil Enhancement.
   Reason:  Unmatched clause: 'Each player may search his discard pile for an evil Enhancement'
+
+[1340323454] (shared) Today
+  Ability: You may convert an Evil Character in battle or discard an evil card in a set aside area. Shuffle all Heroes that are set aside.
+  Reason:  Unmatched clause: 'You may convert an Evil Character in battle or discard an evil card in a set aside area'
+
+[1276443836] (shared) Today (CoW AB)
+  Ability: You may convert an Evil Character in battle or discard an evil card in a set aside area. Shuffle all Heroes that are set aside.
+  Reason:  Unmatched clause: 'You may convert an Evil Character in battle or discard an evil card in a set aside area'
 
 [1800017184] (top) Tola
   Ability: Holder may draw a card.
@@ -14373,6 +14709,10 @@
   Ability: If used by a Prophet, interrupt the battle and select one card of each evil brigade in play. Shuffle them into owner's deck.
   Reason:  Unmatched clause: 'Shuffle them into owner's deck'
 
+[-1853270681] (shared) Two by Two
+  Ability: You may take a Genesis Fortress or an animal (or 2 animals if you control Noah's Ark) from deck (or Reserve if used by a flood survivor).
+  Reason:  Unmatched clause: 'You may take a Genesis Fortress or an animal (or 2 animals if you control Noah's Ark) from deck (or Reserve if used by a flood survivor)'
+
 [-1724391776] (top) Two Olive Branches
   Ability: A second Hero from the Gold Brigade may be added to the battle for one turn.
   Reason:  Unmatched clause: 'A second Hero from the Gold Brigade may be added to the battle for one turn'
@@ -14441,6 +14781,10 @@
   Ability: Interrupt the battle. Hero may band to up to 3 O.T. human Heroes. Cannot be negated if used by David.
   Reason:  Unmatched clause: 'Hero may band to up to 3 O.T. human Heroes'
 
+[1920186199] (shared) Unified Language
+  Ability: If used by a human, character may band to a human in each territory.
+  Reason:  Unmatched clause: 'character may band to a human in each territory'
+
 [-892924333] (top) United Army
   Ability: All O.T. warrior class Heroes must join the battle.
   Reason:  Unmatched clause: 'All O.T. warrior class Heroes must join the battle'
@@ -14453,11 +14797,15 @@
   Ability: Band any number of clay Heroes into battle. Cannot be interrupted if Paul is in play.
   Reason:  Unmatched clause: 'Band any number of clay Heroes into battle'
 
-[1180642685] (top) 
+[107920505] (shared) Unknown Nation
+  Ability: If opponent's Hero is in battle, you may discard this card to search draw pile for a human Evil Character and add it to battle.  Cannot be interrupted.
+  Reason:  Unmatched clause: 'If opponent's Hero is in battle, you may discard this card to search draw pile for a human Evil Character and add it to battle'
+
+[1180642685] (top) Unknown Nation (PoC)
   Ability: While opponent is rescuing, you may discard this card to add an evil human from deck or Reserve to battle.
   Reason:  Unmatched clause: 'While opponent is rescuing, you may discard this card to add an evil human from deck or Reserve to battle'
 
-[1180642685] (bottom) 
+[1180642685] (bottom) Unknown Nation (PoC)
   Ability: Take a human to territory. Convert it.
   Reason:  Unmatched clause: 'Convert it'
 
@@ -14469,11 +14817,15 @@
   Ability: If more than one Hero is in battle, you may draw 1 and bounce a Hero. Otherwise, opponent must underdeck 2 cards from hand.
   Reason:  Unmatched clause: 'If more than one Hero is in battle, you may draw 1 and bounce a Hero'
 
-[1714851448] (top) 
+[-272516890] (shared) Unsuccessful
+  Ability: Negate the last good Enhancement played in battle (may be used once).
+  Reason:  Unmatched clause: 'Negate the last good Enhancement played in battle (may be used once)'
+
+[1714851448] (top) Unsuccessful (PoC)
   Ability: At any time, you may discard this card to negate an Enhancement (or the last Enhancement played) and discard it.
   Reason:  Unmatched clause: 'At any time, you may discard this card to negate an Enhancement (or the last Enhancement played) and discard it'
 
-[1714851448] (bottom) 
+[1714851448] (bottom) Unsuccessful (PoC)
   Ability: End the battle as a stalemate.
   Reason:  Unmatched clause: 'End the battle as a stalemate'
 
@@ -14649,6 +15001,18 @@
   Ability: Reveal the bottom card of deck. If it is a demon, put it in your territory. May band to a generic demon. If your demon is discarded, place it beneath deck instead. Cannot be negated.
   Reason:  Unmatched clause: 'Reveal the bottom card of deck'
 
+[-1326534368] (shared) War in Heaven (RoJ AB)
+  Ability: Negate and discard an opposing card in battle (except a human).
+  Reason:  Unmatched clause: 'Negate and discard an opposing card in battle (except a human)'
+
+[-2093869999] (shared) War in Heaven (RoJ)
+  Ability: Negate and discard an opposing card in battle (except a human).
+  Reason:  Unmatched clause: 'Negate and discard an opposing card in battle (except a human)'
+
+[-2010961368] (shared) War in Heaven [2023 - Worker]
+  Ability: Negate and discard an opposing card in battle (except a human).
+  Reason:  Unmatched clause: 'Negate and discard an opposing card in battle (except a human)'
+
 [1792464575] (top) War in the Heavens
   Ability: This card is worth 2/10 if used by a demon.
   Reason:  Unmatched clause: 'This card is worth 2/10 if used by a demon'
@@ -14656,6 +15020,14 @@
 [744433021] (top) War Officer
   Ability: Hero has access to any Site.  If defeated place in opponent's Land of Bondage.  Hero is treated as a Lost Soul.
   Reason:  Unmatched clause: 'Hero has access to any Site'
+
+[2057201180] (shared) Warning Against Rebellion
+  Ability: Reveal the top 5 cards of opponent's deck: Put Lost Souls in play and underdeck the rest. If blocking, you may topdeck a Lost Soul.
+  Reason:  Unmatched clause: 'If blocking, you may topdeck a Lost Soul'
+
+[-792156637] (shared) Warning Against Rebellion (CoW AB)
+  Ability: Reveal the top 5 cards of opponent's deck: Put Lost Souls in play and underdeck the rest. If blocking, you may topdeck a Lost Soul.
+  Reason:  Unmatched clause: 'If blocking, you may topdeck a Lost Soul'
 
 [-437508114] (top) Warrior in Training
   Ability: This Hero decreases 1/1 each time he enters battle.  The turn after reaching 1/1 he increases to 10/10 until discarded.
@@ -14681,15 +15053,23 @@
   Ability: Discard an Evil Character card from your hand to return up to two N.T. Lost Souls to the top of deck. If no weapon is in battle, withdraw your Roman Evil Character Characters.
   Reason:  Unmatched clause: 'Discard an Evil Character card from your hand to return up to two N.T. Lost Souls to the top of deck'
 
-[-1835850125] (top) 
+[802111712] (shared) Wastelands
+  Ability: Selected opponent must place a Site from his territory beneath deck. May be used twice per game.
+  Reason:  Unmatched clause: 'Selected opponent must place a Site from his territory beneath deck'
+
+[-1835850125] (top) Wastelands (Roots)
   Ability: Underdeck this card to underdeck a territory class card or neutral card.
   Reason:  Unmatched clause: 'Underdeck this card to underdeck a territory class card or neutral card'
 
-[2008212998] (top) 
+[-140086689] (shared) Wasting Disease
+  Ability: Prevent all good abilities that allow a player to play an Enhancement.
+  Reason:  Unmatched clause: 'Prevent all good abilities that allow a player to play an Enhancement'
+
+[2008212998] (top) Wasting Disease (PoC)
   Ability: If an opponent uses a search ability, you may shuffle a card in their territory.
   Reason:  Unmatched clause: 'If an opponent uses a search ability, you may shuffle a card in their territory'
 
-[2008212998] (bottom) 
+[2008212998] (bottom) Wasting Disease (PoC)
   Ability: If opponent has used a draw ability this turn, end the battle.
   Reason:  Unmatched clause: 'If opponent has used a draw ability this turn, end the battle'
 
@@ -14917,7 +15297,7 @@
   Ability: Selected human Evil Character in battle may return to territory.  If the Evil Character does not withdraw, discard it after battle regardless of battle outcome or immunity.
   Reason:  Unmatched clause: 'Selected human Evil Character in battle may return to territory'
 
-[559506153] (top) 
+[559506153] (top) Withered Plant (The Worm)
   Ability: Set aside a human for 2 turns. If it is a green prophet, you may return this card to hand after battle.
   Reason:  Unmatched clause: 'Set aside a human for 2 turns'
 
@@ -15025,7 +15405,7 @@
   Ability: Return up to seven of your generic demons in Tartaros, set-aside area, or Land of Bondage to territory or, seach discard pile for a generic demon.
   Reason:  Unmatched clause: 'Return up to seven of your generic demons in Tartaros, set-aside area, or Land of Bondage to territory or, seach discard pile for a generic demon'
 
-[-353504294] (top) 
+[-353504294] (top) Worship of Edom (LoC)
   Ability: During battle, you may discard this card to add your evil Edomite to battle.
   Reason:  Unmatched clause: 'During battle, you may discard this card to add your evil Edomite to battle'
 
@@ -15077,6 +15457,14 @@
   Ability: Negate an evil card. Opponent must topdeck an evil card from hand.
   Reason:  Unmatched clause: 'Opponent must topdeck an evil card from hand'
 
+[-583006450] (shared) You Will Remain
+  Ability: If opponent uses an evil 'end the battle' ability this turn, you may begin a new battle. If an opponent removes your last Hero from battle, you may remove this from the game to add your Hero to battle.
+  Reason:  Unmatched clause: 'If opponent uses an evil 'end the battle' ability this turn, you may begin a new battle'
+
+[926811108] (shared) You Will Remain (CoW AB)
+  Ability: If opponent uses an evil "end the battle" ability this turn, you may begin a new battle. If an opponent removes your last Hero from battle, you may remove this from the game to add your Hero to battle.
+  Reason:  Unmatched clause: 'If opponent uses an evil "end the battle" ability this turn, you may begin a new battle'
+
 [-1866764787] (top) Your God Will Be My God (LoC)
   Ability: Negate an evil or neutral card. If used by a Ruth Hero, discard that card unless it is human. Cannot be negated if used by a meek Hero.
   Reason:  Unmatched clause: 'If used by a Ruth Hero, discard that card unless it is human'
@@ -15112,10 +15500,6 @@
 [-2133728958] (top) Zadok, Ark Carrier
   Ability: You may reserve an O.T. card from hand to negate Enhancements. You may draw 2.
   Reason:  Unmatched clause: 'You may reserve an O.T. card from hand to negate Enhancements'
-
-[-880861204] (top) Zadok, the Consummate (LoC)
-  Ability: Negate black humans. You may banish up to X evil cards from a discard pile. May band to a meek gold Hero.
-  Reason:  Unmatched clause: 'You may banish up to X evil cards from a discard pile'
 
 [515324786] (top) Zalmon
   Ability: Search opponent's discard pile for a Lost Soul and place it into his territory to discard an evil weapon.
@@ -15185,17 +15569,9 @@
   Ability: STAR: Play a good Temple from deck.
   Reason:  Unmatched clause: 'Play a good Temple from deck'
 
-[-1123206957] (top) Zerubbabel, the Chosen (LoC Plus)
-  Ability: You may convert this card to meek to draw 2. May band to a postexilic Hero, or you may play a postexilic Hero from deck.
-  Reason:  Unmatched clause: 'You may convert this card to meek to draw 2'
-
 [-888694675] (shared) Zerubbabel, the Chosen (LoC)
   Ability: STAR: Play a good Temple from deck.
   Reason:  Unmatched clause: 'Play a good Temple from deck'
-
-[-888694675] (top) Zerubbabel, the Chosen (LoC)
-  Ability: You may convert this card to meek to draw 2. May band to a postexilic Hero, or you may play a postexilic Hero from deck.
-  Reason:  Unmatched clause: 'You may convert this card to meek to draw 2'
 
 [-2131581443] (top) Zerubbabel's Plumb Line (LoC)
   Ability: STAR: Reveal hand: If there is no Hero, take one from deck. GE: Topdeck a good card from Reserve (or deck if used by a meek Hero). You may banish up to X evil cards in battle.
@@ -15273,39 +15649,39 @@
   Ability: You may take an O.T. purple weapon from Reserve. If your equipped O.T. human attacks, you may draw 1.
   Reason:  Unmatched clause: 'You may take an O.T. purple weapon from Reserve'
 
-[785672833] (top) 
+[785672833] (top) Joshua's Covenant
   Ability: You may exchange a card from hand with a Joshua card from deck.
   Reason:  Unmatched clause: 'You may exchange a card from hand with a Joshua card from deck'
 
-[785672833] (bottom) 
+[785672833] (bottom) Joshua's Covenant
   Ability: You may add a good Joshua card from Reserve to battle.
   Reason:  Unmatched clause: 'You may add a good Joshua card from Reserve to battle'
 
-[-43822005] (top) 
+[-43822005] (top) Vow for Samuel
   Ability: If an O.T. green prophet is harmed, you may reserve this card instead.
   Reason:  Unmatched clause: 'If an O.T. green prophet is harmed, you may reserve this card instead'
 
-[-43822005] (bottom) 
+[-43822005] (bottom) Vow for Samuel
   Ability: Reserve an evil card.
   Reason:  Unmatched clause: 'Reserve an evil card'
 
-[-1273216417] (top) 
+[-1273216417] (top) I Am Refuge
   Ability: Reserve this card to take a card with "David" in the title from deck.
   Reason:  Unmatched clause: 'Reserve this card to take a card with "David" in the title from deck'
 
-[-1273216417] (bottom) 
+[-1273216417] (bottom) I Am Refuge
   Ability: Protect O.T. Heroes from the next evil Enhancement played in battle.
   Reason:  Unmatched clause: 'Protect O.T. Heroes from the next evil Enhancement played in battle'
 
-[143260671] (top) 
+[143260671] (top) Fear has Fallen
   Ability: While opponent controls an evil Canaanite, negate Heroes they control.
   Reason:  Unmatched clause: 'While opponent controls an evil Canaanite, negate Heroes they control'
 
-[329531814] (top) 
+[329531814] (top) Israel Turned Away
   Ability: While your Edomite is blocking, you may banish this card to withdraw all Heroes.
   Reason:  Unmatched clause: 'While your Edomite is blocking, you may banish this card to withdraw all Heroes'
 
-[-1919293512] (bottom) 
+[-1919293512] (bottom) Summoned Curse
   Ability: Underdeck all Heroes in battle.
   Reason:  Unmatched clause: 'Underdeck all Heroes in battle'
 
@@ -15349,11 +15725,23 @@
   Ability: If a card is discarded, you may banish it instead. If rescued, you may banish a Reserve.
   Reason:  Unmatched clause: 'If rescued, you may banish a Reserve'
 
-[56894755] (bottom) 
+[-1093610407] (shared) Joab, the General
+  Ability: You may draw 1 or discard an Enhancement of opposite alignment from a deck. While equipped, prevent the next Enhancement of opposite alignment played in battle.
+  Reason:  Unmatched clause: 'You may draw 1 or discard an Enhancement of opposite alignment from a deck'
+
+[1543657928] (shared) Snatched Spear
+  Ability: If used by a lone O.T. warrior, you may choose a human of opposite alignment to oppose bearer.
+  Reason:  Unmatched clause: 'you may choose a human of opposite alignment to oppose bearer'
+
+[56894755] (bottom) Woe to Chemosh
   Ability: You may take an idol or an O.T. gray card from Reserve.
   Reason:  Unmatched clause: 'You may take an idol or an O.T. gray card from Reserve'
 
-[264576149] (bottom) 
+[-1789821770] (shared) Joab's Spears
+  Ability: Select up to 1 (or 2 if used by Joab): Negate a card. Discard this card to discard an opponent's warrior.
+  Reason:  Unmatched clause: 'Select up to 1 (or 2 if used by Joab): Negate a card'
+
+[264576149] (bottom) Inherit Canaan
   Ability: You may give an evil Canaanite to opponent's territory: Paralyze a Hero.
   Reason:  Unmatched clause: 'You may give an evil Canaanite to opponent's territory: Paralyze a Hero'
 
@@ -15825,47 +16213,47 @@
   Ability: You may take an evil Babylonian from deck. If opponent plays a good card with "negated" in the special ability, you may capture a human Hero.
   Reason:  Unmatched clause: 'If opponent plays a good card with "negated" in the special ability, you may capture a human Hero'
 
-[2126335495] (top) 
+[2126335495] (top) Covenant of Time
   Ability: During battle, you may bounce an O.T. green Enhancement. Limit once.
   Reason:  Unmatched clause: 'During battle, you may bounce an O.T. green Enhancement'
 
-[2126335495] (bottom) 
+[2126335495] (bottom) Covenant of Time
   Ability: Take a good card from Reserve. Convert this card to an Artifact.
   Reason:  Unmatched clause: 'Convert this card to an Artifact'
 
-[736979300] (top) 
+[736979300] (top) God's Judgment
   Ability: You may shuffle your evil card to play an Isaiah Hero from deck.
   Reason:  Unmatched clause: 'You may shuffle your evil card to play an Isaiah Hero from deck'
 
-[736979300] (bottom) 
+[736979300] (bottom) God's Judgment
   Ability: Banish an evil card.
   Reason:  Unmatched clause: 'Banish an evil card'
 
-[1699308788] (top) 
+[1699308788] (top) Seventy Weeks
   Ability: While 3 or more Daniel Heroes are in battle, prevent Evil Characters.
   Reason:  Unmatched clause: 'While 3 or more Daniel Heroes are in battle, prevent Evil Characters'
 
-[1699308788] (bottom) 
+[1699308788] (bottom) Seventy Weeks
   Ability: Underdeck an evil card. If used by a Daniel Hero, repeat up to 3 times.
   Reason:  Unmatched clause: 'Underdeck an evil card'
 
-[-382119014] (top) 
+[-382119014] (top) Return to Curse
   Ability: You may exchange this card with an O.T. idol from deck.
   Reason:  Unmatched clause: 'You may exchange this card with an O.T. idol from deck'
 
-[1139814719] (top) 
+[1139814719] (top) Leave Your Name
   Ability: O.T. brown humans cannot be prevented.
   Reason:  Unmatched clause: 'O.T. brown humans'
 
-[1139814719] (bottom) 
+[1139814719] (bottom) Leave Your Name
   Ability: Reserve a card.
   Reason:  Unmatched clause: 'Reserve a card'
 
-[-1765175762] (top) 
+[-1765175762] (top) Self-Made
   Ability: You may reserve a captured character to draw 2.
   Reason:  Unmatched clause: 'You may reserve a captured character to draw 2'
 
-[-1765175762] (bottom) 
+[-1765175762] (bottom) Self-Made
   Ability: Negate a card. You may capture your character to topdeck this card.
   Reason:  Unmatched clause: 'You may capture your character to topdeck this card'
 
@@ -15900,6 +16288,18 @@
 [-1326366389] (top) Lost Soul "Contempt" [Daniel 12:2]
   Ability: If put in play, you may underdeck a different Daniel Lost Soul. If an opponent rescues a Lost Soul, you may underdeck a Daniel Lost Soul.
   Reason:  Unmatched clause: 'If put in play, you may underdeck a different Daniel Lost Soul'
+
+[-2041878896] (shared) Perfidy
+  Ability: Reveal a hand: You may reserve an Enhancement. If 4 or more brigades are revealed, repeat 1 time.
+  Reason:  Unmatched clause: 'If 4 or more brigades are revealed, repeat 1 time'
+
+[-1326680392] (shared) Return to Fight
+  Ability: Interrupt the battle. Character may band to an O.T. character of matching brigade from deck or Reserve.
+  Reason:  Unmatched clause: 'Character may band to an O.T. character of matching brigade from deck or Reserve'
+
+[823924275] (shared) Measured Mien
+  Ability: Underdeck any number of cards from hand to draw X. You may play an O.T. Enhancement. Cannot be interrupted.
+  Reason:  Unmatched clause: 'Underdeck any number of cards from hand to draw X'
 
 [402956708] (top) Michael, the Guardian
   Ability: If your Daniel Hero is harmed, you may topdeck it instead. May band to a Daniel human and/or an O.T. angel. Cannot be negated.
@@ -16301,6 +16701,10 @@
   Ability: Each player must shuffle their hand, or 6 cards at random from hand. Each player who does must draw 6.
   Reason:  Unmatched clause: 'Each player must shuffle their hand, or 6 cards at random from hand'
 
+[-2029239357] (shared) War in Heaven [Fundraiser]
+  Ability: Negate and discard an opposing card in battle (except a human).
+  Reason:  Unmatched clause: 'Negate and discard an opposing card in battle (except a human)'
+
 [551780154] (top) Prince of the Air [Fundraiser]
   Ability: You may play an evil N.T. Fortress from deck or draw 2. You may underdeck up to X cards and/or Lost Souls. Cannot be prevented.
   Reason:  Unmatched clause: 'You may play an evil N.T. Fortress from deck or draw 2'
@@ -16344,6 +16748,10 @@
 [639414743] (top) The Second Coming [Fundraiser - Serialized]
   Ability: Search deck or discard pile for a good Dominant.
   Reason:  Unmatched clause: 'Search deck or discard pile for a good Dominant'
+
+[-69666009] (shared) Three Woes [Fundraiser - Serialized]
+  Ability: Place in territory: Negate a card of a different alignment than this card for one round. Each upkeep, you may negate a card of a different alignment than this card for one round.
+  Reason:  Unmatched clause: 'Place in territory: Negate a card of a different alignment than this card for one round'
 
 [-1228836160] (top) Roaring Lion [2025 - Seasonal]
   Ability: Protect this card from N.T. Heroes. If opponent has board advantage, discard a Hero. Cannot be prevented.
@@ -16393,47 +16801,47 @@
   Ability: You may take an evil Babylonian from deck. If opponent plays a good card with "negated" in the special ability, you may capture a human Hero.
   Reason:  Unmatched clause: 'If opponent plays a good card with "negated" in the special ability, you may capture a human Hero'
 
-[2055845659] (top) 
+[2055845659] (top) Covenant of Time [T2C AB]
   Ability: During battle, you may bounce an O.T. green Enhancement. Limit once.
   Reason:  Unmatched clause: 'During battle, you may bounce an O.T. green Enhancement'
 
-[2055845659] (bottom) 
+[2055845659] (bottom) Covenant of Time [T2C AB]
   Ability: Take a good card from Reserve. Convert this card to an Artifact.
   Reason:  Unmatched clause: 'Convert this card to an Artifact'
 
-[-976570786] (top) 
+[-976570786] (top) God's Judgment [T2C AB]
   Ability: You may shuffle your evil card to play an Isaiah Hero from deck.
   Reason:  Unmatched clause: 'You may shuffle your evil card to play an Isaiah Hero from deck'
 
-[-976570786] (bottom) 
+[-976570786] (bottom) God's Judgment [T2C AB]
   Ability: Banish an evil card.
   Reason:  Unmatched clause: 'Banish an evil card'
 
-[-838912170] (top) 
+[-838912170] (top) Seventy Weeks [T2C AB]
   Ability: While 3 or more Daniel Heroes are in battle, prevent Evil Characters.
   Reason:  Unmatched clause: 'While 3 or more Daniel Heroes are in battle, prevent Evil Characters'
 
-[-838912170] (bottom) 
+[-838912170] (bottom) Seventy Weeks [T2C AB]
   Ability: Underdeck an evil card. If used by a Daniel Hero, repeat up to 3 times.
   Reason:  Unmatched clause: 'Underdeck an evil card'
 
-[774802544] (top) 
+[774802544] (top) Return to Curse [T2C AB]
   Ability: You may exchange this card with an O.T. idol from deck.
   Reason:  Unmatched clause: 'You may exchange this card with an O.T. idol from deck'
 
-[139033451] (top) 
+[139033451] (top) Leave Your Name [T2C AB]
   Ability: O.T. brown humans cannot be prevented.
   Reason:  Unmatched clause: 'O.T. brown humans'
 
-[139033451] (bottom) 
+[139033451] (bottom) Leave Your Name [T2C AB]
   Ability: Reserve a card.
   Reason:  Unmatched clause: 'Reserve a card'
 
-[-311077284] (top) 
+[-311077284] (top) Self-Made [T2C AB]
   Ability: You may reserve a captured character to draw 2.
   Reason:  Unmatched clause: 'You may reserve a captured character to draw 2'
 
-[-311077284] (bottom) 
+[-311077284] (bottom) Self-Made [T2C AB]
   Ability: Negate a card. You may capture your character to topdeck this card.
   Reason:  Unmatched clause: 'You may capture your character to topdeck this card'
 
@@ -16468,6 +16876,18 @@
 [1974113879] (top) Lost Soul "Contempt" [Daniel 12:2] [T2C AB]
   Ability: If put in play, you may underdeck a different Daniel Lost Soul. If an opponent rescues a Lost Soul, you may underdeck a Daniel Lost Soul.
   Reason:  Unmatched clause: 'If put in play, you may underdeck a different Daniel Lost Soul'
+
+[1290473530] (shared) Perfidy [T2C AB]
+  Ability: Reveal a hand: You may reserve an Enhancement. If 4 or more brigades are revealed, repeat 1 time.
+  Reason:  Unmatched clause: 'If 4 or more brigades are revealed, repeat 1 time'
+
+[-1266701550] (shared) Return to Fight [T2C AB]
+  Ability: Interrupt the battle. Character may band to an O.T. character of matching brigade from deck or Reserve.
+  Reason:  Unmatched clause: 'Character may band to an O.T. character of matching brigade from deck or Reserve'
+
+[-458015241] (shared) Measured Mien [T2C AB]
+  Ability: Underdeck any number of cards from hand to draw X. You may play an O.T. Enhancement. Cannot be interrupted.
+  Reason:  Unmatched clause: 'Underdeck any number of cards from hand to draw X'
 
 [982188710] (top) Michael, the Guardian [T2C AB]
   Ability: If your Daniel Hero is harmed, you may topdeck it instead. May band to a Daniel human and/or an O.T. angel. Cannot be negated.

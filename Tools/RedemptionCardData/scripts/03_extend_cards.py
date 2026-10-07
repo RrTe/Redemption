@@ -307,7 +307,7 @@ def _extract_shared_fields(sides: dict) -> dict:
         return sides  # Only one side — no deduplication needed.
 
     all_keys = set().union(*[set(s.keys()) for s in real_sides.values()])
-    shared = {}
+    shared = dict(sides.get("shared", {}))
     for field in all_keys:
         values = [s.get(field) for s in real_sides.values()]
         # Move field to shared only if ALL sides have the same non-empty value.

@@ -12,6 +12,7 @@ is_dual_sided = extend_cards_mod.is_dual_sided
 parse_brigades = extend_cards_mod.parse_brigades
 parse_flip_int = extend_cards_mod.parse_flip_int
 build_card_sides = extend_cards_mod.build_card_sides
+_extract_shared_fields = extend_cards_mod._extract_shared_fields
 
 
 class TestDualCardSides(unittest.TestCase):
@@ -164,7 +165,41 @@ class TestDualCardSides(unittest.TestCase):
         self.assertEqual(sides["top"]["Name"], "Mary, Mother of James (GoC)")
         self.assertEqual(sides["bottom"]["Name"], "Mary, the Caregiver (GoC)")
 
+    def test_extract_shared_fields_preserves_existing_shared(self) -> None:
+        """Verifies that subsequent passes of _extract_shared_fields preserve existing shared fields.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        initial_sides = {
+            "shared": {
+                "Name": "Crowd's Choice (GoC)",
+                "Type": "Dominant",
+                "SpecialAbility": "LAMB: take good card. REAPER: take evil card."
+            },
+            "top": {
+                "Alignment": "Good",
+                "ORDIR": ["Gospel Card"]
+            },
+            "bottom": {
+                "Alignment": "Evil",
+                "ORDIR": ["Gospel Card"]
+            }
+        }
+        res = _extract_shared_fields(initial_sides)
+        self.assertIn("shared", res)
+        self.assertEqual(res["shared"]["Name"], "Crowd's Choice (GoC)")
+        self.assertEqual(res["shared"]["Type"], "Dominant")
+        self.assertEqual(res["shared"]["SpecialAbility"], "LAMB: take good card. REAPER: take evil card.")
+        self.assertEqual(res["shared"]["ORDIR"], ["Gospel Card"])
+        self.assertEqual(res["top"]["Alignment"], "Good")
+        self.assertEqual(res["bottom"]["Alignment"], "Evil")
+
 
 if __name__ == "__main__":
     unittest.main()
+
 

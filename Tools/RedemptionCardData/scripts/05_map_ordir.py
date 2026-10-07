@@ -380,6 +380,21 @@ def map_ordir_to_cards():
         c["CardSides"] = _extract_shared_fields(sides)
         c["IsStarCard"] = check_is_star_card(c)
 
+    # Post-mapping integrity validation: verify that no card lost its core attributes
+    for c in cards_data:
+        cid = c.get("Id", "UNKNOWN")
+        sides = c.get("CardSides", {})
+        shared = sides.get("shared", {})
+        for sk in ["top", "bottom"]:
+            if sk in sides and isinstance(sides[sk], dict):
+                side_obj = sides[sk]
+                side_name = side_obj.get("Name") or shared.get("Name")
+                side_type = side_obj.get("Type") or shared.get("Type")
+                if not side_name:
+                    raise RuntimeError(f"INTEGRITY ERROR: Card [{cid}] side '{sk}' is missing Name!")
+                if not side_type:
+                    raise RuntimeError(f"INTEGRITY ERROR: Card [{cid}] side '{sk}' is missing Type!")
+
     print(f"\nSuccessfully mapped {mapped_count} out of {total_refs} unique ORDIR entities.")
     print(f"Writing updated card data to {OUT_FILE}...")
 
