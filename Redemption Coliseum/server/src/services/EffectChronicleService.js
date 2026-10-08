@@ -60,33 +60,42 @@ class EffectChronicleService {
    * @param {import('../rooms/GameRoom').GameRoom} room
    * @param {import('colyseus').Client} client
    * @param {string} [itemId]
+   * @param {object} [options]
+   * @returns {object | null}
    */
-  static executeItem(room, client, itemId) {
+  static executeItem(room, client, itemId, options = {}) {
     const chronicle = room.state.effectChronicle;
-    if (!chronicle || chronicle.items.length === 0) return;
+    if (!chronicle || chronicle.items.length === 0) return null;
 
     if (client.sessionId !== chronicle.priorityPlayerId) {
       logger.warn(`[EffectChronicleService] Client '${client.sessionId}' attempted execute without priority.`);
-      return;
+      return null;
     }
 
     const index = itemId ? chronicle.items.findIndex(i => i.id === itemId) : 0;
-    if (index === -1) return;
+    if (index === -1) return null;
 
     const item = chronicle.items[index];
     const player = room.state.players.get(client.sessionId);
     const playerName = player ? player.name : "Player";
     const abilityText = item.description ? `: "${item.description}"` : "";
 
-    this._log(
-      room,
-      `${playerName} executes ${item.title}${abilityText}.`
-    );
+    // ✨ AST Special Abilities Engine Execution Hook
+    let astResult = null;
+    if (room.abilityResolver && typeof room.abilityResolver.resolve === "function") {
+      astResult = room.abilityResolver.resolve(item, options);
+    }
 
-    // ✨ Prepared Hook for future AST Engine integration
-    // if (room.abilityResolver && typeof room.abilityResolver.resolve === "function") {
-    //   await room.abilityResolver.resolve(item);
-    // }
+    if (astResult && astResult.handled) {
+      if (astResult.logEntries && astResult.logEntries.length > 0) {
+        astResult.logEntries.forEach(msg => this._log(room, msg));
+      } else {
+        this._log(room, `${playerName} executes ${item.title}${abilityText}.`);
+      }
+    } else {
+      // Graceful Fallback: transparent chronicle log
+      this._log(room, `${playerName} executes ${item.title}${abilityText}.`);
+    }
 
     chronicle.items.splice(index, 1);
     this._reindexOrders(chronicle);
@@ -94,6 +103,8 @@ class EffectChronicleService {
     if (chronicle.items.length === 0) {
       this.finishChronicle(room);
     }
+
+    return { item, astResult, index };
   }
 
   /**

@@ -7,6 +7,10 @@ export interface CardRepositoryCard {
   [key: string]: any;
 }
 
+export declare const LEGACY_DUALS: Record<string, [string, string]>;
+export declare function splitFlipName(name: string): [string, string] | null;
+export declare function isDualSided(cardOrName: any): boolean;
+
 export declare class CardRepository {
   public static isInitialized: boolean;
   public static initialize(cardList: any[]): void;

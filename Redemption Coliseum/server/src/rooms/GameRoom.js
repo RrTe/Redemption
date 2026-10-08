@@ -29,6 +29,7 @@ const RoomLifecycleService = require("../services/RoomLifecycleService"); // ✨
 const GameLogService = require("../services/GameLogService"); // ✨ NEU
 const CommandService = require("../services/CommandService"); // ✨ FIX: Fehlender Import
 const { UndoManager } = require("../managers/UndoManager");
+const { AbilityResolver } = require("../ast/AbilityResolver");
 
 class GameRoom extends colyseus.Room {
   // ✨ SCHRITT 1.3: Importiere den neuen Service für die zukünftige Verwendung.
@@ -98,6 +99,7 @@ class GameRoom extends colyseus.Room {
     // ✨ Dispatcher & UndoManager initialisieren und Commands registrieren
     this.undoManager = new UndoManager(this);
     this.dispatcher = new CommandDispatcher(this);
+    this.abilityResolver = new AbilityResolver(this);
     CommandService.registerCommands(this);
 
     // ✨ FIX: Register empty ping handler to prevent "not registered" errors

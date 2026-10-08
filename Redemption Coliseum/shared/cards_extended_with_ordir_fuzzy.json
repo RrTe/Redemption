@@ -1348,6 +1348,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Abandoned (1st Print - K)",
+          "SpecialAbility": "Negate a card.",
           "ORDIR": [
             "David in the Title or Scripture Verse",
             "I Samuel Card"
@@ -1399,6 +1401,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Abandoned [K]",
+          "SpecialAbility": "Negate a card.",
           "ORDIR": [
             "David in the Title or Scripture Verse",
             "I Samuel Card"
@@ -2727,7 +2731,6 @@
           ],
           "Strength": 3,
           "Toughness": 2,
-          "SpecialAbility": "You may banish an evil card from a discard pile to discard an evil card from a Reserve. May band to a meek gold Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -2743,7 +2746,6 @@
           ],
           "Strength": 10,
           "Toughness": 10,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -4023,6 +4025,12 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
+          "Brigades": [
+            "Blue"
+          ],
+          "SpecialAbility": "Hero starts as Abram.  After he makes a successful rescue, he becomes Abraham and can interrupt and prevent all special abilities on all Lost Soul cards except the Proverbs 22:14 Lost Souls card.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis 12-24 Hero",
@@ -4640,7 +4648,6 @@
           ],
           "Strength": 4,
           "Toughness": 5,
-          "SpecialAbility": "While you control a meek Hero, negate opponents' neutral cards. If attacking, you may draw X (limit 3).",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -4656,7 +4663,6 @@
           ],
           "Strength": 8,
           "Toughness": 7,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -4692,6 +4698,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Acts of Manasseh (LoC)",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "Place in territory: You may discard this card to negate and discard an Enhancement or the last Enhancement played. Cannot be negated if used by a dual icon character.",
           "ORDIR": [
             "II Chronicles Card"
           ]
@@ -4876,7 +4887,6 @@
           ],
           "Strength": 10,
           "Toughness": 2,
-          "SpecialAbility": "You may take a * human from deck. May band to an antediluvian or a meek blue Hero. Cannot be interrupted.",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -4892,7 +4902,6 @@
           ],
           "Strength": 1,
           "Toughness": 3,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Antediluvian",
             "Genesis Card"
@@ -5395,6 +5404,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Affliction of Job (RoJ AB)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 1,
+          "Toughness": 4,
+          "SpecialAbility": "Search deck or discard pile for Dust and Ashes. If used during battle, decrease an opposing character X/X.",
           "ORDIR": [
             "Job Card"
           ]
@@ -5439,6 +5455,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Affliction of Job (RoJ)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 1,
+          "Toughness": 4,
+          "SpecialAbility": "Search deck or discard pile for Dust and Ashes. If used during battle, decrease an opposing character X/X.",
           "ORDIR": [
             "Job Card"
           ]
@@ -6994,6 +7017,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "All the Curses (LoC)",
+          "Strength": 2,
+          "Toughness": 4,
+          "Brigades": [
+            "Brown"
+          ],
           "ORDIR": [
             "II Chronicles Card"
           ]
@@ -7951,7 +7980,6 @@
           ],
           "Strength": 8,
           "Toughness": 11,
-          "SpecialAbility": "If a meek Hero is in play, you may play a Lost Soul from a deck or bounce an evil card. Cannot be prevented.",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card",
@@ -7967,7 +7995,6 @@
           ],
           "Strength": 3,
           "Toughness": 4,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card",
@@ -8574,6 +8601,9 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
+          "SpecialAbility": "You may reveal a good Dominant from hand to negate characters (except disciples). You may convert this card to meek to negate Enhancements.",
           "ORDIR": [
             "Disciple",
             "Duplicate Card",
@@ -12036,6 +12066,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Anthropophobia",
+          "Strength": 3,
+          "Toughness": 2,
           "ORDIR": [
             "Genesis 6-10 Card",
             "Genesis Card"
@@ -13694,7 +13727,6 @@
           ],
           "Strength": 10,
           "Toughness": 8,
-          "SpecialAbility": "You may decrease an Evil Character X/X. Cannot be prevented.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis 6-10 Card",
@@ -13710,7 +13742,6 @@
           ],
           "Strength": 5,
           "Toughness": 5,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis 6-10 Card",
@@ -14037,7 +14068,6 @@
           "Name": "Asa, the Upright (LoC)",
           "Strength": 7,
           "Toughness": 5,
-          "SpecialAbility": "You may reserve an evil male with a band ability or an evil royal female. If you control a meek Hero, you may draw 2.",
           "ORDIR": [
             "Duplicate Card",
             "King",
@@ -14050,7 +14080,6 @@
           "Name": "Asa, the Blameless (LoC)",
           "Strength": 5,
           "Toughness": 4,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "King",
@@ -14850,6 +14879,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Assyrian Affliction (LoC)",
+          "Strength": 5,
+          "Toughness": 1,
+          "Brigades": [
+            "Pale Green"
+          ],
           "ORDIR": [
             "II Chronicles Card"
           ]
@@ -15059,6 +15094,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Assyrian Camp (LoC)",
+          "Classes": [
+            "Warrior"
+          ],
           "ORDIR": [
             "Assyrian",
             "Generic Character",
@@ -16070,6 +16109,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Avenged!",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": -4,
+          "Toughness": 2,
           "ORDIR": [
             "Judges Card"
           ]
@@ -16412,7 +16457,6 @@
           ],
           "Strength": 11,
           "Toughness": 4,
-          "SpecialAbility": "Negate pale green humans. You may banish 3 evil cards from discard pile to discard an idol, Site or evil Fortress.",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -16428,7 +16472,6 @@
           ],
           "Strength": 4,
           "Toughness": 12,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -17893,6 +17936,8 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Site",
+          "Alignment": "Neutral",
           "ORDIR": [
             "Egyptian Site",
             "Exodus Card"
@@ -18880,6 +18925,8 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
           "ORDIR": [
             "Disciple",
             "Duplicate Card",
@@ -19258,7 +19305,6 @@
           ],
           "Strength": 2,
           "Toughness": 6,
-          "SpecialAbility": "If your lone David or Solomon attacks, you may convert this card to meek to choose an evil human to block.",
           "ORDIR": [
             "Duplicate Card",
             "King or Queen of Judah",
@@ -19274,7 +19320,6 @@
           ],
           "Strength": 1,
           "Toughness": 2,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "King or Queen of Judah",
@@ -20843,6 +20888,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Behemoth (RoJ AB)",
+          "SpecialAbility": "Negate an opponent's card. Protect this character from capture. Cannot be prevented by a human Hero.",
           "ORDIR": [
             "Animal",
             "Generic Character",
@@ -20896,6 +20943,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Behemoth (RoJ)",
+          "Strength": 1,
+          "Toughness": 6,
+          "SpecialAbility": "Negate an opponent's card. Protect this character from capture. Cannot be prevented by a human Hero.",
           "ORDIR": [
             "Animal",
             "Generic Character",
@@ -21726,6 +21777,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Besieged",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Crimson"
+          ],
+          "SpecialAbility": "Banding abilities used by human Evil Characters cannot be negated by good cards or Artifacts.  If 3 or more human Evil Characters are in battle while this card is active, you may discard this card to discard an O.T.  Fortress in play.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -21764,6 +21822,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Besieged (PoC)",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Black"
+          ],
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -22372,6 +22436,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Birthing Pains",
+          "Brigades": [
+            "Gray"
+          ],
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis 3 Curse",
@@ -22458,6 +22526,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Blame Shifting",
+          "Strength": 1,
+          "Toughness": 3,
+          "SpecialAbility": "Interrupt and redirect an Enhancement played by an opponent.",
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis Card"
@@ -22973,6 +23045,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Blindness",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Orange"
+          ],
+          "SpecialAbility": "While an evil card is on a Hero, your demons are immune to that Hero.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -23011,6 +23090,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Blindness (PoC)",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Orange"
+          ],
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -23051,6 +23136,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Blood Avenger",
+          "SpecialAbility": "You may draw 2. If this character is discarded, you may discard a character of opposite alignment.",
           "ORDIR": [
             "Generic Character",
             "Numbers Card",
@@ -23579,7 +23666,6 @@
           ],
           "Strength": 9,
           "Toughness": 12,
-          "SpecialAbility": "May band to Ruth, or you may take a good Ruth card from deck (or Reserve if Ruth is in play). Cannot be negated.",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card",
@@ -23594,7 +23680,6 @@
           ],
           "Strength": 6,
           "Toughness": 5,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card"
@@ -26057,6 +26142,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Broken Covenant",
+          "Strength": 1,
+          "Toughness": 5,
+          "SpecialAbility": "On activation, you may discard an evil card from hand or a random card from deck. If you do, discard a Covenant or a good Enhancement, or draw X (limit 3).",
           "ORDIR": [
             "Hebrews Card",
             "Jeremiah Card"
@@ -26103,6 +26192,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Broken Covenant (CoW AB)",
+          "Strength": 1,
+          "Toughness": 5,
+          "SpecialAbility": "On activation, you may discard an evil card from hand or a random card from deck. If you do, discard a Covenant or a good Enhancement, or draw X (limit 3).",
           "ORDIR": [
             "Hebrews Card",
             "Jeremiah Card"
@@ -26190,6 +26283,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Brother's Conflict",
+          "Toughness": 1,
           "ORDIR": [
             "Judges Card"
           ]
@@ -26279,6 +26374,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Brothers Reunited  (LoC)",
+          "Strength": 0,
+          "Toughness": 3,
+          "SpecialAbility": "If opponent has played an Enhancement in battle, end the battle.",
           "ORDIR": [
             "Genesis 21-35 Enhancement",
             "Genesis Card"
@@ -27347,6 +27446,7 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Burning Fire",
           "ORDIR": [
             "Leviticus Card"
           ]
@@ -29336,6 +29436,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Captive Princes",
+          "Strength": 2,
+          "Toughness": 2,
+          "SpecialAbility": "You may capture this character to opponent's Land of Bondage to look at opponent's hand or Reserve add a human of matching brigade to battle.",
           "ORDIR": [
             "Generic Character",
             "II Kings Card",
@@ -29384,6 +29488,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Capture and Seize",
+          "SpecialAbility": "If Isaiah or an Assyrian is in play, capture an opposing character and take an Artifact.",
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -29428,6 +29534,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Captured Ark",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Crimson"
+          ],
+          "SpecialAbility": "Upon activation, each opponent must select one active Artifact in own territory and shuffle it back into their draw pile. Each shuffled Artifact is negated. May be used twice.",
           "ORDIR": [
             "I Samuel Card"
           ]
@@ -29466,6 +29579,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Captured Ark (FoM)",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Crimson"
+          ],
+          "SpecialAbility": "Each opponent must shuffle an active Artifact in their territory. Negate those Artifacts. Limit twice.",
           "ORDIR": [
             "I Samuel Card"
           ]
@@ -29504,6 +29624,15 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Captured Ark (Roots)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Black"
+          ],
           "ORDIR": [
             "I Samuel Card"
           ]
@@ -29744,6 +29873,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Carcasses",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Black"
+          ],
+          "SpecialAbility": "If a warrior class Evil Character is in battle, discard abilities on evil Enhancements cannot be negated.  May be used for two rounds.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -29782,6 +29918,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Carcasses (PoC)",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Crimson"
+          ],
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -29898,6 +30040,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Cast into Lion's Den",
+          "Strength": 3,
+          "Toughness": 3,
+          "SpecialAbility": "Capture a character in battle. If used by a Daniel Hero or Persian, this ability gains regardless of protection",
           "ORDIR": [
             "Daniel Card"
           ]
@@ -33401,6 +33547,7 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Coat of Many Colors (FoM)",
           "ORDIR": [
             "Genesis 37-50 Card",
             "Genesis Card",
@@ -34339,6 +34486,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Confused Languages (FoM)",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "If used by an O.T. character, place in territory: Prevent and ignore opponent's characters of opposite alignment (except those of matching brigade to another character that player controls).",
           "ORDIR": [
             "Genesis Card"
           ]
@@ -34536,6 +34688,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Confusion of Mind",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Pale Green"
+          ],
+          "SpecialAbility": "Negate all special abilities on opponents' Heroes.  An opponent may discard two good Enhancements (or a good Dominant) from hand to discard this card.  Cannot be negated.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -34574,6 +34733,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Confusion of Mind (PoC)",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Pale Green"
+          ],
+          "SpecialAbility": "Negate opponents' Heroes. An opponent may discard 2 good Enhancements (or a good Dominant) from hand to discard this card. Cannot be negated.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -36514,6 +36680,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Abraham",
+          "Strength": 3,
+          "Toughness": 4,
+          "Brigades": [
+            "Blue"
+          ],
+          "SpecialAbility": "Use as an enhancement or an Artifact.  No Evil Character may be set aside while this card is in play.",
           "ORDIR": [
             "Genesis Card"
           ]
@@ -36552,6 +36725,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Eden",
+          "Strength": 3,
+          "Toughness": 4,
+          "Brigades": [
+            "Silver"
+          ],
+          "SpecialAbility": "Use as an enhancement or an Artifact.  No character may be removed from the game.  Instead discard the character targeted for removal.",
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis Card"
@@ -36592,6 +36772,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Eden (PoC)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 2,
+          "Toughness": 3,
+          "SpecialAbility": "HE: Take a Genesis human from deck (or Reserve if used by Adam or Eve). ART: Negate other dual icon cards. If you play another one, discard this card.",
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis Card"
@@ -36639,6 +36826,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Noah",
+          "Strength": 2,
+          "Toughness": 5,
+          "Brigades": [
+            "Blue"
+          ],
+          "SpecialAbility": "Use as an enhancement or an Artifact.  Interrupt and prevent one evil enhancement.  Discard after use.",
           "ORDIR": [
             "Genesis 6-10 Card",
             "Genesis Card"
@@ -36679,6 +36873,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Palestine",
+          "Strength": 5,
+          "Toughness": 2,
+          "Brigades": [
+            "Purple"
+          ],
+          "SpecialAbility": "Use as an enhancement or an Artifact.  Return all Heroes in all Lands of Bondage to owner's territories.  Capture of Heroes is prevented.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -36717,6 +36918,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Palestine (PoC)",
+          "Strength": 0,
+          "Toughness": 7,
+          "SpecialAbility": "HE: Release all captured Heroes to discard up to X evil cards. ART: Discard an evil card from Reserve to take a Site or City and play it.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -36762,6 +36967,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Peace",
+          "Strength": 3,
+          "Toughness": 2,
+          "Brigades": [
+            "Clay"
+          ],
           "ORDIR": [
             "Numbers Card"
           ]
@@ -36802,6 +37013,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Prayer (RoJ AB)",
+          "Strength": 4,
+          "Toughness": 3,
+          "SpecialAbility": "You may banish this card to add to hand your card that was banished by an opponent or a card from Reserve.",
           "ORDIR": [
             "John Card"
           ]
@@ -36846,6 +37061,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Prayer (RoJ)",
+          "Strength": 4,
+          "Toughness": 3,
+          "SpecialAbility": "You may banish this card to add to hand your card that was banished by an opponent or a card from Reserve.",
           "ORDIR": [
             "John Card"
           ]
@@ -36890,6 +37109,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Salt",
+          "Strength": 5,
+          "Toughness": 4,
+          "Brigades": [
+            "White"
+          ],
+          "SpecialAbility": "Use as an enhancement or an Artifact.  All O.T. Heroes in play gain 2/2.",
           "ORDIR": [
             "Numbers Card"
           ]
@@ -36928,6 +37154,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with Abraham (PoC)",
+          "Strength": 3,
+          "Toughness": 4,
           "ORDIR": [
             "Genesis Card"
           ]
@@ -36975,6 +37204,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with Adam",
+          "Strength": 4,
+          "Toughness": 4,
+          "Brigades": [
+            "Red"
+          ],
+          "SpecialAbility": "Use as an enhancement or an Artifact.  All human Evil Characters in battle decrease 0/3 until end of battle.",
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis Card"
@@ -37015,6 +37251,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with Adam (PoC)",
+          "Strength": 3,
+          "Toughness": 3,
+          "SpecialAbility": "HE: Negate an evil card. You may reveal a good Dominant from hand to return this card to hand after battle. ART: Decrease blocking characters 0/3.",
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis Card"
@@ -37062,6 +37302,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with David",
+          "Strength": 5,
+          "Toughness": 2,
+          "Brigades": [
+            "Green"
+          ],
+          "SpecialAbility": "Use as an enhancement or an Artifact.  Household Idols is negated.",
           "ORDIR": [
             "David in the Title or Scripture Verse",
             "I Samuel Card"
@@ -37102,6 +37349,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with David (PoC)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 5,
+          "Toughness": 2,
+          "SpecialAbility": "HE: You may play a Site or good Fortress from deck (or Reserve if used by David). ART: If you do not control a king, you may take a king from deck.",
           "ORDIR": [
             "David in the Title or Scripture Verse",
             "II Samuel Card",
@@ -37151,6 +37405,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with David [K]",
+          "Strength": 5,
+          "Toughness": 2,
           "ORDIR": [
             "David in the Title or Scripture Verse",
             "I Samuel Card"
@@ -37199,6 +37456,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with Death (FooF)",
+          "Strength": 2,
+          "Toughness": 4,
+          "SpecialAbility": "Negate characters. Restrict players from playing Enhancements unless a character is opposed in battle. Cannot be negated.",
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -37320,6 +37581,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with Moses",
+          "Strength": 7,
+          "Toughness": 3,
+          "Brigades": [
+            "Gold"
+          ],
+          "SpecialAbility": "Use as an enhancement or an Artifact.  Burial Shroud, Unholy Writ, Thirty Pieces of Silver, and Household Idols are negated for one round.  May be used twice.",
           "ORDIR": [
             "Exodus Card"
           ]
@@ -37358,6 +37626,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with Moses (PoC)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 5,
+          "Toughness": 2,
+          "SpecialAbility": "HE: Draw up to X (limit 3 unless played in battle). Cannot be prevented. ART: You may take a Tabernacle Artifact from deck or a Curse from Reserve.",
           "ORDIR": [
             "Exodus Card"
           ]
@@ -37403,6 +37678,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with Moses [L]",
+          "Strength": 5,
+          "Toughness": 2,
           "ORDIR": [
             "Exodus Card"
           ]
@@ -37449,6 +37727,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with Noah (PoC)",
+          "Strength": 1,
+          "Toughness": 6,
           "ORDIR": [
             "Genesis 6-10 Card",
             "Genesis Card"
@@ -37498,6 +37779,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with Philistia (LoC)",
+          "Strength": 2,
+          "Toughness": 5,
           "ORDIR": [
             "Genesis 21-35 Enhancement",
             "Genesis Card"
@@ -37546,6 +37830,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant with Phinehas",
+          "Strength": 3,
+          "Toughness": 5,
+          "Brigades": [
+            "Teal"
+          ],
+          "SpecialAbility": "Protect your Priests from the house of Eleazar from discard abilities on evil cards.",
           "ORDIR": [
             "Numbers Card"
           ]
@@ -37980,6 +38271,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Crowd's Choice (GoC)",
+          "Type": "Dominant",
+          "SpecialAbility": "LAMB: You may take a good card from deck or Reserve. REAPER: You may take an evil card from deck or Reserve.",
           "ORDIR": [
             "Matthew Card"
           ]
@@ -38016,6 +38310,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Crowd's Choice [Fundraiser]",
+          "Type": "Dominant",
           "ORDIR": [
             "Matthew Card"
           ]
@@ -38657,6 +38953,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Cursed for Us (GoC)",
+          "Strength": 3,
+          "Toughness": 3,
+          "Brigades": [
+            "Orange"
+          ],
           "ORDIR": [
             "John Card"
           ]
@@ -38697,6 +38999,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Cursed Ground",
+          "Strength": -3,
+          "Toughness": 3,
+          "Brigades": [
+            "Brown"
+          ],
+          "SpecialAbility": "CURSE: If attacked and you control no evil humans, you may underdeck this card to take an evil human from deck or Reserve.EE: Decrease opponent's humans X/X.",
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis 3 Curse",
@@ -39277,6 +39586,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Dancing Wives",
+          "Strength": 1,
+          "Toughness": 2,
+          "SpecialAbility": "Take a female of opposite alignment from a territory or an opponent's Reserve to territory and convert it to a brigade you control. It gains the ability \"May band to a male human of matching brigade.\"",
           "ORDIR": [
             "Judges Card"
           ]
@@ -40155,6 +40468,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Daughter's Grief",
+          "Strength": 2,
+          "Toughness": 0,
+          "SpecialAbility": "Set aside all females in battle and all opposing characters for 2 turns. Cannot be negated if opposed by a female.",
           "ORDIR": [
             "Judges Card"
           ]
@@ -40864,7 +41181,6 @@
           ],
           "Strength": 10,
           "Toughness": 3,
-          "SpecialAbility": "You may convert this card to meek to take a good O.T. card from deck. May band to a meek Hero. Cannot be prevented.",
           "ORDIR": [
             "Cloud Card",
             "David in the Title or Scripture Verse",
@@ -40888,7 +41204,6 @@
           ],
           "Strength": 1,
           "Toughness": 8,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Cloud Card",
             "David in the Title or Scripture Verse",
@@ -40958,7 +41273,6 @@
           ],
           "Strength": 10,
           "Toughness": 3,
-          "SpecialAbility": "You may convert this card to meek to take a good O.T. card from deck. May band to a meek Hero. Cannot be prevented.",
           "ORDIR": [
             "Cloud Card",
             "David in the Title or Scripture Verse",
@@ -40982,7 +41296,6 @@
           ],
           "Strength": 1,
           "Toughness": 8,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Cloud Card",
             "David in the Title or Scripture Verse",
@@ -41053,7 +41366,6 @@
           "Name": "David, Outcasts' Refuge (LoC)",
           "Strength": 10,
           "Toughness": 11,
-          "SpecialAbility": "May band to an O.T. red warrior from hand, Reserve or a territory, or you may draw X (limit 3). Cannot be negated.",
           "ORDIR": [
             "Cloud Card",
             "David in the Title or Scripture Verse",
@@ -41074,7 +41386,6 @@
           "Name": "David, the Anointed (LoC)",
           "Strength": 8,
           "Toughness": 8,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Cloud Card",
             "David in the Title or Scripture Verse",
@@ -41296,6 +41607,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "David's Census",
+          "Strength": 3,
+          "Toughness": -1,
+          "SpecialAbility": "Select 1: Discard a human controlled by each opponent, discard a card (except a character) in each opponent's territory, or each opponent must underdeck a Dominant from hand.",
           "ORDIR": [
             "David in the Title or Scripture Verse",
             "I Chronicles Card"
@@ -42943,6 +43258,15 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Deafening Spirit (GoC)",
+          "Classes": [
+            "Territory"
+          ],
+          "Alignment": "Evil",
+          "Brigades": [
+            "Orange"
+          ],
+          "SpecialAbility": "If put in play (or if played from a territory), negate a good card this turn. If it is an Enhancement, discard it. You may convert this Enhancement to an Evil Character.",
           "ORDIR": [
             "Demon",
             "Generic Character",
@@ -43030,6 +43354,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Death of Family",
+          "Classes": [
+            "Territory"
+          ],
           "ORDIR": [
             "Ruth Card"
           ]
@@ -43588,6 +43916,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Deceit & Vengeance",
+          "Strength": 3,
+          "Toughness": -3,
+          "SpecialAbility": "Set aside opponent's males in battle and all evil males in opponent's territory for 3 turns. On return, if this is used by a son of Jacob, discard those males.",
           "ORDIR": [
             "Genesis 21-35 Enhancement",
             "Genesis Card"
@@ -44137,6 +44469,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Defenestrated!",
+          "SpecialAbility": "If you have a King of Israel in play, you may remove an Evil Chartacter from the game. Cannot be prevented if King Jehu is in play.",
           "ORDIR": [
             "II Kings Card"
           ]
@@ -44181,6 +44515,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Defenestrated! (Roots)",
+          "Toughness": 3,
           "ORDIR": [
             "II Kings Card"
           ]
@@ -44510,6 +44846,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Delivered",
+          "Classes": [
+            "Territory",
+            "Star"
+          ],
+          "SpecialAbility": "STAR: Discard the top card of each opponent's deck. GE/EE: Activate an Artifact from deck (or Reserve if you control an Egyptian).",
           "ORDIR": [
             "Isaiah Card",
             "Star Card"
@@ -45493,6 +45835,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Deserving Scorn",
+          "Strength": 1,
+          "Toughness": 3,
+          "Brigades": [
+            "Brown"
+          ],
           "ORDIR": [
             "Numbers Card"
           ]
@@ -45965,6 +46313,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Destruction of Nehushtan (PoC)",
+          "Type": "Dominant",
+          "SpecialAbility": "LAMB: Negate and discard a Curse or all opponents' active Artifacts (except Tabernacle and Temple Artifacts). REAPER: Negate and discard a Covenant or Artifact.",
           "ORDIR": [
             "II Kings Card"
           ]
@@ -48833,6 +49184,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Drawn Sword (FooF)",
+          "Strength": 3,
+          "Toughness": 2,
+          "SpecialAbility": "If Ezekiel or a Babylonian is in play, you may discard an opponent's character in the field of battle. Cannot be prevented.",
           "ORDIR": [
             "Ezekiel Card"
           ]
@@ -48916,6 +49271,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Drawn Sword (Roots)",
+          "Classes": [
+            "Weapon"
+          ],
+          "Strength": 3,
+          "Toughness": 2,
+          "SpecialAbility": "Negate a card of a different alignment.",
           "ORDIR": [
             "Ezekiel Card"
           ]
@@ -49739,7 +50101,6 @@
           ],
           "Strength": 3,
           "Toughness": 4,
-          "SpecialAbility": "You may bounce an Artifact or play a Lost Soul from a deck. Cannot be negated if you control a meek Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -49754,7 +50115,6 @@
           ],
           "Strength": 6,
           "Toughness": 8,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card"
@@ -49866,6 +50226,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Edomite Camp (LoC)",
+          "Classes": [
+            "Warrior"
+          ],
           "ORDIR": [
             "Edomite",
             "Generic Character",
@@ -52252,7 +52616,6 @@
           "Name": "Eleazar, the Potentate (LoC)",
           "Strength": 8,
           "Toughness": 10,
-          "SpecialAbility": "While alone, toss all Enhancements with strength X or less. May band to an O.T. human warrior or a meek Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -52264,7 +52627,6 @@
           "Name": "Eleazar, the Vassal (LoC)",
           "Strength": 7,
           "Toughness": 2,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -52827,7 +53189,6 @@
           ],
           "Strength": 12,
           "Toughness": 7,
-          "SpecialAbility": "Negate brown humans. You may take an Ezra card from Reserve (or deck if an evil card is in opponent's banish pile).",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -52843,7 +53204,6 @@
           ],
           "Strength": 7,
           "Toughness": 11,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -53493,7 +53853,6 @@
           "Name": "Eliud, the Revolutionary (LoC)",
           "Strength": 10,
           "Toughness": 11,
-          "SpecialAbility": "If a meek postexilic Hero is in play, opponent must discard an evil card from hand or territory. Cannot be prevented.",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -53505,7 +53864,6 @@
           "Name": "Eliud, the Pious (LoC)",
           "Strength": 1,
           "Toughness": 3,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -55293,7 +55651,6 @@
           ],
           "Strength": 3,
           "Toughness": 6,
-          "SpecialAbility": "Protect this card and meek blue Heroes from banish, capture and discard abilities. May band to Methuselah.",
           "ORDIR": [
             "Antediluvian",
             "Cloud Card",
@@ -55311,7 +55668,6 @@
           ],
           "Strength": 7,
           "Toughness": 8,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Antediluvian",
             "Cloud Card",
@@ -55366,7 +55722,6 @@
           ],
           "Strength": 7,
           "Toughness": 7,
-          "SpecialAbility": "While you control a meek Hero, negate opponents' neutral cards. If attacking, you may draw X (limit 3).",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -55382,7 +55737,6 @@
           ],
           "Strength": 3,
           "Toughness": 4,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -56482,6 +56836,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Eternal Covenant",
+          "Strength": 4,
+          "Toughness": 3,
+          "SpecialAbility": "On activation, search discard pile for a human Hero and put it in play.",
           "ORDIR": [
             "Christ or Jesus in the Title or Scripture Verse",
             "Hebrews Card"
@@ -56528,6 +56886,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Eternal Covenant (CoW AB)",
+          "Strength": 4,
+          "Toughness": 3,
+          "SpecialAbility": "On activation, search discard pile for a human Hero and put it in play.",
           "ORDIR": [
             "Christ or Jesus in the Title or Scripture Verse",
             "Hebrews Card"
@@ -56652,6 +57014,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Eternal Judgment",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "Place in territory: You may give this card to a player to negate and discard their Enhancement or the last Enhancement they played. Cannot be negated if used by a Daniel character.",
           "ORDIR": [
             "Daniel Card"
           ]
@@ -56934,6 +57301,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Evade (1st Print - L)",
+          "SpecialAbility": "Negate a card.",
           "ORDIR": [
             "Exodus Card"
           ]
@@ -56983,6 +57352,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Evade [L]",
+          "SpecialAbility": "Negate a card.",
           "ORDIR": [
             "Exodus Card"
           ]
@@ -63796,7 +64167,6 @@
           ],
           "Strength": 12,
           "Toughness": 12,
-          "SpecialAbility": "You may activate this card's * ability and/or draw X (limit 3). If you do, convert this card to meek. Cannot be negated.",
           "ORDIR": [
             "Cloud Card",
             "Duplicate Card",
@@ -63814,7 +64184,6 @@
           ],
           "Strength": 1,
           "Toughness": 1,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Cloud Card",
             "Duplicate Card",
@@ -63871,7 +64240,6 @@
           ],
           "Strength": 12,
           "Toughness": 12,
-          "SpecialAbility": "You may activate this card's * ability and/or draw X (limit 3). If you do, convert this card to meek. Cannot be negated.",
           "ORDIR": [
             "Cloud Card",
             "Duplicate Card",
@@ -63889,7 +64257,6 @@
           ],
           "Strength": 1,
           "Toughness": 1,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Cloud Card",
             "Duplicate Card",
@@ -64883,6 +65250,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Fifth Bowl of Wrath (RoJ AB)",
+          "Strength": 5,
+          "Toughness": 2,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -64930,6 +65300,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Fifth Bowl of Wrath (RoJ)",
+          "Strength": 5,
+          "Toughness": 2,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -64977,6 +65350,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Fifth Seal (Justice Seekers) (RoJ AB)",
+          "Classes": [
+            "Territory"
+          ],
+          "Alignment": "Good",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -65023,6 +65401,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Fifth Seal, Justice Seekers (RoJ)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 5,
+          "Toughness": 5,
+          "Alignment": "Good",
           "ORDIR": [
             "Gender",
             "Generic Character",
@@ -65151,6 +65536,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Fire Foxes",
+          "Strength": 2,
+          "Toughness": 2,
+          "Brigades": [
+            "Black"
+          ],
+          "SpecialAbility": "Shuffle a Site. If opponent used a special ability to draw, exchange, or search this turn, protect Lost Souls from opponent. If used by Samson, remove a male and a female Evil Character from the game.",
           "ORDIR": [
             "Animal",
             "Gender",
@@ -65195,6 +65587,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Fire Foxes (CoW AB)",
+          "Strength": 2,
+          "Toughness": 2,
+          "SpecialAbility": "Shuffle a Site. If opponent used a special ability to draw, exchange, or search this turn, protect Lost Souls from opponent. If used by Samson, remove a male and a female Evil Character from the game.",
           "ORDIR": [
             "Animal",
             "Gender",
@@ -65485,6 +65881,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "First Bowl of Wrath (RoJ AB)",
+          "Strength": 1,
+          "Toughness": 6,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -65532,6 +65931,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "First Bowl of Wrath (RoJ)",
+          "Strength": 1,
+          "Toughness": 6,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -65655,6 +66057,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "First Seal (Conquer) (RoJ AB)",
+          "Classes": [
+            "Warrior"
+          ],
           "ORDIR": [
             "Revelation Card"
           ]
@@ -66224,6 +66630,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Flee from Enemies",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Black"
+          ],
+          "SpecialAbility": "If your warrior class Evil Character is in battle, negate good banding abilities.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -66262,6 +66675,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Flee from Enemies [IR]",
+          "Strength": 2,
+          "Toughness": 4,
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -66589,6 +67005,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Flying Scroll (PoC)",
+          "Strength": 3,
+          "Toughness": 3,
           "ORDIR": [
             "Zechariah Card"
           ]
@@ -67162,6 +67581,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Forbidden Fruit (FoM)",
+          "Classes": [
+            "Territory"
+          ],
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis Card"
@@ -67210,6 +67633,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Forbidden Marriage (LoC)",
+          "Strength": 3,
+          "Toughness": 3,
+          "Brigades": [
+            "Gray"
+          ],
           "ORDIR": [
             "Nehemiah Card"
           ]
@@ -67625,6 +68054,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Foreign Sword",
+          "Classes": [
+            "Weapon"
+          ],
+          "Strength": 3,
+          "Toughness": 2,
+          "SpecialAbility": "Negate an opponent's evil or neutral card. If used by a Canaanite or Philistine, you may return that card to the top of owner's deck.",
           "ORDIR": [
             "II Samuel Card"
           ]
@@ -67771,6 +68207,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Forest Fire (FooF)",
+          "Strength": 2,
+          "Toughness": 2,
+          "SpecialAbility": "If Ezekiel or a Babylonian is in play, negate and discard a single color Site, Artifact, or evil card in play or set aside area. Cannot be prevented.",
           "ORDIR": [
             "Ezekiel Card"
           ]
@@ -67854,6 +68294,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Forest Fire (Roots)",
+          "Strength": 2,
+          "Toughness": 2,
+          "SpecialAbility": "Discard a card of opposite alignment. Cannot be prevented.",
           "ORDIR": [
             "Ezekiel Card"
           ]
@@ -68532,6 +68976,7 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Forty Nights",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -68582,6 +69027,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Forty Years",
+          "Type": "Dominant",
+          "SpecialAbility": "Each player may protect a Hero (and an Evil Character) they control from underdeck abilities. Underdeck all characters and all Artifacts.",
           "ORDIR": [
             "Numbers Card"
           ]
@@ -69093,6 +69541,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Fourth Bowl of Wrath (RoJ AB)",
+          "Strength": 4,
+          "Toughness": 3,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -69140,6 +69591,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Fourth Bowl of Wrath (RoJ)",
+          "Strength": 4,
+          "Toughness": 3,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -69224,6 +69678,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Fourth Seal (Death) (RoJ AB)",
+          "Classes": [
+            "Territory"
+          ],
           "ORDIR": [
             "Revelation Card"
           ]
@@ -70452,6 +70910,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Gamaliel's Speech",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "Place this in your territory: You may discard this card to negate and discard the last Enhancement played by an opponent or any other Enhancement in play.",
           "ORDIR": [
             "Acts Card"
           ]
@@ -71457,6 +71920,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Gibeonite Curse",
+          "Strength": 2,
+          "Toughness": 4,
+          "Brigades": [
+            "Black"
+          ],
+          "SpecialAbility": "Capture your black Canaanite and remove a Dominant in an opponent's discard pile from the game to search his deck for a card with the same icon and discard it.",
           "ORDIR": [
             "Joshua Card"
           ]
@@ -71575,6 +72045,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Gibeonite Treaty (FoM)",
+          "Strength": 1,
+          "Toughness": 5,
+          "SpecialAbility": "Interrupt and redirect an opposing Enhancement.",
           "ORDIR": [
             "Joshua Card"
           ]
@@ -73144,6 +73618,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Go Into Captivity",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Crimson"
+          ],
+          "SpecialAbility": "If your warrior class Evil Character is in battle, you may discard this card to capture a Hero.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -73182,6 +73663,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Go Into Captivity [IR]",
+          "Strength": 1,
+          "Toughness": 3,
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -73347,6 +73831,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "God's Mercy (Jonah's Anger)",
+          "SpecialAbility": "Place in territory: You may discard this card to negate and discard the last Enhancement of opposite alignment played or an Enhancement of opposite alignment. Cannot be negated if used by Jonah.",
           "ORDIR": [
             "Jonah Card"
           ]
@@ -74474,6 +74960,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Goliath's Curse (LoC)",
+          "Strength": 6,
+          "Toughness": 0,
+          "Brigades": [
+            "Black"
+          ],
           "ORDIR": [
             "I Samuel Card"
           ]
@@ -74514,6 +75006,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Goliath's Curse [L]",
+          "Strength": 6,
+          "Toughness": 0,
+          "Brigades": [
+            "Black"
+          ],
           "ORDIR": [
             "I Samuel Card"
           ]
@@ -74809,6 +75307,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Goliath's Sword (LoC)",
+          "Classes": [
+            "Weapon"
+          ],
+          "Toughness": 2,
+          "SpecialAbility": "Negate a card of a different alignment. If bearer is discarded during battle, opponent may take this card from your discard pile.",
           "ORDIR": [
             "David in the Title or Scripture Verse",
             "I Samuel Card"
@@ -82248,7 +82752,6 @@
           "Name": "Hezekiah, the Devout (LoC)",
           "Strength": 2,
           "Toughness": 3,
-          "SpecialAbility": "You may convert this card to meek to take an O.T. Artifact, O.T. Site or a good O.T. Fortress from deck.",
           "ORDIR": [
             "Duplicate Card",
             "II Kings Card",
@@ -82262,7 +82765,6 @@
           "Name": "Hezekiah, the Repentant (LoC)",
           "Strength": 9,
           "Toughness": 11,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "II Kings Card",
@@ -82389,7 +82891,6 @@
           ],
           "Strength": 4,
           "Toughness": 6,
-          "SpecialAbility": "You may topdeck a blue Genesis Enhancement from discard pile. Cannot be negated if you control a meek Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis 37-50 Card",
@@ -82405,7 +82906,6 @@
           ],
           "Strength": 8,
           "Toughness": 9,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis 37-50 Card",
@@ -82499,6 +82999,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Hiding Joseph's Cup",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "You may take Joseph's Silver Cup from deck or Reserve. Place this card on a character of opposite alignment: Negate that character. Canont be prevented.",
           "ORDIR": [
             "Genesis 37-50 Card",
             "Genesis Card",
@@ -83490,6 +83995,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "His Sacrifice (GoC UR+)",
+          "Strength": 7,
+          "Toughness": 0,
+          "Brigades": [
+            "Multi"
+          ],
           "ORDIR": [
             "Matthew Card"
           ]
@@ -83530,6 +84041,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "His Sacrifice (GoC)",
+          "Strength": 7,
+          "Toughness": 0,
+          "Brigades": [
+            "Multi"
+          ],
           "ORDIR": [
             "Matthew Card"
           ]
@@ -84049,6 +84566,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Honey from a Lion (CoW AB)",
+          "Strength": 3,
+          "Toughness": 3,
+          "Brigades": [
+            "Crimson"
+          ],
+          "SpecialAbility": "Once per turn, while you are being attacked and an animal is in your discard pile, look at the top 6 cards of deck: Add an evil card to hand. Underdeck the rest.",
           "ORDIR": [
             "Judges Card"
           ]
@@ -84087,6 +84611,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Honey from a Lion (CoW)",
+          "Strength": 3,
+          "Toughness": 3,
+          "Brigades": [
+            "Crimson"
+          ],
+          "SpecialAbility": "Once per turn, while you are being attacked and an animal is in your discard pile, look at the top 6 cards of deck: Add an evil card to hand. Underdeck the rest.",
           "ORDIR": [
             "Judges Card"
           ]
@@ -84125,6 +84656,7 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Honor Thy Enemy",
           "ORDIR": [
             "Esther Card"
           ]
@@ -84213,6 +84745,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Hope",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 0,
+          "Toughness": 12,
+          "Alignment": "Good",
           "ORDIR": [
             "Generic Character",
             "Symbolic Character"
@@ -85902,6 +86441,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I am Creator",
+          "Strength": 3,
+          "Toughness": 3,
+          "Brigades": [
+            "Red"
+          ],
+          "SpecialAbility": "If you do not have a Hero in your territory, or set-aside area, then search draw pile for a Hero and put it in your territory.  Cannot be interrupted. Limit once during each of your turns.",
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis Card"
@@ -85942,6 +86488,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I Am Creator (Roots)",
+          "Strength": 3,
+          "Toughness": 3,
+          "Brigades": [
+            "Blue"
+          ],
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis Card"
@@ -86111,6 +86663,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I am Healing",
+          "Strength": 0,
+          "Toughness": 4,
+          "Brigades": [
+            "Gold"
+          ],
+          "SpecialAbility": "Holder may heal all of holder's Heroes in play.  May be used twice.",
           "ORDIR": [
             "Exodus Card"
           ]
@@ -86149,6 +86708,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I am Holy",
+          "Strength": 5,
+          "Toughness": 2,
+          "Brigades": [
+            "Blue"
+          ],
+          "SpecialAbility": "Upon activation, holder may discard a good card from hand to make an opponent discard an evil card from hand.  If opponent has no evil cards in hand, opponent must reveal hand.",
           "ORDIR": [
             "Leviticus Card"
           ]
@@ -86187,6 +86753,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I am Justice",
+          "Strength": 5,
+          "Toughness": 2,
+          "Brigades": [
+            "Silver"
+          ],
+          "SpecialAbility": "If an Evil Character discards your Hero this battle, you may discard that Evil Character at the end of the turn.  Limit two discards per game.",
           "ORDIR": [
             "Involves Music"
           ]
@@ -86265,6 +86838,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I am Mercy",
+          "Strength": 2,
+          "Toughness": 5,
+          "Brigades": [
+            "Purple"
+          ],
+          "SpecialAbility": "Protect holder's hand and draw pile from discard abilities on evil cards.",
           "ORDIR": [
             "Involves Music"
           ]
@@ -86343,6 +86923,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I am Redemption",
+          "Strength": 3,
+          "Toughness": 4,
+          "Brigades": [
+            "Gold"
+          ],
+          "SpecialAbility": "Return your captured Heroes to your territory.  Cannot be negated by an evil card.",
           "ORDIR": [
             "Ephesians Card"
           ]
@@ -86381,6 +86968,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I Am Redemption (Roots)",
+          "Strength": 3,
+          "Toughness": 4,
+          "Brigades": [
+            "Silver"
+          ],
           "ORDIR": [
             "Ephesians Card"
           ]
@@ -86421,6 +87014,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I am Salvation",
+          "Strength": 3,
+          "Toughness": 4,
+          "Brigades": [
+            "Green"
+          ],
+          "SpecialAbility": "Negate all special abilities on Lost Soul cards (except the 'Lost Souls' card).  May be used twice.",
           "ORDIR": [
             "John Card"
           ]
@@ -86459,6 +87059,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I am Sustainer",
+          "Strength": 2,
+          "Toughness": 5,
+          "Brigades": [
+            "Silver"
+          ],
+          "SpecialAbility": "Protect holder's Heroes from having their abilities reduced.  Restore all of holder's Heroes to full abilities.",
           "ORDIR": [
             "Involves Music"
           ]
@@ -86497,6 +87104,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I Am Sustainer (Roots)",
+          "Strength": 2,
+          "Toughness": 5,
+          "Brigades": [
+            "Gold"
+          ],
           "ORDIR": [
             "Nehemiah Card"
           ]
@@ -86537,6 +87150,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I am Truth",
+          "Strength": 2,
+          "Toughness": 3,
+          "Brigades": [
+            "White"
+          ],
+          "SpecialAbility": "Good enhancements with \"ignore\" in the special ability cannot be negated by evil cards.",
           "ORDIR": [
             "John Card"
           ]
@@ -87446,6 +88066,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Incurable",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Pale Green"
+          ],
+          "SpecialAbility": "Protect Heroes in territories from healing.  An opponent may discard two good Enhancements from hand to discard this card.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -87484,6 +88111,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Incurable (PoC)",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Pale Green"
+          ],
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -88457,7 +89090,6 @@
           ],
           "Strength": 3,
           "Toughness": 2,
-          "SpecialAbility": "You may play Jacob and/or Esau from deck or Reserve. If an animal or a meek Hero is in play, you may draw 2.",
           "ORDIR": [
             "Cloud Card",
             "Duplicate Card",
@@ -88476,7 +89108,6 @@
           ],
           "Strength": 11,
           "Toughness": 10,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Cloud Card",
             "Duplicate Card",
@@ -90073,7 +90704,6 @@
           ],
           "Strength": 9,
           "Toughness": 8,
-          "SpecialAbility": "Negate evil gold humans and band abilities on evil cards (except Romans). May band to a postexilic Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -90089,7 +90719,6 @@
           ],
           "Strength": 8,
           "Toughness": 9,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -90142,7 +90771,6 @@
           ],
           "Strength": 10,
           "Toughness": 10,
-          "SpecialAbility": "You may take a Genesis Enhancement from deck. May band to a patriarch or a meek Hero. Cannot be interrupted.",
           "ORDIR": [
             "Cloud Card",
             "Duplicate Card",
@@ -90160,7 +90788,6 @@
           ],
           "Strength": 3,
           "Toughness": 4,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Cloud Card",
             "Duplicate Card",
@@ -91606,6 +92233,8 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
           "ORDIR": [
             "Disciple",
             "Duplicate Card",
@@ -91907,7 +92536,6 @@
           ],
           "Strength": 9,
           "Toughness": 10,
-          "SpecialAbility": "You may convert this card to meek to take a blue Enhancement from Reserve. May band to a Cloud Hero.",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -91923,7 +92551,6 @@
           ],
           "Strength": 6,
           "Toughness": 5,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -92719,7 +93346,6 @@
           "Name": "Jehoshaphat, the Seeker (LoC)",
           "Strength": 3,
           "Toughness": 4,
-          "SpecialAbility": "Bounce a human in a territory. May band to a musician, a warrior, a priest or a meek Hero. Cannot be prevented.",
           "ORDIR": [
             "Duplicate Card",
             "King",
@@ -92732,7 +93358,6 @@
           "Name": "Jehoshaphat, the Meek (LoC)",
           "Strength": 10,
           "Toughness": 12,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "King",
@@ -93855,7 +94480,6 @@
           ],
           "Strength": 5,
           "Toughness": 8,
-          "SpecialAbility": "While you control a meek Hero, negate characters in opponents' territories. May band to David or a meek Ruth Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card",
@@ -93870,7 +94494,6 @@
           ],
           "Strength": 7,
           "Toughness": 6,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Mentioned in I or II Samuel",
@@ -94364,6 +94987,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Joab (CoW AB)",
+          "Classes": [
+            "Warrior"
+          ],
+          "SpecialAbility": "Protect Joab from underdeck. After battle, you may discard a warrior class Evil Character. May band to an O.T. warrior class character matching Joab's brigade.",
           "ORDIR": [
             "Duplicate Card",
             "I Chronicles Card",
@@ -94416,6 +95044,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Joab (CoW)",
+          "Classes": [
+            "Warrior"
+          ],
+          "Strength": 11,
+          "Toughness": 10,
+          "SpecialAbility": "Protect Joab from underdeck. After battle, you may discard a warrior class Evil Character. May band to an O.T. warrior class character matching Joab's brigade.",
           "ORDIR": [
             "Duplicate Card",
             "I Chronicles Card",
@@ -94683,6 +95318,9 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
+          "SpecialAbility": "If blocked from hand, toss the next evil Enhancement played in battle. You may convert this card to meek to draw 2 (or take a good N.T. card from Reserve).",
           "ORDIR": [
             "Duplicate Card",
             "Empty Tomb Hero",
@@ -94735,6 +95373,8 @@
       },
       "CardSides": {
         "shared": {
+          "Strength": 7,
+          "Toughness": 7,
           "ORDIR": [
             "Duplicate Card",
             "II Chronicles Card",
@@ -97113,6 +97753,12 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Classes": [
+            "Territory"
+          ],
+          "Alignment": "Good",
+          "SpecialAbility": "If an opponent uses a search ability, you may bounce a character in a territory. If attacking, you may convert this card to meek to choose an evil human to block.",
           "ORDIR": [
             "Duplicate Card",
             "Empty Tomb Hero",
@@ -97371,7 +98017,6 @@
           "Name": "Joseph, the Righteous (LoC)",
           "Strength": 6,
           "Toughness": 5,
-          "SpecialAbility": "You may exchange this card with a meek Hero from deck or Reserve and increase that Hero 10/10 this turn.",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -97382,7 +98027,6 @@
           "Name": "Joseph, the Carpenter (LoC)",
           "Strength": 5,
           "Toughness": 6,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card"
@@ -98120,7 +98764,6 @@
           "Name": "Josiah, the Restorer (LoC)",
           "Strength": 10,
           "Toughness": 12,
-          "SpecialAbility": "You may discard an evil Fortress, an idol or a Curse. If a meek Hero is in play, you may play a Lost Soul from a deck.",
           "ORDIR": [
             "Duplicate Card",
             "II Chronicles Card",
@@ -98134,7 +98777,6 @@
           "Name": "Josiah, the Righteous (LoC)",
           "Strength": 3,
           "Toughness": 7,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "II Chronicles Card",
@@ -98174,6 +98816,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Josiah's Covenant",
+          "Strength": 3,
+          "Toughness": 4,
+          "Brigades": [
+            "Purple"
+          ],
+          "SpecialAbility": "Protect all Heroes in players territory from harm or negative effect.",
           "ORDIR": [
             "II Kings Card"
           ]
@@ -98212,6 +98861,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Josiah's Covenant (LoC)",
+          "Strength": 3,
+          "Toughness": 4,
           "ORDIR": [
             "II Kings Card"
           ]
@@ -98274,7 +98926,6 @@
           "Name": "Jotham, the Mighty (LoC)",
           "Strength": 12,
           "Toughness": 8,
-          "SpecialAbility": "You may convert this card to meek to take a good card from Reserve. May band to a meek Hero. Cannot be negated.",
           "ORDIR": [
             "Duplicate Card",
             "II Kings Card",
@@ -98288,7 +98939,6 @@
           "Name": "Jotham, the Upright (LoC)",
           "Strength": 4,
           "Toughness": 3,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "II Kings Card",
@@ -98631,7 +99281,6 @@
           ],
           "Strength": 4,
           "Toughness": 4,
-          "SpecialAbility": "Negate an evil or neutral card in play or set aside area. May band to a patriarch. Cannot be interrupted.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -98648,7 +99297,6 @@
           ],
           "Strength": 12,
           "Toughness": 11,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -99177,6 +99825,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Judean Garrison (LoC)",
+          "Classes": [
+            "Warrior"
+          ],
           "ORDIR": [
             "Generic Character",
             "II Chronicles 17-20 Hero",
@@ -99651,7 +100303,6 @@
           ],
           "Strength": 8,
           "Toughness": 11,
-          "SpecialAbility": "First strike. You may draw 1. May band to Mahalalel. Cannot be negated if you control a meek Genesis Hero.",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -99667,7 +100318,6 @@
           ],
           "Strength": 4,
           "Toughness": 2,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -99977,6 +100627,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "King Abijam",
+          "Classes": [
+            "Warrior"
+          ],
+          "Strength": 7,
+          "Toughness": 3,
+          "SpecialAbility": "If you control a priest or Temple Artifact, negate Sites. If your rescue attempt is successful, take an opponent's Site. If blocking, decrease a Hero X/X.",
           "ORDIR": [
             "Duplicate Card",
             "King",
@@ -102215,6 +102872,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "King Jehu (FoM)",
+          "Classes": [
+            "Warrior"
+          ],
+          "Toughness": 6,
+          "SpecialAbility": "You may exchange Jehu with a non-royal human in territory to discard an evil royal human. Once per battle, if Jehu uses an O.T. Enhancement, opponent must discard an evil card from hand or territory.",
           "ORDIR": [
             "II Kings Card",
             "King",
@@ -103745,6 +104408,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "King Saul (CoW AB)",
+          "Classes": [
+            "Warrior"
+          ],
+          "SpecialAbility": "You may draw 1. May band to a I Samuel character matching King Saul's brigade, or you may toss the next evil Enhancement you play in battle. Cannot be interrupted.",
           "ORDIR": [
             "I Samuel Card",
             "King",
@@ -103803,6 +104471,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "King Saul (CoW)",
+          "Classes": [
+            "Warrior"
+          ],
+          "Strength": 10,
+          "Toughness": 10,
+          "SpecialAbility": "You may draw 1. May band to a I Samuel character matching King Saul's brigade, or you may toss the next evil Enhancement you play in battle. Cannot be interrupted.",
           "ORDIR": [
             "I Samuel Card",
             "King",
@@ -104036,6 +104711,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "King Saul's Spear",
+          "Classes": [
+            "Weapon"
+          ],
+          "Strength": 5,
+          "Toughness": 0,
+          "SpecialAbility": "You may discard this card to withdraw an opposing character or negate and underdeck an Artifact.",
           "ORDIR": [
             "Bows, Arrows, Spears, Javelins and Darts",
             "David in the Title or Scripture Verse",
@@ -104084,6 +104766,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "King Saul's Spear (CoW AB)",
+          "Strength": 5,
+          "Toughness": 0,
+          "SpecialAbility": "You may discard this card to withdraw an opposing character or negate and underdeck an Artifact.",
           "ORDIR": [
             "Bows, Arrows, Spears, Javelins and Darts",
             "David in the Title or Scripture Verse",
@@ -105180,6 +105866,7 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "King's Weakness (LoC)",
           "ORDIR": [
             "II Kings Card"
           ]
@@ -105504,6 +106191,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Kinsmen's Agreement",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "Place in territory: You may discard this card to negate and discard the last Enhancement of opposite alignment played or an Enhancement of opposite alignment in play.",
           "ORDIR": [
             "Ruth Card"
           ]
@@ -105548,6 +106240,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Kinsmen's Agreement (CoW AB)",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "Place in territory: You may discard this card to negate and discard the last Enhancement of opposite alignment played or an Enhancement of opposite alignment in play.",
           "ORDIR": [
             "Ruth Card"
           ]
@@ -106608,7 +107305,6 @@
           ],
           "Strength": 2,
           "Toughness": 9,
-          "SpecialAbility": "You may take Noah (or topdeck a * Hero) from deck. You may reserve your meek Hero to discard a Curse.",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -106624,7 +107320,6 @@
           ],
           "Strength": 9,
           "Toughness": 7,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -107013,6 +107708,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Land Dispute (LoC)",
+          "SpecialAbility": "Withdraw all opposing characters to take a Site from opponent.",
           "ORDIR": [
             "Genesis 21-35 Enhancement",
             "Genesis Card"
@@ -107680,7 +108377,6 @@
           ],
           "Strength": 1,
           "Toughness": 7,
-          "SpecialAbility": "You may bounce a Genesis Hero and/or resurrect a patriarch (or a meek blue Hero). May band to Jacob.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -107696,7 +108392,6 @@
           ],
           "Strength": 7,
           "Toughness": 8,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -108558,6 +109253,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Leviathan (FoM)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 13,
+          "Toughness": 13,
+          "SpecialAbility": "If your Job character blocks, you may take an evil Job card from Reserve. If your animal blocks, you may take an animal from deck. Protect Job animals from opponents' Dominants. Cannot be negated.",
           "ORDIR": [
             "Animal",
             "Generic Character",
@@ -108932,6 +109634,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Lingering in Sodom",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 3,
+          "Toughness": -3,
+          "SpecialAbility": "You may play a City from deck. If played in battle, capture opponent's character of opposite alignment to an unoccupied Genesis Site. Cannot be prevented.",
           "ORDIR": [
             "Genesis Card"
           ]
@@ -109895,6 +110604,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Lost Anointing",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "Discard a version of any character that has been successful in battle. If used by an O.T. human, regardless of protect abilities. If played in battle, cannot be prevented.",
           "ORDIR": [
             "I Samuel Card"
           ]
@@ -119539,6 +120253,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Madness",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Orange"
+          ],
+          "SpecialAbility": "If opponent's Hero is in battle, you may convert this card to an orange brigade Evil Character and add it to battle.  Cannot be interrupted.",
           "ORDIR": [
             "Deuteronomy Card",
             "Gender",
@@ -119583,6 +120304,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Madness [IR]",
+          "Strength": 2,
+          "Toughness": 4,
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -119939,7 +120663,6 @@
           ],
           "Strength": 6,
           "Toughness": 8,
-          "SpecialAbility": "If you control a meek antediluvian, you may play a Lost Soul from a deck. Protect Lost Souls from evil cards.",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -119955,7 +120678,6 @@
           ],
           "Strength": 5,
           "Toughness": 6,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -120407,6 +121129,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Man with Withered Hand (GoC)",
+          "Strength": 6,
+          "Toughness": 6,
+          "SpecialAbility": "You may reveal your hand. If you do, N.T. Enhancements used by this character cannot be negated.",
           "ORDIR": [
             "Generic Character",
             "Luke Card"
@@ -120946,6 +121672,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Mark of the Beast (RoJ AB)",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Orange"
+          ],
+          "SpecialAbility": "If opponent uses a good ability to draw or search, you may search deck for an evil card. If played during battle and you control a Revelation beast, you may discard this card to discard a Hero.",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -120984,6 +121717,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Mark of the Beast (RoJ)",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Orange"
+          ],
+          "SpecialAbility": "If opponent uses a good ability to draw or search, you may search deck for an evil card. If played during battle and you control a Revelation Beast, you may discard this card to discard a Hero.",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -121056,6 +121796,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Marriage Covenant (LoC)",
+          "Strength": 2,
+          "Toughness": 1,
           "ORDIR": [
             "Ruth Card"
           ]
@@ -121788,7 +122531,6 @@
           "Name": "Mary, Faithful Servant (LoC)",
           "Strength": 5,
           "Toughness": 10,
-          "SpecialAbility": "While you do not control a good Enhancement in battle, protect your meek Heroes from harm.",
           "ORDIR": [
             "Duplicate Card",
             "Jerusalem Church",
@@ -121802,7 +122544,6 @@
           "Name": "Mary, Mother of Christ (LoC)",
           "Strength": 6,
           "Toughness": 7,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Jerusalem Church",
@@ -121842,6 +122583,8 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
           "ORDIR": [
             "Duplicate Card",
             "Jerusalem Church",
@@ -121898,6 +122641,9 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
+          "SpecialAbility": "If blocked from hand, good Gospel Enhancements cannot be negated. You may convert this card to meek to band to any number of empty tomb females.",
           "ORDIR": [
             "Duplicate Card",
             "Empty Tomb Hero",
@@ -121950,6 +122696,9 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
+          "SpecialAbility": "If blocked from hand, you may take a good N.T. card from deck. You may convert this card to meek to negate characters (except empty tomb Heroes) and Enhancements.",
           "ORDIR": [
             "Duplicate Card",
             "Empty Tomb Hero",
@@ -122802,7 +123551,6 @@
         "top": {
           "Name": "Matthan, the Defender (LoC)",
           "Toughness": 6,
-          "SpecialAbility": "Negate gray humans. You may play a Lost Soul from a deck or draw X (limit 3). Cannot be negated.",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -122813,7 +123561,6 @@
         "bottom": {
           "Name": "Matthan, the Denigrated (LoC)",
           "Toughness": 5,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -123191,6 +123938,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Matthias (GoC)",
+          "Type": "Hero",
+          "Alignment": "Good",
           "ORDIR": [
             "Acts Card",
             "Disciple",
@@ -124350,6 +125100,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Mene, Mene, Tekel, Upharsin",
+          "SpecialAbility": "If used by a Daniel Hero or Babylonian, reveal 4 (or X) cards from Reserve: Discard 1 at random and take 1 (or 2 if used by Daniel). Cannot be negated if played in battle.",
           "ORDIR": [
             "Daniel Card"
           ]
@@ -125067,7 +125819,6 @@
           "Brigades": [
             "Blue"
           ],
-          "SpecialAbility": "If blocked, select X random cards from hand: You may convert this card to meek to add a selected Genesis card to battle.",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -125081,7 +125832,6 @@
             "Blue",
             "Red"
           ],
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -127439,6 +128189,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Moabite Camp (LoC)",
+          "Classes": [
+            "Warrior"
+          ],
           "ORDIR": [
             "Generic Character",
             "II Kings Card",
@@ -130040,6 +130794,15 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Naaman (PoC)",
+          "Type": "Evil Character",
+          "Classes": [
+            "Warrior"
+          ],
+          "Strength": 8,
+          "Toughness": 7,
+          "Alignment": "Evil",
+          "SpecialAbility": "If Naaman is discarded, heal and convert him to a red Hero. Limit once. O.T. Enhancements used by Naaman cannot be negaed.",
           "ORDIR": [
             "II Kings Card",
             "Syrian"
@@ -130398,7 +131161,6 @@
           ],
           "Strength": 6,
           "Toughness": 4,
-          "SpecialAbility": "Protect meek Genesis Heroes from the first evil Enhancement played by an opponent each battle.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -130413,7 +131175,6 @@
           ],
           "Strength": 4,
           "Toughness": 6,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card"
@@ -130461,7 +131222,6 @@
           ],
           "Strength": 4,
           "Toughness": 3,
-          "SpecialAbility": "You may underdeck an Artifact or activate an Artifact. May band to an Exodus or meek Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card",
@@ -130477,7 +131237,6 @@
           ],
           "Strength": 11,
           "Toughness": 9,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card",
@@ -130804,6 +131563,9 @@
       },
       "CardSides": {
         "shared": {
+          "Classes": [
+            "Territory"
+          ],
           "ORDIR": [
             "Ruth Card"
           ]
@@ -131126,6 +131888,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Nebuchadnezzar (PoC)",
+          "Type": "Evil Character",
+          "Classes": [
+            "Warrior"
+          ],
+          "Alignment": "Evil",
+          "SpecialAbility": "If a Daniel Hero is in play, you may convert this character to a Hero after battle. May band to a Babylonian, or you may toss the next Enhancement played by opponent. Cannot be negated.",
           "ORDIR": [
             "Babylonian",
             "Daniel Card",
@@ -132007,6 +132776,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "New Covenant (Isaiah)",
+          "Strength": 1,
+          "Toughness": 6,
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -132054,6 +132826,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "New Covenant (Jeremiah)",
+          "Strength": 3,
+          "Toughness": 3,
           "ORDIR": [
             "Hebrews Card",
             "Jeremiah Card"
@@ -133055,6 +133830,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Ninevites",
+          "Type": "Evil Character",
+          "Alignment": "Evil",
+          "SpecialAbility": "You may exchange a card from hand with an O.T. Enhancement matching this card's brigade from Reserve. After battle, you may convert Ninevites to a Hero. Cannot be negated if a prophet is in play.",
           "ORDIR": [
             "Assyrian",
             "Generic Character",
@@ -133353,6 +134132,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "No Salvation",
+          "Strength": 0,
+          "Toughness": 4,
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -133652,7 +134434,6 @@
           ],
           "Strength": 1,
           "Toughness": 4,
-          "SpecialAbility": "You may convert this card to meek to prevent cards. You may shuffle a card (except a human). May band to Shem.",
           "ORDIR": [
             "Antediluvian",
             "Cloud Card",
@@ -133671,7 +134452,6 @@
           ],
           "Strength": 10,
           "Toughness": 11,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Antediluvian",
             "Cloud Card",
@@ -134330,6 +135110,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Oath of Purity (LoC)",
+          "Strength": 3,
+          "Toughness": 2,
           "ORDIR": [
             "Ezra Card"
           ]
@@ -134543,7 +135326,6 @@
           ],
           "Strength": 4,
           "Toughness": 2,
-          "SpecialAbility": "While you control a meek Hero, negate opponents' neutral cards. If attacking, you may draw X (limit 3).",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card",
@@ -134558,7 +135340,6 @@
           ],
           "Strength": 2,
           "Toughness": 1,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card"
@@ -135951,6 +136732,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Oppressed and Robbed",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Gold"
+          ],
+          "SpecialAbility": "While your human Evil Character is blocking, special abilities that discard cards from draw piles cannot be negated.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -136241,6 +137029,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Orpah Departs",
+          "Strength": -3,
+          "Toughness": 3,
+          "SpecialAbility": "Withdraw all opposing characters. You may topdeck a Ruth card from Reserve.",
           "ORDIR": [
             "Ruth Card"
           ]
@@ -137020,6 +137812,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Overtaken",
+          "Strength": 5,
+          "Toughness": 1,
+          "Brigades": [
+            "Gray"
+          ],
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -137138,6 +137936,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Pact with Death (Roots)",
+          "Strength": 2,
+          "Toughness": 4,
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -138753,6 +139554,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Paul's Belt (PC)",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "Capture your Hero or a Hero in battle to opponent's Land of Bondage.",
           "ORDIR": [
             "Acts Card",
             "Paul in the Title"
@@ -139410,7 +140216,6 @@
           ],
           "Strength": 8,
           "Toughness": 8,
-          "SpecialAbility": "Negate evil multi-brigade and evil territory class cards. May band to a meek Genesis Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -139425,7 +140230,6 @@
           ],
           "Strength": 7,
           "Toughness": 3,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card"
@@ -139553,7 +140357,6 @@
           ],
           "Strength": 2,
           "Toughness": 2,
-          "SpecialAbility": "You may bounce a character with strength greater than 2. May band to Hezron or a meek Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis 37-50 Card",
@@ -139569,7 +140372,6 @@
           ],
           "Strength": 10,
           "Toughness": 10,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis 37-50 Card",
@@ -140189,6 +140991,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Peter's Curse",
+          "Strength": 3,
+          "Toughness": 3,
+          "SpecialAbility": "Place on a Hero or good Fortress: Negate that card's special ability. When you play a good Dominant, discard this Curse. Cannot be negated.",
           "ORDIR": [
             "Matthew Card"
           ]
@@ -140233,6 +141039,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Peter's Curse (GoC)",
+          "Strength": 3,
+          "Toughness": 3,
           "ORDIR": [
             "Matthew Card"
           ]
@@ -141278,6 +142087,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Pharaoh's Curse",
+          "Strength": 6,
+          "Toughness": 0,
+          "Brigades": [
+            "Pale Green"
+          ],
           "ORDIR": [
             "Exodus Card"
           ]
@@ -141363,6 +142178,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Pharaoh's Daughter (FoM)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 2,
+          "Toughness": 5,
+          "SpecialAbility": "You may take Moses from deck or Reserve. Your Exodus characters of matching alignment and Exodus Enhancements used by them cannot be prevented. Cannot be interrupted.",
           "ORDIR": [
             "Egyptian",
             "Exodus Card",
@@ -142315,6 +143137,8 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
           "ORDIR": [
             "Disciple",
             "Duplicate Card",
@@ -143178,6 +144002,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Philistine Garrison (LoC)",
+          "Classes": [
+            "Warrior"
+          ],
           "ORDIR": [
             "Generic Character",
             "I Samuel Card",
@@ -144638,6 +145466,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Pillar of Salt",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 3,
+          "Toughness": -1,
           "ORDIR": [
             "Genesis Card"
           ]
@@ -145729,6 +146563,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Plagued with Diseases",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Brown"
+          ],
+          "SpecialAbility": "Decrease all opponents' Heroes by 0/2 (or 0/3 if you have the fewest Redeemed Souls).",
           "ORDIR": [
             "Deuteronomy Card",
             "Disease"
@@ -149774,6 +150615,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Prisoner at Gaza",
+          "Strength": 5,
+          "Toughness": 2,
+          "SpecialAbility": "You may capture this character to opponent's Land of Bondage to take an O.T. card of matching brigade from Reserve and add your human of matching brigade to battle.",
           "ORDIR": [
             "Generic Character",
             "Judges Card"
@@ -152419,7 +153264,6 @@
           "Name": "Rahab, the Defender (LoC)",
           "Strength": 2,
           "Toughness": 4,
-          "SpecialAbility": "You may bounce up to 2 Heroes. If one of them was meek, negate an evil card.",
           "ORDIR": [
             "Canaanite",
             "Cloud Card",
@@ -152432,7 +153276,6 @@
           "Name": "Rahab, the Proselyte (LoC)",
           "Strength": 5,
           "Toughness": 7,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Canaanite",
             "Cloud Card",
@@ -152547,6 +153390,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Rain Becomes Dust",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Gray"
+          ],
+          "SpecialAbility": "All cards that an opponent draws because of a special ability used by that opponent are revealed instead.  Place all revealed Lost Souls in opponent's territory.  Discard the rest.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -152585,6 +153435,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Rain Becomes Dust [IR]",
+          "Strength": 4,
+          "Toughness": 2,
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -152917,7 +153770,6 @@
           ],
           "Strength": 3,
           "Toughness": 4,
-          "SpecialAbility": "You may discard the top card of a deck. If it is good, its owner may take it instead. May band to a meek white Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card",
@@ -152932,7 +153784,6 @@
           ],
           "Strength": 9,
           "Toughness": 10,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card"
@@ -153168,6 +154019,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Razor (FooF)",
+          "Strength": 2,
+          "Toughness": 1,
+          "SpecialAbility": "If Isaiah or an Assyrian is in play, discard an opponent's character in battle, or negate and discard a single color Site, Artifact, or evil card in a territory.",
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -153251,6 +154106,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Razor (Roots)",
+          "Strength": 2,
+          "Toughness": 1,
+          "SpecialAbility": "Discard an evil card, an opposing character or an Artifact. Cannot be prevented.",
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -153751,7 +154610,6 @@
           ],
           "Strength": 2,
           "Toughness": 3,
-          "SpecialAbility": "You may convert your patriarch to meek to draw 2. You may exchange this card with Jacob from hand or territory.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -153767,7 +154625,6 @@
           ],
           "Strength": 6,
           "Toughness": 5,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -154933,6 +155790,7 @@
       },
       "CardSides": {
         "shared": {
+          "SpecialAbility": "Negate a card. Withdraw up to 2 opposing characters.",
           "ORDIR": [
             "Luke Card"
           ]
@@ -155564,7 +156422,6 @@
           ],
           "Strength": 5,
           "Toughness": 7,
-          "SpecialAbility": "If a good Genesis card you own is topdecked, you may draw 1. May band to a meek Genesis Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -155579,7 +156436,6 @@
           ],
           "Strength": 3,
           "Toughness": 2,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card"
@@ -156116,6 +156972,8 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Dominant",
+          "SpecialAbility": "RoV: If an Evil Character is blocking, add a meek Hero to battle. Limit once per game. AT: Play an Enhancement on your meek Hero in battle. Limit once per game.",
           "ORDIR": [
             "Involves Music"
           ]
@@ -156153,6 +157011,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Ridicule (GoC)",
+          "Strength": 2,
+          "Toughness": 4,
           "ORDIR": [
             "Luke Card"
           ]
@@ -156546,6 +157407,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Roman Citizenship",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "If used by a Roman, place on your non-Roman N.T. human: Character is Roman. If character enters battle, each player must discard 1 from hand.",
           "ORDIR": [
             "Acts Card"
           ]
@@ -156749,6 +157615,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Roman Spear",
+          "Classes": [
+            "Weapon"
+          ],
+          "Strength": 5,
+          "SpecialAbility": "Character has first strike. Protect captured characters from opponents. You may discard this card to decrease a human of opposite alignment 0/5",
           "ORDIR": [
             "Acts Card",
             "Bows, Arrows, Spears, Javelins and Darts"
@@ -157586,7 +158458,6 @@
           ],
           "Strength": 7,
           "Toughness": 6,
-          "SpecialAbility": "Protect Ruth Heroes from banish, discard and withdraw abilities. Good Ruth Enhancements cannot be negated.",
           "ORDIR": [
             "Duplicate Card",
             "Moabite",
@@ -157602,7 +158473,6 @@
           ],
           "Strength": 4,
           "Toughness": 3,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Moabite",
@@ -158641,7 +159511,6 @@
           ],
           "Strength": 6,
           "Toughness": 4,
-          "SpecialAbility": "You may exchange a card from hand with a good Ruth card from Reserve. May band to up to X Ruth Heroes.",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card",
@@ -158657,7 +159526,6 @@
           ],
           "Strength": 10,
           "Toughness": 11,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Ruth Card",
@@ -158867,6 +159735,9 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
+          "SpecialAbility": "If blocked from hand, protect Lost Souls and this card from evil cards. Good Enhancements are regardless of protect abilities if you convert this card to meek.",
           "ORDIR": [
             "Duplicate Card",
             "Empty Tomb Hero",
@@ -161087,6 +161958,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Scapegoat (PoC)",
+          "Classes": [
+            "Territory"
+          ],
           "ORDIR": [
             "Animal",
             "Generic Character",
@@ -161416,6 +162291,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Scroll of Isaiah",
+          "Strength": 2,
+          "Toughness": 5,
+          "SpecialAbility": "Good convert enhancements cannot be negated. When an Evil Character is converted its owner may discard 2 cards of matching brigade from hand instead.",
           "ORDIR": [
             "Acts Card",
             "Isaiah Card"
@@ -161579,6 +162458,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Second Bowl of Wrath (RoJ AB)",
+          "Strength": 2,
+          "Toughness": 5,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -161626,6 +162508,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Second Bowl of Wrath (RoJ)",
+          "Strength": 2,
+          "Toughness": 5,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -161673,6 +162558,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Second Seal (War) (RoJ AB)",
+          "Classes": [
+            "Warrior"
+          ],
           "ORDIR": [
             "Revelation Card"
           ]
@@ -161724,6 +162613,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Second Seal, War (RoJ)",
+          "Strength": 5,
+          "Toughness": 2,
           "ORDIR": [
             "Revelation Card",
             "Symbolic Character"
@@ -162673,6 +163565,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Send the Helper (GoC)",
+          "Strength": 6,
+          "Toughness": 1,
+          "Brigades": [
+            "Clay"
+          ],
           "ORDIR": [
             "John Card"
           ]
@@ -163200,6 +164098,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Serpent's Curse",
+          "Strength": 5,
+          "Toughness": -1,
+          "Brigades": [
+            "Crimson"
+          ],
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis 3 Curse",
@@ -163258,7 +164162,6 @@
           ],
           "Strength": 9,
           "Toughness": 10,
-          "SpecialAbility": "Prevent the next Enhancement played, unless it is used by a meek character. May band to a meek blue Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -163273,7 +164176,6 @@
           ],
           "Strength": 2,
           "Toughness": 4,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card"
@@ -163673,7 +164575,6 @@
           ],
           "Strength": 4,
           "Toughness": 3,
-          "SpecialAbility": "If Abel (or a meek Hero) is discarded, you may add this card or your meek Hero to battle. Limit once. May band to Enosh.",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -163689,7 +164590,6 @@
           ],
           "Strength": 2,
           "Toughness": 5,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -163725,6 +164625,7 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Seven Cows",
           "ORDIR": [
             "Genesis 37-50 Card",
             "Genesis Card"
@@ -164070,6 +164971,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Seven Years of Famine",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 0,
+          "Toughness": 7,
+          "SpecialAbility": "If used by a Genesis character, place in your territory for 7 turns: Negate draw and ignore abilities. During each player's upkeep, if their hand is 7 or more, they must discard 1.",
           "ORDIR": [
             "Genesis 37-50 Card",
             "Genesis Card"
@@ -164116,6 +165024,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Seven Years of Plenty",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 7,
+          "Toughness": 0,
+          "SpecialAbility": "Search deck for a Genesis or Exodus Fortress. Place this card in your territory for 7 turns: Each upkeep, if you control a Genesis character, you may draw 1.",
           "ORDIR": [
             "Genesis 37-50 Card",
             "Genesis Card"
@@ -164162,6 +165077,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Seventh Bowl of Wrath (RoJ AB)",
+          "Strength": 7,
+          "Toughness": 0,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -164209,6 +165127,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Seventh Bowl of Wrath (RoJ)",
+          "Strength": 7,
+          "Toughness": 0,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -164256,6 +165177,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Seventh Seal (RoJ AB)",
+          "Strength": 0,
+          "Toughness": 7,
+          "SpecialAbility": "You may search deck or Reserve for a card with \"Trumpet\" or \"Trumpets\" in the title. At any time, you may discard this card to withdraw all non-human characters.",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -164301,6 +165226,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Seventh Seal (RoJ)",
+          "Strength": 0,
+          "Toughness": 7,
+          "SpecialAbility": "You may search deck or Reserve for a card with \"Trumpet or Trumpets in the title. At any time, you may discard this card to withdraw all non-human characters.",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -165178,7 +166107,6 @@
           ],
           "Strength": 12,
           "Toughness": 9,
-          "SpecialAbility": "Negate crimson humans. Look at the top X cards of deck: You may take 1 (or 2 if an evil card is in a banish pile).",
           "ORDIR": [
             "Duplicate Card",
             "I Chronicles Card",
@@ -165195,7 +166123,6 @@
           ],
           "Strength": 3,
           "Toughness": 6,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "I Chronicles Card",
@@ -165375,7 +166302,6 @@
           ],
           "Strength": 4,
           "Toughness": 3,
-          "SpecialAbility": "If you control a meek Lost Soul, you may topdeck an evil card. Cannot be prevented if you control a meek Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -165390,7 +166316,6 @@
           ],
           "Strength": 9,
           "Toughness": 11,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card"
@@ -165579,7 +166504,6 @@
           ],
           "Strength": 5,
           "Toughness": 5,
-          "SpecialAbility": "Protect Noah from lone Evil Characters. May band to a flood survivor or meek Genesis Hero.",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -165596,7 +166520,6 @@
           ],
           "Strength": 6,
           "Toughness": 6,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Antediluvian",
             "Duplicate Card",
@@ -167244,6 +168167,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Siegeworks (FooF)",
+          "Strength": 3,
+          "Toughness": 0,
+          "SpecialAbility": "If you control Isaiah or an Assyrian, place all opposing characters beneath deck and place this card on a Site or Fortress: Negate that card.",
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -167327,6 +168254,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Siegeworks (Roots)",
+          "Strength": 3,
+          "Toughness": 0,
+          "SpecialAbility": "Underdeck a Fortress and all opposing characters.",
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -168451,6 +169382,8 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
           "ORDIR": [
             "Disciple",
             "Duplicate Card",
@@ -168548,6 +169481,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Sin and Justice",
+          "Strength": -2,
+          "Toughness": 1,
           "ORDIR": [
             "Judges Card"
           ]
@@ -169363,6 +170299,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Sixth Bowl of Wrath (RoJ AB)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 6,
+          "Toughness": 1,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -169410,6 +170352,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Sixth Bowl of Wrath (RoJ)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 6,
+          "Toughness": 1,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -169457,6 +170405,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Sixth Seal (Terror) (RoJ AB)",
+          "Classes": [
+            "Territory"
+          ],
           "ORDIR": [
             "Revelation Card"
           ]
@@ -169714,6 +170666,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Slaves in Egypt",
+          "Strength": 1,
+          "Toughness": 1,
+          "SpecialAbility": "You may capture this character to opponent's Land of Bondage to take an Exodus Fortress from deck or Reserve and add an Exodus character to battle.",
           "ORDIR": [
             "Exodus Card",
             "Generic Character"
@@ -173292,6 +174248,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Sprinkled Blood",
+          "Strength": 4,
+          "Toughness": 3,
+          "Brigades": [
+            "White"
+          ],
           "ORDIR": [
             "Exodus Card"
           ]
@@ -174357,6 +175319,7 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Stolen Blessing (LoC)",
           "ORDIR": [
             "Genesis 21-35 Enhancement",
             "Genesis Card"
@@ -176646,6 +177609,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Suicidal Swine Stampede (GoC)",
+          "Alignment": "Evil",
           "ORDIR": [
             "Animal",
             "Generic Character",
@@ -179463,7 +180428,6 @@
           ],
           "Strength": 8,
           "Toughness": 6,
-          "SpecialAbility": "After battle, discard an evil male. May band to Judah and/or you may play meek Perez from deck or Reserve.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis 37-50 Card",
@@ -179479,7 +180443,6 @@
           ],
           "Strength": 2,
           "Toughness": 2,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis 37-50 Card",
@@ -180762,6 +181725,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Temptation in the Wilderness (GoC)",
+          "Classes": [
+            "Territory"
+          ],
           "ORDIR": [
             "Matthew Card"
           ]
@@ -180812,6 +181779,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Ten Virgins (GoC)",
+          "SpecialAbility": "Opponent may reserve the top 5 cards of their deck. If they do not, while your N.T. character is in battle, restrict opponent from playing Enhancements. Cannot be negated.",
           "ORDIR": [
             "Matthew Card"
           ]
@@ -180954,7 +181923,6 @@
           ],
           "Strength": 9,
           "Toughness": 8,
-          "SpecialAbility": "You may reserve your meek Hero to discard an Artifact or evil Enhancement. You may bounce a patriarch in a territory.",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card",
@@ -180969,7 +181937,6 @@
           ],
           "Strength": 4,
           "Toughness": 3,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Genesis Card"
@@ -181176,6 +182143,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Testing of Job (RoJ AB)",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "Search deck or discard pile for Job. Place this card in territory: Decrease your Job 0/X (limit 11). Each upkeep, you may underdeck your character or Enhancement.",
           "ORDIR": [
             "Job Card"
           ]
@@ -181220,6 +182192,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Testing of Job (RoJ)",
+          "Classes": [
+            "Territory"
+          ],
+          "SpecialAbility": "Search deck or discard pile for Job. Place this card in territory: Decrease your Job 0/X (limit 11). Each upkeep, you may underdeck your character or Enhancement.",
           "ORDIR": [
             "Job Card"
           ]
@@ -181381,6 +182358,8 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Alignment": "Good",
           "ORDIR": [
             "Disciple",
             "Duplicate Card",
@@ -185006,6 +185985,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "The Fall of Man",
+          "Strength": 3,
+          "Toughness": 3,
+          "Brigades": [
+            "Multi"
+          ],
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis 3 Curse",
@@ -185526,6 +186511,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "The Flood",
+          "SpecialAbility": "If used by a flood survivor or evil antediluvian, remove this card from the game to discard all cards in the Field of Battle (except flood survivors) and evil cards in play and set-aside areas.",
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis 6-10 Card",
@@ -185574,6 +186561,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "The Flood (CoW AB)",
+          "SpecialAbility": "If used by a flood survivor or evil antediluvian, remove this card from the game to discard all cards in the Field of Battle (except flood survivors) and evil cards in play and set-aside areas.",
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis 6-10 Card",
@@ -186651,6 +187640,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "The Great Fish",
+          "Strength": 0,
           "ORDIR": [
             "Animal",
             "Jonah Card"
@@ -187657,6 +188648,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "The King of Nineveh",
+          "Type": "Evil Character",
+          "Classes": [
+            "Warrior"
+          ],
+          "Alignment": "Evil",
+          "SpecialAbility": "You may play Nineveh from deck. If opponent has board advantage, they must discard X cards from territory. If Jonah is in play, convert this character to a Hero after battle. Cannot be negated.",
           "ORDIR": [
             "Assyrian",
             "Jonah Card",
@@ -188879,6 +189877,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "The New Covenant",
+          "Strength": 4,
+          "Toughness": 3,
+          "Brigades": [
+            "Purple"
+          ],
+          "SpecialAbility": "At any time, you may place this card beneath your deck to heal all N.T. Heroes, return all captured N.T. Heroes to territory, or discard all Evil Character cards on N.T. Heroes.",
           "ORDIR": [
             "Luke Card"
           ]
@@ -188917,6 +189922,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "The New Covenant (I/J+)",
+          "Strength": 4,
+          "Toughness": 3,
+          "Brigades": [
+            "Purple"
+          ],
           "ORDIR": [
             "Mark Card"
           ]
@@ -189492,6 +190503,7 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "The Prodigal Son (GoC)",
           "ORDIR": [
             "Luke Card"
           ]
@@ -190087,6 +191099,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "The Rainbow",
+          "Strength": 1,
+          "Toughness": 7,
+          "Brigades": [
+            "Blue"
+          ],
           "ORDIR": [
             "Genesis 6-10 Card",
             "Genesis Card"
@@ -194061,6 +195079,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Third Bowl of Wrath (RoJ AB)",
+          "Strength": 3,
+          "Toughness": 4,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -194108,6 +195129,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Third Bowl of Wrath (RoJ)",
+          "Strength": 3,
+          "Toughness": 4,
           "ORDIR": [
             "Revelation Card"
           ]
@@ -194189,6 +195213,7 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Third Seal (Famine) (RoJ AB)",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -194451,6 +195476,11 @@
       },
       "CardSides": {
         "shared": {
+          "Type": "Hero",
+          "Classes": [
+            "Territory"
+          ],
+          "Alignment": "Good",
           "ORDIR": [
             "Disciple",
             "Duplicate Card",
@@ -194541,6 +195571,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Thorns and Thistles (CoW AB)",
+          "Strength": 4,
+          "Toughness": 2,
+          "Brigades": [
+            "Brown"
+          ],
+          "SpecialAbility": "Deactivate all but one Artifact in each territory (except Thorns and Thistles). Negate characters in territories. Restrict players to one active Artifact.",
           "ORDIR": [
             "Hebrews Card"
           ]
@@ -194579,6 +195616,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Thorns and Thistles (CoW)",
+          "Strength": 4,
+          "Toughness": 2,
+          "Brigades": [
+            "Brown"
+          ],
+          "SpecialAbility": "Deactivate all but one Artifact in each territory (except Thorns and Thistles). Negate characters in territories. Restrict players to one active Artifact.",
           "ORDIR": [
             "Hebrews Card"
           ]
@@ -194798,6 +195842,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Three Woes (RoJ AB)",
+          "Type": "Dominant",
+          "SpecialAbility": "Place in territory: Negate a card of a different alignment than this card for one round. Each upkeep, you may negate a card of a different alignment than this card for one round.",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -194834,6 +195881,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Three Woes (RoJ)",
+          "Type": "Dominant",
+          "SpecialAbility": "Place in territory: Negate a card of a different alignment than this card for one round. Each upkeep, you may negate a card of a different alignment than this card for one round.",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -194870,6 +195920,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Three Woes [Fundraiser]",
+          "Type": "Dominant",
+          "SpecialAbility": "Place in territory: Negate a card of a different alignment than this card for one round. Each upkeep, you may negate a card of a different alignment than this card for one round.",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -195602,6 +196655,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Today",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 1,
+          "Toughness": 7,
+          "SpecialAbility": "You may convert an Evil Character in battle or discard an evil card in a set aside area. Shuffle all Heroes that are set aside.",
           "ORDIR": [
             "Hebrews Card",
             "Involves Music"
@@ -195648,6 +196708,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Today (CoW AB)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 1,
+          "Toughness": 7,
+          "SpecialAbility": "You may convert an Evil Character in battle or discard an evil card in a set aside area. Shuffle all Heroes that are set aside.",
           "ORDIR": [
             "Hebrews Card",
             "Involves Music"
@@ -197920,6 +198987,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Two by Two",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 2,
+          "Toughness": 7,
+          "SpecialAbility": "You may take a Genesis Fortress or an animal (or 2 animals if you control Noah's Ark) from deck (or Reserve if used by a flood survivor).",
           "ORDIR": [
             "Genesis 1-7 Enhancement",
             "Genesis 6-10 Card",
@@ -198766,6 +199840,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Unified Language",
+          "Brigades": [
+            "Multi"
+          ],
+          "SpecialAbility": "If used by a human, character may band to a human in each territory.",
           "ORDIR": [
             "Genesis Card"
           ]
@@ -198912,6 +199991,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Unknown Nation",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Gold"
+          ],
+          "SpecialAbility": "If opponent's Hero is in battle, you may discard this card to search draw pile for a human Evil Character and add it to battle.  Cannot be interrupted.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -198950,6 +200036,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Unknown Nation (PoC)",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Gold"
+          ],
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -199075,6 +200167,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Unsuccessful",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Gray"
+          ],
+          "SpecialAbility": "Negate the last good Enhancement played in battle (may be used once).",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -199113,6 +200212,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Unsuccessful (PoC)",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Gray"
+          ],
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -201540,6 +202645,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "War in Heaven (RoJ AB)",
+          "Strength": 5,
+          "Toughness": 2,
+          "SpecialAbility": "Negate and discard an opposing card in battle (except a human).",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -201584,6 +202693,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "War in Heaven (RoJ)",
+          "Strength": 5,
+          "Toughness": 2,
+          "SpecialAbility": "Negate and discard an opposing card in battle (except a human).",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -201628,6 +202741,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "War in Heaven [2023 - Worker]",
+          "Strength": 5,
+          "Toughness": 2,
+          "SpecialAbility": "Negate and discard an opposing card in battle (except a human).",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -201755,6 +202872,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Warning Against Rebellion",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 1,
+          "Toughness": 5,
+          "SpecialAbility": "Reveal the top 5 cards of opponent's deck: Put Lost Souls in play and underdeck the rest. If blocking, you may topdeck a Lost Soul.",
           "ORDIR": [
             "Hebrews Card",
             "Involves Music"
@@ -201801,6 +202925,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Warning Against Rebellion (CoW AB)",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 1,
+          "Toughness": 5,
+          "SpecialAbility": "Reveal the top 5 cards of opponent's deck: Put Lost Souls in play and underdeck the rest. If blocking, you may topdeck a Lost Soul.",
           "ORDIR": [
             "Hebrews Card",
             "Involves Music"
@@ -202153,6 +203284,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Wastelands",
+          "Strength": 2,
+          "Toughness": 4,
+          "Brigades": [
+            "Orange"
+          ],
+          "SpecialAbility": "Selected opponent must place a Site from his territory beneath deck. May be used twice per game.",
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -202191,6 +203329,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Wastelands (Roots)",
+          "Strength": 2,
+          "Toughness": 4,
+          "Brigades": [
+            "Orange"
+          ],
           "ORDIR": [
             "Deuteronomy Card"
           ]
@@ -202231,6 +203375,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Wasting Disease",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Brown"
+          ],
+          "SpecialAbility": "Prevent all good abilities that allow a player to play an Enhancement.",
           "ORDIR": [
             "Deuteronomy Card",
             "Disease"
@@ -202271,6 +203422,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Wasting Disease (PoC)",
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Brown"
+          ],
           "ORDIR": [
             "Deuteronomy Card",
             "Disease"
@@ -204366,6 +205523,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Wild Ox (LoC)",
+          "Strength": 3,
           "ORDIR": [
             "Animal",
             "Generic Character",
@@ -205113,6 +206272,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Withered Plant (The Worm)",
+          "Alignment": "Evil",
           "ORDIR": [
             "Animal",
             "Jonah Card"
@@ -206550,6 +207711,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Worship of Edom (LoC)",
+          "Strength": 4,
+          "Toughness": 2,
+          "Brigades": [
+            "Crimson"
+          ],
           "ORDIR": [
             "II Chronicles Card",
             "Idol"
@@ -207182,6 +208349,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "You Will Remain",
+          "Strength": 0,
+          "Toughness": 7,
+          "SpecialAbility": "If opponent uses an evil 'end the battle' ability this turn, you may begin a new battle. If an opponent removes your last Hero from battle, you may remove this from the game to add your Hero to battle.",
           "ORDIR": [
             "Hebrews Card",
             "Involves Music"
@@ -207228,6 +208399,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "You Will Remain (CoW AB)",
+          "Strength": 0,
+          "Toughness": 7,
+          "SpecialAbility": "If opponent uses an evil \"end the battle\" ability this turn, you may begin a new battle. If an opponent removes your last Hero from battle, you may remove this from the game to add your Hero to battle.",
           "ORDIR": [
             "Hebrews Card",
             "Involves Music"
@@ -207662,7 +208837,6 @@
           ],
           "Strength": 10,
           "Toughness": 2,
-          "SpecialAbility": "Negate black humans. You may banish up to X evil cards from a discard pile. May band to a meek gold Hero.",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -207678,7 +208852,6 @@
           ],
           "Strength": 2,
           "Toughness": 10,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Matthew Card",
@@ -208710,7 +209883,6 @@
           ],
           "Strength": 3,
           "Toughness": 2,
-          "SpecialAbility": "You may convert this card to meek to draw 2. May band to a postexilic Hero, or you may play a postexilic Hero from deck.",
           "ORDIR": [
             "Ezra Card",
             "Postexilic"
@@ -208724,7 +209896,6 @@
           ],
           "Strength": 12,
           "Toughness": 8,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Ezra Card",
@@ -208775,7 +209946,6 @@
           ],
           "Strength": 3,
           "Toughness": 2,
-          "SpecialAbility": "You may convert this card to meek to draw 2. May band to a postexilic Hero, or you may play a postexilic Hero from deck.",
           "ORDIR": [
             "Ezra Card",
             "Postexilic"
@@ -208789,7 +209959,6 @@
           ],
           "Strength": 12,
           "Toughness": 8,
-          "SpecialAbility": "Meek",
           "ORDIR": [
             "Duplicate Card",
             "Ezra Card",
@@ -209560,6 +210729,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Joshua's Covenant",
+          "Strength": 2,
+          "Toughness": 5,
+          "Brigades": [
+            "Gold"
+          ],
           "ORDIR": [
             "Joshua Card"
           ]
@@ -209600,6 +210775,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Vow for Samuel",
+          "Strength": 4,
+          "Toughness": 3,
+          "Brigades": [
+            "Green"
+          ],
           "ORDIR": [
             "I Samuel Card"
           ]
@@ -209640,6 +210821,15 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I Am Refuge",
+          "Classes": [
+            "Weapon"
+          ],
+          "Strength": 0,
+          "Toughness": 6,
+          "Brigades": [
+            "Purple"
+          ],
           "ORDIR": [
             "II Samuel Card",
             "Involves Music"
@@ -209682,6 +210872,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Fear has Fallen",
+          "Strength": 5,
+          "Toughness": 1,
+          "Brigades": [
+            "Black"
+          ],
           "ORDIR": [
             "Joshua Card"
           ]
@@ -209722,6 +210918,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Israel Turned Away",
+          "Strength": 2,
+          "Toughness": 4,
+          "Brigades": [
+            "Crimson"
+          ],
           "ORDIR": [
             "Judges Card"
           ]
@@ -209762,6 +210964,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Summoned Curse",
+          "Strength": 6,
+          "Toughness": 0,
+          "Brigades": [
+            "Gray"
+          ],
           "ORDIR": [
             "Joshua Card"
           ]
@@ -210144,6 +211352,11 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Joab, the General",
+          "Classes": [
+            "Warrior"
+          ],
+          "SpecialAbility": "You may draw 1 or discard an Enhancement of opposite alignment from a deck. While equipped, prevent the next Enhancement of opposite alignment played in battle.",
           "ORDIR": [
             "Duplicate Card",
             "II Samuel Card"
@@ -210194,6 +211407,7 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Quake in Edom",
           "ORDIR": [
             "Involves Music",
             "Judges Card"
@@ -210246,6 +211460,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Snatched Spear",
+          "Classes": [
+            "Weapon"
+          ],
+          "Strength": 5,
+          "Toughness": 0,
+          "SpecialAbility": "If used by a lone O.T. warrior, you may choose a human of opposite alignment to oppose bearer.",
           "ORDIR": [
             "Bows, Arrows, Spears, Javelins and Darts",
             "II Samuel Card"
@@ -210292,6 +211513,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Woe to Chemosh",
+          "Classes": [
+            "Territory"
+          ],
+          "Strength": 3,
+          "Toughness": 3,
           "ORDIR": [
             "Numbers Card"
           ]
@@ -210338,6 +211565,13 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Joab's Spears",
+          "Classes": [
+            "Weapon"
+          ],
+          "Strength": 3,
+          "Toughness": 0,
+          "SpecialAbility": "Select up to 1 (or 2 if used by Joab): Negate a card. Discard this card to discard an opponent's warrior.",
           "ORDIR": [
             "Bows, Arrows, Spears, Javelins and Darts",
             "II Samuel Card"
@@ -210384,6 +211618,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Inherit Canaan",
+          "Classes": [
+            "Territory"
+          ],
           "ORDIR": [
             "Leviticus Card"
           ]
@@ -215590,6 +216828,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Time",
+          "Strength": 5,
+          "Toughness": 2,
+          "Brigades": [
+            "Green"
+          ],
           "ORDIR": [
             "Jeremiah Card"
           ]
@@ -215630,6 +216874,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "God's Judgment",
+          "Strength": 2,
+          "Toughness": 5,
+          "Brigades": [
+            "Silver"
+          ],
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -215670,6 +216920,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Seventy Weeks",
+          "Strength": 7,
+          "Toughness": 0,
+          "Brigades": [
+            "White"
+          ],
           "ORDIR": [
             "Daniel Card"
           ]
@@ -215710,6 +216966,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Return to Curse",
+          "Strength": 3,
+          "Toughness": 3,
+          "Brigades": [
+            "Black"
+          ],
           "ORDIR": [
             "Daniel Card"
           ]
@@ -215750,6 +217012,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Leave Your Name",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Brown"
+          ],
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -215790,6 +217058,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Self-Made",
+          "Strength": 0,
+          "Toughness": 3,
+          "Brigades": [
+            "Crimson"
+          ],
           "ORDIR": [
             "Daniel Card"
           ]
@@ -216149,6 +217423,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Perfidy",
+          "SpecialAbility": "Reveal a hand: You may reserve an Enhancement. If 4 or more brigades are revealed, repeat 1 time.",
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -216197,6 +217473,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Return to Fight",
+          "SpecialAbility": "Interrupt the battle. Character may band to an O.T. character of matching brigade from deck or Reserve.",
           "ORDIR": [
             "Daniel Card"
           ]
@@ -216245,6 +217523,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Measured Mien",
+          "SpecialAbility": "Underdeck any number of cards from hand to draw X. You may play an O.T. Enhancement. Cannot be interrupted.",
           "ORDIR": [
             "Daniel Card"
           ]
@@ -220953,6 +222233,10 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "War in Heaven [Fundraiser]",
+          "Strength": 5,
+          "Toughness": 2,
+          "SpecialAbility": "Negate and discard an opposing card in battle (except a human).",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -221614,6 +222898,9 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Three Woes [Fundraiser - Serialized]",
+          "Type": "Dominant",
+          "SpecialAbility": "Place in territory: Negate a card of a different alignment than this card for one round. Each upkeep, you may negate a card of a different alignment than this card for one round.",
           "ORDIR": [
             "Revelation Card"
           ]
@@ -221789,6 +223076,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "I Am Grace [2026 - Regional]",
+          "Strength": 4,
+          "Toughness": 3,
+          "Brigades": [
+            "Clay"
+          ],
           "ORDIR": [
             "Christ or Jesus in the Title or Scripture Verse"
           ]
@@ -222139,6 +223432,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Covenant of Time [T2C AB]",
+          "Strength": 5,
+          "Toughness": 2,
+          "Brigades": [
+            "Green"
+          ],
           "ORDIR": [
             "Jeremiah Card"
           ]
@@ -222179,6 +223478,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "God's Judgment [T2C AB]",
+          "Strength": 2,
+          "Toughness": 5,
+          "Brigades": [
+            "Silver"
+          ],
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -222219,6 +223524,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Seventy Weeks [T2C AB]",
+          "Strength": 7,
+          "Toughness": 0,
+          "Brigades": [
+            "White"
+          ],
           "ORDIR": [
             "Daniel Card"
           ]
@@ -222259,6 +223570,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Return to Curse [T2C AB]",
+          "Strength": 3,
+          "Toughness": 3,
+          "Brigades": [
+            "Black"
+          ],
           "ORDIR": [
             "Daniel Card"
           ]
@@ -222299,6 +223616,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Leave Your Name [T2C AB]",
+          "Strength": 1,
+          "Toughness": 5,
+          "Brigades": [
+            "Brown"
+          ],
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -222339,6 +223662,12 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Self-Made [T2C AB]",
+          "Strength": 0,
+          "Toughness": 3,
+          "Brigades": [
+            "Crimson"
+          ],
           "ORDIR": [
             "Daniel Card"
           ]
@@ -222698,6 +224027,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Perfidy [T2C AB]",
+          "SpecialAbility": "Reveal a hand: You may reserve an Enhancement. If 4 or more brigades are revealed, repeat 1 time.",
           "ORDIR": [
             "Isaiah Card"
           ]
@@ -222746,6 +224077,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Return to Fight [T2C AB]",
+          "SpecialAbility": "Interrupt the battle. Character may band to an O.T. character of matching brigade from deck or Reserve.",
           "ORDIR": [
             "Daniel Card"
           ]
@@ -222794,6 +224127,8 @@
       },
       "CardSides": {
         "shared": {
+          "Name": "Measured Mien [T2C AB]",
+          "SpecialAbility": "Underdeck any number of cards from hand to draw X. You may play an O.T. Enhancement. Cannot be interrupted.",
           "ORDIR": [
             "Daniel Card"
           ]
