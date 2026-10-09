@@ -188,7 +188,9 @@ describe("AST Special Abilities Engine - Phase 1 Walking Skeleton", () => {
       expect(player1.hand.length).toBe(1); // 2 drawn cards returned to deck
       expect(player1.deck.length).toBe(2);
       expect(state.effectChronicle.items.length).toBe(1);
-      expect(state.effectChronicle.items[0].cardId).toBe(horsemen.id);
+      expect(room.broadcastGameLog).toHaveBeenCalledWith(
+        "[UNDO] Player 1 rewound ability of {{2041723113|Egyptian Horsemen}} and returned {{102|Card 2}}, {{101|Card 1}} from their Hand to their Deck."
+      );
     });
 
     test("falls back gracefully on unsupported action and unmapped card", () => {

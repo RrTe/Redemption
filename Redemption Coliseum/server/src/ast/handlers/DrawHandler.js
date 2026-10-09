@@ -56,12 +56,30 @@ class DrawHandler {
     const movedCards = result?.movedCards || [];
     const divertedCards = result?.divertedCards || [];
 
-    // Construct atomic mutation snapshot for rollbacks
+    // Construct atomic mutation snapshot for generic and legacy rollbacks
+    const movedCardsList = [
+      ...movedCards.map((c) => ({
+        cardId: c.id,
+        name: c.Name,
+        fromZone: ZONES.DECK,
+        toZone: destination,
+        ownerId: player.sessionId,
+      })),
+      ...divertedCards.map((c) => ({
+        cardId: c.id,
+        name: c.Name,
+        fromZone: ZONES.DECK,
+        toZone: ZONES.LAND_OF_BONDAGE,
+        ownerId: player.sessionId,
+      })),
+    ];
+
     const snapshot = {
       action: AST_ACTIONS.DRAW,
       timestamp: Date.now(),
       playerId: player.sessionId,
       cardId: item?.cardId || "",
+      movedCards: movedCardsList,
       movedCardIds: movedCards.map((c) => c.id),
       divertedCardIds: divertedCards.map((c) => c.id),
       fromZone: ZONES.DECK,

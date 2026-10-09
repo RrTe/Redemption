@@ -70,6 +70,7 @@ class DiscardHandler {
           cardId: card.id,
           name: card.Name,
           fromZone,
+          toZone: ZONES.DISCARD,
           ownerId: owner.sessionId,
         });
         if (result.logEntry) logEntries.push(result.logEntry);
@@ -81,6 +82,7 @@ class DiscardHandler {
       timestamp: Date.now(),
       playerId: player.sessionId,
       cardId: item?.cardId || "",
+      movedCards: discardedSnapshots,
       discardedCards: discardedSnapshots,
     };
 

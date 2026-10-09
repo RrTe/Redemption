@@ -1,9 +1,9 @@
 const { BaseCommand } = require("./BaseCommand");
 const {
   moveCard,
-  getZoneDisplayName,
   getZoneCollection,
 } = require("../services/cardService");
+const { formatCardUndoLog } = require("../utils/gameLogFormatter");
 const { ZONES } = require("../../../shared/zones");
 const logger = require("../utils/logger");
 
@@ -220,10 +220,13 @@ class MoveCardCommand extends BaseCommand {
     }
 
     // Broadcast mandatory human-readable undo log
-    const fromDisplay = getZoneDisplayName(snap.fromZone, false);
-    const toDisplay = getZoneDisplayName(currentZone, false);
-    const templateId = snap.templateId || snap.cardName;
-    const logMsg = `[UNDO] ${player.name} returned {{${templateId}|${snap.cardName}}} from ${toDisplay} to ${fromDisplay}.`;
+    const logMsg = formatCardUndoLog(
+      player.name,
+      { templateId: snap.templateId, Name: snap.cardName },
+      currentZone,
+      snap.fromZone,
+      false
+    );
     this.room.broadcastGameLog(logMsg);
   }
 
