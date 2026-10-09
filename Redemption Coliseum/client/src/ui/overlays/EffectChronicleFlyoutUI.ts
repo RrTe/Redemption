@@ -145,30 +145,38 @@ export class EffectChronicleFlyoutUI {
     const execBtn = document.createElement("button");
     execBtn.style.cssText = "flex:1.2;padding:8px 12px;background:#d4af37;color:#0f172a;font-weight:bold;border:none;border-radius:4px;cursor:pointer;";
     execBtn.textContent = "Execute";
-    execBtn.onclick = () => this.onExecuteCallback?.(activeItemId);
+    execBtn.onclick = (e) => { e.stopPropagation(); this.onExecuteCallback?.(activeItemId); };
+    this._shield(execBtn);
 
     const passBtn = document.createElement("button");
-    const passCursor = isOptional ? "pointer" : "not-allowed";
-    const passOpacity = isOptional ? "1" : "0.35";
+    const [passCursor, passOpacity] = isOptional ? ["pointer", "1"] : ["not-allowed", "0.35"];
     passBtn.style.cssText = `flex:1;padding:8px 8px;background:#334155;color:#e2e8f0;border:none;border-radius:4px;cursor:${passCursor};opacity:${passOpacity};`;
     passBtn.textContent = "Pass";
     passBtn.disabled = !isOptional;
-    passBtn.onclick = () => {
-      if (isOptional) this.onPassCallback?.(activeItemId);
-    };
+    passBtn.onclick = (e) => { e.stopPropagation(); if (isOptional) this.onPassCallback?.(activeItemId); };
+    this._shield(passBtn);
 
     const passAllBtn = document.createElement("button");
     passAllBtn.style.cssText = `flex:1;padding:8px 6px;background:#1e293b;border:1px solid #475569;color:#94a3b8;border-radius:4px;cursor:${passCursor};font-size:11px;opacity:${passOpacity};`;
     passAllBtn.textContent = "Pass All";
     passAllBtn.disabled = !isOptional;
-    passAllBtn.onclick = () => {
-      if (isOptional) this.onPassAllCallback?.();
-    };
+    passAllBtn.onclick = (e) => { e.stopPropagation(); if (isOptional) this.onPassAllCallback?.(); };
+    this._shield(passAllBtn);
 
     btnRow.appendChild(execBtn);
     btnRow.appendChild(passBtn);
     btnRow.appendChild(passAllBtn);
     this.footerElement.appendChild(btnRow);
+  }
+
+  /**
+   * Shields a DOM element from bubbling pointer/mouse events to the Phaser canvas underneath.
+   */
+  private _shield(el: HTMLElement): void {
+    const stop = (e: Event) => e.stopPropagation();
+    ["pointerdown", "pointerup", "pointermove", "mousedown", "mouseup", "touchstart", "touchend", "click", "wheel"].forEach(
+      (evt) => el.addEventListener(evt, stop)
+    );
   }
 
   private _createDOM(): void {
@@ -177,12 +185,15 @@ export class EffectChronicleFlyoutUI {
 
     this.backdrop = document.createElement("div");
     this.backdrop.style.cssText = "position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.25);display:none;";
-    this.backdrop.onclick = () => this.hide();
+    this.backdrop.onclick = (e) => { e.stopPropagation(); this.hide(); };
 
     this.drawer = document.createElement("div");
     this.drawer.style.cssText = `position:fixed;top:0;right:0;width:min(340px,85vw);height:100%;z-index:901;
       background:#0f172a;border-left:2px solid #d4af37;box-shadow:-4px 0 20px rgba(0,0,0,0.7);
       display:flex;flex-direction:column;transform:translateX(105%);transition:transform 0.28s ease-out;`;
+
+    this._shield(this.backdrop);
+    this._shield(this.drawer);
 
     // Header
     const header = document.createElement("div");
@@ -201,7 +212,8 @@ export class EffectChronicleFlyoutUI {
     const closeBtn = document.createElement("button");
     closeBtn.style.cssText = "background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;line-height:1;";
     closeBtn.textContent = "×";
-    closeBtn.onclick = () => this.hide();
+    closeBtn.onclick = (e) => { e.stopPropagation(); this.hide(); };
+    this._shield(closeBtn);
 
     header.appendChild(titleArea);
     header.appendChild(closeBtn);
