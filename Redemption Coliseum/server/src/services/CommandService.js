@@ -38,8 +38,14 @@ const {
   ResolveChronicleCommand,
 } = require("../commands/ResolveChronicleCommand");
 const {
+  SelectTargetCommand,
+} = require("../commands/SelectTargetCommand");
+const {
   CHRONICLE_MESSAGES,
 } = require("../../../shared/effectChronicleConstants");
+const {
+  AST_MESSAGES,
+} = require("../../../shared/astConstants");
 
 class CommandService {
   /**
@@ -66,6 +72,7 @@ class CommandService {
     room.dispatcher.register("resolveUndo", ResolveUndoCommand);
     room.dispatcher.register("submitDrawSequence", SubmitDrawSequenceCommand);
     room.dispatcher.register(CHRONICLE_MESSAGES.RESOLVE_ITEM, ResolveChronicleCommand);
+    room.dispatcher.register(AST_MESSAGES.SELECT_TARGET, SelectTargetCommand);
   }
 }
 

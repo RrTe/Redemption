@@ -7,6 +7,7 @@ import { SHADOW_CONFIG } from "./CardPhysicsEffects";
 import { AssetManager } from "../managers/AssetManager";
 import { CardSetAsideEffect } from "./CardSetAsideEffect";
 import { LiquidDistortionPipeline } from "./LiquidDistortionPipeline";
+import { TargetBorderEffect } from "./TargetBorderEffect";
 
 const IMAGE_BASE_URL = "/assets/cards/";
 
@@ -60,11 +61,13 @@ export class CardVisuals {
 
   // Set Aside Effect
   private setAsideEffect: CardSetAsideEffect;
+  private targetBorderEffect: TargetBorderEffect;
 
   constructor(scene: Phaser.Scene, cardUI: CardUI) {
     this.scene = scene;
     this.cardUI = cardUI;
     this.setAsideEffect = new CardSetAsideEffect(scene, cardUI, this);
+    this.targetBorderEffect = new TargetBorderEffect(scene, cardUI, cardUI.width, cardUI.height, 8);
 
     // 1. Schatten (NineSlice) - Ganz nach hinten
     this.shadow = scene.add.nineslice(
@@ -505,6 +508,15 @@ export class CardVisuals {
     return this.starIcon;
   }
 
+  /** Schaltet den rubinroten Glitzer- und Umlaufeffekt für das Targeting ein oder aus. */
+  public updateTargetBorder(isActive: boolean): void {
+    this.targetBorderEffect.show(isActive);
+  }
+
+  /** Schaltet das Focal Dimming für nicht-wählbare Karten ein oder aus. */
+  public setDimmed(dimmed: boolean): void {
+    this.cardUI.setAlpha(dimmed ? 0.45 : 1.0);
+  }
 
   /** Aktiviert oder deaktiviert den Paralyze-Effekt. */
   public updateParalyzeEffect(active: boolean) {
@@ -537,6 +549,7 @@ export class CardVisuals {
     this.updateGlowZone();
     this.updateParalyzeZone();
     this.setAsideEffect.onUpdateSize();
+    this.targetBorderEffect.setSize(width, height);
     this.syncMaskState();
   }
 
@@ -762,6 +775,7 @@ export class CardVisuals {
   public destroy() {
     this.removeParalyzeEmitters();
     this.setAsideEffect.destroy();
+    if (this.targetBorderEffect) this.targetBorderEffect.destroy();
     if (this.glowEmitter) this.glowEmitter.destroy();
     if (this.noiseGraphics) this.noiseGraphics.destroy();
     if (this.debugGraphics) this.debugGraphics.destroy();

@@ -2,11 +2,12 @@
 const { AbilityLookup } = require("./AbilityLookup");
 const { ConditionEvaluator } = require("./ConditionEvaluator");
 const { AstEffectRunner } = require("./AstEffectRunner");
+const { TargetSelectionService } = require("./TargetSelectionService");
+const { AST_MESSAGES } = require("../../../shared/astConstants");
 const logger = require("../utils/logger");
 
 /**
  * High-level coordinator bridging EffectChronicle items to the AST execution engine.
- * Fully synchronous in Phase 1 to eliminate race conditions.
  */
 class AbilityResolver {
   /**
@@ -21,7 +22,7 @@ class AbilityResolver {
    *
    * @param {object} item ChronicleItem instance being resolved.
    * @param {object} [options] Execution options (e.g. targetCardIds).
-   * @returns {{ handled: boolean, snapshots?: object[], logEntries?: string[], reason?: string, fallbackText?: string }}
+   * @returns {{ handled: boolean, awaitingTargetSelection?: boolean, eligible?: object, snapshots?: object[], logEntries?: string[], reason?: string, fallbackText?: string }}
    */
   resolve(item, options = {}) {
     if (!item) {
@@ -79,6 +80,35 @@ class AbilityResolver {
         `[AbilityResolver] Conditions not met for '${item.title}': ${evalResult.reason}. Triggering fallback.`
       );
       return { handled: false, reason: "CONDITIONS_UNMET" };
+    }
+
+    // Interactive targeting check: pause and request selection if required
+    const firstEffect = targetAbility.effects?.[0];
+    const hasExplicitTargets = Boolean(options.targetCardIds || options.targetPileId);
+
+    if (firstEffect && firstEffect.target && !hasExplicitTargets) {
+      const eligible = TargetSelectionService.resolveEligibleTargets(this.room, player, firstEffect.target);
+      if (eligible.requiresSelection) {
+        const client = this.room.clients.find((c) => c.sessionId === player.sessionId);
+        if (client) {
+          client.send(AST_MESSAGES.REQUEST_TARGET_SELECTION, {
+            abilityId: targetAbility.ability_id,
+            itemId: item.id,
+            promptText: eligible.promptText,
+            targetType: eligible.targetType,
+            eligibleCardIds: eligible.eligibleCardIds,
+            eligiblePiles: eligible.eligiblePiles,
+            minTargets: eligible.minTargets,
+            maxTargets: eligible.maxTargets,
+            canCancel: eligible.canCancel,
+          });
+        }
+        return {
+          handled: true,
+          awaitingTargetSelection: true,
+          eligible,
+        };
+      }
     }
 
     // Run effects through execution engine

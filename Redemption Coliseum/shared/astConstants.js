@@ -68,6 +68,14 @@ export const AST_ALIGNMENTS = /** @type {const} */ ({
   NEUTRAL: "neutral",
 });
 
+/**
+ * AST network message identifiers.
+ */
+export const AST_MESSAGES = /** @type {const} */ ({
+  REQUEST_TARGET_SELECTION: "requestTargetSelection",
+  SELECT_TARGET: "selectTarget",
+});
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     AST_ACTIONS,
@@ -77,5 +85,6 @@ if (typeof module !== "undefined" && module.exports) {
     AST_CARD_SIDES,
     AST_ACTIVATION_MODES,
     AST_ALIGNMENTS,
+    AST_MESSAGES,
   };
 }

@@ -86,6 +86,13 @@ class EffectChronicleService {
       astResult = room.abilityResolver.resolve(item, options);
     }
 
+    if (astResult && astResult.awaitingTargetSelection) {
+      logger.info(
+        `[EffectChronicleService] Item '${item.title}' is awaiting client target selection.`
+      );
+      return { item, astResult, index, awaitingTargetSelection: true };
+    }
+
     if (astResult && astResult.handled) {
       if (astResult.logEntries && astResult.logEntries.length > 0) {
         astResult.logEntries.forEach(msg => this._log(room, msg));

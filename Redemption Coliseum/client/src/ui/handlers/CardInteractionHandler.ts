@@ -121,6 +121,15 @@ export class CardInteractionHandler {
         return;
       }
 
+      // Check if interactive targeting is active
+      const targeting = this.scene.registry.get("targetingManager");
+      if (targeting?.isTargetingActive?.()) {
+        if (targeting.isCardEligible(card.cardData?.id)) {
+          this.scene.events.emit("ui:cardTargetClicked", card);
+        }
+        return;
+      }
+
       // Mobile: Single Tap toggles preview (no accidental face-down flipping)
       if (pointer.wasTouch || ViewportManager.isTouchPrimary()) {
         if (this.currentHoveredCard === card) {

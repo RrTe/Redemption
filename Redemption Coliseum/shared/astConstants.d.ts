@@ -47,6 +47,11 @@ export declare const AST_ALIGNMENTS: {
   readonly NEUTRAL: "neutral";
 };
 
+export declare const AST_MESSAGES: {
+  readonly REQUEST_TARGET_SELECTION: "requestTargetSelection";
+  readonly SELECT_TARGET: "selectTarget";
+};
+
 export type AstAction = typeof AST_ACTIONS[keyof typeof AST_ACTIONS];
 export type AstSelectionMode = typeof AST_SELECTION_MODES[keyof typeof AST_SELECTION_MODES];
 export type AstScope = typeof AST_SCOPES[keyof typeof AST_SCOPES];
@@ -54,3 +59,4 @@ export type AstZoneOwner = typeof AST_ZONE_OWNERS[keyof typeof AST_ZONE_OWNERS];
 export type AstCardSide = typeof AST_CARD_SIDES[keyof typeof AST_CARD_SIDES];
 export type AstActivationMode = typeof AST_ACTIVATION_MODES[keyof typeof AST_ACTIVATION_MODES];
 export type AstAlignment = typeof AST_ALIGNMENTS[keyof typeof AST_ALIGNMENTS];
+export type AstMessage = typeof AST_MESSAGES[keyof typeof AST_MESSAGES];

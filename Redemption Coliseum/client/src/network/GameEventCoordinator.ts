@@ -2,6 +2,8 @@ import Phaser from "phaser";
 import { type TypedRoom, type StateCallback } from "../ui/gameUI.js";
 import { log, error } from "../utils/logger.js";
 import { GameEvents } from "../constants/EventNames.js";
+import { AST_MESSAGES } from "../../../shared/astConstants.js";
+import type { RequestTargetSelectionMessage } from "../../../shared/messages.js";
 
 /**
  * Translates network messages and state changes into Phaser events.
@@ -113,6 +115,13 @@ export class GameEventCoordinator {
     this.roomListeners.push(
       this.room.onMessage("starCardsRevealed", (msg: { playerName: string; sessionId: string; cards: any[] }) => {
         this.scene.events.emit(GameEvents.NET_STAR_CARDS_REVEALED, msg);
+      }),
+    );
+
+    this.roomListeners.push(
+      this.room.onMessage(AST_MESSAGES.REQUEST_TARGET_SELECTION, (msg: RequestTargetSelectionMessage) => {
+        log("GameEventCoordinator", "[NET] requestTargetSelection received:", msg);
+        this.scene.events.emit(GameEvents.NET_TARGET_SELECTION_REQUESTED, msg);
       }),
     );
 

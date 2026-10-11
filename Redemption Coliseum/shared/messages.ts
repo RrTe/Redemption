@@ -43,12 +43,33 @@ export interface ResolveChronicleItemMessage {
   itemId?: string;
 }
 
+export interface RequestTargetSelectionMessage {
+  abilityId: string;
+  itemId?: string;
+  promptText: string;
+  targetType: "card" | "pile";
+  eligibleCardIds?: string[];
+  eligiblePiles?: Array<{ id: string; label: string; ownerId: string; zone: Zone }>;
+  minTargets: number;
+  maxTargets: number;
+  canCancel: boolean;
+}
+
+export interface SelectTargetMessage {
+  abilityId: string;
+  itemId?: string;
+  selectedCardIds?: string[];
+  selectedPileId?: string;
+  cancelled?: boolean;
+}
+
 export interface GameRoomMessages {
   moveCard: MoveCardMessage;
   requestUndo: RequestUndoMessage;
   resolveUndo: ResolveUndoMessage;
   submitDrawSequence: SubmitDrawSequenceMessage;
   resolveChronicleItem: ResolveChronicleItemMessage;
+  selectTarget: SelectTargetMessage;
 }
 
 

@@ -36,6 +36,7 @@ import { TokenManager } from "./managers/TokenManager.js"; // ✨ FIX: Import hi
 import { AssetManager } from "./managers/AssetManager"; // ✨ NEU
 import { UndoManager } from "./managers/UndoManager";
 import { StaticUIHandler } from "./handlers/StaticUIHandler"; // Fix: was never imported
+import { TargetingManager } from "./managers/TargetingManager";
 import type {
   GameRoomMessages,
   MoveCardMessage,
@@ -93,6 +94,7 @@ export class GameUI {
   private staticUIHandler: StaticUIHandler; // Fix: handles Help/Settings/Save/Concede buttons
   public drawSequenceManager!: DrawSequenceManager; // ✨ NEU
   public effectChronicleManager!: EffectChronicleManager;
+  public targetingManager!: TargetingManager;
 
 
   constructor(
@@ -273,6 +275,16 @@ export class GameUI {
       }
     });
 
+    // ✨ NEU: TargetingManager für interaktive Kartenauswahl & Pile-Targeting
+    this.targetingManager = new TargetingManager(
+      this.scene,
+      this.room,
+      this.networkManager,
+      this.cardRenderer,
+      this.elementManager,
+    );
+    this.scene.registry.set("targetingManager", this.targetingManager);
+
 
     // Fix: Instantiate StaticUIHandler to wire up Help, Settings, Save, and Concede buttons.
     // Without this, the help button had no pointerdown listener during gameplay.
@@ -425,6 +437,7 @@ export class GameUI {
     this.gameStateManager?.destroy(); // ✨ NEU
     this.drawSequenceManager?.destroy(); // ✨ NEU
     this.effectChronicleManager?.destroy();
+    this.targetingManager?.destroy();
     this.previewManager?.hide(); // Hide any active preview
   }
 

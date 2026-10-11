@@ -39,6 +39,12 @@ class ResolveChronicleCommand extends BaseCommand {
           message
         );
         if (result && result.item) {
+          // If the ability is awaiting manual client target selection, it is not yet executed!
+          // Targeting will be finalized and recorded for Undo by SelectTargetCommand.
+          if (result.awaitingTargetSelection) {
+            this.canUndo = false;
+            break;
+          }
           this.executedItem = result.item;
           this.astResult = result.astResult;
           this.canUndo = true;
@@ -79,26 +85,29 @@ class ResolveChronicleCommand extends BaseCommand {
       }
     }
 
-    // Restore ChronicleItem back into the Effect Chronicle queue
+    // Restore ChronicleItem back into the Effect Chronicle queue (prevent duplicates)
     const chronicle = this.room.state.effectChronicle;
     if (chronicle) {
-      const restoredItem = new ChronicleItem({
-        id: this.executedItem.id,
-        cardId: this.executedItem.cardId,
-        controllerId: this.executedItem.controllerId,
-        actionType: this.executedItem.actionType,
-        title: this.executedItem.title,
-        description: this.executedItem.description,
-        status: CHRONICLE_STATUS.PENDING,
-        order: chronicle.items.length + 1,
-        abilityId: this.executedItem.abilityId,
-        isOptional: this.executedItem.isOptional,
-      });
+      const alreadyExists = chronicle.items.some((i) => i.id === this.executedItem.id);
+      if (!alreadyExists) {
+        const restoredItem = new ChronicleItem({
+          id: this.executedItem.id,
+          cardId: this.executedItem.cardId,
+          controllerId: this.executedItem.controllerId,
+          actionType: this.executedItem.actionType,
+          title: this.executedItem.title,
+          description: this.executedItem.description,
+          status: CHRONICLE_STATUS.PENDING,
+          order: chronicle.items.length + 1,
+          abilityId: this.executedItem.abilityId,
+          isOptional: this.executedItem.isOptional,
+        });
 
-      chronicle.items.push(restoredItem);
-      chronicle.priorityPlayerId = this.executedItem.controllerId;
-      chronicle.isResolving = true;
-      EffectChronicleService._reindexOrders(chronicle);
+        chronicle.items.push(restoredItem);
+        chronicle.priorityPlayerId = this.executedItem.controllerId;
+        chronicle.isResolving = true;
+        EffectChronicleService._reindexOrders(chronicle);
+      }
     }
 
     // Broadcast a single unified undo log entry combining ability rewind and card returns

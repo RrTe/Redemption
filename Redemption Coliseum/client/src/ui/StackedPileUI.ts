@@ -4,6 +4,7 @@ import { type GameNetworkManager } from "../network/GameNetworkManager"; // ✨ 
 import { ZONES, type Zone } from "../../../shared/zones";
 import { MAX_HAND_SIZE } from "../../../shared/card-constants";
 import { ToastManager } from "./managers/ToastManager";
+import { TargetBorderEffect } from "./effects/TargetBorderEffect";
 
 const INITIAL_POOL_SIZE = 15; // Startgröße des Pools für die Grafiken
 const CARDS_PER_IMAGE = 5; // ✨ DEIN WUNSCH: Zeige eine neue Grafik für je 5 Karten
@@ -30,6 +31,7 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
   private bottomGlowGraphics: Phaser.GameObjects.Graphics; // ✨ NEU: Für den Leucht-Effekt
   private glowTween: Phaser.Tweens.Tween | null = null; // ✨ NEU: Animationstween
   private badgeBg: Phaser.GameObjects.Graphics; // ✨ NEU: Badge Hintergrund
+  private targetBorderEffect: TargetBorderEffect;
 
   public zoneName: Zone;
 
@@ -144,12 +146,22 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
     }
 
     this.name = zoneName;
+    this.targetBorderEffect = new TargetBorderEffect(scene, this, width, height, 8);
 
     // Klick-Handler für das Kartenziehen vom Deck
     this.on("pointerup", (pointer: Phaser.Input.Pointer) => {
       // ✨ FIX: Ignoriere Events, wenn die Maus bewegt wurde (Drag & Drop Operation).
-      // Dies verhindert, dass beim Droppen einer Karte auf das Deck versehentlich eine Karte gezogen wird.
       if (pointer.getDistance() > 20) return;
+
+      // Targeting-Auswahl: Wenn Stapel markiert ist, Klick als Zielauswahl emittieren
+      if (this.isTargetingActive() && pointer.leftButtonReleased()) {
+        const ownerId = this.isOpponent
+          ? Array.from(room.state.players.keys()).find((id) => id !== room.sessionId) || ""
+          : room.sessionId;
+        const pileId = `${ownerId}:${this.zoneName}`;
+        this.scene.events.emit("ui:pileTargetClicked", { pileId, zoneName: this.zoneName, ownerId });
+        return;
+      }
 
       // ✨ FIX: Verhindere Ziehen vom Gegner-Deck per Linksklick.
       if (
@@ -174,6 +186,19 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
         });
       }
     });
+  }
+
+  /**
+   * Schaltet den rubinroten Glitzer- und Umlaufeffekt (Targeting Beacon) ein oder aus.
+   */
+  public showTargetingBorder(active: boolean): void {
+    if (this.targetBorderEffect) {
+      this.targetBorderEffect.show(active);
+    }
+  }
+
+  public isTargetingActive(): boolean {
+    return (this.targetBorderEffect as any)?.isActive || false;
   }
 
   /**
@@ -328,5 +353,15 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
     }
 
     (this.input?.hitArea as Phaser.Geom.Rectangle)?.setSize(width, height);
+    if (this.targetBorderEffect) {
+      this.targetBorderEffect.setSize(width, height);
+    }
+  }
+
+  destroy(fromScene?: boolean): void {
+    if (this.targetBorderEffect) {
+      this.targetBorderEffect.destroy();
+    }
+    super.destroy(fromScene);
   }
 }

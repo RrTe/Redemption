@@ -2,6 +2,7 @@
 const { moveCard } = require("../../services/cardService");
 const { ZONES } = require("../../../../shared/zones");
 const { AST_ACTIONS } = require("../../../../shared/astConstants");
+const { TargetSelectionService } = require("../TargetSelectionService");
 const logger = require("../../utils/logger");
 
 /**
@@ -99,12 +100,24 @@ class DiscardHandler {
    * @param {import('../../rooms/GameRoom').GameRoom} room Active room.
    * @param {object} actingPlayer Acting player.
    * @param {object} targetDef AST target definition.
-   * @param {object} options Options with explicit targetCardIds.
+   * @param {object} options Options with explicit targetCardIds or targetPileId.
    * @param {number} count Maximum count to select.
    * @returns {Array<{ card: object, owner: object }>} Selected targets with owners.
    * @private
    */
   static _resolveTargets(room, actingPlayer, targetDef, options, count) {
+    // 1. Explicit pile target (e.g. discard top card of targeted deck)
+    if (options.targetPileId) {
+      const [targetOwnerId, targetZone] = options.targetPileId.split(":");
+      const targetPlayer = room.state.players.get(targetOwnerId);
+      const zoneName = targetZone || ZONES.DECK;
+      if (targetPlayer && targetPlayer[zoneName] && targetPlayer[zoneName].length > 0) {
+        const topCard = targetPlayer[zoneName][0];
+        return [{ card: topCard, owner: targetPlayer }];
+      }
+      return [];
+    }
+
     const explicitIds = options.targetCardIds || [];
     const candidates = [];
 
@@ -133,7 +146,12 @@ class DiscardHandler {
       for (const zName of zoneNames) {
         const zoneCards = p[zName] || [];
         for (const card of zoneCards) {
-          if (this._matchesFilter(card, targetDef, explicitIds)) {
+          if (explicitIds.length > 0) {
+            if (explicitIds.includes(card.id)) {
+              candidates.push({ card, owner: p });
+              if (candidates.length >= count) return candidates;
+            }
+          } else if (TargetSelectionService.matchesFilter(card, targetDef)) {
             candidates.push({ card, owner: p });
             if (candidates.length >= count) return candidates;
           }
@@ -142,36 +160,6 @@ class DiscardHandler {
     }
 
     return candidates;
-  }
-
-  /**
-   * Evaluates if a card matches AST target filters.
-   *
-   * @param {object} card Card instance.
-   * @param {object} targetDef AST filter definition.
-   * @param {string[]} explicitIds Explicit target IDs.
-   * @returns {boolean} True if card matches.
-   * @private
-   */
-  static _matchesFilter(card, targetDef, explicitIds) {
-    if (explicitIds.length > 0) {
-      return explicitIds.includes(card.id);
-    }
-
-    // Check alignment
-    if (targetDef.alignment) {
-      const cardAlign = (card.inGameAlignment || card.Alignment || "").toLowerCase();
-      if (cardAlign !== targetDef.alignment.toLowerCase()) {
-        return false;
-      }
-    }
-
-    // Check target type
-    if (targetDef.target_type === "character" && !card.IsCharacter) {
-      return false;
-    }
-
-    return true;
   }
 }
 

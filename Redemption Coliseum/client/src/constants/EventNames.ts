@@ -23,6 +23,7 @@ export const GameEvents = {
   NET_DISCONNECTED: "net:disconnected",
   NET_UNDO_CONFIRMATION_PROMPT: "net:undoConfirmationPrompt",
   NET_UNDO_RESOLVED: "net:undoResolved",
+  NET_TARGET_SELECTION_REQUESTED: "net:targetSelectionRequested",
 
   // UI & Logic Events
   UI_REQUEST_CARD_ACTION: "request-card-action",
