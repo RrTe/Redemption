@@ -144,7 +144,9 @@ class DiscardHandler {
 
     for (const p of playersToScan) {
       for (const zName of zoneNames) {
-        const zoneCards = p[zName] || [];
+        const zoneCards = zName === ZONES.BATTLEFIELD
+          ? (room?.state?.battlefield || []).filter(c => (c.controllerId || c.ownerId) === p.sessionId)
+          : (p[zName] || []);
         for (const card of zoneCards) {
           if (explicitIds.length > 0) {
             if (explicitIds.includes(card.id)) {

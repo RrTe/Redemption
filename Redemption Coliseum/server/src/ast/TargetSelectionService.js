@@ -56,7 +56,7 @@ class TargetSelectionService {
         targetType: "pile",
         eligibleCardIds: [],
         eligiblePiles,
-        requiresSelection: isManual && eligiblePiles.length > 1,
+        requiresSelection: isManual && eligiblePiles.length >= 1,
         minTargets: eligiblePiles.length > 0 ? 1 : 0,
         maxTargets: 1,
         canCancel: Boolean(targetDef.can_cancel),
@@ -70,7 +70,9 @@ class TargetSelectionService {
 
     for (const p of playersToScan) {
       for (const zName of zoneNames) {
-        const zoneCards = p[zName] || [];
+        const zoneCards = zName === ZONES.BATTLEFIELD
+          ? (room?.state?.battlefield || []).filter(c => (c.controllerId || c.ownerId) === p.sessionId)
+          : (p[zName] || []);
         for (const card of zoneCards) {
           if (this.matchesFilter(card, targetDef)) {
             eligibleCardIds.push(card.id);
@@ -147,8 +149,10 @@ class TargetSelectionService {
 
     // Check alignment filter
     if (targetDef.alignment) {
-      const cardAlign = (card.inGameAlignment || card.Alignment || "").toLowerCase();
-      if (cardAlign !== targetDef.alignment.toLowerCase()) {
+      let cardAlign = card.inGameAlignment || card.Alignment || "";
+      if (Array.isArray(cardAlign)) cardAlign = cardAlign.join("/");
+      cardAlign = String(cardAlign).toLowerCase();
+      if (!cardAlign.includes(targetDef.alignment.toLowerCase())) {
         return false;
       }
     }

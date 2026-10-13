@@ -3,6 +3,7 @@ const { BaseCommand } = require("./BaseCommand");
 const { AbilityLookup } = require("../ast/AbilityLookup");
 const { TargetSelectionService } = require("../ast/TargetSelectionService");
 const { EffectChronicleService } = require("../services/EffectChronicleService");
+const { ChronicleHistoryService } = require("../services/ChronicleHistoryService");
 const { ChronicleItem } = require("../state/EffectChronicleState");
 const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants");
 const { moveCard } = require("../services/cardService");
@@ -94,10 +95,13 @@ class SelectTargetCommand extends BaseCommand {
         this.room.broadcastGameLog(`${player.name} resolves ${item.title}.`);
       }
 
+      ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
       chronicle.items.splice(index, 1);
       EffectChronicleService._reindexOrders(chronicle);
       if (chronicle.items.length === 0) {
         EffectChronicleService.finishChronicle(this.room);
+      } else {
+        EffectChronicleService.executeItem(this.room, this.client, chronicle.items[0].id, { autoExecuteSupported: true });
       }
 
       this.executedItem = item;

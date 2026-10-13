@@ -31,7 +31,8 @@ class ChatCommand extends BaseCommand {
           this.room,
           [targetCard],
           this.client.sessionId,
-          ActionType.ACTIVATE_ABILITY
+          ActionType.ACTIVATE_ABILITY,
+          { autoExecuteSupported: true }
         );
         this.room.broadcastGameLog(`[DEV] Enqueued ${targetCard.Name} into Effect Chronicle.`);
         return;

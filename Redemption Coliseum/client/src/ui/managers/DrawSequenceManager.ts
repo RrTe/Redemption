@@ -88,25 +88,13 @@ export class DrawSequenceManager {
     const isChronicleActive = this.chronicleCount > 0;
 
     if (isChronicleActive) {
-      if (showHelp) {
-        this.banner.setPrompt(UI_STRINGS.DRAW_SEQUENCE.CHRONICLE_ACTIVE(hasPriority));
-        this.banner.setConfirmButton("", false, false, 0);
-        this.banner.setPassButton("", false, false, 0);
-      } else {
-        if (!hasPriority) {
-          this.banner.setPrompt("Chronicle: Waiting for opponent's decision...");
-          this.banner.setConfirmButton("", false, false, 0);
-          this.banner.setPassButton("", false, false, 0);
-        } else {
-          const activeItem = this.room.state?.effectChronicle?.items?.[0];
-          const title = activeItem?.title || "Active Effect";
-          const order = activeItem?.order ?? 1;
-          this.banner.setPrompt(`Chronicle: ${title} (#${order})`);
-          this.banner.setConfirmButton("Execute", true, true, 1);
-          const canPass = Boolean(activeItem?.isOptional);
-          this.banner.setPassButton("Pass", true, canPass, canPass ? 1 : 0.4);
-        }
-      }
+      this.banner.setPrompt(
+        hasPriority
+          ? "Resolving Chronicle effects... (Click Pass to advance)"
+          : "Chronicle: Waiting for opponent..."
+      );
+      this.banner.setConfirmButton("", false, false, 0);
+      this.banner.setPassButton(UI_STRINGS.DRAW_SEQUENCE.BTN_PASS, hasPriority, true, hasPriority ? 1 : 0.45);
       return;
     }
 
@@ -174,8 +162,7 @@ export class DrawSequenceManager {
 
   private onPassClicked() {
     if (this.chronicleCount > 0) {
-      const activeId = this.room.state?.effectChronicle?.items?.[0]?.id;
-      this.room.send("resolveChronicleItem", { action: "pass", itemId: activeId });
+      this.room.send("resolveChronicleItem", { action: "pass_all" });
       return;
     }
     this.selectedCardIds = [];

@@ -15,6 +15,8 @@ export const CHRONICLE_ACTIONS = /** @type {const} */ ({
 export const CHRONICLE_STATUS = /** @type {const} */ ({
   PENDING: "pending",
   RESOLVING: "resolving",
+  COMPLETED: "completed",
+  PASSED: "passed",
 });
 
 /**

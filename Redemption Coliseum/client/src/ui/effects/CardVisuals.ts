@@ -67,7 +67,7 @@ export class CardVisuals {
     this.scene = scene;
     this.cardUI = cardUI;
     this.setAsideEffect = new CardSetAsideEffect(scene, cardUI, this);
-    this.targetBorderEffect = new TargetBorderEffect(scene, cardUI, cardUI.width, cardUI.height, 8);
+    this.targetBorderEffect = new TargetBorderEffect(scene, cardUI, cardUI.width || 100, cardUI.height || 140, 8);
 
     // 1. Schatten (NineSlice) - Ganz nach hinten
     this.shadow = scene.add.nineslice(
@@ -510,6 +510,9 @@ export class CardVisuals {
 
   /** Schaltet den rubinroten Glitzer- und Umlaufeffekt für das Targeting ein oder aus. */
   public updateTargetBorder(isActive: boolean): void {
+    if (isActive) {
+      this.targetBorderEffect.setSize(this.cardUI.width, this.cardUI.height, 8);
+    }
     this.targetBorderEffect.show(isActive);
   }
 
@@ -549,7 +552,7 @@ export class CardVisuals {
     this.updateGlowZone();
     this.updateParalyzeZone();
     this.setAsideEffect.onUpdateSize();
-    this.targetBorderEffect.setSize(width, height);
+    this.targetBorderEffect.setSize(width, height, 8);
     this.syncMaskState();
   }
 

@@ -20,6 +20,12 @@ export class TargetingFocusManager {
 
   private overlay: Phaser.GameObjects.Rectangle | null = null;
   private elevatedObjects: Array<{ obj: Phaser.GameObjects.GameObject; originalDepth: number }> = [];
+  public onOverlayClick: (() => void) | null = null;
+
+  private isActive: boolean = false;
+  private currentTargetType: "card" | "pile" | null = null;
+  private currentEligibleCardIds: string[] = [];
+  private currentEligiblePileIds: Set<string> | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -44,6 +50,15 @@ export class TargetingFocusManager {
       .setDepth(SPOTLIGHT_DEPTH)
       .setVisible(false)
       .setInteractive();
+
+    this.overlay.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+      const hits = this.scene.input.hitTestPointer(pointer);
+      const hitElevated = hits.some(
+        (h) => (h as any).depth >= ELEVATED_DEPTH || (h.parentContainer as any)?.depth >= ELEVATED_DEPTH
+      );
+      if (hitElevated) return;
+      this.onOverlayClick?.();
+    });
   }
 
   private handleResize(): void {
@@ -53,21 +68,33 @@ export class TargetingFocusManager {
   }
 
   public activate(targetType: "card" | "pile", eligibleCardIds?: string[], eligiblePileIds?: Set<string>): void {
+    this.isActive = true;
+    this.currentTargetType = targetType;
+    this.currentEligibleCardIds = eligibleCardIds || [];
+    this.currentEligiblePileIds = eligiblePileIds || null;
+
     if (this.overlay) {
       this.overlay.setSize(this.scene.scale.width, this.scene.scale.height);
       this.overlay.setVisible(true);
     }
 
-    this.elevatedObjects = [];
+    this.scene.events.off("cardsRendered", this.onCardsRendered, this);
+    this.scene.events.on("cardsRendered", this.onCardsRendered, this);
 
-    if (targetType === "pile") {
+    this.refreshVisuals();
+  }
+
+  public refreshVisuals(): void {
+    if (!this.isActive) return;
+
+    if (this.currentTargetType === "pile") {
       this.cardRenderer.getAllCardUIs().forEach((cardUI) => {
         cardUI.visuals.updateTargetBorder(false);
         cardUI.visuals.setDimmed(true);
       });
 
       this.getPileEntries().forEach(({ pile, id }) => {
-        const isEligible = eligiblePileIds ? eligiblePileIds.has(id) : false;
+        const isEligible = this.currentEligiblePileIds ? this.currentEligiblePileIds.has(id) : false;
         if (typeof pile.showTargetingBorder === "function") pile.showTargetingBorder(isEligible);
         if (typeof pile.setAlpha === "function") pile.setAlpha(isEligible ? 1.0 : 0.45);
         if (isEligible) {
@@ -75,7 +102,7 @@ export class TargetingFocusManager {
         }
       });
     } else {
-      const allowed = new Set(eligibleCardIds || []);
+      const allowed = new Set(this.currentEligibleCardIds);
       this.cardRenderer.getAllCardUIs().forEach((cardUI, id) => {
         const isEligible = allowed.has(id);
         cardUI.visuals.updateTargetBorder(isEligible);
@@ -91,7 +118,17 @@ export class TargetingFocusManager {
     }
   }
 
+  private onCardsRendered(): void {
+    this.refreshVisuals();
+  }
+
   public deactivate(): void {
+    this.isActive = false;
+    this.currentTargetType = null;
+    this.currentEligibleCardIds = [];
+    this.currentEligiblePileIds = null;
+    this.scene.events.off("cardsRendered", this.onCardsRendered, this);
+
     if (this.overlay) {
       this.overlay.setVisible(false);
     }
@@ -138,8 +175,11 @@ export class TargetingFocusManager {
 
   private elevateObject(obj: any): void {
     if (!obj || !("setDepth" in obj)) return;
-    const originalDepth = obj.depth || 0;
-    this.elevatedObjects.push({ obj, originalDepth });
+    const isAlreadyElevated = this.elevatedObjects.some((entry) => entry.obj === obj);
+    if (!isAlreadyElevated) {
+      const originalDepth = obj.depth || 0;
+      this.elevatedObjects.push({ obj, originalDepth });
+    }
     obj.setDepth(ELEVATED_DEPTH);
   }
 }

@@ -1,6 +1,7 @@
 // server/src/services/EffectChronicleService.js
 const { ChronicleItem } = require("../state/EffectChronicleState");
 const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants");
+const { ChronicleHistoryService } = require("./ChronicleHistoryService");
 const GameLogService = require("./GameLogService");
 const logger = require("../utils/logger");
 
@@ -53,6 +54,11 @@ class EffectChronicleService {
     logger.info(
       `[EffectChronicleService] Enqueued ${cards ? cards.length : 0} items for '${playerName}' (${controllerId}).`
     );
+
+    if ((options.autoExecute || options.autoExecuteSupported) && chronicle.items.length > 0) {
+      const client = room.clients?.find((c) => c.sessionId === controllerId) || { sessionId: controllerId };
+      this.executeItem(room, client, chronicle.items[0].id, options);
+    }
   }
 
   /**
@@ -93,6 +99,11 @@ class EffectChronicleService {
       return { item, astResult, index, awaitingTargetSelection: true };
     }
 
+    // Fast-Track guard: unsupported cards stay in chronicle as pending visual notes
+    if (options.autoExecuteSupported && (!astResult || !astResult.handled)) {
+      return { item, astResult, index, unhandled: true };
+    }
+
     if (astResult && astResult.handled) {
       if (astResult.logEntries && astResult.logEntries.length > 0) {
         astResult.logEntries.forEach(msg => this._log(room, msg));
@@ -104,11 +115,14 @@ class EffectChronicleService {
       this._log(room, `${playerName} executes ${item.title}${abilityText}.`);
     }
 
+    ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
     chronicle.items.splice(index, 1);
     this._reindexOrders(chronicle);
 
     if (chronicle.items.length === 0) {
       this.finishChronicle(room);
+    } else if (options.autoExecute || options.autoExecuteSupported) {
+      this.executeItem(room, client, chronicle.items[0].id, options);
     }
 
     return { item, astResult, index };
@@ -136,11 +150,8 @@ class EffectChronicleService {
     const player = room.state.players.get(client.sessionId);
     const playerName = player ? player.name : "Player";
 
-    this._log(
-      room,
-      `${playerName} passes on ${item.title}.`
-    );
-
+    this._log(room, `${playerName} passes on ${item.title}.`);
+    ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.PASSED);
     chronicle.items.splice(index, 1);
     this._reindexOrders(chronicle);
 
@@ -171,6 +182,7 @@ class EffectChronicleService {
       `${playerName} passes on all remaining Chronicle effects.`
     );
 
+    chronicle.items.forEach(i => ChronicleHistoryService.recordHistory(chronicle, i, CHRONICLE_STATUS.PASSED));
     chronicle.items.splice(0, chronicle.items.length);
     this.finishChronicle(room);
   }
@@ -188,7 +200,6 @@ class EffectChronicleService {
       GameLogService.broadcastGameLog(room, text);
     }
   }
-
 
   /**
    * Finalizes chronicle resolution and triggers the registered completion callback.
@@ -221,11 +232,10 @@ class EffectChronicleService {
     });
   }
 
-  /**
-   * Checks if there are active items in the chronicle.
-   * @param {import('../rooms/GameRoom').GameRoom} room
-   * @returns {boolean}
-   */
+  static purgeHistory(room) {
+    ChronicleHistoryService.purgeHistory(room);
+  }
+
   static hasPendingItems(room) {
     return Boolean(room.state.effectChronicle && room.state.effectChronicle.items.length > 0);
   }

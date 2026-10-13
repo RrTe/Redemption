@@ -86,11 +86,13 @@ class AbilityResolver {
     const firstEffect = targetAbility.effects?.[0];
     const hasExplicitTargets = Boolean(options.targetCardIds || options.targetPileId);
 
-    if (firstEffect && firstEffect.target && !hasExplicitTargets) {
+    const isSupportedAction = Boolean(firstEffect && AstEffectRunner._handlers[firstEffect.action]);
+
+    if (isSupportedAction && firstEffect.target && !hasExplicitTargets) {
       const eligible = TargetSelectionService.resolveEligibleTargets(this.room, player, firstEffect.target);
       if (eligible.requiresSelection) {
         const client = this.room.clients.find((c) => c.sessionId === player.sessionId);
-        if (client) {
+        if (client && typeof client.send === "function") {
           client.send(AST_MESSAGES.REQUEST_TARGET_SELECTION, {
             abilityId: targetAbility.ability_id,
             itemId: item.id,

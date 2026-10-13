@@ -91,6 +91,7 @@ class SubmitDrawSequenceCommand extends BaseCommand {
         this.client.sessionId,
         actionType,
         {
+          autoExecuteSupported: true,
           onComplete: room => {
             DrawPhaseStepService.advanceStep(room);
           },

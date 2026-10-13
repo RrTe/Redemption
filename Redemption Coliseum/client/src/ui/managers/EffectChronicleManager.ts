@@ -93,27 +93,12 @@ export class EffectChronicleManager {
   }
 
   private _bindEvents(): void {
-    // When icon is clicked in Phaser, toggle DOM flyout drawer if in support mode
+    // When icon is clicked in Phaser, toggle DOM flyout drawer (passive inspector)
     this.effect.setOnClickCallback(() => {
-      if (this.settingsManager.isInGameSupportEnabled()) {
-        this.flyout.toggle();
-      }
+      this.flyout.toggle();
     });
 
     this.scene.events.on("playChronicleFlight", this._onPlayFlight, this);
-
-    // Wire flyout actions to network handler
-    this.flyout.onExecuteCallback = (itemId) => {
-      this.handler.executeItem(itemId);
-    };
-
-    this.flyout.onPassCallback = (itemId) => {
-      this.handler.passItem(itemId);
-    };
-
-    this.flyout.onPassAllCallback = () => {
-      this.handler.passAll();
-    };
   }
 
   private _onPlayFlight(data: { x: number; y: number; texture: string; width?: number; height?: number; rotation?: number }): void {
@@ -149,6 +134,24 @@ export class EffectChronicleManager {
       });
     });
 
+    const history: ChronicleItemData[] = [];
+    if (chronicle.history) {
+      chronicle.history.forEach((item, index) => {
+        history.push({
+          id: item.id,
+          cardId: item.cardId,
+          controllerId: item.controllerId,
+          actionType: item.actionType,
+          title: item.title,
+          description: item.description,
+          status: item.status as any,
+          order: item.order || index + 1,
+          abilityId: item.abilityId,
+          isOptional: (item as any).isOptional ?? false,
+        });
+      });
+    }
+
     const hasPriority = chronicle.priorityPlayerId === this.mySessionId;
     const isSupport = this.settingsManager.isInGameSupportEnabled();
 
@@ -172,24 +175,15 @@ export class EffectChronicleManager {
       }
     }
 
-    // 2. Update visual icon & badge count (visible in both modes when items > 0)
+    // 2. Update visual icon & badge count
     this.effect.setCount(items.length);
 
-    // 3. Update flyout drawer
-    if (isSupport) {
-      this.flyout.updateItems(items, hasPriority);
-      if (items.length === 0 && this.flyout.isOpen()) {
-        this.flyout.hide();
-      }
-    } else {
-      if (this.flyout.isOpen()) {
-        this.flyout.hide();
-      }
-    }
+    // 3. Update flyout drawer with pending and phase history
+    this.flyout.updateItems(items, history, isSupport);
 
     // 4. Update next phase button lock
     this.onPhaseLockCallback?.(items.length > 0);
-    log("EffectChronicleManager", `Synced ${items.length} items (hasPriority=${hasPriority}, isSupport=${isSupport})`);
+    log("EffectChronicleManager", `Synced ${items.length} items, ${history.length} history (isSupport=${isSupport})`);
   }
 
   private _animateOpponentItemFlight(item: ChronicleItemData, delayMs = 0): void {

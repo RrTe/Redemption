@@ -96,6 +96,11 @@ export class DragDropHandler {
   }
 
   private onDragStart(pointer: Phaser.Input.Pointer, gameObject: CardUI) {
+    const targeting = this.scene.registry.get("targetingManager") as any;
+    if (targeting?.isTargetingActive?.()) {
+      return;
+    }
+
     this.isDragging = true;
     log("Input", `dragstart on ${gameObject.cardData?.id}`);
 

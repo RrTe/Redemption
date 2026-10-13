@@ -49,6 +49,11 @@ export class TargetingManager {
       cardRenderer,
       elementManager,
     );
+    this.focusManager.onOverlayClick = () => {
+      if (this.activeRequest?.canCancel) {
+        this.cancelTargeting();
+      }
+    };
 
     this.registerEventListeners();
   }
@@ -78,14 +83,8 @@ export class TargetingManager {
     this.selectedCardIds.clear();
     this.selectedPileId = null;
 
-    this.hud.show({
-      promptText: request.promptText,
-      minTargets: request.minTargets,
-      maxTargets: request.maxTargets,
-      canCancel: request.canCancel,
-      onConfirm: () => this.confirmSelection(),
-      onCancel: () => this.cancelTargeting(),
-    });
+    // HUD banner is omitted per Zero-Confirm / Zero-Bureaucracy specification.
+    this.scene.input.keyboard?.on("keydown-ESC", this.handleEscKey, this);
 
     if (request.targetType === "pile") {
       const allowedIds = new Set((request.eligiblePiles || []).map((p) => p.id));
@@ -96,6 +95,12 @@ export class TargetingManager {
         .map(({ pile }) => pile);
     } else {
       this.focusManager.activate("card", request.eligibleCardIds || []);
+    }
+  }
+
+  private handleEscKey(): void {
+    if (this.activeRequest?.canCancel) {
+      this.cancelTargeting();
     }
   }
 
@@ -136,9 +141,8 @@ export class TargetingManager {
       }
     }
 
-    this.hud.updateSelectedCount(this.selectedCardIds.size);
-
-    if (this.activeRequest.maxTargets === 1 && this.selectedCardIds.size === 1) {
+    // Zero-Confirm: auto-confirm immediately once maxTargets is reached
+    if (this.selectedCardIds.size === this.activeRequest.maxTargets) {
       this.confirmSelection();
     }
   }
@@ -178,6 +182,7 @@ export class TargetingManager {
 
   public stopTargeting(animate: boolean = true): void {
     if (animate) this.hud.hide();
+    this.scene.input.keyboard?.off("keydown-ESC", this.handleEscKey, this);
     this.focusManager.deactivate();
     this.activePiles = [];
     this.activeRequest = null;

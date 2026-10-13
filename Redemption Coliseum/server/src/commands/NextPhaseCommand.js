@@ -4,6 +4,7 @@ const { ActionType } = require("../../../shared/actions");
 const { CardAction } = require("../../../shared/actionSchema");
 const MatchService = require("../services/MatchService");
 const { DrawPhaseStepService } = require("../services/DrawPhaseStepService");
+const { EffectChronicleService } = require("../services/EffectChronicleService");
 const logger = require("../utils/logger");
 
 class NextPhaseCommand extends BaseCommand {
@@ -53,10 +54,11 @@ class NextPhaseCommand extends BaseCommand {
         this.room.cardLookup,
       );
 
-      // Clear undo stack on phase change
+      // Clear undo stack and purge chronicle phase history on phase change
       if (this.room.undoManager) {
         this.room.undoManager.clear();
       }
+      EffectChronicleService.purgeHistory(this.room);
 
       // Auto-reduce counters during UPKEEP
       if (this.state.currentPhase === PHASES.UPKEEP) {

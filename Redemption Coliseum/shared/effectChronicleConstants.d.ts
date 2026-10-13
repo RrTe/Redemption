@@ -9,6 +9,8 @@ export declare const CHRONICLE_ACTIONS: {
 export declare const CHRONICLE_STATUS: {
   readonly PENDING: "pending";
   readonly RESOLVING: "resolving";
+  readonly COMPLETED: "completed";
+  readonly PASSED: "passed";
 };
 
 export declare const CHRONICLE_MESSAGES: {

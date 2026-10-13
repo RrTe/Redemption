@@ -4,21 +4,16 @@ import { CardDetailOverlay } from "./CardDetailOverlay";
 import { CardRepository } from "../../../../shared/CardRepository.js";
 
 /**
- * Slide-out DOM Drawer representing the Effect Chronicle.
- * Displays queued abilities in sequential order with active highlights, card detail zoom, and controls.
+ * Slide-out DOM Drawer representing the Effect Chronicle as a passive Phase Inspector.
+ * Displays Phase History (resolved) and Pending Queue (triggers) with unified card zoom.
  */
 export class EffectChronicleFlyoutUI {
   private container: HTMLDivElement | null = null;
   private backdrop: HTMLDivElement | null = null;
   private drawer: HTMLDivElement | null = null;
   private listElement: HTMLDivElement | null = null;
-  private footerElement: HTMLDivElement | null = null;
   private badgeElement: HTMLSpanElement | null = null;
   private isDrawerOpen: boolean = false;
-
-  public onExecuteCallback: ((itemId?: string) => void) | null = null;
-  public onPassCallback: ((itemId?: string) => void) | null = null;
-  public onPassAllCallback: (() => void) | null = null;
 
   constructor() {
     this._createDOM();
@@ -52,40 +47,69 @@ export class EffectChronicleFlyoutUI {
   }
 
   /**
-   * Updates the displayed items in the drawer.
+   * Updates the displayed items in the inspector.
+   * In Tournament mode (isInGameSupport=false), pending queue is strictly hidden.
    */
-  public updateItems(items: ChronicleItemData[], hasPriority: boolean): void {
-    if (!this.listElement || !this.footerElement || !this.badgeElement) return;
+  public updateItems(
+    pendingItems: ChronicleItemData[],
+    historyItems: ChronicleItemData[],
+    isInGameSupport: boolean
+  ): void {
+    if (!this.listElement || !this.badgeElement) return;
 
-    this.badgeElement.textContent = String(items.length);
+    const visibleItemsCount = (isInGameSupport ? pendingItems.length : 0) + historyItems.length;
+    this.badgeElement.textContent = String(visibleItemsCount);
     this.listElement.innerHTML = "";
 
-    if (items.length === 0) {
+    if (visibleItemsCount === 0) {
       const emptyMsg = document.createElement("div");
       emptyMsg.style.cssText = "color:#94a3b8;text-align:center;padding:30px 10px;font-style:italic;";
-      emptyMsg.textContent = "No effects pending in the Chronicle.";
+      emptyMsg.textContent = isInGameSupport
+        ? "No effects pending or resolved in this phase."
+        : "No resolved effects in this phase.";
       this.listElement.appendChild(emptyMsg);
-      this._renderFooter(false, false);
       return;
     }
 
-    items.forEach((item, index) => {
-      const row = this._createItemRow(item, index === 0);
-      this.listElement?.appendChild(row);
-    });
+    // 1. Pending Queue (visible only when In-Game Support is enabled)
+    if (isInGameSupport && pendingItems.length > 0) {
+      this._appendSectionHeader("Pending Triggers", "#f59e0b", pendingItems.length);
+      pendingItems.forEach((item, index) => {
+        this.listElement?.appendChild(this._createItemRow(item, index === 0, false));
+      });
+    }
 
-    this._renderFooter(hasPriority, items.length > 0, items[0]?.id, items[0]?.isOptional ?? false);
+    // 2. Phase History (always visible as immutable tournament log)
+    if (historyItems.length > 0) {
+      this._appendSectionHeader("Phase History", "#10b981", historyItems.length);
+      historyItems.forEach((item) => {
+        this.listElement?.appendChild(this._createItemRow(item, false, true));
+      });
+    }
   }
 
-  private _createItemRow(item: ChronicleItemData, isActive: boolean): HTMLDivElement {
-    const row = document.createElement("div");
-    const activeBorder = isActive ? "border:2px solid #ffd700;box-shadow:0 0 10px rgba(255,215,0,0.4);" : "border:1px solid #334155;";
-    row.style.cssText = `display:flex;gap:10px;padding:8px;margin-bottom:8px;border-radius:6px;background:#1e293b;align-items:center;${activeBorder}`;
+  private _appendSectionHeader(title: string, color: string, count: number): void {
+    const header = document.createElement("div");
+    header.style.cssText = `display:flex;justify-content:space-between;align-items:center;
+      margin:10px 0 6px 0;padding:4px 6px;border-bottom:1px solid #334155;color:${color};font-size:12px;font-weight:bold;`;
+    header.innerHTML = `<span>${title}</span><span>(${count})</span>`;
+    this.listElement?.appendChild(header);
+  }
 
-    // Order Badge
-    const orderSpan = document.createElement("span");
-    orderSpan.style.cssText = "font-weight:bold;color:#f59e0b;font-size:13px;min-width:24px;";
-    orderSpan.textContent = `#${item.order}`;
+  private _createItemRow(item: ChronicleItemData, isActive: boolean, isHistory: boolean): HTMLDivElement {
+    const row = document.createElement("div");
+    const activeBorder = isActive
+      ? "border:2px solid #ffd700;box-shadow:0 0 10px rgba(255,215,0,0.4);"
+      : isHistory
+      ? "border:1px solid #1e3a2f;"
+      : "border:1px solid #334155;";
+    const rowBg = isHistory ? "#0f2027;" : "#1e293b;";
+    row.style.cssText = `display:flex;gap:10px;padding:8px;margin-bottom:8px;border-radius:6px;background:${rowBg}align-items:center;${activeBorder}`;
+
+    // Order or Checkmark Badge
+    const badgeSpan = document.createElement("span");
+    badgeSpan.style.cssText = `font-weight:bold;color:${isHistory ? "#10b981" : "#f59e0b"};font-size:13px;min-width:24px;`;
+    badgeSpan.textContent = isHistory ? "✓" : `#${item.order}`;
 
     // Thumbnail with unified CardDetailOverlay zoom
     const thumb = document.createElement("img");
@@ -93,16 +117,14 @@ export class EffectChronicleFlyoutUI {
     const cardData = CardRepository.getByName(item.title) || { Name: item.title, SpecialAbility: item.description };
     const imagePath = cardData.ImageFile ? `assets/cards/${cardData.ImageFile}.jpg` : "assets/cards/cardback.jpg";
     thumb.src = imagePath;
-    thumb.onmouseenter = (e) => {
-      CardDetailOverlay.show(cardData, { imageSrc: imagePath, globalX: e.clientX, globalY: e.clientY });
-    };
+    thumb.onmouseenter = (e) => CardDetailOverlay.show(cardData, { imageSrc: imagePath, globalX: e.clientX, globalY: e.clientY });
     thumb.onmouseleave = () => CardDetailOverlay.hide();
     thumb.onclick = (e) => {
       e.stopPropagation();
       CardDetailOverlay.show(cardData, { isModal: true, imageSrc: imagePath });
     };
 
-    // Text details
+    // Text details (Card name prefix + Effect description)
     const textCol = document.createElement("div");
     textCol.style.cssText = "flex:1;overflow:hidden;";
     const title = document.createElement("div");
@@ -114,64 +136,12 @@ export class EffectChronicleFlyoutUI {
     textCol.appendChild(title);
     textCol.appendChild(desc);
 
-    row.appendChild(orderSpan);
+    row.appendChild(badgeSpan);
     row.appendChild(thumb);
     row.appendChild(textCol);
     return row;
   }
 
-  private _renderFooter(
-    hasPriority: boolean,
-    hasItems: boolean,
-    activeItemId?: string,
-    isOptional: boolean = false
-  ): void {
-    if (!this.footerElement) return;
-    this.footerElement.innerHTML = "";
-
-    if (!hasItems) return;
-
-    if (!hasPriority) {
-      const waitMsg = document.createElement("div");
-      waitMsg.style.cssText = "color:#94a3b8;font-size:12px;text-align:center;padding:6px;font-style:italic;";
-      waitMsg.textContent = "Waiting for opponent's decision...";
-      this.footerElement.appendChild(waitMsg);
-      return;
-    }
-
-    const btnRow = document.createElement("div");
-    btnRow.style.cssText = "display:flex;gap:6px;width:100%;justify-content:space-between;";
-
-    const execBtn = document.createElement("button");
-    execBtn.style.cssText = "flex:1.2;padding:8px 12px;background:#d4af37;color:#0f172a;font-weight:bold;border:none;border-radius:4px;cursor:pointer;";
-    execBtn.textContent = "Execute";
-    execBtn.onclick = (e) => { e.stopPropagation(); this.onExecuteCallback?.(activeItemId); };
-    this._shield(execBtn);
-
-    const passBtn = document.createElement("button");
-    const [passCursor, passOpacity] = isOptional ? ["pointer", "1"] : ["not-allowed", "0.35"];
-    passBtn.style.cssText = `flex:1;padding:8px 8px;background:#334155;color:#e2e8f0;border:none;border-radius:4px;cursor:${passCursor};opacity:${passOpacity};`;
-    passBtn.textContent = "Pass";
-    passBtn.disabled = !isOptional;
-    passBtn.onclick = (e) => { e.stopPropagation(); if (isOptional) this.onPassCallback?.(activeItemId); };
-    this._shield(passBtn);
-
-    const passAllBtn = document.createElement("button");
-    passAllBtn.style.cssText = `flex:1;padding:8px 6px;background:#1e293b;border:1px solid #475569;color:#94a3b8;border-radius:4px;cursor:${passCursor};font-size:11px;opacity:${passOpacity};`;
-    passAllBtn.textContent = "Pass All";
-    passAllBtn.disabled = !isOptional;
-    passAllBtn.onclick = (e) => { e.stopPropagation(); if (isOptional) this.onPassAllCallback?.(); };
-    this._shield(passAllBtn);
-
-    btnRow.appendChild(execBtn);
-    btnRow.appendChild(passBtn);
-    btnRow.appendChild(passAllBtn);
-    this.footerElement.appendChild(btnRow);
-  }
-
-  /**
-   * Shields a DOM element from bubbling pointer/mouse events to the Phaser canvas underneath.
-   */
   private _shield(el: HTMLElement): void {
     const stop = (e: Event) => e.stopPropagation();
     ["pointerdown", "pointerup", "pointermove", "mousedown", "mouseup", "touchstart", "touchend", "click", "wheel"].forEach(
@@ -202,7 +172,7 @@ export class EffectChronicleFlyoutUI {
     titleArea.style.cssText = "display:flex;align-items:center;gap:8px;";
     const title = document.createElement("span");
     title.style.cssText = "font-weight:bold;color:#f8fafc;font-size:15px;";
-    title.textContent = "Effect Chronicle";
+    title.textContent = "Phase Inspector";
     this.badgeElement = document.createElement("span");
     this.badgeElement.style.cssText = "background:#d4af37;color:#0f172a;font-weight:bold;font-size:11px;border-radius:10px;padding:1px 6px;";
     this.badgeElement.textContent = "0";
@@ -222,13 +192,14 @@ export class EffectChronicleFlyoutUI {
     this.listElement = document.createElement("div");
     this.listElement.style.cssText = "flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;";
 
-    // Footer Container
-    this.footerElement = document.createElement("div");
-    this.footerElement.style.cssText = "padding:12px 16px;border-top:1px solid #334155;background:#0b1120;";
+    // Passive Footer Note
+    const footer = document.createElement("div");
+    footer.style.cssText = "padding:10px 16px;border-top:1px solid #334155;background:#0b1120;color:#64748b;font-size:11px;text-align:center;font-style:italic;";
+    footer.textContent = "Chronicle Phase-Log (purges on next phase)";
 
     this.drawer.appendChild(header);
     this.drawer.appendChild(this.listElement);
-    this.drawer.appendChild(this.footerElement);
+    this.drawer.appendChild(footer);
 
     this.container.appendChild(this.backdrop);
     this.container.appendChild(this.drawer);

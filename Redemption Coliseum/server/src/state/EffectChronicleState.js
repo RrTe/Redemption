@@ -41,6 +41,7 @@ class EffectChronicleState extends Schema {
   constructor() {
     super();
     this.items = new ArraySchema();
+    this.history = new ArraySchema();
     this.priorityPlayerId = "";
     this.isResolving = false;
   }
@@ -48,6 +49,7 @@ class EffectChronicleState extends Schema {
 
 defineTypes(EffectChronicleState, {
   items: [ChronicleItem],
+  history: [ChronicleItem],
   priorityPlayerId: "string",
   isResolving: "boolean",
 });

@@ -52,7 +52,7 @@ export interface PlayerState {
   searchContext: SearchContextState;
 }
 
-export type ChronicleItemStatus = "pending" | "resolving";
+export type ChronicleItemStatus = "pending" | "resolving" | "completed" | "passed";
 
 export interface ChronicleItemData {
   id: string;
@@ -69,6 +69,7 @@ export interface ChronicleItemData {
 
 export interface EffectChronicleStateData {
   items: ArraySchema<ChronicleItemData>;
+  history: ArraySchema<ChronicleItemData>;
   priorityPlayerId: string;
   isResolving: boolean;
   onChange?: (changes: any) => void;
