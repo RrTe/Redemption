@@ -82,10 +82,41 @@ class AbilityResolver {
       return { handled: false, reason: "CONDITIONS_UNMET" };
     }
 
-    // Interactive targeting check: pause and request selection if required
     const firstEffect = targetAbility.effects?.[0];
-    const hasExplicitTargets = Boolean(options.targetCardIds || options.targetPileId);
 
+    // Optional ability confirmation check
+    const isStarActivation = item.actionType === "ACTIVATE_STAR_ABILITY";
+    if (targetAbility.is_optional && options.accepted === undefined && !isStarActivation) {
+      const promptText = this._getOptionalPromptText(firstEffect, card, item);
+      const client = this.room.clients.find((c) => c.sessionId === player.sessionId);
+      if (client && typeof client.send === "function") {
+        client.send(AST_MESSAGES.REQUEST_OPTIONAL_ABILITY, {
+          abilityId: targetAbility.ability_id,
+          itemId: item.id,
+          cardId: card.id || item.cardId,
+          cardTitle: card.Name || item.title,
+          promptText,
+          action: firstEffect?.action || "activate",
+          cardImageFile: card.ImageFile || "",
+          templateId: card.templateId || "",
+        });
+      }
+      return {
+        handled: true,
+        awaitingConfirmation: true,
+      };
+    }
+
+    if (options.accepted === false) {
+      return {
+        handled: true,
+        snapshots: [],
+        logEntries: [`${player.name} chooses not to activate ${card.Name || item.title}.`],
+      };
+    }
+
+    // Interactive targeting check: pause and request selection if required
+    const hasExplicitTargets = Boolean(options.targetCardIds || options.targetPileId);
     const isSupportedAction = Boolean(firstEffect && AstEffectRunner._handlers[firstEffect.action]);
 
     if (isSupportedAction && firstEffect.target && !hasExplicitTargets) {
@@ -134,6 +165,36 @@ class AbilityResolver {
       snapshots: runnerResult.snapshots || [],
       logEntries: runnerResult.logEntries || [],
     };
+  }
+
+  /**
+   * Generates a readable prompt question for optional abilities.
+   *
+   * @private
+   * @param {object} [effect] First effect in the ability definition.
+   * @param {object} card Card object.
+   * @param {object} item Chronicle item.
+   * @returns {string} Prompt question.
+   */
+  _getOptionalPromptText(effect, card, item) {
+    const cardName = card.Name || item.title || "this card";
+    if (!effect) {
+      return `Activate the optional ability of ${cardName}?`;
+    }
+    let count = effect.count ?? effect.target?.count ?? 1;
+    if (typeof count === "object" && count !== null) {
+      count = count.fixed_value ?? 1;
+    }
+    switch (effect.action) {
+      case "draw":
+        return `Draw ${count} card${count > 1 ? "s" : ""}?`;
+      case "discard":
+        return `Discard ${count} card${count > 1 ? "s" : ""}?`;
+      case "look_and_choose":
+        return `Search and choose from cards?`;
+      default:
+        return `Activate ${cardName}'s optional ability?`;
+    }
   }
 }
 

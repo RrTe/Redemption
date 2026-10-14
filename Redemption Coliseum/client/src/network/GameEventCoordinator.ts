@@ -3,7 +3,10 @@ import { type TypedRoom, type StateCallback } from "../ui/gameUI.js";
 import { log, error } from "../utils/logger.js";
 import { GameEvents } from "../constants/EventNames.js";
 import { AST_MESSAGES } from "../../../shared/astConstants.js";
-import type { RequestTargetSelectionMessage } from "../../../shared/messages.js";
+import type {
+  RequestTargetSelectionMessage,
+  RequestOptionalAbilityMessage,
+} from "../../../shared/messages.js";
 
 /**
  * Translates network messages and state changes into Phaser events.
@@ -122,6 +125,13 @@ export class GameEventCoordinator {
       this.room.onMessage(AST_MESSAGES.REQUEST_TARGET_SELECTION, (msg: RequestTargetSelectionMessage) => {
         log("GameEventCoordinator", "[NET] requestTargetSelection received:", msg);
         this.scene.events.emit(GameEvents.NET_TARGET_SELECTION_REQUESTED, msg);
+      }),
+    );
+
+    this.roomListeners.push(
+      this.room.onMessage(AST_MESSAGES.REQUEST_OPTIONAL_ABILITY, (msg: RequestOptionalAbilityMessage) => {
+        log("GameEventCoordinator", "[NET] requestOptionalAbility received:", msg);
+        this.scene.events.emit(GameEvents.NET_OPTIONAL_ABILITY_REQUESTED, msg);
       }),
     );
 

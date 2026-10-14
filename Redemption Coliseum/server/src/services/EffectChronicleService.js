@@ -92,11 +92,14 @@ class EffectChronicleService {
       astResult = room.abilityResolver.resolve(item, options);
     }
 
-    if (astResult && astResult.awaitingTargetSelection) {
-      logger.info(
-        `[EffectChronicleService] Item '${item.title}' is awaiting client target selection.`
-      );
-      return { item, astResult, index, awaitingTargetSelection: true };
+    if (astResult && (astResult.awaitingTargetSelection || astResult.awaitingConfirmation)) {
+      return {
+        item,
+        astResult,
+        index,
+        awaitingTargetSelection: Boolean(astResult.awaitingTargetSelection),
+        awaitingConfirmation: Boolean(astResult.awaitingConfirmation),
+      };
     }
 
     // Fast-Track guard: unsupported cards stay in chronicle as pending visual notes

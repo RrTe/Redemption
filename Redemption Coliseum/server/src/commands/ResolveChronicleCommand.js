@@ -36,12 +36,12 @@ class ResolveChronicleCommand extends BaseCommand {
           this.room,
           this.client,
           itemId,
-          message
+          { ...message, accepted: message?.accepted !== undefined ? message.accepted : true }
         );
         if (result && result.item) {
           // If the ability is awaiting manual client target selection, it is not yet executed!
           // Targeting will be finalized and recorded for Undo by SelectTargetCommand.
-          if (result.awaitingTargetSelection) {
+          if (result.awaitingTargetSelection || result.awaitingConfirmation) {
             this.canUndo = false;
             break;
           }

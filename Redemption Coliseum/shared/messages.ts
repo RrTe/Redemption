@@ -63,6 +63,22 @@ export interface SelectTargetMessage {
   cancelled?: boolean;
 }
 
+export interface RequestOptionalAbilityMessage {
+  abilityId: string;
+  itemId: string;
+  cardId?: string;
+  cardTitle: string;
+  promptText: string;
+  action: string;
+  cardImageFile?: string;
+  templateId?: string;
+}
+
+export interface RespondOptionalAbilityMessage {
+  itemId: string;
+  accepted: boolean;
+}
+
 export interface GameRoomMessages {
   moveCard: MoveCardMessage;
   requestUndo: RequestUndoMessage;
@@ -70,6 +86,7 @@ export interface GameRoomMessages {
   submitDrawSequence: SubmitDrawSequenceMessage;
   resolveChronicleItem: ResolveChronicleItemMessage;
   selectTarget: SelectTargetMessage;
+  respondOptionalAbility: RespondOptionalAbilityMessage;
 }
 
 

@@ -1,6 +1,10 @@
 import type { TypedRoom } from "../ui/gameUI.js";
 import { type Zone } from "../../../shared/zones.js";
-import type { MoveCardMessage, SelectTargetMessage } from "../../../shared/messages.js";
+import type {
+  MoveCardMessage,
+  SelectTargetMessage,
+  RespondOptionalAbilityMessage,
+} from "../../../shared/messages.js";
 import { AST_MESSAGES } from "../../../shared/astConstants.js";
 import type { SelectedCardInfo } from "../scenes/SelectionDialogScene.js";
 import { log } from "../utils/logger.js";
@@ -129,5 +133,10 @@ export class GameMessageSender {
   public sendSelectTarget(payload: SelectTargetMessage): void {
     log("Network", "Sending 'selectTarget' message:", payload);
     this.room.send(AST_MESSAGES.SELECT_TARGET, payload);
+  }
+
+  public sendRespondOptionalAbility(payload: RespondOptionalAbilityMessage): void {
+    log("Network", "Sending 'respondOptionalAbility' message:", payload);
+    this.room.send(AST_MESSAGES.RESPOND_OPTIONAL_ABILITY, payload);
   }
 }

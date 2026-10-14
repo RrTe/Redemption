@@ -41,6 +41,9 @@ const {
   SelectTargetCommand,
 } = require("../commands/SelectTargetCommand");
 const {
+  RespondOptionalAbilityCommand,
+} = require("../commands/RespondOptionalAbilityCommand");
+const {
   CHRONICLE_MESSAGES,
 } = require("../../../shared/effectChronicleConstants");
 const {
@@ -73,6 +76,7 @@ class CommandService {
     room.dispatcher.register("submitDrawSequence", SubmitDrawSequenceCommand);
     room.dispatcher.register(CHRONICLE_MESSAGES.RESOLVE_ITEM, ResolveChronicleCommand);
     room.dispatcher.register(AST_MESSAGES.SELECT_TARGET, SelectTargetCommand);
+    room.dispatcher.register(AST_MESSAGES.RESPOND_OPTIONAL_ABILITY, RespondOptionalAbilityCommand);
   }
 }
 

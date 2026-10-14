@@ -24,6 +24,7 @@ export const GameEvents = {
   NET_UNDO_CONFIRMATION_PROMPT: "net:undoConfirmationPrompt",
   NET_UNDO_RESOLVED: "net:undoResolved",
   NET_TARGET_SELECTION_REQUESTED: "net:targetSelectionRequested",
+  NET_OPTIONAL_ABILITY_REQUESTED: "net:optionalAbilityRequested",
 
   // UI & Logic Events
   UI_REQUEST_CARD_ACTION: "request-card-action",

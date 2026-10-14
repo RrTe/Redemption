@@ -25,6 +25,38 @@ class ChatCommand extends BaseCommand {
         }
       }
 
+      if (!targetCard) {
+        const { CardRepository } = require("../../../shared/CardRepository");
+        const { cardDatabase } = require("../data/cardDatabase");
+        const { CardFactory } = require("../factories/CardFactory");
+        const { ZONES } = require("../../../shared/zones");
+
+        if (!CardRepository.isInitialized) {
+          CardRepository.initialize(cardDatabase);
+        }
+        let cardDef = CardRepository.get(query);
+        if (!cardDef && Array.isArray(cardDatabase)) {
+          cardDef = cardDatabase.find((c) => c.Name?.toLowerCase().includes(query.toLowerCase()));
+        }
+        if (cardDef) {
+          const testId = `dev-test-${Date.now()}`;
+          const player = this.state.players.get(this.client.sessionId);
+          targetCard = CardFactory.createCard(
+            cardDef,
+            this.client.sessionId,
+            testId,
+            ZONES.TERRITORY,
+            this.client.sessionId
+          );
+          if (player && player.territory) {
+            player.territory.push(targetCard);
+          }
+          if (this.room.cardLookup) {
+            this.room.cardLookup.set(targetCard.id, targetCard);
+          }
+        }
+      }
+
       if (targetCard) {
         logger.info(`[ChatCommand/DEBUG] Manually enqueuing ${targetCard.Name} (${targetCard.templateId}).`);
         EffectChronicleService.enqueueCards(

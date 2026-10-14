@@ -4,6 +4,7 @@ const { PlayerState } = require("../src/state/PlayerState");
 const { Card } = require("../src/state/Card");
 const { ChatCommand } = require("../src/commands/ChatCommand");
 const { SelectTargetCommand } = require("../src/commands/SelectTargetCommand");
+const { RespondOptionalAbilityCommand } = require("../src/commands/RespondOptionalAbilityCommand");
 const { AbilityResolver } = require("../src/ast/AbilityResolver");
 const { ZONES } = require("../../shared/zones");
 const { AST_MESSAGES } = require("../../shared/astConstants");
@@ -78,7 +79,15 @@ describe("ChatCommand DEV Fast-Track for AST abilities", () => {
     const chatCmd = new ChatCommand(room, client1);
     chatCmd.execute({ text: "/test Egyptian Horsemen" });
 
-    // Auto-executes, draws 2 cards, finishes chronicle
+    // Enqueues into chronicle and pauses awaiting confirmation (May ability)
+    expect(state.effectChronicle.items.length).toBe(1);
+    const item = state.effectChronicle.items[0];
+
+    // Player accepts the prompt
+    const optCmd = new RespondOptionalAbilityCommand(room, client1);
+    optCmd.execute({ itemId: item.id, accepted: true });
+
+    // Executes, draws 2 cards, finishes chronicle
     expect(player1.deck.length).toBe(0);
     expect(player1.hand.length).toBe(3);
     expect(state.effectChronicle.items.length).toBe(0);

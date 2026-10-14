@@ -37,6 +37,7 @@ import { AssetManager } from "./managers/AssetManager"; // ✨ NEU
 import { UndoManager } from "./managers/UndoManager";
 import { StaticUIHandler } from "./handlers/StaticUIHandler"; // Fix: was never imported
 import { TargetingManager } from "./managers/TargetingManager";
+import { AbilityPromptManager } from "./managers/AbilityPromptManager";
 import type {
   GameRoomMessages,
   MoveCardMessage,
@@ -95,6 +96,7 @@ export class GameUI {
   public drawSequenceManager!: DrawSequenceManager; // ✨ NEU
   public effectChronicleManager!: EffectChronicleManager;
   public targetingManager!: TargetingManager;
+  public abilityPromptManager!: AbilityPromptManager;
 
 
   constructor(
@@ -285,6 +287,14 @@ export class GameUI {
     );
     this.scene.registry.set("targetingManager", this.targetingManager);
 
+    this.abilityPromptManager = new AbilityPromptManager(
+      this.scene,
+      this.networkManager,
+      this.cardRenderer,
+      this.settingsManager,
+    );
+    this.scene.registry.set("abilityPromptManager", this.abilityPromptManager);
+
 
     // Fix: Instantiate StaticUIHandler to wire up Help, Settings, Save, and Concede buttons.
     // Without this, the help button had no pointerdown listener during gameplay.
@@ -438,6 +448,7 @@ export class GameUI {
     this.drawSequenceManager?.destroy(); // ✨ NEU
     this.effectChronicleManager?.destroy();
     this.targetingManager?.destroy();
+    this.abilityPromptManager?.destroy();
     this.previewManager?.hide(); // Hide any active preview
   }
 

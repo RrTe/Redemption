@@ -74,6 +74,8 @@ export const AST_ALIGNMENTS = /** @type {const} */ ({
 export const AST_MESSAGES = /** @type {const} */ ({
   REQUEST_TARGET_SELECTION: "requestTargetSelection",
   SELECT_TARGET: "selectTarget",
+  REQUEST_OPTIONAL_ABILITY: "requestOptionalAbility",
+  RESPOND_OPTIONAL_ABILITY: "respondOptionalAbility",
 });
 
 if (typeof module !== "undefined" && module.exports) {

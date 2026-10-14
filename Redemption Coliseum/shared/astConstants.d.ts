@@ -50,6 +50,8 @@ export declare const AST_ALIGNMENTS: {
 export declare const AST_MESSAGES: {
   readonly REQUEST_TARGET_SELECTION: "requestTargetSelection";
   readonly SELECT_TARGET: "selectTarget";
+  readonly REQUEST_OPTIONAL_ABILITY: "requestOptionalAbility";
+  readonly RESPOND_OPTIONAL_ABILITY: "respondOptionalAbility";
 };
 
 export type AstAction = typeof AST_ACTIONS[keyof typeof AST_ACTIONS];

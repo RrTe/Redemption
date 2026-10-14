@@ -2,7 +2,11 @@ import type { TypedRoom, StateCallback } from "../ui/gameUI.js";
 import type { GameUI } from "../ui/gameUI.js";
 import type { SelectedCardInfo } from "../scenes/SelectionDialogScene.js";
 import { type Zone } from "../../../shared/zones.js";
-import type { MoveCardMessage, SelectTargetMessage } from "../../../shared/messages.js";
+import type {
+  MoveCardMessage,
+  SelectTargetMessage,
+  RespondOptionalAbilityMessage,
+} from "../../../shared/messages.js";
 import { log } from "../utils/logger.js";
 import { type DialogManager } from "../ui/managers/DialogManager.js";
 import { getClient } from "./connection.js";
@@ -176,6 +180,7 @@ export class GameNetworkManager {
   public sendRequestUndo(count: number = 1) { this.sender.sendRequestUndo(count); }
   public sendResolveUndo(accepted: boolean, count: number) { this.sender.sendResolveUndo(accepted, count); }
   public sendSelectTarget(payload: SelectTargetMessage) { this.sender.sendSelectTarget(payload); }
+  public sendRespondOptionalAbility(payload: RespondOptionalAbilityMessage) { this.sender.sendRespondOptionalAbility(payload); }
 
   public destroy(): void {
     log("Network", `[NetworkManager ${this.instanceId}] Destroying...`);
