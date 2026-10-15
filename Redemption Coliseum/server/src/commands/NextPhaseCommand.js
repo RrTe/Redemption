@@ -1,12 +1,13 @@
 const { BaseCommand } = require("./BaseCommand");
-const { PHASES, DRAW_STEPS } = require("../../../shared/phases");
-const { ActionType } = require("../../../shared/actions");
-const { CardAction } = require("../../../shared/actionSchema");
-const MatchService = require("../services/MatchService");
-const { DrawPhaseStepService } = require("../services/DrawPhaseStepService");
-const { EffectChronicleService } = require("../services/EffectChronicleService");
+const { DRAW_STEPS } = require("../../../shared/phases");
+const { PhaseTransitionService } = require("../services/PhaseTransitionService");
 const logger = require("../utils/logger");
 
+/**
+ * Command triggered when the active player clicks 'Next Phase'.
+ * In multiplayer rooms, initiates a bilateral handshake with the opponent.
+ * In solo / testing rooms, directly advances the phase.
+ */
 class NextPhaseCommand extends BaseCommand {
   execute() {
     if (this.client.sessionId !== this.state.activePlayer) return;
@@ -14,106 +15,73 @@ class NextPhaseCommand extends BaseCommand {
     const player = this.state.players.get(this.client.sessionId);
     if (!player) return;
 
-    if (this.state.drawStep && this.state.drawStep !== DRAW_STEPS.NONE && this.state.drawStep !== DRAW_STEPS.COMPLETED) {
-      logger.warn(`[NextPhaseCommand] Blocked nextPhase: draw sequence step '${this.state.drawStep}' is active.`);
+    if (
+      this.state.drawStep &&
+      this.state.drawStep !== DRAW_STEPS.NONE &&
+      this.state.drawStep !== DRAW_STEPS.COMPLETED
+    ) {
+      logger.warn(
+        `[NextPhaseCommand] Blocked nextPhase: draw sequence step '${this.state.drawStep}' is active.`,
+      );
       return;
     }
 
     if (this.state.effectChronicle && this.state.effectChronicle.items.length > 0) {
       logger.warn(
-        `[NextPhaseCommand] Blocked nextPhase: ${this.state.effectChronicle.items.length} items still pending in Effect Chronicle.`
+        `[NextPhaseCommand] Blocked nextPhase: ${this.state.effectChronicle.items.length} items still pending in Effect Chronicle.`,
       );
       return;
     }
 
-
-    let result = null;
-    try {
-      // ✨ NEU: Vor dem Phasenwechsel bereinigen wir ALLE Aktionen auf dem gesamten Board.
-      // Da Aktionen immer phasenabhängig neu generiert werden, stellen wir so sicher,
-      // dass keine veralteten Actions (egal von welchem Spieler) in die neue Phase leaken.
-      const allZones = ['hand', 'deck', 'discard', 'reserve', 'landOfRedemption', 'landOfBondage', 'territory', 'setAside', 'banish'];
-      this.state.players.forEach(p => {
-        allZones.forEach(zone => {
-          if (p[zone]) {
-            p[zone].forEach(card => {
-              if (card.availableActions && card.availableActions.length > 0) {
-                // Wir leeren das Array, ohne die ArraySchema-Instanz zu zerstören
-                card.availableActions.splice(0, card.availableActions.length);
-              }
-            });
-          }
-        });
-      });
-
-      // Delegate to phaseService (attached to room)
-      result = this.room.phaseService.advancePhase(
-        this.state,
-        player,
-        this.room.clients,
-        this.room.cardLookup,
-      );
-
-      // Clear undo stack and purge chronicle phase history on phase change
-      if (this.room.undoManager) {
-        this.room.undoManager.clear();
-      }
-      EffectChronicleService.purgeHistory(this.room);
-
-      // Auto-reduce counters during UPKEEP
-      if (this.state.currentPhase === PHASES.UPKEEP) {
-        MatchService.handleUpkeepPhase(this.room);
-      }
-
-      if (result) {
-        this._handlePhaseDraw(result, player);
-      }
-    } catch (err) {
-      logger.error(`[NextPhaseCommand] Critical error:`, err);
-    }
-  }
-
-  _handlePhaseDraw(result, player) {
-    const movedCards = result.movedCards || [];
-    if (movedCards.length === 0) return;
-
-    // Find client for the (potentially new) active player
-    const receivingClient = this.room.clients.find(
-      (c) => c.sessionId === this.state.activePlayer,
+    const opponentClient = this.room.clients.find(
+      (c) => c.sessionId !== this.client.sessionId,
     );
 
-    if (receivingClient) {
-      receivingClient.send("cardsDrawn", {
-        cardIds: movedCards.map((c) => c.id),
-      });
+    // If solo / testing mode with no opponent connected, advance immediately
+    if (!opponentClient) {
+      logger.info(
+        `[NextPhaseCommand] Solo mode active. Directly advancing phase for ${this.client.sessionId}.`,
+      );
+      PhaseTransitionService.executePhaseAdvance(this.room, this.state, player);
+      return;
     }
 
-    // ✨ NEU: Star-Fähigkeit für gezogene Star-Karten in der Draw-Phase aktivieren
-    if (this.state.currentPhase === PHASES.DRAW) {
-      movedCards.forEach(card => {
-        // Prüfe, ob die Karte eine Star-Karte ist (IsStarCard Flag oder Klasse "Star")
-        if (card.IsStarCard || (card.Class && (card.Class.includes("Star") || card.Class.includes("star")))) {
-          const action = new CardAction();
-          action.id = `star_${Date.now()}_${card.id}`;
-          action.type = ActionType.ACTIVATE_STAR_ABILITY;
-          action.description = "Activate Star Ability";
-          action.isMandatory = false;
-
-          // ✨ FIX: Verwende zentrale Hilfsmethode
-          const cardService = require("../services/cardService");
-          cardService.addAvailableAction(this.state, card, action);
-        }
-      });
+    // Guard against duplicate phase handshake prompts
+    if (this.room.pendingPhaseTransition) {
+      logger.warn(
+        `[NextPhaseCommand] Phase transition handshake already pending in room ${this.room.roomId}.`,
+      );
+      return;
     }
 
-    if (result.logEntry) {
-      this.room.broadcastGameLog(result.logEntry);
-    }
+    const fromPhase = this.state.currentPhase;
+    const toPhase = PhaseTransitionService.getNextPhase(fromPhase);
 
-    // ✨ Coordinated Draw Phase sequence for turn draws
-    if (this.state.currentPhase === PHASES.DRAW) {
-      DrawPhaseStepService.startTurnDrawSequence(this.room);
-    }
+    this.room.pendingPhaseTransition = {
+      requestingPlayerId: this.client.sessionId,
+      requestingPlayerName: player.name || "Active Player",
+      fromPhase,
+      toPhase,
+      createdAt: Date.now(),
+    };
+
+    // Notify requester to render WaitingDialogScene
+    this.client.send("phaseTransitionWaiting", {
+      fromPhase,
+      toPhase,
+    });
+
+    // Send confirmation prompt to opponent
+    opponentClient.send("phaseTransitionPrompt", {
+      requestingPlayerId: this.client.sessionId,
+      requestingPlayerName: player.name || "Opponent",
+      fromPhase,
+      toPhase,
+    });
+
+    logger.info(
+      `[NextPhaseCommand] Phase handshake initiated by ${this.client.sessionId} (${fromPhase} -> ${toPhase}). Prompt sent to ${opponentClient.sessionId}.`,
+    );
   }
 }
 

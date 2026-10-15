@@ -79,6 +79,27 @@ export interface RespondOptionalAbilityMessage {
   accepted: boolean;
 }
 
+export interface RequestNextPhaseMessage {
+  requestedPhase?: string;
+}
+
+export interface PromptPhaseTransitionMessage {
+  requestingPlayerId: string;
+  requestingPlayerName: string;
+  fromPhase: string;
+  toPhase: string;
+}
+
+export interface RespondPhaseTransitionMessage {
+  accept: boolean;
+}
+
+export interface ResolvePhaseTransitionMessage {
+  accepted: boolean;
+  fromPhase?: string;
+  toPhase?: string;
+}
+
 export interface GameRoomMessages {
   moveCard: MoveCardMessage;
   requestUndo: RequestUndoMessage;
@@ -87,6 +108,6 @@ export interface GameRoomMessages {
   resolveChronicleItem: ResolveChronicleItemMessage;
   selectTarget: SelectTargetMessage;
   respondOptionalAbility: RespondOptionalAbilityMessage;
+  requestNextPhase: RequestNextPhaseMessage;
+  respondPhaseTransition: RespondPhaseTransitionMessage;
 }
-
-

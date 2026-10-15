@@ -25,6 +25,9 @@ export const GameEvents = {
   NET_UNDO_RESOLVED: "net:undoResolved",
   NET_TARGET_SELECTION_REQUESTED: "net:targetSelectionRequested",
   NET_OPTIONAL_ABILITY_REQUESTED: "net:optionalAbilityRequested",
+  NET_PHASE_TRANSITION_WAITING: "net:phaseTransitionWaiting",
+  NET_PHASE_TRANSITION_PROMPT: "net:phaseTransitionPrompt",
+  NET_PHASE_TRANSITION_RESOLVED: "net:phaseTransitionResolved",
 
   // UI & Logic Events
   UI_REQUEST_CARD_ACTION: "request-card-action",

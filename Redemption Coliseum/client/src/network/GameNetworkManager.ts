@@ -181,6 +181,7 @@ export class GameNetworkManager {
   public sendResolveUndo(accepted: boolean, count: number) { this.sender.sendResolveUndo(accepted, count); }
   public sendSelectTarget(payload: SelectTargetMessage) { this.sender.sendSelectTarget(payload); }
   public sendRespondOptionalAbility(payload: RespondOptionalAbilityMessage) { this.sender.sendRespondOptionalAbility(payload); }
+  public sendRespondPhaseTransition(accept: boolean) { this.sender.sendRespondPhaseTransition(accept); }
 
   public destroy(): void {
     log("Network", `[NetworkManager ${this.instanceId}] Destroying...`);

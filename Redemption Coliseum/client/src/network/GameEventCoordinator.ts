@@ -135,6 +135,24 @@ export class GameEventCoordinator {
       }),
     );
 
+    this.roomListeners.push(
+      this.room.onMessage("phaseTransitionWaiting", (msg) =>
+        this.scene.events.emit(GameEvents.NET_PHASE_TRANSITION_WAITING, msg),
+      ),
+    );
+
+    this.roomListeners.push(
+      this.room.onMessage("phaseTransitionPrompt", (msg) =>
+        this.scene.events.emit(GameEvents.NET_PHASE_TRANSITION_PROMPT, msg),
+      ),
+    );
+
+    this.roomListeners.push(
+      this.room.onMessage("phaseTransitionResolved", (msg) =>
+        this.scene.events.emit(GameEvents.NET_PHASE_TRANSITION_RESOLVED, msg),
+      ),
+    );
+
     // --- State Mapping ---
     this.stateListeners.push(
       this.$(this.room.state).revealedCards.onAdd((card, index) =>
@@ -198,33 +216,6 @@ export class GameEventCoordinator {
               sessionId,
             }),
           ),
-        );
-
-        // ✨ NEU: Client-seitiges Debugging für Colyseus ArraySchema Änderungen
-        // Diese Logs zeigen, ob Colyseus die Kartenbewegungen im State-Modell registriert.
-        this.stateListeners.push(
-          this.$(player).hand.onAdd((card) => {
-            log("GameEventCoordinator", `[CLIENT-SYNC][IMMEDIATE] Hand ADDED: ${card.id}, Zone: ${card.zone}, FaceUp: ${card.isFaceUp}`);
-            // ✨ DEFERRED CHECK: Prüfe den State nach dem aktuellen Tick
-            queueMicrotask(() => {
-               log("GameEventCoordinator", `[CLIENT-SYNC][DEFERRED]  Hand STATE: ${card.id}, Zone: ${card.zone}, FaceUp: ${card.isFaceUp}`);
-            });
-          }),
-        );
-        this.stateListeners.push(
-          this.$(player).hand.onRemove((card) => {
-            log("GameEventCoordinator", `[CLIENT-SYNC][Colyseus] Player ${sessionId} Hand REMOVED: ${card.id} (${card.Name}), Zone: ${card.zone}, FaceUp: ${card.isFaceUp}`);
-          }),
-        );
-        this.stateListeners.push(
-          this.$(player).deck.onAdd((card) => {
-            log("GameEventCoordinator", `[CLIENT-SYNC][Colyseus] Player ${sessionId} Deck ADDED: ${card.id} (${card.Name}), Zone: ${card.zone}, FaceUp: ${card.isFaceUp}`);
-          }),
-        );
-        this.stateListeners.push(
-          this.$(player).deck.onRemove((card) => {
-            log("GameEventCoordinator", `[CLIENT-SYNC][Colyseus] Player ${sessionId} Deck REMOVED: ${card.id} (${card.Name}), Zone: ${card.zone}, FaceUp: ${card.isFaceUp}`);
-          }),
         );
       }, true),
     );

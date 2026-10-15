@@ -100,6 +100,7 @@ class GameRoom extends colyseus.Room {
     this.undoManager = new UndoManager(this);
     this.dispatcher = new CommandDispatcher(this);
     this.abilityResolver = new AbilityResolver(this);
+    this.pendingPhaseTransition = null;
     CommandService.registerCommands(this);
 
     // ✨ FIX: Register empty ping handler to prevent "not registered" errors
@@ -156,7 +157,9 @@ class GameRoom extends colyseus.Room {
   }
 
   async onLeave(client, consented) {
-    
+    if (this.pendingPhaseTransition) {
+      this.pendingPhaseTransition = null;
+    }
     await RoomLifecycleService.handleLeave(this, client, consented);
   }
 

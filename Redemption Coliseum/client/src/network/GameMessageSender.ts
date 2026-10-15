@@ -139,4 +139,9 @@ export class GameMessageSender {
     log("Network", "Sending 'respondOptionalAbility' message:", payload);
     this.room.send(AST_MESSAGES.RESPOND_OPTIONAL_ABILITY, payload);
   }
+
+  public sendRespondPhaseTransition(accept: boolean): void {
+    log("Network", `Sending 'respondPhaseTransition' accept=${accept}`);
+    this.room.send("respondPhaseTransition", { accept });
+  }
 }

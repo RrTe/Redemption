@@ -44,6 +44,9 @@ const {
   RespondOptionalAbilityCommand,
 } = require("../commands/RespondOptionalAbilityCommand");
 const {
+  RespondPhaseTransitionCommand,
+} = require("../commands/RespondPhaseTransitionCommand");
+const {
   CHRONICLE_MESSAGES,
 } = require("../../../shared/effectChronicleConstants");
 const {
@@ -59,6 +62,7 @@ class CommandService {
     room.dispatcher.register("chat", ChatCommand);
     room.dispatcher.register("moveCard", MoveCardCommand);
     room.dispatcher.register("nextPhase", NextPhaseCommand);
+    room.dispatcher.register("respondPhaseTransition", RespondPhaseTransitionCommand);
     room.dispatcher.register("changeRedeemedSouls", ChangeRedeemedSoulsCommand);
     room.dispatcher.register("updateCardState", UpdateCardStateCommand);
     room.dispatcher.register("requestSearchPile", RequestSearchPileCommand);

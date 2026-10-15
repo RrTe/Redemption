@@ -79,7 +79,7 @@ export class PhaseManager {
     log(
       "[NEXT_PHASE] 'nextPhaseButtonClicked' event received. Sending 'nextPhase' message to server.",
     );
-    this.scene.game.events.emit("playSound", "PHASE_CHANGE"); // ✨ FIX: Globaler Event-Bus
+    this.scene.game.events.emit("playSound", "UI_CLICK");
     this.networkManager.sendNextPhase();
   }
 
@@ -91,6 +91,7 @@ export class PhaseManager {
         `[PHASE_CHANGE] Detected phase change. New phase: ${state.currentPhase}`,
       );
       this.currentPhase = state.currentPhase;
+      this.scene.game.events.emit("playSound", "PHASE_CHANGE");
       const newLayout = calculateLayout(
         this.scene.scale.width,
         this.scene.scale.height,

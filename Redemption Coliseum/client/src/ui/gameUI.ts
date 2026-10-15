@@ -35,6 +35,7 @@ import { HUDManager } from "./managers/HUDManager"; // ✨ REFACTOR
 import { TokenManager } from "./managers/TokenManager.js"; // ✨ FIX: Import hinzufügen
 import { AssetManager } from "./managers/AssetManager"; // ✨ NEU
 import { UndoManager } from "./managers/UndoManager";
+import { PhaseHandshakeManager } from "./managers/PhaseHandshakeManager";
 import { StaticUIHandler } from "./handlers/StaticUIHandler"; // Fix: was never imported
 import { TargetingManager } from "./managers/TargetingManager";
 import { AbilityPromptManager } from "./managers/AbilityPromptManager";
@@ -97,6 +98,7 @@ export class GameUI {
   public effectChronicleManager!: EffectChronicleManager;
   public targetingManager!: TargetingManager;
   public abilityPromptManager!: AbilityPromptManager;
+  public phaseHandshakeManager!: PhaseHandshakeManager;
 
 
   constructor(
@@ -312,6 +314,13 @@ export class GameUI {
       this.elementManager,
     );
     this.undoManager.registerHandlers();
+
+    this.phaseHandshakeManager = new PhaseHandshakeManager(
+      this.scene,
+      this.room,
+      this.networkManager,
+    );
+    this.phaseHandshakeManager.registerHandlers();
   }
 
   // ✨ KORREKTUR: Die Initialisierung der Handler wird jetzt von der Scene gesteuert.
@@ -449,6 +458,7 @@ export class GameUI {
     this.effectChronicleManager?.destroy();
     this.targetingManager?.destroy();
     this.abilityPromptManager?.destroy();
+    this.phaseHandshakeManager?.destroy();
     this.previewManager?.hide(); // Hide any active preview
   }
 
