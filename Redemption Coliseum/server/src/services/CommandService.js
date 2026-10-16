@@ -2,6 +2,9 @@ const { ChatCommand } = require("../commands/ChatCommand");
 const { MoveCardCommand } = require("../commands/MoveCardCommand");
 const { NextPhaseCommand } = require("../commands/NextPhaseCommand");
 const {
+  TogglePhaseHandshakeCommand,
+} = require("../commands/TogglePhaseHandshakeCommand");
+const {
   ChangeRedeemedSoulsCommand,
 } = require("../commands/ChangeRedeemedSoulsCommand");
 const {
@@ -62,6 +65,7 @@ class CommandService {
     room.dispatcher.register("chat", ChatCommand);
     room.dispatcher.register("moveCard", MoveCardCommand);
     room.dispatcher.register("nextPhase", NextPhaseCommand);
+    room.dispatcher.register("togglePhaseHandshake", TogglePhaseHandshakeCommand);
     room.dispatcher.register("respondPhaseTransition", RespondPhaseTransitionCommand);
     room.dispatcher.register("changeRedeemedSouls", ChangeRedeemedSoulsCommand);
     room.dispatcher.register("updateCardState", UpdateCardStateCommand);

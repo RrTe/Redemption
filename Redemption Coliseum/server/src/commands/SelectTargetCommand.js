@@ -101,7 +101,10 @@ class SelectTargetCommand extends BaseCommand {
       if (chronicle.items.length === 0) {
         EffectChronicleService.finishChronicle(this.room);
       } else {
-        EffectChronicleService.executeItem(this.room, this.client, chronicle.items[0].id, { autoExecuteSupported: true });
+        const nextItem = chronicle.items[0];
+        chronicle.priorityPlayerId = nextItem.controllerId;
+        const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
+        EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, { autoExecuteSupported: true });
       }
 
       this.executedItem = item;

@@ -24,6 +24,7 @@ export class AbilityPromptManager {
   private settingsManager: SettingsManager | undefined;
   private banner: AbilityPromptBanner;
   private activeGlowingCard: CardUI | null = null;
+  private activePromptMsg: RequestOptionalAbilityMessage | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -45,10 +46,32 @@ export class AbilityPromptManager {
       GameEvents.NET_OPTIONAL_ABILITY_REQUESTED,
       (msg: RequestOptionalAbilityMessage) => this.handleOptionalAbilityRequest(msg),
     );
+    this.scene.events.on("ui:autoPassOptionalPrompt", () => this.autoPassActivePrompt());
+  }
+
+  /**
+   * Window of Opportunity: Automatically declines the active prompt
+   * when playing another card or advancing the phase with In-Game Help disabled.
+   */
+  public autoPassActivePrompt(): void {
+    const isHelpEnabled = this.settingsManager?.isInGameSupportEnabled() ?? true;
+    if (isHelpEnabled || !this.activePromptMsg) {
+      return;
+    }
+
+    log("AbilityPromptManager", "Window of opportunity expired: Auto-passing active optional ability", this.activePromptMsg.itemId);
+    const itemId = this.activePromptMsg.itemId;
+    this.activePromptMsg = null;
+    this.cleanupHighlight();
+    this.networkManager.sendRespondOptionalAbility({
+      itemId,
+      accepted: false,
+    });
   }
 
   private handleOptionalAbilityRequest(msg: RequestOptionalAbilityMessage): void {
     log("AbilityPromptManager", "Received optional ability request:", msg);
+    this.activePromptMsg = msg;
 
     CardDetailOverlay.hide();
     TooltipManager.hide();
@@ -69,6 +92,7 @@ export class AbilityPromptManager {
     }
 
     const onConfirmAction = () => {
+      this.activePromptMsg = null;
       this.cleanupHighlight();
       this.networkManager.sendRespondOptionalAbility({
         itemId: msg.itemId,
@@ -77,6 +101,7 @@ export class AbilityPromptManager {
     };
 
     const onDeclineAction = () => {
+      this.activePromptMsg = null;
       this.cleanupHighlight();
       this.networkManager.sendRespondOptionalAbility({
         itemId: msg.itemId,
@@ -133,7 +158,9 @@ export class AbilityPromptManager {
 
   public destroy(): void {
     this.cleanupHighlight();
+    this.activePromptMsg = null;
     this.banner.destroy();
     this.scene.events.off(GameEvents.NET_OPTIONAL_ABILITY_REQUESTED);
+    this.scene.events.off("ui:autoPassOptionalPrompt");
   }
 }

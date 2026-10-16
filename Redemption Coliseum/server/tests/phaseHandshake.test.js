@@ -1,4 +1,5 @@
 const { NextPhaseCommand } = require("../src/commands/NextPhaseCommand");
+const { TogglePhaseHandshakeCommand } = require("../src/commands/TogglePhaseHandshakeCommand");
 const { RespondPhaseTransitionCommand } = require("../src/commands/RespondPhaseTransitionCommand");
 const { RoomState } = require("../src/state/RoomState");
 const { PlayerState } = require("../src/state/PlayerState");
@@ -71,11 +72,35 @@ describe("Bilateral Phase Transition Handshake", () => {
     expect(room.pendingPhaseTransition).toBeNull();
   });
 
-  test("Multiplayer Handshake: initiates waiting and prompt without advancing phase immediately", () => {
+  test("Multiplayer Default: directly advances phase when requireHandshake is false/omitted", () => {
     room.clients = [client1, client2];
 
     const nextCmd = new NextPhaseCommand(room, client1);
     nextCmd.execute();
+
+    expect(room.phaseService.advancePhase).toHaveBeenCalled();
+    expect(room.state.currentPhase).toBe(PHASES.BATTLE);
+    expect(room.pendingPhaseTransition).toBeNull();
+  });
+
+  test("Opponent Preference: initiates handshake if opponent has toggle enabled even when active player passes no flag", () => {
+    room.clients = [client1, client2];
+
+    const toggleCmd = new TogglePhaseHandshakeCommand(room, client2);
+    toggleCmd.execute({ enabled: true });
+
+    const nextCmd = new NextPhaseCommand(room, client1);
+    nextCmd.execute();
+
+    expect(room.phaseService.advancePhase).not.toHaveBeenCalled();
+    expect(client2.send).toHaveBeenCalledWith("phaseTransitionPrompt", expect.anything());
+  });
+
+  test("Multiplayer Handshake: initiates waiting and prompt when requireHandshake is true", () => {
+    room.clients = [client1, client2];
+
+    const nextCmd = new NextPhaseCommand(room, client1);
+    nextCmd.execute({ requireHandshake: true });
 
     // Phase must NOT advance yet
     expect(room.phaseService.advancePhase).not.toHaveBeenCalled();
@@ -108,7 +133,7 @@ describe("Bilateral Phase Transition Handshake", () => {
     room.clients = [client1, client2];
 
     const nextCmd = new NextPhaseCommand(room, client1);
-    nextCmd.execute();
+    nextCmd.execute({ requireHandshake: true });
 
     const respondCmd = new RespondPhaseTransitionCommand(room, client1); // Requester attempts to resolve
     respondCmd.execute({ accept: true });
@@ -122,7 +147,7 @@ describe("Bilateral Phase Transition Handshake", () => {
     room.clients = [client1, client2];
 
     const nextCmd = new NextPhaseCommand(room, client1);
-    nextCmd.execute();
+    nextCmd.execute({ requireHandshake: true });
 
     const respondCmd = new RespondPhaseTransitionCommand(room, client2);
     respondCmd.execute({ accept: false });
@@ -150,7 +175,7 @@ describe("Bilateral Phase Transition Handshake", () => {
     room.clients = [client1, client2];
 
     const nextCmd = new NextPhaseCommand(room, client1);
-    nextCmd.execute();
+    nextCmd.execute({ requireHandshake: true });
 
     const respondCmd = new RespondPhaseTransitionCommand(room, client2);
     respondCmd.execute({ accept: true });

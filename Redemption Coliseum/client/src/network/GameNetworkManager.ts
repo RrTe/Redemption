@@ -173,9 +173,13 @@ export class GameNetworkManager {
   public sendRequestSearchPile(zone: Zone, targetPlayerId?: string) { this.sender.sendRequestSearchPile(zone, targetPlayerId); }
   public sendLookAtCards(z: string, count: number, p: "top" | "bottom", target?: string) { this.sender.sendLookAtCards(z, count, p, target); }
   public sendRevealCards(z: string, count: number, p: "top" | "bottom", target?: string) { this.sender.sendRevealCards(z, count, p, target); }
-  public sendMoveCard(msg: MoveCardMessage) { this.sender.sendMoveCard(msg); }
+  public sendMoveCard(msg: MoveCardMessage) {
+    this.scene.events.emit("ui:autoPassOptionalPrompt");
+    this.sender.sendMoveCard(msg);
+  }
   public sendResolveReveal(pos: SelectedCardInfo[] = []) { this.sender.sendResolveReveal(pos); }
-  public sendNextPhase() { this.sender.sendNextPhase(); }
+  public sendNextPhase(payload?: { requireHandshake?: boolean }) { this.sender.sendNextPhase(payload); }
+  public sendTogglePhaseHandshake(p: { enabled: boolean }) { this.sender.sendTogglePhaseHandshake(p); }
   public sendPlayerReady() { this.sender.sendPlayerReady(); }
   public sendRequestUndo(count: number = 1) { this.sender.sendRequestUndo(count); }
   public sendResolveUndo(accepted: boolean, count: number) { this.sender.sendResolveUndo(accepted, count); }

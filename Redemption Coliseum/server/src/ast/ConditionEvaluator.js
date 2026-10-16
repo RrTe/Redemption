@@ -1,4 +1,5 @@
 // server/src/ast/ConditionEvaluator.js
+const { ZONES } = require("../../../shared/zones");
 const logger = require("../utils/logger");
 
 /**
@@ -66,11 +67,38 @@ class ConditionEvaluator {
 
       case "zone_check": {
         const currentZone = card?.zone;
-        const requiredZone = condition.zone || condition.value || condition.selector?.scope;
-        if (requiredZone && currentZone !== requiredZone) {
+        const rawRequired = condition.zone || condition.value || condition.selector?.scope;
+        const requiredZone = rawRequired ? String(rawRequired).toLowerCase() : "";
+
+        if (requiredZone === "in_play") {
+          const inPlayZones = [ZONES.TERRITORY, ZONES.BATTLEFIELD];
+          if (!inPlayZones.includes(currentZone)) {
+            return {
+              valid: false,
+              reason: `Zone mismatch. Current: ${currentZone}, Required: in_play`,
+            };
+          }
+          return { valid: true };
+        }
+
+        if (
+          requiredZone === ZONES.BATTLEFIELD ||
+          requiredZone === "field_of_battle" ||
+          requiredZone === "battle"
+        ) {
+          if (currentZone !== ZONES.BATTLEFIELD) {
+            return {
+              valid: false,
+              reason: `Zone mismatch. Current: ${currentZone}, Required: ${ZONES.BATTLEFIELD}`,
+            };
+          }
+          return { valid: true };
+        }
+
+        if (rawRequired && currentZone !== rawRequired) {
           return {
             valid: false,
-            reason: `Zone mismatch. Current: ${currentZone}, Required: ${requiredZone}`,
+            reason: `Zone mismatch. Current: ${currentZone}, Required: ${rawRequired}`,
           };
         }
         return { valid: true };

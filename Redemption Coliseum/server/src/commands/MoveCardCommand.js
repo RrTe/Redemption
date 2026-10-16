@@ -1,9 +1,7 @@
 const { BaseCommand } = require("./BaseCommand");
-const {
-  moveCard,
-  getZoneCollection,
-} = require("../services/cardService");
-const { formatCardUndoLog } = require("../utils/gameLogFormatter");
+const { moveCard } = require("../services/cardService");
+const { MoveCardSnapshotHelper } = require("./MoveCardSnapshotHelper");
+const { BattleTriggerService } = require("../services/BattleTriggerService");
 const { ZONES } = require("../../../shared/zones");
 const logger = require("../utils/logger");
 
@@ -32,7 +30,7 @@ class MoveCardCommand extends BaseCommand {
         const targetCard = this.room.cardLookup.get(targetCardId);
         if (targetCard) {
           const zoneName = targetCard.zone || message.from;
-          this.preMoveSnapshot = this._createSnapshot(targetCard, zoneName, player);
+          this.preMoveSnapshot = MoveCardSnapshotHelper.createSnapshot(targetCard, zoneName, player);
         }
       }
 
@@ -108,11 +106,11 @@ class MoveCardCommand extends BaseCommand {
         this.canUndo = false;
       } else if (movedCards.length > 0 || divertedCards.length > 0) {
         if (!this.preMoveSnapshot && movedCards[0]) {
-          this.preMoveSnapshot = this._createSnapshot(movedCards[0], message.from, player);
+          this.preMoveSnapshot = MoveCardSnapshotHelper.createSnapshot(movedCards[0], message.from, player);
         }
         if (divertedCards.length > 0) {
           this.divertedSnapshots = divertedCards.map((card) =>
-            this._createDeckSnapshot(card, player)
+            MoveCardSnapshotHelper.createDeckSnapshot(card, player)
           );
         }
         this.canUndo = true;
@@ -132,102 +130,15 @@ class MoveCardCommand extends BaseCommand {
       if (result.logEntry) {
         this.room.broadcastGameLog(result.logEntry);
       }
+
+      // ✨ Phase 3: Battlefield & Battle Entry Triggers
+      if (!result.error && message.to === ZONES.BATTLEFIELD && message.from !== ZONES.BATTLEFIELD) {
+        BattleTriggerService.onCardEnteredBattlefield(this.room, player, movedCards, message);
+      }
     } catch (err) {
       this.canUndo = false;
       logger.error(`[MoveCardCommand] Error:`, err);
     }
-  }
-
-  _createSnapshot(card, fromZone, player) {
-    return {
-      cardId: card.id,
-      templateId: card.templateId || card.ImageFile,
-      cardName: card.Name,
-      imageFile: card.ImageFile,
-      set: card.Set,
-      fromZone: fromZone || card.zone,
-      fromCoords: { x: card.x, y: card.y },
-      controllerId: card.controllerId || player?.sessionId,
-      originalOwnerId: card.originalOwnerId || player?.sessionId,
-      isFaceUp: card.isFaceUp,
-      rotation: card.rotation,
-      isParalyzed: card.isParalyzed,
-      paralyzeRounds: card.paralyzeRounds,
-      isSetAside: card.isSetAside,
-      setAsideRounds: card.setAsideRounds,
-      attachedTo: card.attachedTo,
-      inGameType: card.inGameType,
-      inGameAlignment: card.inGameAlignment,
-      counters: card.counters ? Object.fromEntries(card.counters.entries()) : {},
-    };
-  }
-
-  _createDeckSnapshot(card, player) {
-    return {
-      cardId: card.id,
-      templateId: card.templateId || card.ImageFile,
-      cardName: card.Name,
-      imageFile: card.ImageFile,
-      set: card.Set,
-      fromZone: ZONES.DECK,
-      fromCoords: { x: 0, y: 0 },
-      controllerId: card.controllerId || player?.sessionId,
-      originalOwnerId: card.originalOwnerId || player?.sessionId,
-      isFaceUp: false,
-      rotation: 0,
-      isParalyzed: false,
-      paralyzeRounds: 0,
-      isSetAside: false,
-      setAsideRounds: 0,
-      attachedTo: null,
-      inGameType: "",
-      inGameAlignment: "",
-      counters: {},
-    };
-  }
-
-  _undoSingleCard(snap, player) {
-    const card = this.room.cardLookup.get(snap.cardId);
-    if (!card) return;
-
-    const currentZone = card.zone;
-
-    // Reverse movement back to original zone and coordinates
-    moveCard(
-      player,
-      this.state,
-      this.room.cardLookup,
-      currentZone,
-      snap.fromZone,
-      snap.cardId,
-      1,
-      {
-        x: snap.fromCoords.x,
-        y: snap.fromCoords.y,
-        targetPlayerId: snap.controllerId,
-      },
-      snap.inGameType,
-      snap.inGameAlignment,
-      {
-        isUndo: true,
-        snapshot: snap,
-      },
-    );
-
-    const updatedCard = this.room.cardLookup.get(snap.cardId);
-    if (updatedCard && snap.attachedTo) {
-      updatedCard.attachedTo = snap.attachedTo;
-    }
-
-    // Broadcast mandatory human-readable undo log
-    const logMsg = formatCardUndoLog(
-      player.name,
-      { templateId: snap.templateId, Name: snap.cardName },
-      currentZone,
-      snap.fromZone,
-      false
-    );
-    this.room.broadcastGameLog(logMsg);
   }
 
   undo() {
@@ -235,15 +146,16 @@ class MoveCardCommand extends BaseCommand {
     if (!player) return;
 
     if (this.preMoveSnapshot) {
-      this._undoSingleCard(this.preMoveSnapshot, player);
+      MoveCardSnapshotHelper.undoSingleCard(this.room, this.state, this.preMoveSnapshot, player);
     }
 
     if (this.divertedSnapshots && this.divertedSnapshots.length > 0) {
       for (let i = this.divertedSnapshots.length - 1; i >= 0; i--) {
-        this._undoSingleCard(this.divertedSnapshots[i], player);
+        MoveCardSnapshotHelper.undoSingleCard(this.room, this.state, this.divertedSnapshots[i], player);
       }
     }
   }
 }
 
 module.exports = { MoveCardCommand };
+

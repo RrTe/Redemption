@@ -37,61 +37,68 @@ class AbilityResolver {
       return { handled: false, reason: "CARD_OR_TEMPLATE_NOT_FOUND" };
     }
 
-    const templateId = card.templateId;
-    if (!AbilityLookup.hasLogic(templateId)) {
-      logger.info(
-        `[AbilityResolver] No AST logic found for templateId '${templateId}'. Triggering fallback.`
-      );
-      return { handled: false, reason: "NO_AST_LOGIC" };
-    }
-
     const player = this.room.state.players.get(item.controllerId);
     if (!player) {
       return { handled: false, reason: "CONTROLLER_NOT_FOUND" };
     }
 
-    // Resolve side-specific abilities
-    const abilities = AbilityLookup.resolveAbilities(templateId, {
-      actionType: item.actionType,
-      inGameType: card.inGameType,
-      inGameAlignment: card.inGameAlignment,
-    });
-
-    if (abilities.length === 0) {
-      logger.info(
-        `[AbilityResolver] No matching abilities for templateId '${templateId}'. Triggering fallback.`
-      );
-      return { handled: false, reason: "NO_MATCHING_ABILITIES" };
+    // 1. Declined response
+    if (options.accepted === false) {
+      return {
+        handled: true,
+        snapshots: [],
+        logEntries: [`${player.name} chooses not to activate ${card.Name || item.title}.`],
+      };
     }
 
-    // Select ability: matching abilityId or default to the first one
-    const targetAbility = (item.abilityId && abilities.find((a) => a.ability_id === item.abilityId))
-      || abilities[0];
+    const templateId = card.templateId;
+    const hasLogic = templateId && AbilityLookup.hasLogic(templateId);
 
-    // Evaluate trigger conditions
-    const evalResult = ConditionEvaluator.evaluate(targetAbility.conditions, {
-      room: this.room,
-      player,
-      card,
-    });
+    // 2. Resolve side-specific abilities if AST logic exists
+    let targetAbility = null;
+    let firstEffect = null;
 
-    if (!evalResult.valid) {
-      logger.info(
-        `[AbilityResolver] Conditions not met for '${item.title}': ${evalResult.reason}. Triggering fallback.`
-      );
-      return { handled: false, reason: "CONDITIONS_UNMET" };
+    if (hasLogic) {
+      const abilities = AbilityLookup.resolveAbilities(templateId, {
+        actionType: item.actionType,
+        inGameType: card.inGameType,
+        inGameAlignment: card.inGameAlignment,
+      });
+
+      if (abilities.length > 0) {
+        targetAbility = (item.abilityId && abilities.find((a) => a.ability_id === item.abilityId))
+          || abilities[0];
+
+        const evalResult = ConditionEvaluator.evaluate(targetAbility.conditions, {
+          room: this.room,
+          player,
+          card,
+        });
+
+        if (!evalResult.valid) {
+          logger.info(
+            `[AbilityResolver] Conditions not met for '${item.title}': ${evalResult.reason}. Triggering fallback.`
+          );
+          return { handled: false, reason: "CONDITIONS_UNMET" };
+        }
+
+        firstEffect = targetAbility.effects?.[0];
+      }
     }
 
-    const firstEffect = targetAbility.effects?.[0];
-
-    // Optional ability confirmation check
+    // 3. Optional ability confirmation check (both AST and Tabletop)
     const isStarActivation = item.actionType === "ACTIVATE_STAR_ABILITY";
-    if (targetAbility.is_optional && options.accepted === undefined && !isStarActivation) {
-      const promptText = this._getOptionalPromptText(firstEffect, card, item);
+    const isOptional = Boolean(targetAbility?.is_optional || item.isOptional);
+
+    if (isOptional && options.accepted === undefined && !isStarActivation) {
+      const promptText = firstEffect
+        ? this._getOptionalPromptText(firstEffect, card, item)
+        : `Activate the special ability of ${card.Name || item.title}?`;
+
       const client = this.room.clients.find((c) => c.sessionId === player.sessionId);
       if (client && typeof client.send === "function") {
         client.send(AST_MESSAGES.REQUEST_OPTIONAL_ABILITY, {
-          abilityId: targetAbility.ability_id,
+          abilityId: targetAbility?.ability_id || item.abilityId || "",
           itemId: item.id,
           cardId: card.id || item.cardId,
           cardTitle: card.Name || item.title,
@@ -107,15 +114,15 @@ class AbilityResolver {
       };
     }
 
-    if (options.accepted === false) {
-      return {
-        handled: true,
-        snapshots: [],
-        logEntries: [`${player.name} chooses not to activate ${card.Name || item.title}.`],
-      };
+    // 4. If no AST logic or no targetAbility, trigger tabletop fallback
+    if (!hasLogic || !targetAbility) {
+      logger.info(
+        `[AbilityResolver] No AST logic found for '${card.Name}' (${templateId}). Tabletop resolution.`
+      );
+      return { handled: false, reason: "NO_AST_LOGIC" };
     }
 
-    // Interactive targeting check: pause and request selection if required
+    // 5. Interactive targeting check: pause and request selection if required
     const hasExplicitTargets = Boolean(options.targetCardIds || options.targetPileId);
     const isSupportedAction = Boolean(firstEffect && AstEffectRunner._handlers[firstEffect.action]);
 
@@ -144,7 +151,7 @@ class AbilityResolver {
       }
     }
 
-    // Run effects through execution engine
+    // 6. Run effects through execution engine
     const runnerResult = AstEffectRunner.runAbility(targetAbility, {
       room: this.room,
       player,

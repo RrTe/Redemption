@@ -76,29 +76,106 @@ class AbilityLookup {
 
     const { sides } = cardData;
     const actionType = options.actionType || "";
+    const isStarCard = Boolean(
+      options.isStarCard ||
+      (options.card && options.card.IsStarCard) ||
+      this.isStarCardTemplate(templateId)
+    );
+    const isDual = Boolean(sides.top || sides.bottom);
+    const isDualShared = isStarCard && isDual;
 
     // Dedicated Star Phase resolution: only execute shared / star abilities
     if (actionType === ActionType.ACTIVATE_STAR_ABILITY) {
+      const starAbilities = [];
       if (sides.shared && Array.isArray(sides.shared.abilities)) {
-        return sides.shared.abilities;
+        starAbilities.push(
+          ...sides.shared.abilities.filter((a) =>
+            this.isStarAbility(a, { isStarCard, isDualShared })
+          )
+        );
       }
-      return [];
+      if (sides.top && Array.isArray(sides.top.abilities)) {
+        starAbilities.push(
+          ...sides.top.abilities.filter((a) =>
+            this.isStarAbility(a, { isStarCard, isDualShared: false })
+          )
+        );
+      }
+      if (starAbilities.length > 0) {
+        return starAbilities;
+      }
+      return sides.shared?.abilities || [];
     }
 
     const abilities = [];
 
-    // Add universally shared abilities
+    // Add universally shared abilities (excluding star abilities)
     if (sides.shared && Array.isArray(sides.shared.abilities)) {
-      abilities.push(...sides.shared.abilities);
+      abilities.push(
+        ...sides.shared.abilities.filter(
+          (a) => !this.isStarAbility(a, { isStarCard, isDualShared })
+        )
+      );
     }
 
     // Determine active side: explicit side or matching inGame alignment/type
     const targetSide = this._determineActiveSide(sides, options);
     if (sides[targetSide] && Array.isArray(sides[targetSide].abilities)) {
-      abilities.push(...sides[targetSide].abilities);
+      abilities.push(
+        ...sides[targetSide].abilities.filter(
+          (a) => !this.isStarAbility(a, { isStarCard, isDualShared: false })
+        )
+      );
     }
 
     return abilities;
+  }
+
+  /**
+   * Identifies whether an ability is a Star ability.
+   * Star abilities are designated to trigger exclusively during the Star Phase (or starting draw).
+   *
+   * @param {object} ability AST ability node.
+   * @param {object} [context] Context options (e.g. isStarCard, isDualShared).
+   * @returns {boolean} True if the ability is a Star ability.
+   */
+  static isStarAbility(ability, context = {}) {
+    if (!ability) return false;
+    if (ability.is_star === true || ability.isStar === true) return true;
+    const id = (ability.ability_id || "").toLowerCase();
+    if (id.includes("star")) return true;
+    const event = (ability.trigger_event || "").toLowerCase();
+    if (event.includes("star")) return true;
+    if (context.isDualShared) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Checks whether a template ID belongs to a Star card in the catalog.
+   *
+   * @param {string} templateId Card catalog ID.
+   * @returns {boolean} True if card is a Star card.
+   */
+  static isStarCardTemplate(templateId) {
+    if (!templateId) return false;
+    try {
+      const { CardRepository } = require("../../../shared/CardRepository");
+      if (CardRepository) {
+        if (!CardRepository.isInitialized) {
+          const { cardDatabase } = require("../data/cardDatabase");
+          CardRepository.initialize(cardDatabase);
+        }
+        const def = CardRepository.getById(templateId);
+        if (def && (def.IsStarCard || (def.Class && def.Class.includes("Star")))) {
+          return true;
+        }
+      }
+    } catch (_e) {
+      // Graceful fallback if CardRepository or database is unavailable
+    }
+    return false;
   }
 
   /**

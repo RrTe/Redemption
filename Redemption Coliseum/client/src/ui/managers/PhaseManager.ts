@@ -4,14 +4,14 @@ import type { GameNetworkManager } from "../../network/GameNetworkManager";
 import type { RoomState } from "../../../../shared/types";
 import { DRAW_STEPS } from "../../../../shared/phases";
 import { calculateLayout } from "../layout";
+import { PhaseHandshakeToggle } from "../components/PhaseHandshakeToggle";
 
 const DEBUG = localStorage.getItem("debug") === "true";
 const log = (...a: any[]) =>
   DEBUG && console.log("[CLIENT DEBUG][PhaseManager]", ...a);
 
 /**
- * ✨ NEU: Verwaltet den Phasen-Zustand, die Logik für den "Next Phase"-Button
- * und die Animationen beim Phasenwechsel.
+ * Manages phase transitions, the 'Next Phase' button, and bilateral handshake toggle.
  */
 export class PhaseManager {
   private scene: Phaser.Scene;
@@ -20,6 +20,7 @@ export class PhaseManager {
   private elementManager: ElementManager;
   private networkManager: GameNetworkManager;
   private currentPhase: string = "";
+  private handshakeToggle?: PhaseHandshakeToggle;
 
   constructor(
     scene: Phaser.Scene,
@@ -35,25 +36,31 @@ export class PhaseManager {
     this.networkManager = networkManager;
   }
 
-  /** Registriert den onStateChange-Handler, um auf Phasenänderungen zu lauschen. */
+  /** Registers onStateChange listener for phase changes. */
   public registerHandlers() {
     this.room.onStateChange((state) => {
       this.handleStateChange(state);
     });
   }
 
-  /** Initialisiert die Interaktivität des "Next Phase"-Buttons. */
+  /** Initializes Next Phase button interactivity and Handshake Toggle. */
   public initialize() {
-    // ✨ REFACTORING: Der PhaseManager lauscht nur noch auf das generische Klick-Event.
-    // Das eigentliche Pointer-Handling erfolgt im ElementManager, wo der Button erstellt wird.
     this.scene.events.on(
       "nextPhaseButtonClicked",
       this.onNextPhaseClicked,
       this,
     );
+    this.handshakeToggle = new PhaseHandshakeToggle(
+      this.scene,
+      0,
+      0,
+      this.networkManager,
+    );
+    this.handshakeToggle.setVisible(true);
+    this.reposition();
   }
 
-  /** ✨ REFACTORING: Dies ist der Callback für das Button-Klick-Event. */
+  /** Callback when Next Phase button is clicked. */
   private onNextPhaseClicked() {
     const state = this.room.state;
     const isDrawStepActive =
@@ -62,11 +69,13 @@ export class PhaseManager {
       state.drawStep !== DRAW_STEPS.NONE &&
       state.drawStep !== DRAW_STEPS.COMPLETED;
 
-    const isChronicleActive = Boolean(
-      state?.effectChronicle &&
-      state.effectChronicle.items &&
-      state.effectChronicle.items.length > 0
+    const isHelpEnabled = (this.scene.registry.get("settingsManager") as any)?.isInGameSupportEnabled() ?? true;
+    const hasMandatoryChronicleItems = Boolean(
+      state?.effectChronicle?.items?.some((item: any) => !item.isOptional)
     );
+    const isChronicleActive = isHelpEnabled
+      ? Boolean(state?.effectChronicle?.items?.length)
+      : hasMandatoryChronicleItems;
 
     if (isDrawStepActive || isChronicleActive) {
       log(
@@ -75,17 +84,22 @@ export class PhaseManager {
       return;
     }
 
+    // Auto-pass any pending optional ability prompt if help is off
+    if (!isHelpEnabled) {
+      this.scene.events.emit("ui:autoPassOptionalPrompt");
+    }
+
+    const requireHandshake = Boolean(this.handshakeToggle?.isEnabled());
 
     log(
-      "[NEXT_PHASE] 'nextPhaseButtonClicked' event received. Sending 'nextPhase' message to server.",
+      `[NEXT_PHASE] 'nextPhaseButtonClicked' event received. Sending 'nextPhase' message (requireHandshake=${requireHandshake}).`,
     );
     this.scene.game.events.emit("playSound", "UI_CLICK");
-    this.networkManager.sendNextPhase();
+    this.networkManager.sendNextPhase({ requireHandshake });
   }
 
-  /** Wird bei jeder Zustandsänderung aufgerufen, um die Phasenlogik zu verarbeiten. */
+  /** Invoked on room state change to trigger animations and update button state. */
   private handleStateChange(state: RoomState) {
-    // --- Logik für Phasenwechsel-Animation ---
     if (this.currentPhase !== state.currentPhase) {
       log(
         `[PHASE_CHANGE] Detected phase change. New phase: ${state.currentPhase}`,
@@ -133,17 +147,24 @@ export class PhaseManager {
       state.drawStep !== DRAW_STEPS.NONE &&
       state.drawStep !== DRAW_STEPS.COMPLETED;
 
-    const isChronicleActive = Boolean(
-      state?.effectChronicle &&
-      state.effectChronicle.items &&
-      state.effectChronicle.items.length > 0
+    const isHelpEnabled = (this.scene.registry.get("settingsManager") as any)?.isInGameSupportEnabled() ?? true;
+    const hasMandatoryChronicleItems = Boolean(
+      state?.effectChronicle?.items?.some((item: any) => !item.isOptional)
     );
+    const isChronicleActive = isHelpEnabled
+      ? Boolean(state?.effectChronicle?.items?.length)
+      : hasMandatoryChronicleItems;
 
     if (isDrawStepActive || isChronicleActive) {
       isButtonEnabled = false;
     }
 
     nextPhaseButton.setVisible(isActive);
+
+    if (this.handshakeToggle) {
+      this.handshakeToggle.setVisible(true);
+      this.reposition();
+    }
 
     if (isButtonEnabled) {
       nextPhaseButton.setInteractive();
@@ -154,13 +175,35 @@ export class PhaseManager {
     }
   }
 
+  /**
+   * Repositions the Handshake Toggle to match the dynamic layout.
+   * Placed right above the Next Phase button coordinates for all players.
+   */
+  public reposition(layout?: any): void {
+    if (!this.handshakeToggle) return;
+    const currentLayout = layout || this.ui?.layout || this.elementManager?.layout;
+    if (!currentLayout?.nextPhaseButton) return;
 
-  /** Räumt den Event-Listener auf. */
+    const baseScale = currentLayout.buttonScale ?? 1.0;
+    this.handshakeToggle.setPosition(
+      currentLayout.nextPhaseButton.x,
+      currentLayout.nextPhaseButton.y - 44 * baseScale,
+    );
+    this.handshakeToggle.setScale(baseScale);
+    this.handshakeToggle.setData("baseScale", baseScale);
+    this.handshakeToggle.setVisible(true);
+  }
+
+  /** Cleans up event listeners and toggle component. */
   public destroy() {
     this.scene.events.off(
       "nextPhaseButtonClicked",
       this.onNextPhaseClicked,
       this,
     );
+    if (this.handshakeToggle) {
+      this.handshakeToggle.destroy();
+      this.handshakeToggle = undefined;
+    }
   }
 }

@@ -112,8 +112,12 @@ export class GameMessageSender {
     this.room.send("resolveReveal", { cardPositions });
   }
 
-  public sendNextPhase(): void {
-    this.room.send("nextPhase");
+  public sendNextPhase(payload?: { requireHandshake?: boolean }): void {
+    this.room.send("nextPhase", payload || {});
+  }
+
+  public sendTogglePhaseHandshake(payload: { enabled: boolean }): void {
+    this.room.send("togglePhaseHandshake", payload);
   }
 
   public sendPlayerReady(): void {

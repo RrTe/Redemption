@@ -273,6 +273,10 @@ export class GameLoadingScene extends BaseLoadingScene {
       "assets/ui/buttons/clker-free-vector-images-arrow-23284_small_compressed.png",
     );
     this.load.image(
+      "button_handshake",
+      "assets/ui/buttons/handshake_gold.png",
+    );
+    this.load.image(
       "button_settings",
       "assets/ui/buttons/button-gold-7850928_1920.png",
     );

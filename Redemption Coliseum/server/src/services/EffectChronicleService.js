@@ -39,23 +39,21 @@ class EffectChronicleService {
           description: card.SpecialAbility || card.specialAbility || "",
           status: CHRONICLE_STATUS.PENDING,
           order: chronicle.items.length + 1,
-          abilityId: card.abilityId || "",
+          abilityId: card.abilityId || options.abilityId || "",
           isOptional: Boolean(card.isOptional || options.isOptional || false),
         });
         chronicle.items.push(item);
       });
     }
 
-    chronicle.priorityPlayerId = controllerId;
+    const isFirstActive = !chronicle.isResolving || chronicle.items.length === (cards?.length || 0);
+    if (isFirstActive) chronicle.priorityPlayerId = controllerId;
     chronicle.isResolving = chronicle.items.length > 0;
 
     const player = room.state.players.get(controllerId);
-    const playerName = player ? player.name : "Player";
-    logger.info(
-      `[EffectChronicleService] Enqueued ${cards ? cards.length : 0} items for '${playerName}' (${controllerId}).`
-    );
+    logger.info(`[EffectChronicleService] Enqueued ${cards?.length || 0} items for '${player?.name || "Player"}' (${controllerId}).`);
 
-    if ((options.autoExecute || options.autoExecuteSupported) && chronicle.items.length > 0) {
+    if ((options.autoExecute || options.autoExecuteSupported) && chronicle.items.length > 0 && isFirstActive) {
       const client = room.clients?.find((c) => c.sessionId === controllerId) || { sessionId: controllerId };
       this.executeItem(room, client, chronicle.items[0].id, options);
     }
@@ -102,8 +100,8 @@ class EffectChronicleService {
       };
     }
 
-    // Fast-Track guard: unsupported cards stay in chronicle as pending visual notes
-    if (options.autoExecuteSupported && (!astResult || !astResult.handled)) {
+    // Fast-Track guard: in draw sequence without autoExecute, unsupported cards stay as pending visual notes
+    if (options.autoExecuteSupported && !options.autoExecute && (!astResult || !astResult.handled)) {
       return { item, astResult, index, unhandled: true };
     }
 
@@ -125,7 +123,10 @@ class EffectChronicleService {
     if (chronicle.items.length === 0) {
       this.finishChronicle(room);
     } else if (options.autoExecute || options.autoExecuteSupported) {
-      this.executeItem(room, client, chronicle.items[0].id, options);
+      const nextItem = chronicle.items[0];
+      chronicle.priorityPlayerId = nextItem.controllerId;
+      const nextClient = room.clients?.find(c => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
+      this.executeItem(room, nextClient, nextItem.id, options);
     }
 
     return { item, astResult, index };

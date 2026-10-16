@@ -407,6 +407,7 @@ export class GameUI {
       this.effectChronicleManager?.updateLayout(this.layout);
     }
     this.layoutManager.repositionUI();
+    this.phaseManager?.reposition(this.layout);
 
     // ✨ REFACTORING: Delegiere Debug-Updates an den DebugManager
     this.debugManager.update();
@@ -459,6 +460,7 @@ export class GameUI {
     this.targetingManager?.destroy();
     this.abilityPromptManager?.destroy();
     this.phaseHandshakeManager?.destroy();
+    this.phaseManager?.destroy();
     this.previewManager?.hide(); // Hide any active preview
   }
 

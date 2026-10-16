@@ -9,7 +9,7 @@ const logger = require("../utils/logger");
  * In solo / testing rooms, directly advances the phase.
  */
 class NextPhaseCommand extends BaseCommand {
-  execute() {
+  execute(message) {
     if (this.client.sessionId !== this.state.activePlayer) return;
 
     const player = this.state.players.get(this.client.sessionId);
@@ -37,10 +37,16 @@ class NextPhaseCommand extends BaseCommand {
       (c) => c.sessionId !== this.client.sessionId,
     );
 
-    // If solo / testing mode with no opponent connected, advance immediately
-    if (!opponentClient) {
+    const activePref = this.room.handshakePreferences?.get(this.client.sessionId) ?? false;
+    const opponentPref = opponentClient
+      ? (this.room.handshakePreferences?.get(opponentClient.sessionId) ?? false)
+      : false;
+    const requireHandshake = Boolean(message?.requireHandshake || activePref || opponentPref);
+
+    // If handshake is disabled by both players (default) or solo / testing mode, advance immediately
+    if (!requireHandshake || !opponentClient) {
       logger.info(
-        `[NextPhaseCommand] Solo mode active. Directly advancing phase for ${this.client.sessionId}.`,
+        `[NextPhaseCommand] Directly advancing phase for ${this.client.sessionId} (requireHandshake=${requireHandshake}, opponentPresent=${Boolean(opponentClient)}).`,
       );
       PhaseTransitionService.executePhaseAdvance(this.room, this.state, player);
       return;

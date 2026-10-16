@@ -67,7 +67,10 @@ class RespondOptionalAbilityCommand extends BaseCommand {
       if (chronicle.items.length === 0) {
         EffectChronicleService.finishChronicle(this.room);
       } else {
-        EffectChronicleService.executeItem(this.room, this.client, chronicle.items[0].id, {
+        const nextItem = chronicle.items[0];
+        chronicle.priorityPlayerId = nextItem.controllerId;
+        const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
+        EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, {
           autoExecuteSupported: true,
         });
       }
@@ -81,29 +84,31 @@ class RespondOptionalAbilityCommand extends BaseCommand {
       return;
     }
 
-    if (astResult && astResult.handled) {
-      if (astResult.logEntries && astResult.logEntries.length > 0) {
-        astResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
-      } else {
-        this.room.broadcastGameLog(`${player.name} activates ${item.title}.`);
-      }
-
-      ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
-      chronicle.items.splice(index, 1);
-      EffectChronicleService._reindexOrders(chronicle);
-
-      if (chronicle.items.length === 0) {
-        EffectChronicleService.finishChronicle(this.room);
-      } else {
-        EffectChronicleService.executeItem(this.room, this.client, chronicle.items[0].id, {
-          autoExecuteSupported: true,
-        });
-      }
-
-      this.executedItem = item;
-      this.astResult = astResult;
-      this.canUndo = true;
+    if (astResult?.logEntries?.length) {
+      astResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
+    } else {
+      const abilityText = item.description ? `: "${item.description}"` : "";
+      this.room.broadcastGameLog(`${player.name} activates ${item.title}${abilityText}.`);
     }
+
+    ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
+    chronicle.items.splice(index, 1);
+    EffectChronicleService._reindexOrders(chronicle);
+
+    if (chronicle.items.length === 0) {
+      EffectChronicleService.finishChronicle(this.room);
+    } else {
+      const nextItem = chronicle.items[0];
+      chronicle.priorityPlayerId = nextItem.controllerId;
+      const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
+      EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, {
+        autoExecuteSupported: true,
+      });
+    }
+
+    this.executedItem = item;
+    this.astResult = astResult;
+    this.canUndo = Boolean(astResult?.handled);
   }
 
   /**
