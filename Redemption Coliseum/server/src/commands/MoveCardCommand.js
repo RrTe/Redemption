@@ -47,6 +47,26 @@ class MoveCardCommand extends BaseCommand {
         message.inGameAlignment,
       );
 
+      // Early exit if move validation failed
+      if (result.error) {
+        this.client.send("gameToast", {
+          message: result.error,
+          type: "warning",
+        });
+        const failedCardId = message.cardId ?? (result.card ? result.card.id : null);
+        if (failedCardId) {
+          this.client.send("cardMoveFailed", {
+            cardId: failedCardId,
+            from: message.from,
+            to: message.to,
+            error: result.error,
+          });
+        }
+        this.canUndo = false;
+        this.preMoveSnapshot = null;
+        return;
+      }
+
       const movedCards = result.movedCards || [];
       const divertedCards = result.divertedCards || [];
       const movedCardId = message.cardId ?? (movedCards[0]?.id || null);
@@ -61,11 +81,11 @@ class MoveCardCommand extends BaseCommand {
 
         // B. CARRY CHILDREN (Leaving field)
         const isLeavingField = [
-          "deck",
-          "discard",
-          "hand",
-          "banish",
-          "reserve",
+          ZONES.DECK,
+          ZONES.DISCARD,
+          ZONES.HAND,
+          ZONES.BANISH,
+          ZONES.RESERVE,
         ].includes(message.to);
         if (isLeavingField) {
           for (const otherCard of this.room.cardLookup.values()) {
@@ -98,13 +118,7 @@ class MoveCardCommand extends BaseCommand {
       }
 
       // Events & Logging
-      if (result.error) {
-        this.client.send("gameToast", {
-          message: result.error,
-          type: "warning",
-        });
-        this.canUndo = false;
-      } else if (movedCards.length > 0 || divertedCards.length > 0) {
+      if (movedCards.length > 0 || divertedCards.length > 0) {
         if (!this.preMoveSnapshot && movedCards[0]) {
           this.preMoveSnapshot = MoveCardSnapshotHelper.createSnapshot(movedCards[0], message.from, player);
         }
@@ -138,6 +152,14 @@ class MoveCardCommand extends BaseCommand {
     } catch (err) {
       this.canUndo = false;
       logger.error(`[MoveCardCommand] Error:`, err);
+      if (message && message.cardId) {
+        this.client.send("cardMoveFailed", {
+          cardId: message.cardId,
+          from: message.from,
+          to: message.to,
+          error: "Internal move error",
+        });
+      }
     }
   }
 

@@ -13,6 +13,7 @@ import { ElementManager } from "../managers/ElementManager";
 import { TypeSelectionOverlay, type TypeSelectionOption } from "../components/TypeSelectionOverlay";
 import { cardData as staticCardData } from "../../utils/CardService";
 import { ToastManager } from "../managers/ToastManager";
+import { GameEvents } from "../../constants/EventNames";
 
 const ATTACH_HOVER_DELAY = 700;
 
@@ -33,6 +34,7 @@ export class DragDropHandler {
   private pendingDragTarget: CardUI | null = null;
   private attachHoverTimer: number | null = null;
   private currentHoveredDeck: StackedPileUI | null = null;
+  private pendingDroppedCards: Map<string, CardUI> = new Map();
 
   constructor(
     scene: Phaser.Scene,
@@ -57,6 +59,7 @@ export class DragDropHandler {
     this.scene.input.on("drag", this.onDrag, this);
     this.scene.input.on("dragend", this.onDragEnd, this);
     this.scene.input.on("drop", this.onDrop, this);
+    this.scene.events.on(GameEvents.NET_CARD_MOVE_FAILED, this.onCardMoveFailed, this);
   }
 
   public destroy() {
@@ -68,16 +71,25 @@ export class DragDropHandler {
     this.scene.input.off("drag", this.onDrag, this);
     this.scene.input.off("dragend", this.onDragEnd, this);
     this.scene.input.off("drop", this.onDrop, this);
+    this.scene.events.off(GameEvents.NET_CARD_MOVE_FAILED, this.onCardMoveFailed, this);
+    this.pendingDroppedCards.clear();
   }
 
-  private snapBack(gameObject: CardUI) {
-    const targetX = gameObject.targetX || gameObject.getData("start_x");
-    const targetY = gameObject.targetY || gameObject.getData("start_y");
+  public snapBack(gameObject: CardUI) {
+    const targetX =
+      gameObject.targetX !== undefined
+        ? gameObject.targetX
+        : gameObject.getData("start_x");
+    const targetY =
+      gameObject.targetY !== undefined
+        ? gameObject.targetY
+        : gameObject.getData("start_y");
     const targetAngle =
       gameObject.targetAngle !== undefined
         ? gameObject.targetAngle
-        : gameObject.getData("start_angle");
+        : (gameObject.getData("start_angle") ?? 0);
 
+    gameObject.setData("is_snapping_back", true);
     this.scene.tweens.add({
       targets: gameObject,
       x: targetX,
@@ -85,6 +97,10 @@ export class DragDropHandler {
       angle: targetAngle,
       ease: "Power1",
       duration: 200,
+      onComplete: () => {
+        gameObject.setData("is_snapping_back", false);
+        gameObject.setData("drop_action_taken", false);
+      },
     });
 
     if (gameObject.scene) {
@@ -95,10 +111,33 @@ export class DragDropHandler {
     }
   }
 
+  private onCardMoveFailed(data: { cardId: string; error?: string }) {
+    log("Input", `[NET_CARD_MOVE_FAILED] Move rejected for card ${data.cardId}: ${data.error}`);
+    const card = this.pendingDroppedCards.get(data.cardId);
+    if (card) {
+      card.setData("drop_action_taken", false);
+      card.setData("waiting_for_overlay", false);
+      this.snapBack(card);
+      this.pendingDroppedCards.delete(data.cardId);
+    } else {
+      const allCards = (this.scene as any).gameUI?.cardRenderer?.getAllCardUIs?.();
+      const fallbackCard = allCards?.get(data.cardId);
+      if (fallbackCard) {
+        fallbackCard.setData("drop_action_taken", false);
+        fallbackCard.setData("waiting_for_overlay", false);
+        this.snapBack(fallbackCard);
+      }
+    }
+  }
+
   private onDragStart(pointer: Phaser.Input.Pointer, gameObject: CardUI) {
     const targeting = this.scene.registry.get("targetingManager") as any;
     if (targeting?.isTargetingActive?.()) {
       return;
+    }
+
+    if (gameObject.cardData?.id) {
+      this.pendingDroppedCards.delete(gameObject.cardData.id);
     }
 
     this.isDragging = true;
@@ -372,6 +411,7 @@ export class DragDropHandler {
         `[DROP] Attaching card ${gameObject.cardData.id} to ${attachTarget.cardData.id}`,
       );
       gameObject.setData("drop_action_taken", true);
+      this.pendingDroppedCards.set(gameObject.cardData.id, gameObject);
       attachTarget.playAttachAnimation();
 
       this.networkManager.sendMoveCard({
@@ -531,6 +571,7 @@ export class DragDropHandler {
               message.inGameType = selectedOption.inGameType;
               message.inGameAlignment = selectedOption.inGameAlignment;
               
+              this.pendingDroppedCards.set(gameObject.cardData.id, gameObject);
               this.networkManager.sendMoveCard(message);
             },
             () => {
@@ -554,6 +595,7 @@ export class DragDropHandler {
         message,
       );
       gameObject.setData("drop_action_taken", true);
+      this.pendingDroppedCards.set(gameObject.cardData.id, gameObject);
       this.networkManager.sendMoveCard(message);
     }
   }

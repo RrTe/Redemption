@@ -4,6 +4,8 @@ const { Card } = require("../src/state/Card");
 const { PlayerState } = require("../src/state/PlayerState");
 const { RoomState } = require("../src/state/RoomState");
 const { ZONES } = require("../../shared/zones");
+const { PHASES } = require("../../shared/phases");
+const { CARD_TYPES, ALIGNMENTS } = require("../../shared/card-constants");
 
 describe("cardService (moveCard)", () => {
   let player;
@@ -324,6 +326,342 @@ describe("cardService (moveCard)", () => {
       expect(player[ZONES.HAND].length).toBe(0);
       expect(player[ZONES.TERRITORY].length).toBe(1);
       expect(player[ZONES.TERRITORY][0].id).toBe("c2");
+    });
+  });
+
+  describe("Combat Guards (Battlefield Moves)", () => {
+    let attacker;
+    let defender;
+
+    beforeEach(() => {
+      attacker = new PlayerState();
+      attacker.sessionId = "p1";
+      attacker.name = "Attacker";
+
+      defender = new PlayerState();
+      defender.sessionId = "p2";
+      defender.name = "Defender";
+
+      state.players.set("p1", attacker);
+      state.players.set("p2", defender);
+      state.activePlayer = "p1";
+      state.currentPhase = PHASES.BATTLE;
+    });
+
+    test("1. Phasen-Sperre: Karten ins Kampffeld zu verschieben ist ausserhalb von BATTLE verboten", () => {
+      state.currentPhase = PHASES.PREP;
+      const hero = new Card();
+      hero.id = "hero_1";
+      hero.Name = "King David";
+      hero.Type = CARD_TYPES.HERO;
+      hero.Alignment = ALIGNMENTS.GOOD;
+      hero.IsCharacter = true;
+      hero.controllerId = "p1";
+      hero.originalOwnerId = "p1";
+      hero.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(hero);
+      cardLookup.set(hero.id, hero);
+
+      const res = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, hero.id);
+      expect(res.movedCards.length).toBe(0);
+      expect(res.error).toBe("Only allowed during Battle!");
+      expect(hero.zone).toBe(ZONES.HAND);
+      expect(state.battlefield.length).toBe(0);
+    });
+
+    test("2. Angreifer: darf Heroes ins Kampffeld spielen, aber keine Evil Characters oder Evil Enhancements", () => {
+      // Hero move -> valid
+      const hero = new Card();
+      hero.id = "hero_2";
+      hero.Name = "Moses";
+      hero.Type = CARD_TYPES.HERO;
+      hero.Alignment = ALIGNMENTS.GOOD;
+      hero.IsCharacter = true;
+      hero.controllerId = "p1";
+      hero.originalOwnerId = "p1";
+      hero.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(hero);
+      cardLookup.set(hero.id, hero);
+
+      const resHero = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, hero.id);
+      expect(resHero.movedCards.length).toBe(1);
+      expect(state.battlefield.length).toBe(1);
+      expect(hero.zone).toBe(ZONES.BATTLEFIELD);
+
+      // Evil Character -> forbidden for attacker
+      const ec = new Card();
+      ec.id = "ec_1";
+      ec.Name = "Pharaoh";
+      ec.Type = CARD_TYPES.EC;
+      ec.Alignment = ALIGNMENTS.EVIL;
+      ec.IsCharacter = true;
+      ec.controllerId = "p1";
+      ec.originalOwnerId = "p1";
+      ec.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(ec);
+      cardLookup.set(ec.id, ec);
+
+      const resEC = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, ec.id);
+      expect(resEC.movedCards.length).toBe(0);
+      expect(resEC.error).toBe("Evil cards cannot attack!");
+      expect(ec.zone).toBe(ZONES.HAND);
+
+      // Evil Enhancement -> forbidden for attacker
+      const ee = new Card();
+      ee.id = "ee_1";
+      ee.Name = "Balaam's Disobedience";
+      ee.Type = CARD_TYPES.EE;
+      ee.Alignment = ALIGNMENTS.EVIL;
+      ee.IsEnhancement = true;
+      ee.controllerId = "p1";
+      ee.originalOwnerId = "p1";
+      ee.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(ee);
+      cardLookup.set(ee.id, ee);
+
+      const resEE = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, ee.id);
+      expect(resEE.movedCards.length).toBe(0);
+      expect(resEE.error).toBe("Evil cards cannot attack!");
+      expect(ee.zone).toBe(ZONES.HAND);
+    });
+
+    test("3. Verteidiger: darf Evil Characters ins Kampffeld spielen, aber keine Heroes oder Good Enhancements", () => {
+      // Evil Character -> valid for blocker
+      const ec = new Card();
+      ec.id = "ec_def";
+      ec.Name = "Goliath";
+      ec.Type = CARD_TYPES.EC;
+      ec.Alignment = ALIGNMENTS.EVIL;
+      ec.IsCharacter = true;
+      ec.controllerId = "p2";
+      ec.originalOwnerId = "p2";
+      ec.zone = ZONES.HAND;
+      defender[ZONES.HAND].push(ec);
+      cardLookup.set(ec.id, ec);
+
+      const resEC = moveCard(defender, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, ec.id);
+      expect(resEC.movedCards.length).toBe(1);
+      expect(state.battlefield.length).toBe(1);
+      expect(ec.zone).toBe(ZONES.BATTLEFIELD);
+
+      // Hero -> forbidden for defender
+      const hero = new Card();
+      hero.id = "hero_def";
+      hero.Name = "Samson";
+      hero.Type = CARD_TYPES.HERO;
+      hero.Alignment = ALIGNMENTS.GOOD;
+      hero.IsCharacter = true;
+      hero.controllerId = "p2";
+      hero.originalOwnerId = "p2";
+      hero.zone = ZONES.HAND;
+      defender[ZONES.HAND].push(hero);
+      cardLookup.set(hero.id, hero);
+
+      const resHero = moveCard(defender, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, hero.id);
+      expect(resHero.movedCards.length).toBe(0);
+      expect(resHero.error).toBe("Good cards cannot block!");
+      expect(hero.zone).toBe(ZONES.HAND);
+
+      // Good Enhancement -> forbidden for defender
+      const ge = new Card();
+      ge.id = "ge_def";
+      ge.Name = "Sword of the Lord";
+      ge.Type = CARD_TYPES.GE;
+      ge.Alignment = ALIGNMENTS.GOOD;
+      ge.IsEnhancement = true;
+      ge.controllerId = "p2";
+      ge.originalOwnerId = "p2";
+      ge.zone = ZONES.HAND;
+      defender[ZONES.HAND].push(ge);
+      cardLookup.set(ge.id, ge);
+
+      const resGE = moveCard(defender, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, ge.id);
+      expect(resGE.movedCards.length).toBe(0);
+      expect(resGE.error).toBe("Good cards cannot block!");
+      expect(ge.zone).toBe(ZONES.HAND);
+    });
+
+    test("4. Enhancement-Voraussetzung: Enhancements erfordern passenden Charakter mit matchender Brigade oder Multibrigade", () => {
+      // Attacker plays Good Enhancement without a Hero in battlefield -> forbidden
+      const ge = new Card();
+      ge.id = "ge_atk";
+      ge.Name = "Helmet of Salvation";
+      ge.Type = CARD_TYPES.GE;
+      ge.Alignment = ALIGNMENTS.GOOD;
+      ge.Brigade = "Silver";
+      ge.IsEnhancement = true;
+      ge.controllerId = "p1";
+      ge.originalOwnerId = "p1";
+      ge.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(ge);
+      cardLookup.set(ge.id, ge);
+
+      const resGEFail = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, ge.id);
+      expect(resGEFail.movedCards.length).toBe(0);
+      expect(resGEFail.error).toBe("No Hero in battle!");
+
+      // Put a Hero with non-matching Brigade ("Red") in battlefield for attacker
+      const heroRed = new Card();
+      heroRed.id = "hero_red";
+      heroRed.Name = "David the Musician";
+      heroRed.Type = CARD_TYPES.HERO;
+      heroRed.Alignment = ALIGNMENTS.GOOD;
+      heroRed.Brigade = "Red";
+      heroRed.IsCharacter = true;
+      heroRed.controllerId = "p1";
+      heroRed.originalOwnerId = "p1";
+      heroRed.zone = ZONES.BATTLEFIELD;
+      state.battlefield.push(heroRed);
+      cardLookup.set(heroRed.id, heroRed);
+
+      // Silver GE fails because Hero has Red brigade (no match)
+      const resGEMismatch = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, ge.id);
+      expect(resGEMismatch.movedCards.length).toBe(0);
+      expect(resGEMismatch.error).toBe("Brigade mismatch!");
+
+      // Put a Hero with matching Brigade ("Silver") in battlefield
+      const heroSilver = new Card();
+      heroSilver.id = "hero_silver";
+      heroSilver.Name = "Archangel Michael";
+      heroSilver.Type = CARD_TYPES.HERO;
+      heroSilver.Alignment = ALIGNMENTS.GOOD;
+      heroSilver.Brigade = "Silver";
+      heroSilver.IsCharacter = true;
+      heroSilver.controllerId = "p1";
+      heroSilver.originalOwnerId = "p1";
+      heroSilver.zone = ZONES.BATTLEFIELD;
+      state.battlefield.push(heroSilver);
+      cardLookup.set(heroSilver.id, heroSilver);
+
+      // Silver GE succeeds with Silver Hero in battlefield
+      const resGESuccess = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, ge.id);
+      expect(resGESuccess.movedCards.length).toBe(1);
+      expect(ge.zone).toBe(ZONES.BATTLEFIELD);
+
+      // Multibrigade GE ("Blue/Purple") succeeds even if hero only matches one brigade or is multibrigade
+      const geMulti = new Card();
+      geMulti.id = "ge_multi";
+      geMulti.Name = "Shield of Faith";
+      geMulti.Type = CARD_TYPES.GE;
+      geMulti.Alignment = ALIGNMENTS.GOOD;
+      geMulti.Brigade = "Blue/Purple";
+      geMulti.IsEnhancement = true;
+      geMulti.controllerId = "p1";
+      geMulti.originalOwnerId = "p1";
+      geMulti.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(geMulti);
+      cardLookup.set(geMulti.id, geMulti);
+
+      const resGEMultiSuccess = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, geMulti.id);
+      expect(resGEMultiSuccess.movedCards.length).toBe(1);
+      expect(geMulti.zone).toBe(ZONES.BATTLEFIELD);
+    });
+
+    test("5. Undo-Kompatibilität: options.isUndo === true umgeht Kampf-Regelpruefungen", () => {
+      // Phase ist NICHT Battle
+      state.currentPhase = PHASES.DISCARD;
+      const hero = new Card();
+      hero.id = "hero_undo";
+      hero.Name = "Gideon";
+      hero.Type = CARD_TYPES.HERO;
+      hero.Alignment = ALIGNMENTS.GOOD;
+      hero.IsCharacter = true;
+      hero.controllerId = "p1";
+      hero.originalOwnerId = "p1";
+      hero.zone = ZONES.BATTLEFIELD;
+      state.battlefield.push(hero);
+      cardLookup.set(hero.id, hero);
+
+      // Undo movement back to hand must succeed despite phase lock
+      const undoRes = moveCard(attacker, state, cardLookup, ZONES.BATTLEFIELD, ZONES.HAND, hero.id, 1, null, "", "", { isUndo: true });
+      expect(undoRes.movedCards.length).toBe(1);
+      expect(hero.zone).toBe(ZONES.HAND);
+      expect(attacker[ZONES.HAND].length).toBe(1);
+    });
+
+    test("6. Banding mit gegnerischen Charakteren ins Kampffeld ist erlaubt", () => {
+      // Opponent Hero in defender's territory
+      const opponentHero = new Card();
+      opponentHero.id = "c_opp_hero";
+      opponentHero.Name = "Opponent Hero";
+      opponentHero.Type = CARD_TYPES.HERO;
+      opponentHero.Alignment = ALIGNMENTS.GOOD;
+      opponentHero.IsCharacter = true;
+      opponentHero.controllerId = "p2";
+      opponentHero.originalOwnerId = "p2";
+      opponentHero.zone = ZONES.TERRITORY;
+      defender[ZONES.TERRITORY].push(opponentHero);
+      cardLookup.set(opponentHero.id, opponentHero);
+
+      // Attacker p1 bands with opponent Hero and brings it into battlefield
+      const resBanding = moveCard(attacker, state, cardLookup, ZONES.TERRITORY, ZONES.BATTLEFIELD, opponentHero.id);
+      expect(resBanding.movedCards.length).toBe(1);
+      expect(resBanding.error).toBeUndefined();
+      expect(opponentHero.zone).toBe(ZONES.BATTLEFIELD);
+      expect(opponentHero.controllerId).toBe("p1"); // Controller becomes attacker in battle
+
+      // But attacker cannot bring an opponent's Evil Character into battle on attacker's side
+      const opponentEC = new Card();
+      opponentEC.id = "c_opp_ec";
+      opponentEC.Name = "Opponent EC";
+      opponentEC.Type = CARD_TYPES.EC;
+      opponentEC.Alignment = ALIGNMENTS.EVIL;
+      opponentEC.IsCharacter = true;
+      opponentEC.controllerId = "p2";
+      opponentEC.originalOwnerId = "p2";
+      opponentEC.zone = ZONES.TERRITORY;
+      defender[ZONES.TERRITORY].push(opponentEC);
+      cardLookup.set(opponentEC.id, opponentEC);
+
+      const resECFail = moveCard(attacker, state, cardLookup, ZONES.TERRITORY, ZONES.BATTLEFIELD, opponentEC.id);
+      expect(resECFail.movedCards.length).toBe(0);
+      expect(resECFail.error).toBe("Evil cards cannot attack!");
+    });
+
+    test("6. MoveCardCommand sends gameToast and cardMoveFailed when defender plays hero into battle", () => {
+      const { MoveCardCommand } = require("../src/commands/MoveCardCommand");
+      const hero = new Card();
+      hero.id = "hero_amminadab";
+      hero.Name = "Amminadab, the Generous";
+      hero.Type = CARD_TYPES.HERO;
+      hero.Alignment = ALIGNMENTS.GOOD;
+      hero.IsCharacter = true;
+      hero.controllerId = "p2";
+      hero.originalOwnerId = "p2";
+      hero.zone = ZONES.TERRITORY;
+      defender[ZONES.TERRITORY].push(hero);
+      cardLookup.set(hero.id, hero);
+
+      const client2 = {
+        sessionId: "p2",
+        send: jest.fn(),
+      };
+      const room = {
+        roomId: "test_room",
+        state,
+        cardLookup,
+        broadcastGameLog: jest.fn(),
+      };
+
+      const cmd = new MoveCardCommand(room, client2);
+      cmd.execute({
+        from: ZONES.TERRITORY,
+        to: ZONES.BATTLEFIELD,
+        cardId: hero.id,
+      });
+
+      expect(cmd.canUndo).toBe(false);
+      expect(client2.send).toHaveBeenCalledWith("gameToast", {
+        message: "Good cards cannot block!",
+        type: "warning",
+      });
+      expect(client2.send).toHaveBeenCalledWith("cardMoveFailed", {
+        cardId: "hero_amminadab",
+        from: ZONES.TERRITORY,
+        to: ZONES.BATTLEFIELD,
+        error: "Good cards cannot block!",
+      });
+      expect(hero.zone).toBe(ZONES.TERRITORY);
     });
   });
 });

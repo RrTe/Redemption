@@ -20,6 +20,7 @@ export class AbilityPromptBanner {
   private container: Phaser.GameObjects.Container | null = null;
   private isVisible = false;
   private soundManager: SoundManager | undefined;
+  private currentConfig: AbilityPromptBannerConfig | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -27,6 +28,7 @@ export class AbilityPromptBanner {
   }
 
   public show(config: AbilityPromptBannerConfig): void {
+    this.currentConfig = config;
     this.isVisible = true;
 
     if (!this.container) {
@@ -36,6 +38,7 @@ export class AbilityPromptBanner {
     }
 
     if (this.container) {
+      this.scene.tweens.killTweensOf(this.container);
       this.container.setVisible(true);
       this.container.setAlpha(0);
       this.container.setY(-60);
@@ -51,11 +54,16 @@ export class AbilityPromptBanner {
   }
 
   public hide(callback?: () => void): void {
-    if (!this.isVisible || !this.container) {
+    if (!this.container) {
+      this.isVisible = false;
+      this.currentConfig = null;
       callback?.();
       return;
     }
+
     this.isVisible = false;
+    this.currentConfig = null;
+    this.scene.tweens.killTweensOf(this.container);
 
     this.scene.tweens.add({
       targets: this.container,
@@ -113,7 +121,10 @@ export class AbilityPromptBanner {
       0x22c55e,
       () => {
         this.soundManager?.playSound("UI_CLICK");
-        this.hide(() => config.onConfirm());
+        const action = this.currentConfig?.onConfirm;
+        this.currentConfig = null;
+        this.hide();
+        action?.();
       }
     ).setName("confirmBtn");
 
@@ -128,7 +139,10 @@ export class AbilityPromptBanner {
       0x475569,
       () => {
         this.soundManager?.playSound("UI_CLICK");
-        this.hide(() => config.onDecline());
+        const action = this.currentConfig?.onDecline;
+        this.currentConfig = null;
+        this.hide();
+        action?.();
       }
     ).setName("declineBtn");
 
@@ -140,6 +154,22 @@ export class AbilityPromptBanner {
     const txt = this.container.getByName("promptText") as Phaser.GameObjects.Text;
     if (txt) {
       txt.setText(`${config.cardTitle}: ${config.promptText}`);
+    }
+
+    const confirmBtn = this.container.getByName("confirmBtn") as Phaser.GameObjects.Container;
+    if (confirmBtn) {
+      const confirmLabel = confirmBtn.getByName("btnLabel") as Phaser.GameObjects.Text;
+      if (confirmLabel) {
+        confirmLabel.setText(config.confirmLabel || "Activate");
+      }
+    }
+
+    const declineBtn = this.container.getByName("declineBtn") as Phaser.GameObjects.Container;
+    if (declineBtn) {
+      const declineLabel = declineBtn.getByName("btnLabel") as Phaser.GameObjects.Text;
+      if (declineLabel) {
+        declineLabel.setText(config.declineLabel || "Pass");
+      }
     }
   }
 
@@ -168,7 +198,8 @@ export class AbilityPromptBanner {
         fontStyle: "bold",
         color: "#ffffff",
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setName("btnLabel");
 
     btn.add([bg, txt]);
     btn.setSize(w, h);
@@ -196,8 +227,10 @@ export class AbilityPromptBanner {
 
   public destroy(): void {
     if (this.container) {
+      this.scene.tweens.killTweensOf(this.container);
       this.container.destroy();
       this.container = null;
     }
+    this.currentConfig = null;
   }
 }

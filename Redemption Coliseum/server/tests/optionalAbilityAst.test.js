@@ -188,4 +188,25 @@ describe("Optional Ability (May) AST Prompt & Execution", () => {
     expect(sentMessages).toHaveLength(0);
     expect(player1.hand).toHaveLength(2); // starHero + drawn card
   });
+
+  test("6. Stale or mismatching itemId falls back to player's pending chronicle item and resolves safely", () => {
+    const horsemen = createCard("eh_1", "2041723113", "Egyptian Horsemen", ZONES.TERRITORY, "p1");
+    createCard("deck_1", "100", "Deck Card", ZONES.DECK, "p1");
+    createCard("deck_2", "101", "Deck Card 2", ZONES.DECK, "p1");
+
+    const item = enqueueChronicleItem(horsemen);
+    expect(state.effectChronicle.items).toHaveLength(1);
+    expect(state.effectChronicle.isResolving).toBe(true);
+
+    // Client sends an outdated itemId (e.g. from previous banner closure)
+    const cmd = new RespondOptionalAbilityCommand(room, client1);
+    cmd.execute({ itemId: "stale_old_item_id_from_previous_card", accepted: true });
+
+    // Should gracefully fall back to horsemen item, draw 2 cards, and finish chronicle
+    expect(player1.hand).toHaveLength(2);
+    expect(state.effectChronicle.items).toHaveLength(0);
+    expect(state.effectChronicle.isResolving).toBe(false);
+    expect(state.effectChronicle.history).toHaveLength(1);
+    expect(state.effectChronicle.history[0].status).toBe(CHRONICLE_STATUS.COMPLETED);
+  });
 });

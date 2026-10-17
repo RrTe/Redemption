@@ -96,6 +96,13 @@ export class GameEventCoordinator {
     );
 
     this.roomListeners.push(
+      this.room.onMessage("cardMoveFailed", (msg: { cardId: string; from?: string; to?: string; error?: string }) => {
+        log("GameEventCoordinator", `[NET] cardMoveFailed received: cardId=${msg.cardId}, error=${msg.error}`);
+        this.scene.events.emit(GameEvents.NET_CARD_MOVE_FAILED, msg);
+      }),
+    );
+
+    this.roomListeners.push(
       this.room.onMessage("undoConfirmationPrompt", (msg: { requestingPlayerId: string; requestingPlayerName: string; count: number }) =>
         this.scene.events.emit("net:undoConfirmationPrompt", msg),
       ),

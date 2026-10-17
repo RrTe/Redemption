@@ -1,11 +1,63 @@
 // server/src/services/BattleCharacterClassifier.js
 const { ActionType } = require("../../../shared/actions");
 const { AbilityLookup } = require("../ast/AbilityLookup");
+const { CARD_TYPES, ALIGNMENTS } = require("../../../shared/card-constants");
 
 /**
  * Helper utility for classifying battle character types and filtering battle entrance abilities.
  */
 class BattleCharacterClassifier {
+  /**
+   * Helper to normalize type or alignment values to lowercase string.
+   *
+   * @param {string|string[]} val Raw field value.
+   * @returns {string} Lowercase string.
+   */
+  static _normalize(val) {
+    if (Array.isArray(val)) return val.join(" ").toLowerCase();
+    return typeof val === "string" ? val.toLowerCase() : "";
+  }
+
+  /**
+   * Determines if a card is a Good Enhancement.
+   *
+   * @param {object} card Card instance.
+   * @returns {boolean} True if card is a Good Enhancement.
+   */
+  static isGoodEnhancement(card) {
+    if (!card) return false;
+    const inGameType = this._normalize(card.inGameType || card.Type);
+    const inGameAlign = this._normalize(card.inGameAlignment || card.Alignment);
+
+    if (inGameType.includes("good enhancement") || inGameType === CARD_TYPES.GE.toLowerCase()) {
+      return true;
+    }
+    if (inGameAlign === ALIGNMENTS.GOOD.toLowerCase() && (card.IsEnhancement || inGameType.includes("enhancement"))) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Determines if a card is an Evil Enhancement.
+   *
+   * @param {object} card Card instance.
+   * @returns {boolean} True if card is an Evil Enhancement.
+   */
+  static isEvilEnhancement(card) {
+    if (!card) return false;
+    const inGameType = this._normalize(card.inGameType || card.Type);
+    const inGameAlign = this._normalize(card.inGameAlignment || card.Alignment);
+
+    if (inGameType.includes("evil enhancement") || inGameType === CARD_TYPES.EE.toLowerCase()) {
+      return true;
+    }
+    if (inGameAlign === ALIGNMENTS.EVIL.toLowerCase() && (card.IsEnhancement || inGameType.includes("enhancement"))) {
+      return true;
+    }
+    return false;
+  }
+
   /**
    * Determines if a card is a Hero / Good Character.
    *
@@ -14,11 +66,13 @@ class BattleCharacterClassifier {
    */
   static isHero(card) {
     if (!card) return false;
-    const inGameType = (card.inGameType || card.Type || "").toLowerCase();
-    const inGameAlign = (card.inGameAlignment || card.Alignment || "").toLowerCase();
+    if (this.isGoodEnhancement(card) || this.isEvilEnhancement(card)) return false;
+
+    const inGameType = this._normalize(card.inGameType || card.Type);
+    const inGameAlign = this._normalize(card.inGameAlignment || card.Alignment);
 
     if (inGameType.includes("hero")) return true;
-    if (inGameAlign === "good" && (card.IsCharacter || inGameType.includes("character"))) {
+    if (inGameAlign === ALIGNMENTS.GOOD.toLowerCase() && (card.IsCharacter || inGameType.includes("character"))) {
       return true;
     }
     return false;
@@ -32,14 +86,71 @@ class BattleCharacterClassifier {
    */
   static isEvilCharacter(card) {
     if (!card) return false;
-    const inGameType = (card.inGameType || card.Type || "").toLowerCase();
-    const inGameAlign = (card.inGameAlignment || card.Alignment || "").toLowerCase();
+    if (this.isGoodEnhancement(card) || this.isEvilEnhancement(card)) return false;
 
-    if (inGameType.includes("evil character") || inGameType === "ec") return true;
-    if (inGameAlign === "evil" && (card.IsCharacter || inGameType.includes("character"))) {
+    const inGameType = this._normalize(card.inGameType || card.Type);
+    const inGameAlign = this._normalize(card.inGameAlignment || card.Alignment);
+
+    if (inGameType.includes("evil character") || inGameType === CARD_TYPES.EC.toLowerCase() || inGameType === "ec") {
+      return true;
+    }
+    if (inGameAlign === ALIGNMENTS.EVIL.toLowerCase() && (card.IsCharacter || inGameType.includes("character"))) {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Extracts and normalizes brigades from a card.
+   *
+   * @param {object} card Card instance.
+   * @returns {string[]} Array of lowercase brigade names.
+   */
+  static getBrigades(card) {
+    if (!card) return [];
+    const raw = card.Brigade || card.Brigades || [];
+    if (Array.isArray(raw)) {
+      return raw
+        .flatMap((b) => (typeof b === "string" ? b.split("/") : []))
+        .map((b) => b.trim().toLowerCase())
+        .filter(Boolean);
+    }
+    if (typeof raw === "string") {
+      return raw
+        .split("/")
+        .map((b) => b.trim().toLowerCase())
+        .filter(Boolean);
+    }
+    return [];
+  }
+
+  /**
+   * Checks whether an enhancement can be used with a character based on brigade rules.
+   * Matches if at least one brigade matches, or if the enhancement is multi-brigade,
+   * or if either card lacks brigade definitions (fallback for mock cards or colorless).
+   *
+   * @param {object} enhancementCard Enhancement card instance.
+   * @param {object} characterCard Character card instance.
+   * @returns {boolean} True if brigades match or multi-brigade.
+   */
+  static canEnhancementMatchCharacter(enhancementCard, characterCard) {
+    if (!enhancementCard || !characterCard) return false;
+
+    const enhBrigades = this.getBrigades(enhancementCard);
+    const charBrigades = this.getBrigades(characterCard);
+
+    // If either card has no brigade specified (e.g. mock test cards or colorless), allow match
+    if (enhBrigades.length === 0 || charBrigades.length === 0) {
+      return true;
+    }
+
+    // If enhancement is multi-brigade or contains "multi", it matches
+    if (enhBrigades.includes("multi") || enhBrigades.length > 1) {
+      return true;
+    }
+
+    // At least one brigade must match
+    return enhBrigades.some((b) => charBrigades.includes(b));
   }
 
   /**

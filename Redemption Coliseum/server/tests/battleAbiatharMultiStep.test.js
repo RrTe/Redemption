@@ -6,6 +6,7 @@ const { MoveCardCommand } = require("../src/commands/MoveCardCommand");
 const { RespondOptionalAbilityCommand } = require("../src/commands/RespondOptionalAbilityCommand");
 const { AbilityResolver } = require("../src/ast/AbilityResolver");
 const { ZONES } = require("../../shared/zones");
+const { PHASES } = require("../../shared/phases");
 const { AST_MESSAGES } = require("../../shared/astConstants");
 const { CHRONICLE_STATUS } = require("../../shared/effectChronicleConstants");
 const { ActionType } = require("../../shared/actions");
@@ -34,6 +35,7 @@ describe("Phase 3: Multi-Step Attack & Block Resolution (Abiathar & Egyptian Hor
     state.players.set("p1", player1);
     state.players.set("p2", player2);
     state.activePlayer = "p1";
+    state.currentPhase = PHASES.BATTLE;
 
     sentMessages1 = [];
     sentMessages2 = [];

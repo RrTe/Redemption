@@ -147,4 +147,11 @@ export class InputManager {
   public updateCardHitArea(card: CardUI) {
     this.cardInteractionHandler.updateCardHitArea(card);
   }
+
+  /**
+   * Snaps back a card whose move was rejected or cancelled.
+   */
+  public snapBackCard(card: CardUI): void {
+    this.dragDropHandler.snapBack(card);
+  }
 }

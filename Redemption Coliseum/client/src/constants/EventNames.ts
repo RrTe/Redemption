@@ -28,6 +28,7 @@ export const GameEvents = {
   NET_PHASE_TRANSITION_WAITING: "net:phaseTransitionWaiting",
   NET_PHASE_TRANSITION_PROMPT: "net:phaseTransitionPrompt",
   NET_PHASE_TRANSITION_RESOLVED: "net:phaseTransitionResolved",
+  NET_CARD_MOVE_FAILED: "net:cardMoveFailed",
 
   // UI & Logic Events
   UI_REQUEST_CARD_ACTION: "request-card-action",

@@ -6,6 +6,8 @@ const {
   MANAGED_TERRITORY_TYPES,
   MAX_HAND_SIZE,
 } = require("../../../shared/card-constants");
+const { PHASES } = require("../../../shared/phases");
+const { BattleCharacterClassifier } = require("./BattleCharacterClassifier");
 const { ArraySchema, $changes } = require("@colyseus/schema");
 const { PlayerState } = require("../state/PlayerState");
 const { ActionType } = require("../../../shared/actions");
@@ -142,6 +144,112 @@ function _validateMove(
   // If this is an undo operation, bypass game rules restrictions (e.g. Reserve in Round 1, Hand limit, etc.)
   if (options && options.isUndo) {
     return { valid: true };
+  }
+
+  // ✨ COMBAT GUARDS (Rule Validation for Battlefield Moves)
+  if (toZone === ZONES.BATTLEFIELD) {
+    // 1. Phasen-Sperre: Das Verschieben von Karten ins Kampffeld ist nur in der BATTLE-Phase erlaubt.
+    if (state?.currentPhase !== PHASES.BATTLE) {
+      logger.warn(
+        `[COMBAT_GUARD] Invalid move: Battlefield is only accessible during Battle Phase (current phase: '${state?.currentPhase}').`,
+      );
+      return { valid: false, error: "Only allowed during Battle!" };
+    }
+
+    // Role determined by who controls the card on their side of the battlefield:
+    // Active player is Attacker, non-active player is Defender (Blocker).
+    // Note: Banding allows players to bring opponent characters into battle on their side.
+    const isAttacker = targetPlayerId === state.activePlayer;
+    const isHero = BattleCharacterClassifier.isHero(card);
+    const isGoodEnhancement = BattleCharacterClassifier.isGoodEnhancement(card);
+    const isEvilChar = BattleCharacterClassifier.isEvilCharacter(card);
+    const isEvilEnhancement = BattleCharacterClassifier.isEvilEnhancement(card);
+
+    if (isAttacker) {
+      // 2. Angreifer (aktiver Spieler): Darf nur Heroes (und Good Enhancements) ins Kampffeld spielen.
+      if (isEvilEnhancement) {
+        logger.warn(
+          `[COMBAT_GUARD] Attacker '${targetPlayerId}' attempted to play Evil Enhancement '${card.Name}' into battle.`,
+        );
+        return { valid: false, error: "Evil cards cannot attack!" };
+      }
+      if (isEvilChar) {
+        logger.warn(
+          `[COMBAT_GUARD] Attacker '${targetPlayerId}' attempted to play Evil Character '${card.Name}' into battle.`,
+        );
+        return { valid: false, error: "Evil cards cannot attack!" };
+      }
+      if (!isHero && !isGoodEnhancement) {
+        logger.warn(
+          `[COMBAT_GUARD] Attacker '${targetPlayerId}' attempted to play invalid card '${card.Name}' into battle.`,
+        );
+        return { valid: false, error: "Invalid card for battle!" };
+      }
+
+      // 4. Enhancement-Voraussetzung: Good Enhancements erfordern einen Hero im Kampf mit passender Brigade.
+      if (isGoodEnhancement && fromZone !== ZONES.BATTLEFIELD) {
+        const heroesInBattle = (state.battlefield || []).filter(
+          (c) => c.controllerId === state.activePlayer && BattleCharacterClassifier.isHero(c)
+        );
+        if (heroesInBattle.length === 0) {
+          logger.warn(
+            `[COMBAT_GUARD] Attacker '${targetPlayerId}' attempted to play Good Enhancement '${card.Name}' without a Hero in battle.`,
+          );
+          return { valid: false, error: "No Hero in battle!" };
+        }
+        const hasMatchingBrigade = heroesInBattle.some((hero) =>
+          BattleCharacterClassifier.canEnhancementMatchCharacter(card, hero)
+        );
+        if (!hasMatchingBrigade) {
+          logger.warn(
+            `[COMBAT_GUARD] Attacker '${targetPlayerId}' attempted to play Good Enhancement '${card.Name}' without matching brigade.`,
+          );
+          return { valid: false, error: "Brigade mismatch!" };
+        }
+      }
+    } else {
+      // 3. Verteidiger (nicht-aktiver Spieler): Darf nur Evil Characters (und Evil Enhancements) ins Kampffeld spielen.
+      if (isGoodEnhancement) {
+        logger.warn(
+          `[COMBAT_GUARD] Defender '${targetPlayerId}' attempted to play Good Enhancement '${card.Name}' into battle.`,
+        );
+        return { valid: false, error: "Good cards cannot block!" };
+      }
+      if (isHero) {
+        logger.warn(
+          `[COMBAT_GUARD] Defender '${targetPlayerId}' attempted to play Hero '${card.Name}' into battle.`,
+        );
+        return { valid: false, error: "Good cards cannot block!" };
+      }
+      if (!isEvilChar && !isEvilEnhancement) {
+        logger.warn(
+          `[COMBAT_GUARD] Defender '${targetPlayerId}' attempted to play invalid card '${card.Name}' into battle.`,
+        );
+        return { valid: false, error: "Invalid card for battle!" };
+      }
+
+      // 4. Enhancement-Voraussetzung: Evil Enhancements erfordern einen Evil Character im Kampf mit passender Brigade.
+      if (isEvilEnhancement && fromZone !== ZONES.BATTLEFIELD) {
+        const evilCharsInBattle = (state.battlefield || []).filter(
+          (c) => c.controllerId !== state.activePlayer && BattleCharacterClassifier.isEvilCharacter(c)
+        );
+        if (evilCharsInBattle.length === 0) {
+          logger.warn(
+            `[COMBAT_GUARD] Defender '${targetPlayerId}' attempted to play Evil Enhancement '${card.Name}' without an Evil Character in battle.`,
+          );
+          return { valid: false, error: "No Evil Character in battle!" };
+        }
+        const hasMatchingBrigade = evilCharsInBattle.some((ec) =>
+          BattleCharacterClassifier.canEnhancementMatchCharacter(card, ec)
+        );
+        if (!hasMatchingBrigade) {
+          logger.warn(
+            `[COMBAT_GUARD] Defender '${targetPlayerId}' attempted to play Evil Enhancement '${card.Name}' without matching brigade.`,
+          );
+          return { valid: false, error: "Brigade mismatch!" };
+        }
+      }
+    }
   }
 
   // ✨ Kompakte und vollständige Regelprüfung für Lost Souls.
@@ -811,5 +919,6 @@ module.exports = {
   shuffle,
   findCardById,
   getZoneDisplayName,
-  addAvailableAction
+  addAvailableAction,
+  _validateMove,
 };

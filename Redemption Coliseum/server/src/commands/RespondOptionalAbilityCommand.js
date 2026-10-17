@@ -42,9 +42,30 @@ class RespondOptionalAbilityCommand extends BaseCommand {
       return;
     }
 
-    const index = itemId ? chronicle.items.findIndex((i) => i.id === itemId) : 0;
+    let index = itemId ? chronicle.items.findIndex((i) => i.id === itemId) : 0;
     if (index === -1) {
-      logger.warn(`[RespondOptionalAbilityCommand] Chronicle item '${itemId}' not found.`);
+      index = chronicle.items.findIndex((i) => i.controllerId === this.client.sessionId);
+      if (index !== -1) {
+        logger.warn(
+          `[RespondOptionalAbilityCommand] Chronicle item '${itemId}' not found. Falling back to active item '${chronicle.items[index].id}' for client '${this.client.sessionId}'.`
+        );
+      }
+    }
+
+    if (index === -1) {
+      logger.warn(`[RespondOptionalAbilityCommand] Chronicle item '${itemId}' not found for client '${this.client.sessionId}'.`);
+      if (chronicle.priorityPlayerId === this.client.sessionId) {
+        if (chronicle.items.length === 0) {
+          EffectChronicleService.finishChronicle(this.room);
+        } else {
+          const nextItem = chronicle.items[0];
+          chronicle.priorityPlayerId = nextItem.controllerId;
+          const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
+          EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, {
+            autoExecuteSupported: true,
+          });
+        }
+      }
       return;
     }
 
@@ -52,15 +73,47 @@ class RespondOptionalAbilityCommand extends BaseCommand {
     const player = this.state.players.get(this.client.sessionId);
     if (!player) return;
 
-    if (!accepted) {
-      const declineResult = this.room.abilityResolver.resolve(item, { accepted: false });
-      if (declineResult?.logEntries?.length) {
-        declineResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
-      } else {
-        this.room.broadcastGameLog(`${player.name} chooses not to activate ${item.title}.`);
+    try {
+      if (!accepted) {
+        const declineResult = this.room.abilityResolver.resolve(item, { accepted: false });
+        if (declineResult?.logEntries?.length) {
+          declineResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
+        } else {
+          this.room.broadcastGameLog(`${player.name} chooses not to activate ${item.title}.`);
+        }
+
+        ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.PASSED);
+        chronicle.items.splice(index, 1);
+        EffectChronicleService._reindexOrders(chronicle);
+
+        if (chronicle.items.length === 0) {
+          EffectChronicleService.finishChronicle(this.room);
+        } else {
+          const nextItem = chronicle.items[0];
+          chronicle.priorityPlayerId = nextItem.controllerId;
+          const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
+          EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, {
+            autoExecuteSupported: true,
+          });
+        }
+        return;
       }
 
-      ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.PASSED);
+      const astResult = this.room.abilityResolver.resolve(item, { accepted: true });
+
+      if (astResult && astResult.awaitingTargetSelection) {
+        logger.info(`[RespondOptionalAbilityCommand] Item '${item.title}' now awaiting target selection.`);
+        return;
+      }
+
+      if (astResult?.logEntries?.length) {
+        astResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
+      } else {
+        const abilityText = item.description ? `: "${item.description}"` : "";
+        this.room.broadcastGameLog(`${player.name} activates ${item.title}${abilityText}.`);
+      }
+
+      ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
       chronicle.items.splice(index, 1);
       EffectChronicleService._reindexOrders(chronicle);
 
@@ -74,41 +127,25 @@ class RespondOptionalAbilityCommand extends BaseCommand {
           autoExecuteSupported: true,
         });
       }
-      return;
+
+      this.executedItem = item;
+      this.astResult = astResult;
+      this.canUndo = Boolean(astResult?.handled);
+    } catch (err) {
+      logger.error(`[RespondOptionalAbilityCommand] Fatal error resolving chronicle item '${item.title}':`, err);
+      chronicle.items.splice(index, 1);
+      EffectChronicleService._reindexOrders(chronicle);
+      if (chronicle.items.length === 0) {
+        EffectChronicleService.finishChronicle(this.room);
+      } else {
+        const nextItem = chronicle.items[0];
+        chronicle.priorityPlayerId = nextItem.controllerId;
+        const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
+        EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, {
+          autoExecuteSupported: true,
+        });
+      }
     }
-
-    const astResult = this.room.abilityResolver.resolve(item, { accepted: true });
-
-    if (astResult && astResult.awaitingTargetSelection) {
-      logger.info(`[RespondOptionalAbilityCommand] Item '${item.title}' now awaiting target selection.`);
-      return;
-    }
-
-    if (astResult?.logEntries?.length) {
-      astResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
-    } else {
-      const abilityText = item.description ? `: "${item.description}"` : "";
-      this.room.broadcastGameLog(`${player.name} activates ${item.title}${abilityText}.`);
-    }
-
-    ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
-    chronicle.items.splice(index, 1);
-    EffectChronicleService._reindexOrders(chronicle);
-
-    if (chronicle.items.length === 0) {
-      EffectChronicleService.finishChronicle(this.room);
-    } else {
-      const nextItem = chronicle.items[0];
-      chronicle.priorityPlayerId = nextItem.controllerId;
-      const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
-      EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, {
-        autoExecuteSupported: true,
-      });
-    }
-
-    this.executedItem = item;
-    this.astResult = astResult;
-    this.canUndo = Boolean(astResult?.handled);
   }
 
   /**
