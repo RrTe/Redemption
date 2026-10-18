@@ -58,17 +58,26 @@ class BattleTriggerService {
   static handleCardBattleEntry(room, player, card, message) {
     const isHeroChar = this.isHero(card);
     const isEvilChar = this.isEvilCharacter(card);
+    const isGoodEnh = this.isGoodEnhancement(card);
+    const isEvilEnh = this.isEvilEnhancement(card);
 
-    if (!isHeroChar && !isEvilChar) {
+    if (!isHeroChar && !isEvilChar && !isGoodEnh && !isEvilEnh) {
       logger.debug(
-        `[BattleTriggerService] Card '${card.Name}' (${card.id}) is not a battle character. Skipping.`
+        `[BattleTriggerService] Card '${card.Name}' (${card.id}) is neither a battle character nor an enhancement. Skipping.`
       );
       return null;
     }
 
-    const actionType = isHeroChar
-      ? ActionType.RESCUE_ATTEMPT
-      : ActionType.BLOCK_RESCUE;
+    let actionType;
+    if (isHeroChar) {
+      actionType = ActionType.RESCUE_ATTEMPT;
+    } else if (isEvilChar) {
+      actionType = ActionType.BLOCK_RESCUE;
+    } else if (isGoodEnh) {
+      actionType = ActionType.PLAY_GOOD_ENHANCEMENT;
+    } else {
+      actionType = ActionType.PLAY_EVIL_ENHANCEMENT;
+    }
     const controllerId = card.controllerId || player?.sessionId;
 
     // 1. Try finding an automated AST battle entrance ability
@@ -210,6 +219,14 @@ class BattleTriggerService {
 
   static isEvilCharacter(card) {
     return BattleCharacterClassifier.isEvilCharacter(card);
+  }
+
+  static isGoodEnhancement(card) {
+    return BattleCharacterClassifier.isGoodEnhancement(card);
+  }
+
+  static isEvilEnhancement(card) {
+    return BattleCharacterClassifier.isEvilEnhancement(card);
   }
 
   static isAbilityTriggeredOnBattleEntry(ability, actionType, card = null) {

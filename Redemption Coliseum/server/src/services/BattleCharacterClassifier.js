@@ -177,23 +177,29 @@ class BattleCharacterClassifier {
       return mode === "immediate" || mode === "triggered";
     }
 
-    if (actionType === ActionType.BLOCK_RESCUE) {
+    if (
+      actionType === ActionType.BLOCK_RESCUE ||
+      actionType === ActionType.PLAY_EVIL_ENHANCEMENT
+    ) {
       return (
         event.startsWith("block") ||
         event.includes("blocking") ||
         event.includes("enters battle") ||
-        event === "play" ||
-        event === "played"
+        event.includes("play") ||
+        event.includes("use")
       );
     }
 
-    if (actionType === ActionType.RESCUE_ATTEMPT) {
+    if (
+      actionType === ActionType.RESCUE_ATTEMPT ||
+      actionType === ActionType.PLAY_GOOD_ENHANCEMENT
+    ) {
       return (
         event.includes("rescue_attempt") ||
         event.includes("enters battle") ||
         event.includes("attack") ||
-        event === "play" ||
-        event === "played"
+        event.includes("play") ||
+        event.includes("use")
       );
     }
 

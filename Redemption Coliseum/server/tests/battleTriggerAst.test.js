@@ -238,5 +238,83 @@ describe("Phase 3: Battlefield & Combat Triggers (Battle Primitives)", () => {
     const hasDiscard = state.effectChronicle.items.some((i) => i.abilityId === "ab_1_discard");
     expect(hasDiscard).toBe(false);
   });
+
+  test("6. Playing Good Enhancement in battle triggers PLAY_GOOD_ENHANCEMENT and executes AST Draw", () => {
+    createCard("c_hero_active", "hero_active_1", "Active Hero", ZONES.BATTLEFIELD, "p1", {
+      Type: "Hero", Alignment: "Good", IsCharacter: true, Brigade: "Silver",
+    });
+
+    AbilityLookup._loadData()["ge_ast_draw"] = {
+      card_id: "ge_ast_draw",
+      card_name: "Good Enhancement Draw",
+      sides: {
+        top: {
+          abilities: [
+            {
+              ability_id: "ab_ge_draw",
+              activation_mode: "immediate",
+              is_optional: true,
+              conditions: [],
+              effects: [{ action: "draw", target: { count: { fixed_value: 2 } } }],
+            },
+          ],
+        },
+      },
+    };
+    createCard("d_p1_1", "d1", "Deck 1", ZONES.DECK, "p1");
+    createCard("d_p1_2", "d2", "Deck 2", ZONES.DECK, "p1");
+
+    const goodEnh = createCard("ge_card_1", "ge_ast_draw", "Good Enhancement Draw", ZONES.HAND, "p1", {
+      Type: "Good Enhancement", Alignment: "Good", IsEnhancement: true, Brigade: "Silver",
+      SpecialAbility: "You may draw 2 cards.",
+    });
+
+    const moveCmd = new MoveCardCommand(room, client1);
+    moveCmd.execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: goodEnh.id });
+
+    expect(goodEnh.zone).toBe(ZONES.BATTLEFIELD);
+    expect(state.effectChronicle.items.length).toBe(1);
+    const item = state.effectChronicle.items[0];
+    expect(item.actionType).toBe(ActionType.PLAY_GOOD_ENHANCEMENT);
+    expect(item.cardId).toBe(goodEnh.id);
+
+    const optCmd = new RespondOptionalAbilityCommand(room, client1);
+    optCmd.execute({ itemId: item.id, accepted: true });
+
+    expect(player1.hand.length).toBe(2);
+    expect(player1.deck.length).toBe(0);
+    expect(state.effectChronicle.items.length).toBe(0);
+  });
+
+  test("7. Playing Evil Enhancement in battle triggers PLAY_EVIL_ENHANCEMENT and tabletop fallback", () => {
+    createCard("c_ec_blocker", "ec_blocker_1", "Blocking EC", ZONES.BATTLEFIELD, "p2", {
+      Type: "Evil Character", Alignment: "Evil", IsCharacter: true, Brigade: "Pale Green",
+    });
+
+    const evilEnh = createCard("ee_card_1", "ee_tt_test", "Evil Tabletop Enhancement", ZONES.HAND, "p2", {
+      Type: "Evil Enhancement", Alignment: "Evil", IsEnhancement: true, Brigade: "Pale Green",
+      SpecialAbility: "Discard all Heroes in battle.",
+    });
+
+    const moveCmd = new MoveCardCommand(room, client2);
+    moveCmd.execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: evilEnh.id });
+
+    expect(evilEnh.zone).toBe(ZONES.BATTLEFIELD);
+    expect(state.effectChronicle.items.length).toBe(1);
+    const item = state.effectChronicle.items[0];
+    expect(item.actionType).toBe(ActionType.PLAY_EVIL_ENHANCEMENT);
+    expect(item.cardId).toBe(evilEnh.id);
+    expect(item.isOptional).toBe(true);
+
+    const optCmd = new RespondOptionalAbilityCommand(room, client2);
+    optCmd.execute({ itemId: item.id, accepted: true });
+
+    expect(state.effectChronicle.items.length).toBe(0);
+    expect(state.effectChronicle.history.length).toBe(1);
+    expect(state.effectChronicle.history[0].status).toBe(CHRONICLE_STATUS.COMPLETED);
+    expect(room.broadcastGameLog).toHaveBeenCalledWith(
+      expect.stringContaining("Defending Player activates Evil Tabletop Enhancement")
+    );
+  });
 });
 
