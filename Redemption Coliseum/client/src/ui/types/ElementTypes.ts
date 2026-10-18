@@ -15,7 +15,9 @@ export type StaticElements = {
   helpButton: SidebarButton;
   phaseIndicator: Phaser.GameObjects.Graphics;
   phaseBar: Phaser.GameObjects.Graphics;
+  modeIndicator: Phaser.GameObjects.Image;
   playerInfoText: Phaser.GameObjects.BitmapText;
+
   opponentInfoText: Phaser.GameObjects.BitmapText;
   highlightOverlay: Phaser.GameObjects.Container;
   highlightGraphics: Phaser.GameObjects.Graphics;

@@ -29,6 +29,25 @@ export class LobbyDataManager {
     this._selectedDeck = deck;
   }
 
+  private _isArenaMode: boolean = false;
+
+  public get isArenaMode(): boolean {
+    return this._isArenaMode;
+  }
+
+  public set isArenaMode(val: boolean) {
+    this._isArenaMode = val;
+  }
+
+  public get isSandboxMode(): boolean {
+    return this._isArenaMode;
+  }
+
+  public set isSandboxMode(val: boolean) {
+    this._isArenaMode = val;
+  }
+
+
   /**
    * Extrahiert den aktuellen Namen aus einem HTML Input Element.
    */

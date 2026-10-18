@@ -65,6 +65,10 @@ export class LobbyInputHandler {
       onLoad: () => this.handleLoadGame(),
       onReconnect: () => this.handleReconnect(),
       onClearSession: () => this.handleClearSession(),
+      onModeChanged: (isArena: boolean) => {
+        log("Lobby", `[LobbyInputHandler] onModeChanged received: isArena=${isArena}`);
+        this.dataManager.isArenaMode = isArena;
+      },
     });
   }
 
@@ -81,12 +85,15 @@ export class LobbyInputHandler {
 
       this.uiManager.lockAllButtons();
       this.uiManager.statusText.setText("Creating game...");
+      log("Lobby", `[LobbyInputHandler] handleCreateGame with isArenaMode=${this.dataManager.isArenaMode}`);
 
       await this.networkManager.createGame({
         playerName: this.dataManager.playerName,
         deck: this.dataManager.selectedDeck,
         savedState,
+        isArenaMode: this.dataManager.isArenaMode,
       });
+
     } catch (e: any) {
       this.uiManager.statusText.setText("Error: " + e.message);
       this.uiManager.unlockInput();

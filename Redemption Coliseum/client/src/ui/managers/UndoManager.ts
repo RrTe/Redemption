@@ -5,6 +5,7 @@ import { type ElementManager } from "./ElementManager";
 import { GameEvents } from "../../constants/EventNames";
 import { CardDetailOverlay } from "../overlays/CardDetailOverlay";
 import { ToastManager } from "./ToastManager";
+import { UI_STRINGS } from "../../constants/uiStrings";
 import { TooltipManager } from "./TooltipManager";
 import { log } from "../../utils/logger";
 import type { QuantitySelectionDialogData } from "../../scenes/QuantitySelectionDialogScene";
@@ -110,7 +111,7 @@ export class UndoManager {
 
   public requestSingleUndo(): void {
     if (this.currentAvailableCount === 0) {
-      ToastManager.show("No actions to undo in the current phase.", "warning");
+      ToastManager.show(UI_STRINGS.TOASTS.NO_UNDO_ACTIONS, "warning");
       return;
     }
     this.showWaitingDialog();
@@ -119,7 +120,7 @@ export class UndoManager {
 
   public openCountSelectionDialog(): void {
     if (this.currentAvailableCount === 0) {
-      ToastManager.show("No actions to undo in the current phase.", "warning");
+      ToastManager.show(UI_STRINGS.TOASTS.NO_UNDO_ACTIONS, "warning");
       return;
     }
 

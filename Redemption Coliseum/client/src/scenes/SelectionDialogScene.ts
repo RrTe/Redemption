@@ -14,6 +14,7 @@ import { SelectionDialogFilterView } from "../ui/components/filters/SelectionDia
 import { filterConfigData } from "../ui/config/filter_config";
 import { MAX_HAND_SIZE } from "../../../shared/card-constants";
 import { ToastManager } from "../ui/managers/ToastManager";
+import { UI_STRINGS } from "../constants/uiStrings";
 
 // CARDS_PER_PAGE is now calculated dynamically based on screen height
 export interface SelectionAction {
@@ -427,7 +428,7 @@ export class SelectionDialogScene extends Phaser.Scene {
       const card = selectedStates.find((c: any) => c.id === id);
       if (!this.isLostSoul(card) && nonLostSoulHandCount === handLimits.myFreeSlots && handLimits.myFreeSlots > 0) {
         ToastManager.show(
-          `Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!`,
+          UI_STRINGS.TOASTS.HAND_LIMIT(MAX_HAND_SIZE, MAX_HAND_SIZE),
           "info",
         );
       }

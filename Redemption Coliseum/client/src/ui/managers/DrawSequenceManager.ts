@@ -46,12 +46,26 @@ export class DrawSequenceManager {
   }
 
   private onCardsRendered() {
+    const isArena = Boolean(this.room?.state?.isArenaMode ?? (this.room?.state as any)?.isSandboxMode);
+    if (isArena) return;
     if (this.currentStep !== DRAW_STEPS.NONE && this.currentStep !== DRAW_STEPS.COMPLETED) {
       this.updateCardHighlights();
     }
   }
 
   public handleStateUpdate(step: string, priorityPlayerId: string, activeSequenceCardIds?: any, chronicleItemCount = 0) {
+    const isArena = Boolean(this.room?.state?.isArenaMode ?? (this.room?.state as any)?.isSandboxMode);
+    if (isArena) {
+      this.currentStep = DRAW_STEPS.COMPLETED;
+      this.banner.setVisible(false);
+      this.clearAllBadges();
+      this.cardRenderer.getAllCardUIs().forEach(cardUI => {
+        cardUI.visuals.updateStarHighlight(false);
+        cardUI.visuals.updateLostSoulHighlight(false);
+      });
+      return;
+    }
+
     const stepChanged = this.currentStep !== step || this.priorityPlayerId !== priorityPlayerId;
     const countChanged = this.chronicleCount !== chronicleItemCount;
 
@@ -187,6 +201,15 @@ export class DrawSequenceManager {
   }
 
   private updateCardHighlights() {
+    const isArena = Boolean(this.room?.state?.isArenaMode ?? (this.room?.state as any)?.isSandboxMode);
+    if (isArena) {
+      this.cardRenderer.getAllCardUIs().forEach(cardUI => {
+        cardUI.visuals.updateStarHighlight(false);
+        cardUI.visuals.updateLostSoulHighlight(false);
+      });
+      return;
+    }
+
     const isStars = this.currentStep === DRAW_STEPS.ACTIVE_STARS || this.currentStep === DRAW_STEPS.OPPONENT_STARS;
     const isSouls = this.currentStep === DRAW_STEPS.ACTIVE_SOULS || this.currentStep === DRAW_STEPS.OPPONENT_SOULS;
     const showHelp = this.settingsManager?.isInGameSupportEnabled() ?? true;

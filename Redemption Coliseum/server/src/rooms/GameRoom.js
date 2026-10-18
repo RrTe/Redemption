@@ -89,12 +89,25 @@ class GameRoom extends colyseus.Room {
     // ✨ NEU: Set, um zu speichern, welche Clients fertig geladen haben.
     this.readyClients = new Set();
 
-    // ✨ NEU: Metadaten für die Lobby setzen (Name des Raums)
+    // ✨ NEU: Arena Mode aus den Raumerstellungs-Optionen initialisieren
+    const isArenaMode = Boolean(options.isArenaMode ?? options.isSandboxMode);
+    this.state.isArenaMode = isArenaMode;
+
+    logger.info(
+      `[GameRoom] Room created! roomId: ${this.roomId}, Mode: ${isArenaMode ? "Arena" : "Standard"} (isArenaMode=${isArenaMode})`,
+    );
+
+    // ✨ NEU: Metadaten für die Lobby setzen (Name des Raums & Arena-Flag)
     // Diese werden automatisch an den LobbyRoom übertragen.
     const roomName = options.roomName || `Game ${this.roomId}`;
     this.setMetadata({
       name: roomName,
+      isArenaMode: isArenaMode,
     });
+    logger.info(
+      `[GameRoom] Set lobby metadata for room ${this.roomId}: name='${roomName}', isArenaMode=${isArenaMode}`,
+    );
+
 
     // ✨ Dispatcher & UndoManager initialisieren und Commands registrieren
     this.undoManager = new UndoManager(this);

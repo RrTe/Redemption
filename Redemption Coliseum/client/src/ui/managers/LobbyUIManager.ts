@@ -3,6 +3,9 @@ import { type RoomAvailable } from "colyseus.js";
 import { type SoundManager } from "../../managers/SoundManager";
 import { log } from "../../utils/logger";
 import { SidebarButton } from "../components/SidebarButton";
+import { LobbyModeToggle } from "../components/LobbyModeToggle";
+import { TooltipManager } from "./TooltipManager";
+import { UI_STRINGS } from "../../constants/uiStrings";
 
 export class LobbyUIManager {
   private scene: Phaser.Scene;
@@ -16,6 +19,7 @@ export class LobbyUIManager {
   public debugText!: Phaser.GameObjects.Text;
   public nameLabel!: Phaser.GameObjects.BitmapText;
   public createBtn!: Phaser.GameObjects.Container;
+  public modeToggle!: LobbyModeToggle;
   public deckSelectBtn!: Phaser.GameObjects.Container;
   public loadGameBtn!: Phaser.GameObjects.Container;
   public reconnectBtn!: Phaser.GameObjects.Container;
@@ -25,6 +29,7 @@ export class LobbyUIManager {
   public legalBtn!: Phaser.GameObjects.Text;
   public privacyBtn!: Phaser.GameObjects.Text;
   private background!: Phaser.GameObjects.Image; // ✨ NEU: Hintergrundbild-Referenz
+
 
   // Layout Props
   private itemHeight = 60;
@@ -170,6 +175,7 @@ export class LobbyUIManager {
     onLoad: () => void;
     onReconnect: () => void;
     onClearSession: () => void;
+    onModeChanged?: (isArena: boolean) => void;
   }) {
     // Hilfsfunktion für Buttons
     const createBtn = (text: string, cb: () => void, tint = 0xffffff) => {
@@ -180,6 +186,13 @@ export class LobbyUIManager {
 
     this.createBtn = createBtn("Create New Game", callbacks.onCreate);
     this.scene.add.existing(this.createBtn);
+
+    this.modeToggle = new LobbyModeToggle(
+      this.scene,
+      this.soundManager,
+      callbacks.onModeChanged,
+    );
+
 
     this.deckSelectBtn = createBtn(
       "Select Deck (Random)",
@@ -221,50 +234,71 @@ export class LobbyUIManager {
 
     if (rooms.length === 0) {
       const txt = this.scene.add
-        .text(0, 50, "No open games.", { color: "#888" })
+        .text(0, 50, UI_STRINGS.DIALOGS.ROOM_NO_OPEN_GAMES, { color: "#888" })
         .setOrigin(0.5);
       this.listContainer.add(txt);
     } else {
-      // Dynamische Breite berechnen basierend auf dem längsten Spielnamen
-      let maxTextWidth = 0;
-      rooms.forEach((room) => {
-        const name = room.metadata?.name || `Game ${room.roomId.substring(0, 4)}`;
-        const label = `${name} (${room.clients}/${room.maxClients})`;
-        const tempText = this.scene.add.bitmapText(0, 0, "fairydust", label, 28);
-        maxTextWidth = Math.max(maxTextWidth, tempText.width);
-        tempText.destroy();
-      });
-      // Minimal 200, Maximal 450. Wir addieren 60 Pixel Padding für die Ränder
-      const dynamicWidth = Math.min(450, Math.max(200, maxTextWidth + 60));
+      const buttonWidth = 300;
+      const buttonHeight = 50;
+      const iconSize = 26;
 
       rooms.forEach((room, index) => {
         const y = index * this.itemHeight;
-        const name =
-          room.metadata?.name || `Game ${room.roomId.substring(0, 4)}`; // Kürzere ID als Fallback
-        const label = `${name} (${room.clients}/${room.maxClients})`; // Spielername im Label anzeigen
+        const rawName =
+          room.metadata?.name || `Game ${room.roomId.substring(0, 4)}`;
+        // Namen kürzen, falls zu lang, damit er sauber in den 300px Button passt
+        const shortName = rawName.length > 16 ? `${rawName.substring(0, 14)}...` : rawName;
+        const label = `${shortName} (${room.clients}/${room.maxClients})`;
 
         const width = this.scene.scale.gameSize.width;
         const height = this.scene.scale.gameSize.height;
         const isTwoColumn = width > height && height <= 600;
 
-        // Im 2-Spalten-Layout richten wir den Button linksbündig mit dem Input-Feld aus.
-        // Im normalen Layout (Desktop, Tablet) wird der Button einfach zentriert.
         let xOffset = 0;
         if (isTwoColumn) {
-          xOffset = -160 + dynamicWidth / 2;
+          xOffset = -160 + buttonWidth / 2;
         }
 
+        const rowContainer = this.scene.add.container(xOffset, y);
+
         const btn = this.createStyledButton(
-          xOffset,
-          y,
+          0,
+          0,
           label,
           () => joinCallback(room.roomId, btn),
-          dynamicWidth,
-          50,
+          buttonWidth,
+          buttonHeight,
         );
-        this.listContainer.add(btn);
+
+        const isArena = Boolean(room.metadata?.isArenaMode ?? room.metadata?.isSandboxMode);
+        const iconKey = isArena ? "icon_arena" : "icon_standard";
+        const tooltipKey = isArena ? "mode_arena" : "mode_standard";
+        log("Lobby", `[LobbyUIManager] Room ${room.roomId} metadata:`, room.metadata, `-> Mode: ${isArena ? "Arena" : "Standard"}`);
+
+        // Icon links vor dem Button platzieren (Button reicht von -150 bis +150)
+        const iconX = -buttonWidth / 2 - 24;
+        const modeIcon = this.scene.add
+          .image(iconX, 0, iconKey)
+          .setDisplaySize(iconSize, iconSize)
+          .setInteractive({ useHandCursor: true });
+
+        modeIcon.on("pointerover", () => {
+          const bounds = modeIcon.getBounds();
+          TooltipManager.show(bounds.centerX, bounds.top, tooltipKey);
+        });
+        modeIcon.on("pointerout", () => {
+          TooltipManager.hide();
+        });
+        modeIcon.on("pointerdown", () => {
+          this.soundManager.playSound("UI_TOGGLE");
+          joinCallback(room.roomId, btn);
+        });
+
+        rowContainer.add([btn, modeIcon]);
+        this.listContainer.add(rowContainer);
       });
     }
+
     this.updateScrollLimits(rooms.length);
   }
 
@@ -359,6 +393,12 @@ export class LobbyUIManager {
       this.createBtn.setPosition(leftX, currentY);
       this.createBtn.setData("baseScale", uiScale);
       this.createBtn.setScale(uiScale);
+
+      if (this.modeToggle) {
+        const toggleX = width >= 500 ? leftX + (150 + 55) * uiScale : leftX;
+        const toggleY = width >= 500 ? currentY : currentY - 35 * uiScale;
+        this.modeToggle.setPosition(toggleX, toggleY, uiScale);
+      }
     }
     currentY += 70 * uiScale;
     if (this.deckSelectBtn) {
@@ -441,6 +481,7 @@ export class LobbyUIManager {
     this.createBtn?.setAlpha(1.0);
     this.deckSelectBtn?.setAlpha(1.0);
     this.loadGameBtn?.setAlpha(1.0);
+    this.modeToggle?.setVisible(true);
   }
 
   /** ✨ NEU: Sperrt die UI visuell (wird beim Start-Versuch gerufen) */
@@ -449,6 +490,7 @@ export class LobbyUIManager {
     this.deckSelectBtn?.setAlpha(0.5);
     this.loadGameBtn?.setAlpha(0.5);
     this.reconnectBtn?.setAlpha(0.5);
+    this.modeToggle?.setVisible(false);
   }
 
   private createStyledButton(
@@ -538,6 +580,7 @@ export class LobbyUIManager {
     this.debugText?.destroy();
     this.nameLabel?.destroy();
     this.createBtn?.destroy();
+    this.modeToggle?.destroy();
     this.deckSelectBtn?.destroy();
     this.loadGameBtn?.destroy();
     this.reconnectBtn?.destroy();

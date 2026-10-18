@@ -23,12 +23,20 @@ class BattleTriggerService {
    * @returns {Array<object>} Results of trigger checks.
    */
   static onCardEnteredBattlefield(room, player, movedCards, message) {
+    const isArena = Boolean(room?.state?.isArenaMode ?? room?.state?.isSandboxMode);
+    if (isArena) {
+      logger.debug(
+        "[BattleTriggerService] Arena mode active: skipping automatic battle entry triggers."
+      );
+      return [];
+    }
     if (!Array.isArray(movedCards) || movedCards.length === 0) {
       return [];
     }
     if (message.from === ZONES.BATTLEFIELD || message.to !== ZONES.BATTLEFIELD) {
       return [];
     }
+
 
     const results = [];
     for (const card of movedCards) {

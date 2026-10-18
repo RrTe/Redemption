@@ -2,6 +2,7 @@
 import Phaser from "phaser";
 import { SoundManager } from "../managers/SoundManager";
 import { PreviewManager } from "../ui/managers/PreviewManager";
+import { UI_STRINGS } from "../constants/uiStrings";
 
 export interface ConfirmationDialogData {
   title?: string;
@@ -117,8 +118,8 @@ export class ConfirmationDialogScene extends Phaser.Scene {
     const btnW = Math.max(90, Math.round(130 * scaleFactor));
     const btnH = Math.max(34, Math.round(40 * scaleFactor));
     const btnOffset = Math.max(btnW / 2 + 8, Math.round(90 * scaleFactor));
-    const confirmLabel = this.dialogData.confirmLabel || "Accept";
-    const declineLabel = this.dialogData.declineLabel || "Decline";
+    const confirmLabel = this.dialogData.confirmLabel || UI_STRINGS.DIALOGS.CONFIRM_DEFAULT_ACCEPT;
+    const declineLabel = this.dialogData.declineLabel || UI_STRINGS.DIALOGS.CONFIRM_DEFAULT_DECLINE;
 
     // Accept Button (emerald green with gold border)
     this.createHudButton(cx - btnOffset, buttonY, btnW, btnH, confirmLabel, 0x166534, 0x22c55e, scaleFactor, () => {

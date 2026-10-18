@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { PHASES } from "../../../../shared/phases.js";
 import { type StaticElements } from "../types/ElementTypes";
+import { type TypedRoom } from "../gameUI";
 import { DEBUG } from "../../utils/logger";
 import { SidebarButton } from "../components/SidebarButton";
 import { TooltipManager } from "../managers/TooltipManager";
@@ -8,9 +9,11 @@ import { createHighlightOverlay } from "./HighlightOverlayFactory";
 
 export class StaticElementFactory {
   private scene: Phaser.Scene;
+  private room?: TypedRoom;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, room?: TypedRoom) {
     this.scene = scene;
+    this.room = room;
   }
 
   public create(): StaticElements {
@@ -58,6 +61,30 @@ export class StaticElementFactory {
     // Highlight Overlay
     const highlightOverlay = createHighlightOverlay(this.scene);
 
+    // Mode-Indikator (Standard vs Arena)
+    const room = this.room || (this.scene.registry?.get("room") as any);
+    const isArena = Boolean(room?.state?.isArenaMode ?? room?.state?.isSandboxMode);
+    const modeIconKey = isArena ? "icon_arena" : "icon_standard";
+    const modeTooltipKey = isArena ? "mode_arena" : "mode_standard";
+
+    const modeIndicator = this.scene.add
+      .image(0, 0, modeIconKey)
+      .setOrigin(0.5)
+      .setDepth(10)
+      .setDisplaySize(32, 32)
+      .setInteractive({ useHandCursor: true });
+
+    modeIndicator.setData("tooltipKey", modeTooltipKey);
+
+    modeIndicator.on("pointerover", () => {
+      const bounds = modeIndicator.getBounds();
+      const currentTooltipKey = modeIndicator.getData("tooltipKey") || modeTooltipKey;
+      TooltipManager.show(bounds.centerX, bounds.top, currentTooltipKey);
+    });
+    modeIndicator.on("pointerout", () => {
+      TooltipManager.hide();
+    });
+
     return {
       boardText,
       phaseIcons,
@@ -69,6 +96,7 @@ export class StaticElementFactory {
       helpButton,
       phaseIndicator,
       phaseBar,
+      modeIndicator,
       playerInfoText,
       opponentInfoText,
       highlightOverlay: highlightOverlay.container,
@@ -76,6 +104,7 @@ export class StaticElementFactory {
       highlightText: highlightOverlay.text,
     };
   }
+
 
   private createBarGraphics(width: number, height: number, radius = 12): Phaser.GameObjects.Graphics {
     const bar = this.scene.add.graphics();

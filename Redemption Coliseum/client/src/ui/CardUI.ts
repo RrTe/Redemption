@@ -293,18 +293,21 @@ export class CardUI extends Phaser.GameObjects.Container {
 
     this.visuals.onUpdate(); // ✨ FIX: Effekte aktualisieren
 
-    // ✨ Star Action (nur außerhalb aktiver Draw-Steps evaluieren, sonst durch DrawSequenceManager gesteuert)
+    // ✨ Star Action (nur im Standardmodus außerhalb aktiver Draw-Steps evaluieren; im Arena-Modus keine Phasen-Highlights)
     const room = this.scene.registry?.get("room") as any;
+    const isArena = Boolean(room?.state?.isArenaMode ?? room?.state?.isSandboxMode);
     const currentDrawStep = room?.state?.drawStep;
     const isDrawStepActive = currentDrawStep && currentDrawStep !== DRAW_STEPS.NONE && currentDrawStep !== DRAW_STEPS.COMPLETED;
 
-    if (!isDrawStepActive) {
+    if (!isDrawStepActive && !isArena) {
       const hasStarAction = this.cardData.availableActions && this.cardData.availableActions.some(
         a => a.type === ActionType.ACTIVATE_STAR_ABILITY ||
              (a.type === ActionType.ACTIVATE_ABILITY && this.cardData.Class && this.cardData.Class.includes("Star"))
       );
       const inGameSupport = this.settingsManager.isInGameSupportEnabled();
       this.visuals.updateStarHighlight(hasStarAction && inGameSupport);
+    } else if (isArena) {
+      this.visuals.updateStarHighlight(false);
     }
 
     // ✨ NEU: Physik-Update an Handler delegieren
@@ -342,9 +345,11 @@ export class CardUI extends Phaser.GameObjects.Container {
       this.stopGlow(); // Stoppt den Hover-Glow sofort
     }
 
-    // ✨ FIX: Star-Highlight bei Settings-Änderung sofort evaluieren!
+    // ✨ FIX: Star-Highlight bei Settings-Änderung sofort evaluieren (nur im Standardmodus)!
     if (this.cardData) {
-      const hasStarAction = this.cardData.availableActions && this.cardData.availableActions.some(a => a.type === ActionType.ACTIVATE_STAR_ABILITY);
+      const room = this.scene.registry?.get("room") as any;
+      const isArena = Boolean(room?.state?.isArenaMode ?? room?.state?.isSandboxMode);
+      const hasStarAction = !isArena && this.cardData.availableActions && this.cardData.availableActions.some(a => a.type === ActionType.ACTIVATE_STAR_ABILITY);
       const inGameSupport = this.settingsManager.isInGameSupportEnabled();
       this.visuals.updateStarHighlight(hasStarAction && inGameSupport);
     }

@@ -15,23 +15,27 @@ class NextPhaseCommand extends BaseCommand {
     const player = this.state.players.get(this.client.sessionId);
     if (!player) return;
 
-    if (
-      this.state.drawStep &&
-      this.state.drawStep !== DRAW_STEPS.NONE &&
-      this.state.drawStep !== DRAW_STEPS.COMPLETED
-    ) {
-      logger.warn(
-        `[NextPhaseCommand] Blocked nextPhase: draw sequence step '${this.state.drawStep}' is active.`,
-      );
-      return;
+    const isArena = Boolean(this.state.isArenaMode ?? this.state.isSandboxMode);
+    if (!isArena) {
+      if (
+        this.state.drawStep &&
+        this.state.drawStep !== DRAW_STEPS.NONE &&
+        this.state.drawStep !== DRAW_STEPS.COMPLETED
+      ) {
+        logger.warn(
+          `[NextPhaseCommand] Blocked nextPhase: draw sequence step '${this.state.drawStep}' is active.`,
+        );
+        return;
+      }
+
+      if (this.state.effectChronicle && this.state.effectChronicle.items.length > 0) {
+        logger.warn(
+          `[NextPhaseCommand] Blocked nextPhase: ${this.state.effectChronicle.items.length} items still pending in Effect Chronicle.`,
+        );
+        return;
+      }
     }
 
-    if (this.state.effectChronicle && this.state.effectChronicle.items.length > 0) {
-      logger.warn(
-        `[NextPhaseCommand] Blocked nextPhase: ${this.state.effectChronicle.items.length} items still pending in Effect Chronicle.`,
-      );
-      return;
-    }
 
     const opponentClient = this.room.clients.find(
       (c) => c.sessionId !== this.client.sessionId,

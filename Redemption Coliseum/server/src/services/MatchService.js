@@ -14,8 +14,9 @@ class MatchService {
    * @param {import('../rooms/GameRoom').GameRoom} room
    */
   static initializeGame(room) {
+    const isArena = Boolean(room.state.isArenaMode ?? room.state.isSandboxMode);
     logger.info(
-      `[MatchService] Initializing game for room ${room.roomId}. Locking room.`,
+      `[MatchService] Initializing game for room ${room.roomId} (Mode: ${isArena ? "Arena" : "Standard"}). Locking room.`,
     );
 
     room.lock(); // Prevent new players from joining
@@ -43,11 +44,18 @@ class MatchService {
     room.state.currentPhase = PHASES.DRAW;
 
     logger.info(
-      `[MatchService] Initialization complete. Starting player: ${startingClientId}, Round: 1, Phase: ${room.state.currentPhase}`,
+      `[MatchService] Initialization complete. Starting player: ${startingClientId}, Round: 1, Phase: ${room.state.currentPhase}, Mode: ${isArena ? "Arena" : "Standard"}`,
     );
 
     // ✨ Coordinated Draw Phase sequence for game start (Turn 1)
-    DrawPhaseStepService.startInitialSequence(room);
+    if (!isArena) {
+      DrawPhaseStepService.startInitialSequence(room);
+    } else {
+      logger.info(
+        `[MatchService] Arena mode active: bypassing automated DrawPhaseStepService sequence.`
+      );
+      room.state.drawStep = "completed";
+    }
   }
 
   /**

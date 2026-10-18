@@ -4,10 +4,10 @@ import { type SoundManager } from "../managers/SoundManager";
 import { log } from "../utils/logger";
 import { filterConfigData } from "../ui/config/filter_config";
 import { EFFECT_CHRONICLE_CONFIG } from "../ui/config/visualConfig";
-
-
+import { ModeIconHelper } from "../ui/utils/ModeIconHelper";
 
 export class GameLoadingScene extends BaseLoadingScene {
+
   private targetScene!: string;
   private targetData: any;
   private backgroundKey!: string;
@@ -321,6 +321,10 @@ export class GameLoadingScene extends BaseLoadingScene {
     this.load.image("icon_upkeep", "assets/ui/icons/icon_upkeep.png");
     this.load.image("icon_battle", "assets/ui/icons/icon_battle.png");
     this.load.image("icon_discard", "assets/ui/icons/icon_discard.png");
+    this.load.image("icon_arena", "assets/ui/icons/icon_arena.png");
+    this.load.image("icon_sandbox", "assets/ui/icons/icon_arena.png");
+    this.load.image("icon_standard", "assets/ui/icons/icon_standard.png");
+
 
     // === Radial Menu Icons ===
     this.load.image("icon_search", "assets/ui/icons/icon_search.png");
@@ -497,10 +501,12 @@ export class GameLoadingScene extends BaseLoadingScene {
   }
 
   protected onLoadComplete(): void {
+    ModeIconHelper.ensureModeIcons(this);
     log(
       "GameLoadingScene",
       `All assets loaded. Transitioning to ${this.targetScene}.`,
     );
+
     const soundManager = this.registry.get("soundManager") as SoundManager;
 
     if (this.targetScene === "DeckEditorScene") {

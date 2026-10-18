@@ -123,7 +123,15 @@ class PhaseTransitionService {
     }
 
     if (state.currentPhase === PHASES.DRAW) {
-      DrawPhaseStepService.startTurnDrawSequence(room);
+      const isArena = Boolean(state.isArenaMode ?? state.isSandboxMode);
+      if (!isArena) {
+        DrawPhaseStepService.startTurnDrawSequence(room);
+      } else {
+        logger.info(
+          `[PhaseTransitionService] Arena mode active: bypassing DrawPhaseStepService turn sequence.`
+        );
+        state.drawStep = "completed";
+      }
     }
   }
 }

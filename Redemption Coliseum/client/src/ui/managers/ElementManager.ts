@@ -40,7 +40,7 @@ export class ElementManager {
     this.layout = layout;
     this.networkManager = networkManager; // ✨ NEU
 
-    this.staticFactory = new StaticElementFactory(scene);
+    this.staticFactory = new StaticElementFactory(scene, room);
     this.zoneFactory = new ZoneFactory(scene, room, networkManager);
   }
 
@@ -217,6 +217,18 @@ export class ElementManager {
       }
     });
 
+    if (this.staticElements.modeIndicator && this.layout.modeIndicator) {
+      this.staticElements.modeIndicator.setPosition(
+        this.layout.modeIndicator.x,
+        this.layout.modeIndicator.y,
+      );
+      this.staticElements.modeIndicator.setDisplaySize(
+        this.layout.modeIndicator.size,
+        this.layout.modeIndicator.size,
+      );
+      this.updateModeIndicator();
+    }
+
     const activeIcon = Object.values(this.staticElements.phaseIcons).find(
       (icon) => icon.getData("scaleFactor") === 1.2,
     );
@@ -312,6 +324,7 @@ export class ElementManager {
     this.staticElements.helpButton.destroy(); // ✨ NEU
     this.staticElements.phaseIndicator.destroy(); // ✨ NEU: Aufräumen
     this.staticElements.phaseBar.destroy(); // ✨ NEU: Aufräumen
+    this.staticElements.modeIndicator.destroy();
     this.staticElements.playerInfoText.destroy(); // ✨ NEU
     this.staticElements.opponentInfoText.destroy(); // ✨ NEU
     Object.values(this.staticElements.phaseIcons).forEach((icon) =>
@@ -386,5 +399,20 @@ export class ElementManager {
     opponentHandZone.setData("ownerId", opponentId);
 
     log("ElementManager", `Opponent zones assigned to owner: ${opponentId}`);
+  }
+
+  /**
+   * Updates in-game mode indicator texture and tooltip to match room state.
+   */
+  public updateModeIndicator(): void {
+    if (!this.staticElements?.modeIndicator) return;
+    const isArena = Boolean(
+      this.room?.state?.isArenaMode ??
+      (this.room?.state as any)?.isSandboxMode
+    );
+    const modeIconKey = isArena ? "icon_arena" : "icon_standard";
+    const modeTooltipKey = isArena ? "mode_arena" : "mode_standard";
+    this.staticElements.modeIndicator.setTexture(modeIconKey);
+    this.staticElements.modeIndicator.setData("tooltipKey", modeTooltipKey);
   }
 }

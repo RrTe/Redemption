@@ -38,8 +38,12 @@ class RoomState extends Schema {
 
     // ✨ NEU: Effect Chronicle resolution queue
     this.effectChronicle = new EffectChronicleState();
+
+    // ✨ NEU: Arena Mode (Freier Spieltisch)
+    this.isArenaMode = false;
   }
 }
+
 
 // Spieler (Map von PlayerState)
 type({ map: PlayerState })(RoomState.prototype, "players");
@@ -71,6 +75,10 @@ type(["string"])(RoomState.prototype, "activeSequenceCardIds");
 // ✨ NEU: Effect Chronicle resolution queue
 type(EffectChronicleState)(RoomState.prototype, "effectChronicle");
 
+// ✨ NEU: Arena Mode (Freier Spieltisch)
+type("boolean")(RoomState.prototype, "isArenaMode");
+
 module.exports = { RoomState };
+
 
 

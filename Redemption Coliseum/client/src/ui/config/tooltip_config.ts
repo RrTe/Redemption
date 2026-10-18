@@ -1,3 +1,5 @@
+import { UI_STRINGS } from "../../constants/uiStrings";
+
 export const tooltipConfig: Record<string, string> = {
   // Action Buttons
   button_deck_smith: "Open Deck Smith (Create New Deck)",
@@ -24,6 +26,14 @@ export const tooltipConfig: Record<string, string> = {
   button_next_phase: "Next Phase",
   button_undo: "Undo Action (Long-press or Ctrl+Shift+Z for multiple)",
   
+  // Game Modes
+  mode_standard: UI_STRINGS.ROOM_MODE.STANDARD_TOOLTIP,
+  mode_arena: UI_STRINGS.ROOM_MODE.ARENA_TOOLTIP,
+  mode_sandbox: UI_STRINGS.ROOM_MODE.ARENA_TOOLTIP,
+  mode_indicator_standard: UI_STRINGS.ROOM_MODE.STANDARD_TOOLTIP,
+  mode_indicator_arena: UI_STRINGS.ROOM_MODE.ARENA_TOOLTIP,
+  mode_indicator_sandbox: UI_STRINGS.ROOM_MODE.ARENA_TOOLTIP,
+
   // Sort Buttons
   sort_name_asc: "Sort Alphabetically (A to Z)",
   sort_name_desc: "Sort Alphabetically (Z to A)",
@@ -44,3 +54,4 @@ export const tooltipConfig: Record<string, string> = {
   // Special Filters
   AndFilter: "Toggle AND / OR Filtering Mode",
 };
+

@@ -33,6 +33,7 @@ export default class CardGameScene extends Phaser.Scene {
     // ✨ NEU: Wenn ein Raum von der Lobby übergeben wurde, nutzen wir ihn.
     if (data && data.room) {
       this.room = data.room;
+      this.registry.set("room", this.room);
     }
   }
 
@@ -86,10 +87,10 @@ export default class CardGameScene extends Phaser.Scene {
       // ✨ FIX: Verhindert, dass minimale Mausbewegungen als Drag-Aktion gewertet werden, was Klicks blockiert.
       this.input.dragDistanceThreshold = 5;
 
-      // ✨ NEU: Nur verbinden, wenn wir nicht schon verbunden sind (durch die Lobby)
       if (!this.room) {
         this.room = await connectToRoom();
       }
+      this.registry.set("room", this.room);
 
       // ✨ FINALE LÖSUNG: Erstelle den Callback-Handler, wie in der Doku beschrieben.
       // Dies ist der korrekte Weg, um auf State-Änderungen zu lauschen.

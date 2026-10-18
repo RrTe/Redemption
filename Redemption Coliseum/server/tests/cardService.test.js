@@ -664,6 +664,161 @@ describe("cardService (moveCard)", () => {
       expect(hero.zone).toBe(ZONES.TERRITORY);
     });
   });
+
+  describe("Arena Mode (_validateMove bypasses Combat Guards)", () => {
+    let attacker;
+    let defender;
+
+    beforeEach(() => {
+      attacker = new PlayerState();
+      attacker.sessionId = "p1";
+      attacker.name = "Attacking Player";
+
+      defender = new PlayerState();
+      defender.sessionId = "p2";
+      defender.name = "Defending Player";
+
+      state = new RoomState();
+      state.isArenaMode = true; // ✨ Arena Mode aktiviert
+      state.players.set("p1", attacker);
+      state.players.set("p2", defender);
+      state.activePlayer = "p1";
+      state.currentPhase = PHASES.PREP; // NICHT Battle Phase!
+      cardLookup = new Map();
+    });
+
+    test("1. Erlaubt Kartenbewegung ins Kampffeld außerhalb der Battle-Phase", () => {
+      const hero = new Card();
+      hero.id = "sb_hero";
+      hero.Name = "David";
+      hero.Type = CARD_TYPES.HERO;
+      hero.Alignment = ALIGNMENTS.GOOD;
+      hero.IsCharacter = true;
+      hero.controllerId = "p1";
+      hero.originalOwnerId = "p1";
+      hero.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(hero);
+      cardLookup.set(hero.id, hero);
+
+      const res = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, hero.id);
+      expect(res.movedCards.length).toBe(1);
+      expect(res.error).toBeUndefined();
+      expect(hero.zone).toBe(ZONES.BATTLEFIELD);
+    });
+
+    test("2. Erlaubt dem Angreifer Evil Characters und Evil Enhancements im Kampffeld", () => {
+      const evilChar = new Card();
+      evilChar.id = "sb_ec";
+      evilChar.Name = "Goliath";
+      evilChar.Type = CARD_TYPES.EC;
+      evilChar.Alignment = ALIGNMENTS.EVIL;
+      evilChar.IsCharacter = true;
+      evilChar.controllerId = "p1";
+      evilChar.originalOwnerId = "p1";
+      evilChar.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(evilChar);
+      cardLookup.set(evilChar.id, evilChar);
+
+      const res = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, evilChar.id);
+      expect(res.movedCards.length).toBe(1);
+      expect(res.error).toBeUndefined();
+      expect(evilChar.zone).toBe(ZONES.BATTLEFIELD);
+    });
+
+    test("3. Erlaubt Enhancements ohne Charakter oder ohne passende Brigade im Kampffeld", () => {
+      const ge = new Card();
+      ge.id = "sb_ge";
+      ge.Name = "Sword of the Spirit";
+      ge.Type = CARD_TYPES.GE;
+      ge.Alignment = ALIGNMENTS.GOOD;
+      ge.Brigade = "Silver";
+      ge.IsEnhancement = true;
+      ge.controllerId = "p1";
+      ge.originalOwnerId = "p1";
+      ge.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(ge);
+      cardLookup.set(ge.id, ge);
+
+      // Kein Hero im Kampffeld vorhanden!
+      expect(state.battlefield.length).toBe(0);
+
+      const res = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, ge.id);
+      expect(res.movedCards.length).toBe(1);
+      expect(res.error).toBeUndefined();
+      expect(ge.zone).toBe(ZONES.BATTLEFIELD);
+    });
+
+    test("4. Schützt weiterhin gegen das Ablegen in gegnerische Piles", () => {
+      const card = new Card();
+      card.id = "c_stolen";
+      card.Name = "My Card";
+      card.controllerId = "p1";
+      card.originalOwnerId = "p1";
+      card.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(card);
+      cardLookup.set(card.id, card);
+
+      // Versuch, die eigene Karte in den gegnerischen Discard-Pile zu legen via coords.targetPlayerId
+      const res = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.DISCARD, card.id, 1, { targetPlayerId: "p2" });
+      expect(res.movedCards.length).toBe(0);
+      expect(res.error).toBe("Cannot move cards to opponent's pile!");
+    });
+
+    test("5. Schützt weiterhin Lost Soul Zonenregeln, Reserve Runde 1 und Handlimit", () => {
+      // 5a. Lost Soul Zonen-Regel (Lost Soul darf nicht ins Territory gelegt werden)
+      const ls = new Card();
+      ls.id = "sb_ls";
+      ls.Name = "Lost Soul (Hopper)";
+      ls.Type = CARD_TYPES.LOST_SOUL;
+      ls.controllerId = "p1";
+      ls.originalOwnerId = "p1";
+      ls.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(ls);
+      cardLookup.set(ls.id, ls);
+
+      const resLS = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.TERRITORY, ls.id);
+      expect(resLS.movedCards.length).toBe(0);
+      expect(resLS.error).toBe("Invalid move for Lost Soul!");
+
+      // 5b. Handlimit Check (MAX_HAND_SIZE = 16)
+      attacker[ZONES.HAND] = new Array(16).fill(null).map((_, i) => {
+        const dummy = new Card();
+        dummy.id = `dummy_${i}`;
+        dummy.controllerId = "p1";
+        dummy.originalOwnerId = "p1";
+        return dummy;
+      });
+
+      const extraCard = new Card();
+      extraCard.id = "extra_c";
+      extraCard.controllerId = "p1";
+      extraCard.originalOwnerId = "p1";
+      extraCard.zone = ZONES.TERRITORY;
+      attacker[ZONES.TERRITORY].push(extraCard);
+      cardLookup.set(extraCard.id, extraCard);
+
+      const resHandLimit = moveCard(attacker, state, cardLookup, ZONES.TERRITORY, ZONES.HAND, extraCard.id);
+      expect(resHandLimit.movedCards.length).toBe(0);
+      expect(resHandLimit.error).toContain("Hand limit reached");
+
+      // 5c. Reserve Runde 1 Check
+      attacker[ZONES.HAND] = [];
+      state.round = 1;
+      const resReserve = new Card();
+      resReserve.id = "res_card";
+      resReserve.controllerId = "p1";
+      resReserve.originalOwnerId = "p1";
+      resReserve.zone = ZONES.RESERVE;
+      attacker[ZONES.RESERVE].push(resReserve);
+      cardLookup.set(resReserve.id, resReserve);
+
+      const resReserveFail = moveCard(attacker, state, cardLookup, ZONES.RESERVE, ZONES.HAND, resReserve.id);
+      expect(resReserveFail.movedCards.length).toBe(0);
+      expect(resReserveFail.error).toBe("Cannot take cards from Reserve in Round 1!");
+    });
+  });
 });
+
+
 
 

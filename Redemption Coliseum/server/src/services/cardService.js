@@ -147,7 +147,10 @@ function _validateMove(
   }
 
   // ✨ COMBAT GUARDS (Rule Validation for Battlefield Moves)
-  if (toZone === ZONES.BATTLEFIELD) {
+  // In Arena Mode, all combat guards (phase lock, character/enhancement restrictions, brigade match) are bypassed.
+  const isArena = Boolean(state?.isArenaMode ?? state?.isSandboxMode);
+  if (toZone === ZONES.BATTLEFIELD && !isArena) {
+
     // 1. Phasen-Sperre: Das Verschieben von Karten ins Kampffeld ist nur in der BATTLE-Phase erlaubt.
     if (state?.currentPhase !== PHASES.BATTLE) {
       logger.warn(

@@ -4,6 +4,7 @@ import { type GameNetworkManager } from "../network/GameNetworkManager"; // ✨ 
 import { ZONES, type Zone } from "../../../shared/zones";
 import { MAX_HAND_SIZE } from "../../../shared/card-constants";
 import { ToastManager } from "./managers/ToastManager";
+import { UI_STRINGS } from "../constants/uiStrings";
 import { TargetBorderEffect } from "./effects/TargetBorderEffect";
 
 const INITIAL_POOL_SIZE = 15; // Startgröße des Pools für die Grafiken
@@ -171,11 +172,11 @@ export class StackedPileUI extends Phaser.GameObjects.Container {
       ) {
         const myPlayer = room.state.players.get(room.sessionId);
         if (myPlayer && myPlayer.deck && myPlayer.deck.length === 0) {
-          ToastManager.show("Deck is empty!", "warning");
+          ToastManager.show(UI_STRINGS.TOASTS.DECK_EMPTY, "warning");
           return;
         }
         if (myPlayer && myPlayer.hand && myPlayer.hand.length >= MAX_HAND_SIZE) {
-          ToastManager.show(`Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!`, "warning");
+          ToastManager.show(UI_STRINGS.TOASTS.HAND_LIMIT(MAX_HAND_SIZE, MAX_HAND_SIZE), "warning");
           return;
         }
 

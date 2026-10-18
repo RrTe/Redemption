@@ -91,6 +91,8 @@ export interface RoomState {
   priorityPlayerId?: string;
   activeSequenceCardIds?: ArraySchema<string>;
   effectChronicle?: EffectChronicleStateData;
+  isArenaMode?: boolean;
 }
+
 
 

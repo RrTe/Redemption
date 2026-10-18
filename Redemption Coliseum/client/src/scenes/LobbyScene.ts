@@ -9,8 +9,10 @@ import { LobbyDataManager } from "../ui/managers/LobbyDataManager";
 import { LobbyNetworkManager } from "../network/LobbyNetworkManager";
 import { LobbyDomManager } from "../ui/managers/LobbyDomManager";
 import { LobbyInputHandler } from "../ui/handlers/LobbyInputHandler";
+import { ModeIconHelper } from "../ui/utils/ModeIconHelper";
 
 export class LobbyScene extends Phaser.Scene {
+
   private uiManager!: LobbyUIManager;
   private networkManager!: LobbyNetworkManager;
   private dataManager!: LobbyDataManager;
@@ -73,12 +75,20 @@ export class LobbyScene extends Phaser.Scene {
     );
     this.load.audio("menu_select", "assets/sounds/effects/menu/select.mp3");
     this.load.audio("page_flip", "assets/sounds/effects/pageflip_01-81244.mp3");
+
+    // Mode Icons (Standard & Arena)
+    this.load.image("icon_arena", "assets/ui/icons/icon_arena.png");
+    this.load.image("icon_sandbox", "assets/ui/icons/icon_arena.png");
+    this.load.image("icon_standard", "assets/ui/icons/icon_standard.png");
   }
 
   create() {
+    ModeIconHelper.ensureModeIcons(this);
+
     if (!this.scene.get("SettingsDialogScene")) {
       this.scene.add("SettingsDialogScene", SettingsDialogScene, false);
     }
+
 
     this.soundManager = this.registry.get("soundManager");
     this.uiManager = new LobbyUIManager(this, this.soundManager);

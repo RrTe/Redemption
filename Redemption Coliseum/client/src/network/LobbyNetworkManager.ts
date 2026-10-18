@@ -99,6 +99,8 @@ export class LobbyNetworkManager {
     playerName: string;
     deck: DeckData;
     savedState?: any;
+    isArenaMode?: boolean;
+    isSandboxMode?: boolean;
   }) {
     log("LobbyNetwork", "createGame called. Current isTransitioning:", this.isTransitioning);
 
@@ -110,14 +112,18 @@ export class LobbyNetworkManager {
     this.onStatusChange?.("Creating Game...");
 
     try {
+      const isArena = Boolean(options.isArenaMode ?? options.isSandboxMode);
       const roomOptions = {
         roomName: `${options.playerName}'s Game`,
         deck: options.deck,
         playerName: options.playerName,
         deckName: options.deck.name || "Random Deck",
         savedState: options.savedState,
+        isArenaMode: isArena,
+        isSandboxMode: isArena,
       };
 
+      log("LobbyNetwork", `[LobbyNetwork] Calling client.create('game_room') with isArenaMode=${isArena}:`, roomOptions);
       const room = await this.client.create("game_room", roomOptions);
       this.handleJoinSuccess(room as TypedRoom);
     } catch (e: any) {

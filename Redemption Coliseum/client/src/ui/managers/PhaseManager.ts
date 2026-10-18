@@ -77,12 +77,14 @@ export class PhaseManager {
       ? Boolean(state?.effectChronicle?.items?.length)
       : hasMandatoryChronicleItems;
 
-    if (isDrawStepActive || isChronicleActive) {
+    const isArena = Boolean(state?.isArenaMode);
+    if (!isArena && (isDrawStepActive || isChronicleActive)) {
       log(
         `[NEXT_PHASE] Blocked nextPhase click: draw step '${state?.drawStep}' or chronicle active (${state?.effectChronicle?.items?.length} items).`,
       );
       return;
     }
+
 
     // Auto-pass any pending optional ability prompt if help is off
     if (!isHelpEnabled) {
@@ -155,9 +157,11 @@ export class PhaseManager {
       ? Boolean(state?.effectChronicle?.items?.length)
       : hasMandatoryChronicleItems;
 
-    if (isDrawStepActive || isChronicleActive) {
+    const isArena = Boolean(state.isArenaMode);
+    if (!isArena && (isDrawStepActive || isChronicleActive)) {
       isButtonEnabled = false;
     }
+
 
     nextPhaseButton.setVisible(isActive);
 
@@ -181,8 +185,9 @@ export class PhaseManager {
    */
   public reposition(layout?: any): void {
     if (!this.handshakeToggle) return;
-    const currentLayout = layout || this.ui?.layout || this.elementManager?.layout;
+    const currentLayout = layout || this.elementManager?.layout || (this.ui as any)?.layout;
     if (!currentLayout?.nextPhaseButton) return;
+
 
     const baseScale = currentLayout.buttonScale ?? 1.0;
     this.handshakeToggle.setPosition(

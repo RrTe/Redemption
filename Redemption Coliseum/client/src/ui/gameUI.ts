@@ -331,6 +331,8 @@ export class GameUI {
     // Fix: Register static UI button handlers (Help, Settings, Save, Concede).
     this.staticUIHandler.registerHandlers();
 
+    this.elementManager.updateModeIndicator();
+
     // ✨ NEU: Melde dem Server, dass wir bereit sind (Assets geladen, UI erstellt).
     this.networkManager.sendPlayerReady();
   }
@@ -348,7 +350,13 @@ export class GameUI {
     });
 
     this.scene.events.on("net:playerLeft", () => this.updateWaitingStatus());
-    this.scene.events.on("net:stateChanged", () => this.updateWaitingStatus());
+    this.scene.events.on("net:stateChanged", () => {
+      this.updateWaitingStatus();
+      this.elementManager.updateModeIndicator();
+    });
+    this.room.onStateChange.once(() => {
+      this.elementManager.updateModeIndicator();
+    });
 
     // --- Bridge Connection Events to OverlayManager ---
     this.scene.events.on("net:offline", (data: { message: string }) =>

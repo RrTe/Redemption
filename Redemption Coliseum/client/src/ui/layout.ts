@@ -47,6 +47,7 @@ export interface GameLayout {
     height: number;
     radius: number;
   };
+  modeIndicator: { x: number; y: number; size: number };
   nextPhaseButton: { x: number; y: number };
   undoButton: { x: number; y: number };
   concedeButton: { x: number; y: number };
@@ -321,6 +322,13 @@ export function calculateLayout(
     radius: 15,
   };
 
+  const modeIndicatorSize = iconSize;
+  const modeIndicator = {
+    x: phaseBar.x - phaseBar.width / 2 - modeIndicatorSize / 2 - iconGap,
+    y: iconsCenterY,
+    size: modeIndicatorSize,
+  };
+
   const buttonSpacing = 55;
   const nextPhaseButtonWidth = 80 * buttonScale;
   const nextPhaseButton = {
@@ -431,6 +439,7 @@ export function calculateLayout(
     opponentBanishPile,
     phaseIcons,
     phaseBar,
+    modeIndicator,
     nextPhaseButton,
     undoButton,
     concedeButton,

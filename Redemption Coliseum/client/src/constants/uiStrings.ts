@@ -33,4 +33,25 @@ export const UI_STRINGS = Object.freeze({
         ? "Effect Chronicle active: Resolve abilities via the Chronicle icon."
         : "Effect Chronicle active: Waiting for opponent to resolve abilities...",
   },
+  ROOM_MODE: {
+    STANDARD_TITLE: "Standard Mode",
+    STANDARD_TOOLTIP: "Standard Mode: Full rules and chronicle enforcement",
+    ARENA_TITLE: "Arena Mode",
+    ARENA_TOOLTIP: "Arena Mode: Free tabletop play (core rules only)",
+    TOGGLE_LABEL: "Mode:",
+  },
+  TOASTS: {
+    DECK_EMPTY: "Deck is empty!",
+    HAND_LIMIT: (current: number, max: number) => `Hand limit reached (${current}/${max})!`,
+    ZONE_SHUFFLED: (zoneName: string) => `${zoneName} shuffled.`,
+    NO_UNDO_ACTIONS: "No actions to undo in the current phase.",
+    PARALYZED_BATTLE_RESTRICTED: "Paralyzed cards cannot enter the Field of Battle!",
+    SET_ASIDE_BATTLE_RESTRICTED: "Cards in Set Aside cannot enter the Field of Battle!",
+  },
+  DIALOGS: {
+    CONFIRM_DEFAULT_ACCEPT: "Accept",
+    CONFIRM_DEFAULT_DECLINE: "Decline",
+    ROOM_NO_OPEN_GAMES: "No open games.",
+  },
 });
+

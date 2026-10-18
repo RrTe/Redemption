@@ -13,6 +13,7 @@ import { ElementManager } from "../managers/ElementManager";
 import { TypeSelectionOverlay, type TypeSelectionOption } from "../components/TypeSelectionOverlay";
 import { cardData as staticCardData } from "../../utils/CardService";
 import { ToastManager } from "../managers/ToastManager";
+import { UI_STRINGS } from "../../constants/uiStrings";
 import { GameEvents } from "../../constants/EventNames";
 
 const ATTACH_HOVER_DELAY = 700;
@@ -435,7 +436,7 @@ export class DragDropHandler {
 
     if (toZone === ZONES.BATTLEFIELD && gameObject.isParalyzed) {
       log("Input", `[DROP] Blocked paralyzed card from entering Battlefield.`);
-      ToastManager.show("Paralyzed cards cannot enter the Field of Battle!", "warning");
+      ToastManager.show(UI_STRINGS.TOASTS.PARALYZED_BATTLE_RESTRICTED, "warning");
       gameObject.setData("drop_action_taken", true);
       this.snapBack(gameObject);
       return;
@@ -443,7 +444,7 @@ export class DragDropHandler {
 
     if (toZone === ZONES.BATTLEFIELD && gameObject.isSetAside) {
       log("Input", `[DROP] Blocked set-aside card from entering Battlefield.`);
-      ToastManager.show("Cards in Set Aside cannot enter the Field of Battle!", "warning");
+      ToastManager.show(UI_STRINGS.TOASTS.SET_ASIDE_BATTLE_RESTRICTED, "warning");
       gameObject.setData("drop_action_taken", true);
       this.snapBack(gameObject);
       return;
