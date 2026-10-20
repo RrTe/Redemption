@@ -65,9 +65,29 @@ export class EffectChronicleEffect {
   }
 
   public setCount(count: number): void {
-    if (count > 0) {
-      this.badgeText.setText(String(count));
-      this._show();
+    this.updateState(count, 0);
+  }
+
+  /**
+   * Updates Chronicle icon state and count badges based on pending and resolved items.
+   * Remains visible if either pending triggers or phase history exist.
+   *
+   * @param pendingCount Number of pending items awaiting resolution.
+   * @param historyCount Number of resolved items in phase history.
+   */
+  public updateState(pendingCount: number, historyCount: number): void {
+    const totalActivity = pendingCount + historyCount;
+
+    if (totalActivity > 0) {
+      if (pendingCount > 0) {
+        this.badgeText.setText(String(pendingCount));
+        this._drawBadge(14, false);
+        this._show(true);
+      } else {
+        this.badgeText.setText(String(historyCount));
+        this._drawBadge(14, true);
+        this._show(false);
+      }
     } else {
       this._hide();
     }
@@ -137,8 +157,20 @@ export class EffectChronicleEffect {
     }
   }
 
-  private _show(): void {
-    if (this.isVisible) return;
+  private _show(enablePulse = true): void {
+    if (this.isVisible) {
+      if (enablePulse) {
+        if (!this.bumpTween && !this.pulseTween) {
+          this._startBreathingPulse();
+        }
+      } else {
+        this.pulseTween?.stop();
+        this.pulseTween = null;
+        this.iconSprite.setScale(this.baseScale);
+      }
+      return;
+    }
+
     this.isVisible = true;
     this.scene.tweens.killTweensOf(this.container);
     this.scene.tweens.add({
@@ -146,7 +178,13 @@ export class EffectChronicleEffect {
       alpha: 1,
       duration: 300,
       ease: "Power2",
-      onComplete: () => { if (!this.bumpTween) this._startBreathingPulse(); },
+      onComplete: () => {
+        if (enablePulse && !this.bumpTween) {
+          this._startBreathingPulse();
+        } else {
+          this.iconSprite.setScale(this.baseScale);
+        }
+      },
     });
   }
 
@@ -212,8 +250,10 @@ export class EffectChronicleEffect {
     this.scene.game?.events?.emit("playSound", "CHRONICLE_CARD_FLIGHT");
   }
 
-  private _drawBadge(radius: number): void {
+  private _drawBadge(radius: number, isHistory = false): void {
+    const borderColor = isHistory ? 0x10b981 : EFFECT_CHRONICLE_CONFIG.BADGE_BORDER;
     this.badgeBg.clear().fillStyle(EFFECT_CHRONICLE_CONFIG.BADGE_BG, 0.95).fillCircle(0, 0, radius);
-    this.badgeBg.lineStyle(2, EFFECT_CHRONICLE_CONFIG.BADGE_BORDER, 1).strokeCircle(0, 0, radius);
+    this.badgeBg.lineStyle(2, borderColor, 1).strokeCircle(0, 0, radius);
+    this.badgeText.setColor(isHistory ? "#10b981" : "#ffffff");
   }
 }

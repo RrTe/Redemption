@@ -229,6 +229,10 @@ class BattleTriggerService {
     return BattleCharacterClassifier.isEvilEnhancement(card);
   }
 
+  static isLastCharacterInBattle(battlefield, targetCard, ownerId) {
+    return BattleCharacterClassifier.isLastCharacterInBattle(battlefield, targetCard, ownerId);
+  }
+
   static isAbilityTriggeredOnBattleEntry(ability, actionType, card = null) {
     return BattleCharacterClassifier.isAbilityTriggeredOnBattleEntry(ability, actionType, card);
   }

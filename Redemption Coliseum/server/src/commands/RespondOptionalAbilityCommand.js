@@ -74,6 +74,68 @@ class RespondOptionalAbilityCommand extends BaseCommand {
     if (!player) return;
 
     try {
+      if (item.pendingSpecialInitiative) {
+        const psi = item.pendingSpecialInitiative;
+        item.pendingSpecialInitiative = null;
+
+        // Restore priority back to original ability owner
+        chronicle.priorityPlayerId = psi.initiatorId;
+
+        if (!accepted) {
+          // Defending player declines Special Initiative -> proceed with discard
+          const isMultiple = Array.isArray(psi.targetCardIds) && psi.targetCardIds.length > 1;
+          const targetCard = this.room.cardLookup?.get(psi.targetCardId);
+          const cardName = isMultiple ? `all ${psi.targetCardIds.length} characters` : (targetCard?.Name || "character");
+          this.room.broadcastGameLog(
+            `${player.name} declines Special Initiative on ${cardName}.`
+          );
+
+          const targetIds = psi.targetCardIds || [psi.targetCardId];
+          const resumeResult = this.room.abilityResolver.resolve(item, {
+            ...psi.options,
+            specialInitiativeDeclined: true,
+            targetCardIds: targetIds,
+          });
+          if (resumeResult?.logEntries?.length) {
+            resumeResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
+          }
+
+          ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
+          chronicle.items.splice(index, 1);
+          EffectChronicleService._reindexOrders(chronicle);
+          if (chronicle.items.length === 0) {
+            EffectChronicleService.finishChronicle(this.room);
+          } else {
+            const nextItem = chronicle.items[0];
+            chronicle.priorityPlayerId = nextItem.controllerId;
+            const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
+            EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, { autoExecuteSupported: true });
+          }
+          return;
+        }
+
+        // Defending player accepts Special Initiative -> card stays in battle!
+        const isMultiple = Array.isArray(psi.targetCardIds) && psi.targetCardIds.length > 1;
+        const targetCard = this.room.cardLookup?.get(psi.targetCardId);
+        const cardName = isMultiple ? "all characters" : (targetCard?.Name || "character");
+        this.room.broadcastGameLog(
+          `✨ ${player.name} declares Special Initiative to defend ${cardName}!`
+        );
+
+        ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
+        chronicle.items.splice(index, 1);
+        EffectChronicleService._reindexOrders(chronicle);
+        if (chronicle.items.length === 0) {
+          EffectChronicleService.finishChronicle(this.room);
+        } else {
+          const nextItem = chronicle.items[0];
+          chronicle.priorityPlayerId = nextItem.controllerId;
+          const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
+          EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, { autoExecuteSupported: true });
+        }
+        return;
+      }
+
       if (!accepted) {
         const declineResult = this.room.abilityResolver.resolve(item, { accepted: false });
         if (declineResult?.logEntries?.length) {
@@ -99,10 +161,16 @@ class RespondOptionalAbilityCommand extends BaseCommand {
         return;
       }
 
+      item.isConfirmed = true;
       const astResult = this.room.abilityResolver.resolve(item, { accepted: true });
 
-      if (astResult && astResult.awaitingTargetSelection) {
-        logger.info(`[RespondOptionalAbilityCommand] Item '${item.title}' now awaiting target selection.`);
+      if (
+        astResult &&
+        (astResult.awaitingTargetSelection ||
+          astResult.awaitingSpecialInitiative ||
+          astResult.awaitingConfirmation)
+      ) {
+        logger.info(`[RespondOptionalAbilityCommand] Item '${item.title}' now awaiting further response.`);
         return;
       }
 

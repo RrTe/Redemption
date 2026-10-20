@@ -108,6 +108,23 @@ class BattleCharacterClassifier {
    */
   static getBrigades(card) {
     if (!card) return [];
+
+    // If card has dual sides and active inGameAlignment or inGameType, resolve active side brigades
+    if (Array.isArray(card.sides) && card.sides.length > 0 && (card.inGameAlignment || card.inGameType)) {
+      const activeSide = card.sides.find((s) => {
+        const alignMatch = card.inGameAlignment && String(s.Alignment || "").toLowerCase() === card.inGameAlignment.toLowerCase();
+        const typeMatch = card.inGameType && String(s.Type || "").toLowerCase() === card.inGameType.toLowerCase();
+        return alignMatch || typeMatch;
+      });
+      if (activeSide && (activeSide.Brigade || activeSide.Brigades)) {
+        const sideRaw = activeSide.Brigade || activeSide.Brigades;
+        return (Array.isArray(sideRaw) ? sideRaw : [sideRaw])
+          .flatMap((b) => (typeof b === "string" ? b.split("/") : []))
+          .map((b) => b.trim().toLowerCase())
+          .filter(Boolean);
+      }
+    }
+
     const raw = card.Brigade || card.Brigades || [];
     if (Array.isArray(raw)) {
       return raw
@@ -214,6 +231,32 @@ class BattleCharacterClassifier {
    */
   static hasBattleAbilityHeader(text) {
     return /\b(EC|HERO|CHARACTER|IF BLOCKING|WHEN BLOCKING)\b/i.test(text);
+  }
+
+  /**
+   * Checks whether removing targetCard(s) would leave ownerId with zero characters in battle.
+   * Special Initiative triggers if an opponent's effect removes the only/all
+   * characters a player controls in the Field of Battle.
+   *
+   * @param {Array<object>} battlefield Current battlefield cards array.
+   * @param {object|Array<object>} targetCard Single card or array of cards being removed.
+   * @param {string} ownerId SessionId of the defending character controller.
+   * @returns {boolean} True if all characters of ownerId in battle are being removed.
+   */
+  static isLastCharacterInBattle(battlefield, targetCard, ownerId) {
+    if (!battlefield || !targetCard || !ownerId) return false;
+
+    const removingCards = Array.isArray(targetCard) ? targetCard : [targetCard];
+    const removingIds = new Set(removingCards.map((c) => c.id));
+
+    const charactersInBattle = (battlefield || []).filter(
+      (c) => c.controllerId === ownerId && (this.isHero(c) || this.isEvilCharacter(c))
+    );
+
+    if (charactersInBattle.length === 0) return false;
+
+    const remaining = charactersInBattle.filter((c) => !removingIds.has(c.id));
+    return remaining.length === 0;
   }
 }
 

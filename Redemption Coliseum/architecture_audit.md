@@ -54,9 +54,30 @@ This document tracks modularization targets, line-count audits, and architectura
   - Unify Star card activation to use `ActionType.ACTIVATE_ABILITY` with Star class validation.
   - Maintain backward-compatibility alias during transitional phases to prevent regression.
 
+### 5. Card Type Hierarchy & Dynamic Type System Migration
+- **Status**: Audit Planned (Architectural Technical Debt & Type Safety)
+- **Scope**: `shared/card-constants.js`, `shared/cardHierarchy.json`, `server/src/ast/TargetSelectionService.js`, `server/src/services/BattleCharacterClassifier.js`, `client/src/ui/renderers/FieldRenderer.ts`.
+- **Issue**:
+  - The codebase currently relies on a flat `CARD_TYPES` enum without ontological type hierarchy (`TYPE_GROUPS`, `TYPE_IS_A`).
+  - Fragile, manual string inspections (e.g. `rawType.includes("character")`, `card.inGameType === "ge"`, manual alignment checking) are scattered across services.
+  - When card abilities target higher-order categories (e.g. `enhancement` encompassing both `GE` and `EE`), manual string checks fail or misclassify characters as enhancements.
+- **Target Architecture**:
+  1. **Hierarchy Export (`shared/cardHierarchy.json` / `shared/cardTypes.js`)**:
+     - Ingest exported ontology schema from the Python card data pipeline defining:
+       - Complete `CardType` enum (including `Hero`, `Evil Character`, `GE`, `EE`, `Artifact`, `Site`, `Fortress`, `Dominant`, `Lost Soul`, `Covenant`, `Curse`, `City`, `Character`, `Enhancement`, Tokens).
+       - `TYPE_GROUPS` (e.g., `Enhancement: ["GE", "EE"]`, `Character: ["Hero", "Evil Character", ...]`, `City: ["Site", "Fortress"]`).
+       - `TYPE_IS_A` (e.g., `Covenant: ["Artifact", "GE"]`, `Curse: ["Artifact", "EE"]`, Tokens).
+  2. **Centralized Query Helper (`CardTypeService` in `shared/`)**:
+     - Provide a single source of truth helper method: `CardTypeService.matchesType(card, targetType)`.
+     - Recursively/transitively evaluates if `card` satisfies `targetType` via direct match, group membership (`TYPE_GROUPS`), or inheritance (`TYPE_IS_A`).
+  3. **Codebase Refactoring**:
+     - Replace all ad-hoc string inspections in `TargetSelectionService.matchesFilter`, `BattleCharacterClassifier`, and UI renderers with `CardTypeService.matchesType(card, targetType)`.
+     - Eliminate magic strings and enforce compiler-checked types across client and server.
+
 ---
 
 ## Clean Code & Modular Architecture Guidelines
 - Strict 250-line limit per file/class (`*Manager.ts`, `*Handler.ts`, `*Effect.ts`, `.css`).
 - Separation of concerns: UI/DOM views decoupled from game state managers and network event listeners.
+
 

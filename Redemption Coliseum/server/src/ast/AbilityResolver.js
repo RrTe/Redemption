@@ -88,7 +88,11 @@ class AbilityResolver {
 
     // 3. Optional ability confirmation check (both AST and Tabletop)
     const isStarActivation = item.actionType === "ACTIVATE_STAR_ABILITY";
-    const isOptional = Boolean(targetAbility?.is_optional || item.isOptional);
+    const isAlreadyAccepted = Boolean(item.isConfirmed || item.accepted || options.accepted === true);
+    if (options.accepted === true) {
+      item.isConfirmed = true;
+    }
+    const isOptional = Boolean(targetAbility?.is_optional || item.isOptional) && !isAlreadyAccepted;
 
     if (isOptional && options.accepted === undefined && !isStarActivation) {
       const promptText = firstEffect
@@ -159,6 +163,13 @@ class AbilityResolver {
       item,
       options,
     });
+
+    if (runnerResult?.awaitingSpecialInitiative) {
+      return {
+        handled: true,
+        awaitingSpecialInitiative: true,
+      };
+    }
 
     if (!runnerResult.handled) {
       return {

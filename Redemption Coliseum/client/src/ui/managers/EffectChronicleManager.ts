@@ -175,8 +175,8 @@ export class EffectChronicleManager {
       }
     }
 
-    // 2. Update visual icon & badge count
-    this.effect.setCount(items.length);
+    // 2. Update visual icon & badge count (retains visibility when either pending or history exists)
+    this.effect.updateState(items.length, history.length);
 
     // 3. Update flyout drawer with pending and phase history
     this.flyout.updateItems(items, history, isSupport);

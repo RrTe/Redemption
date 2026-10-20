@@ -663,6 +663,142 @@ describe("cardService (moveCard)", () => {
       });
       expect(hero.zone).toBe(ZONES.TERRITORY);
     });
+
+    test("7. Attacker playing dual GE/EE card with inGameType=GE and inGameAlignment=Good succeeds", () => {
+      // Setup hero in battle with matching Green brigade
+      const hero = new Card();
+      hero.id = "hero_green";
+      hero.Name = "Green Hero";
+      hero.Type = CARD_TYPES.HERO;
+      hero.Alignment = ALIGNMENTS.GOOD;
+      hero.Brigade = "Green";
+      hero.IsCharacter = true;
+      hero.controllerId = "p1";
+      hero.originalOwnerId = "p1";
+      hero.zone = ZONES.BATTLEFIELD;
+      state.battlefield.push(hero);
+      cardLookup.set(hero.id, hero);
+
+      // Setup dual GE/EE card in hand
+      const dualCard = new Card();
+      dualCard.id = "c_abandoned";
+      dualCard.Name = "Abandoned";
+      dualCard.Type = "GE/EE";
+      dualCard.Alignment = "Good/Evil";
+      dualCard.Brigade = "Green/Purple/Pale Green";
+      dualCard.IsEnhancement = true;
+      dualCard.sides = [
+        { Type: "GE", Alignment: "Good", Brigade: ["Green", "Purple"] },
+        { Type: "EE", Alignment: "Evil", Brigade: ["Pale Green"] },
+      ];
+      dualCard.controllerId = "p1";
+      dualCard.originalOwnerId = "p1";
+      dualCard.zone = ZONES.HAND;
+      attacker[ZONES.HAND].push(dualCard);
+      cardLookup.set(dualCard.id, dualCard);
+
+      // Attempting to play as Evil Enhancement when attacking fails
+      const resEvilFail = moveCard(
+        attacker,
+        state,
+        cardLookup,
+        ZONES.HAND,
+        ZONES.BATTLEFIELD,
+        dualCard.id,
+        1,
+        null,
+        "EE",
+        "Evil"
+      );
+      expect(resEvilFail.movedCards.length).toBe(0);
+      expect(resEvilFail.error).toBe("Evil cards cannot attack!");
+
+      // Playing as Good Enhancement succeeds!
+      const resGoodSuccess = moveCard(
+        attacker,
+        state,
+        cardLookup,
+        ZONES.HAND,
+        ZONES.BATTLEFIELD,
+        dualCard.id,
+        1,
+        null,
+        "GE",
+        "Good"
+      );
+      expect(resGoodSuccess.movedCards.length).toBe(1);
+      expect(dualCard.zone).toBe(ZONES.BATTLEFIELD);
+      expect(dualCard.inGameType).toBe("GE");
+      expect(dualCard.inGameAlignment).toBe("Good");
+    });
+
+    test("8. Defender playing dual GE/EE card with inGameType=EE and inGameAlignment=Evil succeeds", () => {
+      // Setup evil character in battle with matching Pale Green brigade
+      const ec = new Card();
+      ec.id = "ec_palegreen";
+      ec.Name = "Pale Green EC";
+      ec.Type = CARD_TYPES.EC;
+      ec.Alignment = ALIGNMENTS.EVIL;
+      ec.Brigade = "Pale Green";
+      ec.IsCharacter = true;
+      ec.controllerId = "p2";
+      ec.originalOwnerId = "p2";
+      ec.zone = ZONES.BATTLEFIELD;
+      state.battlefield.push(ec);
+      cardLookup.set(ec.id, ec);
+
+      // Setup dual GE/EE card in defender's hand
+      const dualCard = new Card();
+      dualCard.id = "c_abandoned_def";
+      dualCard.Name = "Abandoned";
+      dualCard.Type = "GE/EE";
+      dualCard.Alignment = "Good/Evil";
+      dualCard.Brigade = "Green/Purple/Pale Green";
+      dualCard.IsEnhancement = true;
+      dualCard.sides = [
+        { Type: "GE", Alignment: "Good", Brigade: ["Green", "Purple"] },
+        { Type: "EE", Alignment: "Evil", Brigade: ["Pale Green"] },
+      ];
+      dualCard.controllerId = "p2";
+      dualCard.originalOwnerId = "p2";
+      dualCard.zone = ZONES.HAND;
+      defender[ZONES.HAND].push(dualCard);
+      cardLookup.set(dualCard.id, dualCard);
+
+      // Attempting to play as Good Enhancement when blocking fails
+      const resGoodFail = moveCard(
+        defender,
+        state,
+        cardLookup,
+        ZONES.HAND,
+        ZONES.BATTLEFIELD,
+        dualCard.id,
+        1,
+        null,
+        "GE",
+        "Good"
+      );
+      expect(resGoodFail.movedCards.length).toBe(0);
+      expect(resGoodFail.error).toBe("Good cards cannot block!");
+
+      // Playing as Evil Enhancement succeeds!
+      const resEvilSuccess = moveCard(
+        defender,
+        state,
+        cardLookup,
+        ZONES.HAND,
+        ZONES.BATTLEFIELD,
+        dualCard.id,
+        1,
+        null,
+        "EE",
+        "Evil"
+      );
+      expect(resEvilSuccess.movedCards.length).toBe(1);
+      expect(dualCard.zone).toBe(ZONES.BATTLEFIELD);
+      expect(dualCard.inGameType).toBe("EE");
+      expect(dualCard.inGameAlignment).toBe("Evil");
+    });
   });
 
   describe("Arena Mode (_validateMove bypasses Combat Guards)", () => {

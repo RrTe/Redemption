@@ -1,8 +1,15 @@
 // server/src/ast/handlers/DiscardHandler.js
 const { moveCard } = require("../../services/cardService");
 const { ZONES } = require("../../../../shared/zones");
-const { AST_ACTIONS } = require("../../../../shared/astConstants");
+const { PHASES } = require("../../../../shared/phases");
+const {
+  AST_ACTIONS,
+  AST_MESSAGES,
+  AST_SELECTION_MODES,
+  AST_SCOPES,
+} = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
+const { BattleCharacterClassifier } = require("../../services/BattleCharacterClassifier");
 const logger = require("../../utils/logger");
 
 /**
@@ -29,9 +36,10 @@ class DiscardHandler {
     }
 
     const targetDef = effect?.target || {};
-    const count = typeof targetDef.count?.fixed_value === "number"
-      ? targetDef.count.fixed_value
-      : 1;
+    const isAll = targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_ALL || targetDef.all === true;
+    const count = isAll
+      ? Infinity
+      : (typeof targetDef.count?.fixed_value === "number" ? targetDef.count.fixed_value : 1);
 
     // Resolve eligible target cards based on dynamic filter criteria
     const targets = this._resolveTargets(room, player, targetDef, options, count);
@@ -54,11 +62,97 @@ class DiscardHandler {
     const discardedSnapshots = [];
     const logEntries = [];
 
+    // Special Initiative Interception Check:
+    // If an opponent's card ability would remove the last remaining character(s) of a player in battle during Battle Phase,
+    // suspend the discard and prompt the defending player to declare Special Initiative.
+    if (
+      room.state?.currentPhase === PHASES.BATTLE &&
+      !options.specialInitiativeDeclined
+    ) {
+      // Group battle targets by combatant controller to detect if all characters of that player are being removed
+      const opponentBattleTargetsByController = new Map();
+      for (const { card, owner } of targets) {
+        const combatantControllerId = card.controllerId || owner.sessionId;
+        const isCharacter = BattleCharacterClassifier.isHero(card) || BattleCharacterClassifier.isEvilCharacter(card);
+        if (isCharacter && card.zone === ZONES.BATTLEFIELD && combatantControllerId !== player.sessionId) {
+          if (!opponentBattleTargetsByController.has(combatantControllerId)) {
+            opponentBattleTargetsByController.set(combatantControllerId, []);
+          }
+          opponentBattleTargetsByController.get(combatantControllerId).push(card);
+        }
+      }
+
+      let siControllerId = null;
+      let siTargetCards = null;
+
+      for (const [cId, cardsBeingRemoved] of opponentBattleTargetsByController.entries()) {
+        if (BattleCharacterClassifier.isLastCharacterInBattle(room.state.battlefield, cardsBeingRemoved, cId)) {
+          siControllerId = cId;
+          siTargetCards = cardsBeingRemoved;
+          break;
+        }
+      }
+
+      if (siTargetCards && siTargetCards.length > 0) {
+        const primaryTarget = siTargetCards[0];
+        const targetController = room.state.players.get(siControllerId) || primaryTarget.owner;
+        const targetCard = primaryTarget;
+        const isMultiple = siTargetCards.length > 1;
+        const promptTargetText = isMultiple
+          ? `All characters (${siTargetCards.length})`
+          : targetCard.Name;
+
+        logger.info(
+          `[DiscardHandler] Special Initiative triggered: Opponent '${player.name}' targets ${promptTargetText} of '${targetController.name}'.`
+        );
+
+        const chronicle = room.state.effectChronicle;
+        if (chronicle) {
+          chronicle.priorityPlayerId = targetController.sessionId;
+        }
+
+        if (item) {
+          item.pendingSpecialInitiative = {
+            targetCardId: targetCard.id,
+            targetCardIds: siTargetCards.map((c) => c.id),
+            targetOwnerId: targetController.sessionId,
+            initiatorId: player.sessionId,
+            options,
+          };
+        }
+
+        const targetClient = room.clients?.find((c) => c.sessionId === targetController.sessionId);
+        if (targetClient && typeof targetClient.send === "function") {
+          targetClient.send(AST_MESSAGES.REQUEST_OPTIONAL_ABILITY, {
+            abilityId: "special_initiative",
+            itemId: item?.id || "",
+            cardId: targetCard.id,
+            cardTitle: targetCard.Name,
+            promptText: `${promptTargetText} in battle targeted for discard! Declare Special Initiative?`,
+            action: "special_initiative",
+            cardImageFile: targetCard.ImageFile || "",
+            templateId: targetCard.templateId || "",
+          });
+        }
+
+        return {
+          success: true,
+          handled: true,
+          awaitingSpecialInitiative: true,
+          targetCard,
+          targetCards: siTargetCards,
+          targetOwner: targetController,
+        };
+      }
+    }
+
     // Execute discard moves for each resolved target
     for (const { card, owner } of targets) {
       const fromZone = card.zone;
+      const trueOwnerId = card.originalOwnerId || card.ownerId;
+      const trueOwner = (trueOwnerId && room.state.players.get(trueOwnerId)) || owner;
       const result = moveCard(
-        owner,
+        trueOwner,
         room.state,
         room.cardLookup,
         fromZone,
@@ -72,7 +166,7 @@ class DiscardHandler {
           name: card.Name,
           fromZone,
           toZone: ZONES.DISCARD,
-          ownerId: owner.sessionId,
+          ownerId: trueOwner.sessionId,
         });
         if (result.logEntry) logEntries.push(result.logEntry);
       }
@@ -136,10 +230,12 @@ class DiscardHandler {
     }
 
     // Determine target zones based on scope
-    const scope = targetDef.scope || "in_play";
+    const scope = (targetDef.scope || "in_play").toLowerCase();
     let zoneNames = [ZONES.TERRITORY, ZONES.BATTLEFIELD];
     if (scope === "hand") zoneNames = [ZONES.HAND];
     else if (scope === "deck") zoneNames = [ZONES.DECK];
+    else if (scope === "battle" || scope === "battlefield" || scope === AST_SCOPES.BATTLE) zoneNames = [ZONES.BATTLEFIELD];
+    else if (scope === "territory") zoneNames = [ZONES.TERRITORY];
     else if (scope === "in_play") zoneNames = [ZONES.TERRITORY, ZONES.BATTLEFIELD];
 
     for (const p of playersToScan) {

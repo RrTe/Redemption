@@ -90,13 +90,14 @@ class EffectChronicleService {
       astResult = room.abilityResolver.resolve(item, options);
     }
 
-    if (astResult && (astResult.awaitingTargetSelection || astResult.awaitingConfirmation)) {
+    if (astResult && (astResult.awaitingTargetSelection || astResult.awaitingConfirmation || astResult.awaitingSpecialInitiative)) {
       return {
         item,
         astResult,
         index,
         awaitingTargetSelection: Boolean(astResult.awaitingTargetSelection),
         awaitingConfirmation: Boolean(astResult.awaitingConfirmation),
+        awaitingSpecialInitiative: Boolean(astResult.awaitingSpecialInitiative),
       };
     }
 

@@ -6,6 +6,7 @@ const {
   AST_ZONE_OWNERS,
   AST_ALIGNMENTS,
 } = require("../../../shared/astConstants");
+const { BattleCharacterClassifier } = require("../services/BattleCharacterClassifier");
 
 /**
  * Service for querying and evaluating valid targets according to card AST rules.
@@ -33,7 +34,10 @@ class TargetSelectionService {
     const scope = targetDef.scope || AST_SCOPES.IN_PLAY;
     const targetType = targetDef.target_type || "";
     const playersToScan = this._getPlayersToScan(room, actingPlayer, targetDef.zone_owner);
-    const count = typeof targetDef.count?.fixed_value === "number" ? targetDef.count.fixed_value : 1;
+    const isAll = targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_ALL || targetDef.all === true;
+    const count = isAll
+      ? Infinity
+      : (typeof targetDef.count?.fixed_value === "number" ? targetDef.count.fixed_value : 1);
     const isManual = targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_CONTROLLER;
 
     // 1. Evaluate Pile-Targeting effects (e.g. deck/discard targeting)
@@ -81,8 +85,8 @@ class TargetSelectionService {
       }
     }
 
-    const minTargets = Math.min(count, eligibleCardIds.length);
-    const maxTargets = count;
+    const minTargets = isAll ? eligibleCardIds.length : Math.min(count, eligibleCardIds.length);
+    const maxTargets = isAll ? eligibleCardIds.length : count;
     const requiresSelection = isManual && eligibleCardIds.length > 0;
 
     return {
@@ -158,22 +162,32 @@ class TargetSelectionService {
     }
 
     // Check card type filter
-    const rawType = (targetDef.target_type || "").toLowerCase();
+    const rawType = (targetDef.target_type || "").toLowerCase().trim();
     if (rawType) {
-      if (rawType.includes("character") && !card.IsCharacter) {
-        return false;
-      }
-      if (rawType === "hero") {
-        const align = (card.inGameAlignment || card.Alignment || "").toLowerCase();
-        if (!card.IsCharacter || align !== AST_ALIGNMENTS.GOOD) return false;
-      }
-      if (rawType.includes("evil character") || rawType.includes("evil_character")) {
-        const align = (card.inGameAlignment || card.Alignment || "").toLowerCase();
-        if (!card.IsCharacter || align !== AST_ALIGNMENTS.EVIL) return false;
-      }
-      if (rawType === "lost soul" || rawType === "lost_soul") {
-        const isSoul = card.isLostSoul || (card.Name && card.Name.startsWith("Lost Soul"));
-        if (!isSoul) return false;
+      const isCardEnh = Boolean(card.IsEnhancement) ||
+        BattleCharacterClassifier.isGoodEnhancement(card) ||
+        BattleCharacterClassifier.isEvilEnhancement(card) ||
+        String(card.Type || "").toLowerCase().includes("enhancement");
+      const isCardHero = BattleCharacterClassifier.isHero(card);
+      const isCardEvilChar = BattleCharacterClassifier.isEvilCharacter(card);
+      const isCardChar = card.IsCharacter || isCardHero || isCardEvilChar;
+      const isCardSoul = card.isLostSoul || (card.Name && card.Name.startsWith("Lost Soul"));
+      const isCardArt = Boolean(card.IsArtifact) || String(card.Type || "").toLowerCase() === "artifact";
+
+      if (rawType.includes("enhancement")) {
+        if (!isCardEnh) return false;
+        if (rawType.includes("evil") && !BattleCharacterClassifier.isEvilEnhancement(card)) return false;
+        if (rawType.includes("good") && !BattleCharacterClassifier.isGoodEnhancement(card)) return false;
+      } else if (rawType === "hero") {
+        if (!isCardHero) return false;
+      } else if (rawType.includes("evil character") || rawType.includes("evil_character") || rawType === "ec") {
+        if (!isCardEvilChar) return false;
+      } else if (rawType.includes("character")) {
+        if (!isCardChar) return false;
+      } else if (rawType === "lost soul" || rawType === "lost_soul") {
+        if (!isCardSoul) return false;
+      } else if (rawType === "artifact") {
+        if (!isCardArt) return false;
       }
     }
 
@@ -210,11 +224,12 @@ class TargetSelectionService {
    * @private
    */
   static _resolveTargetZones(scope) {
-    if (scope === AST_SCOPES.HAND) return [ZONES.HAND];
-    if (scope === AST_SCOPES.DECK) return [ZONES.DECK];
-    if (scope === AST_SCOPES.DISCARD_PILE) return [ZONES.DISCARD];
-    if (scope === "territory") return [ZONES.TERRITORY];
-    if (scope === "battlefield") return [ZONES.BATTLEFIELD];
+    const s = (scope || "").toLowerCase();
+    if (s === AST_SCOPES.HAND) return [ZONES.HAND];
+    if (s === AST_SCOPES.DECK) return [ZONES.DECK];
+    if (s === AST_SCOPES.DISCARD_PILE) return [ZONES.DISCARD];
+    if (s === "territory") return [ZONES.TERRITORY];
+    if (s === "battlefield" || s === AST_SCOPES.BATTLE) return [ZONES.BATTLEFIELD];
     return [ZONES.TERRITORY, ZONES.BATTLEFIELD];
   }
 

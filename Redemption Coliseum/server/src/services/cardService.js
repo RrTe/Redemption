@@ -83,21 +83,26 @@ function getZoneDisplayName(zone, isOpponent = false) {
 }
 
 /**
- * Hilfsfunktion: Gibt die richtige Zone-Collection zurück.
- * Nutzt ZONES für konsistente Referenzen.
+ * Helper function: Returns the appropriate zone collection.
+ * Uses ZONES for consistent references.
+ *
+ * @param {PlayerState} player - The player state.
+ * @param {RoomState} state - The room state.
+ * @param {string} zone - The target zone identifier.
+ * @returns {ArraySchema<Card>} The zone collection.
  */
 function getZoneCollection(player, state, zone) {
-  // ✨ NEU: Globale Zonen direkt vom State abfragen.
+  // Global zones are retrieved directly from the room state.
   if (zone === ZONES.BATTLEFIELD) return state.battlefield;
-  if (zone === ZONES.SET_ASIDE) return state.setAside; // Falls wir das später brauchen
+  if (zone === ZONES.SET_ASIDE) return state.setAside;
 
   if (!Object.values(ZONES).includes(zone) || zone === ZONES.BATTLEFIELD) {
-    throw new Error(`Unbekannte Zone: ${zone}`);
+    throw new Error(`Unknown zone: ${zone}`);
   }
 
-  // Wenn kein Spieler übergeben wurde, kann keine spielerspezifische Zone gefunden werden.
+  // Player-specific zones require a valid player context.
   if (!player) {
-    throw new Error(`Spieler-Kontext fehlt für die Zone: ${zone}`);
+    throw new Error(`Player context missing for zone: ${zone}`);
   }
 
   switch (zone) {
@@ -118,19 +123,21 @@ function getZoneCollection(player, state, zone) {
     case ZONES.LAND_OF_REDEMPTION:
       return player[ZONES.LAND_OF_REDEMPTION];
     default:
-      throw new Error(`Unbekannte Zone: ${zone}`);
+      throw new Error(`Unknown zone: ${zone}`);
   }
 }
 
 /**
- * ✨ REFACTORING: Validierungslogik für Kartenbewegungen ausgelagert.
- * @param {Card} card Die zu bewegende Karte.
- * @param {RoomState} state Der aktuelle Spielzustand.
- * @param {string} cardControllerId Die ID des Spielers, der die Karte kontrolliert.
- * @param {string} targetPlayerId Die ID des Spielers, der das Ziel der Bewegung ist.
- * @param {string} fromZone Der Name der Quellzone.
- * @param {string} toZone Der Name der Zielzone.
- * @returns {boolean} True, wenn die Bewegung gültig ist, sonst false.
+ * Validation logic for card movements.
+ *
+ * @param {Card} card - The card to move.
+ * @param {RoomState} state - The current game state.
+ * @param {string} cardControllerId - The ID of the controlling player.
+ * @param {string} targetPlayerId - The ID of the target player.
+ * @param {string} fromZone - Source zone name.
+ * @param {string} toZone - Target zone name.
+ * @param {object} [options={}] - Additional move options.
+ * @returns {{valid: boolean, error?: string}} Validation result.
  */
 function _validateMove(
   card,
@@ -146,12 +153,23 @@ function _validateMove(
     return { valid: true };
   }
 
+  // ✨ Support Dual Card resolution: if inGameType or inGameAlignment is provided in options,
+  // evaluate combat rules against an effectiveCard instance reflecting the player's chosen side.
+  const effectiveInGameType = options.inGameType || card.inGameType || "";
+  const effectiveInGameAlignment = options.inGameAlignment || card.inGameAlignment || "";
+  const effectiveCard = (effectiveInGameType || effectiveInGameAlignment)
+    ? Object.assign(Object.create(card), {
+        inGameType: effectiveInGameType,
+        inGameAlignment: effectiveInGameAlignment,
+      })
+    : card;
+
   // ✨ COMBAT GUARDS (Rule Validation for Battlefield Moves)
   // In Arena Mode, all combat guards (phase lock, character/enhancement restrictions, brigade match) are bypassed.
   const isArena = Boolean(state?.isArenaMode ?? state?.isSandboxMode);
   if (toZone === ZONES.BATTLEFIELD && !isArena) {
 
-    // 1. Phasen-Sperre: Das Verschieben von Karten ins Kampffeld ist nur in der BATTLE-Phase erlaubt.
+    // 1. Phase Guard: Moving cards to battlefield is only permitted during BATTLE phase.
     if (state?.currentPhase !== PHASES.BATTLE) {
       logger.warn(
         `[COMBAT_GUARD] Invalid move: Battlefield is only accessible during Battle Phase (current phase: '${state?.currentPhase}').`,
@@ -163,13 +181,13 @@ function _validateMove(
     // Active player is Attacker, non-active player is Defender (Blocker).
     // Note: Banding allows players to bring opponent characters into battle on their side.
     const isAttacker = targetPlayerId === state.activePlayer;
-    const isHero = BattleCharacterClassifier.isHero(card);
-    const isGoodEnhancement = BattleCharacterClassifier.isGoodEnhancement(card);
-    const isEvilChar = BattleCharacterClassifier.isEvilCharacter(card);
-    const isEvilEnhancement = BattleCharacterClassifier.isEvilEnhancement(card);
+    const isHero = BattleCharacterClassifier.isHero(effectiveCard);
+    const isGoodEnhancement = BattleCharacterClassifier.isGoodEnhancement(effectiveCard);
+    const isEvilChar = BattleCharacterClassifier.isEvilCharacter(effectiveCard);
+    const isEvilEnhancement = BattleCharacterClassifier.isEvilEnhancement(effectiveCard);
 
     if (isAttacker) {
-      // 2. Angreifer (aktiver Spieler): Darf nur Heroes (und Good Enhancements) ins Kampffeld spielen.
+      // 2. Attacker (active player): Only Heroes and Good Enhancements may enter battle.
       if (isEvilEnhancement) {
         logger.warn(
           `[COMBAT_GUARD] Attacker '${targetPlayerId}' attempted to play Evil Enhancement '${card.Name}' into battle.`,
@@ -189,7 +207,7 @@ function _validateMove(
         return { valid: false, error: "Invalid card for battle!" };
       }
 
-      // 4. Enhancement-Voraussetzung: Good Enhancements erfordern einen Hero im Kampf mit passender Brigade.
+      // 4. Enhancement prerequisite: Good Enhancements require a Hero in battle with a matching brigade.
       if (isGoodEnhancement && fromZone !== ZONES.BATTLEFIELD) {
         const heroesInBattle = (state.battlefield || []).filter(
           (c) => c.controllerId === state.activePlayer && BattleCharacterClassifier.isHero(c)
@@ -201,7 +219,7 @@ function _validateMove(
           return { valid: false, error: "No Hero in battle!" };
         }
         const hasMatchingBrigade = heroesInBattle.some((hero) =>
-          BattleCharacterClassifier.canEnhancementMatchCharacter(card, hero)
+          BattleCharacterClassifier.canEnhancementMatchCharacter(effectiveCard, hero)
         );
         if (!hasMatchingBrigade) {
           logger.warn(
@@ -211,7 +229,7 @@ function _validateMove(
         }
       }
     } else {
-      // 3. Verteidiger (nicht-aktiver Spieler): Darf nur Evil Characters (und Evil Enhancements) ins Kampffeld spielen.
+      // 3. Defender (non-active player): Only Evil Characters and Evil Enhancements may enter battle.
       if (isGoodEnhancement) {
         logger.warn(
           `[COMBAT_GUARD] Defender '${targetPlayerId}' attempted to play Good Enhancement '${card.Name}' into battle.`,
@@ -231,7 +249,7 @@ function _validateMove(
         return { valid: false, error: "Invalid card for battle!" };
       }
 
-      // 4. Enhancement-Voraussetzung: Evil Enhancements erfordern einen Evil Character im Kampf mit passender Brigade.
+      // 4. Enhancement prerequisite: Evil Enhancements require an Evil Character in battle with a matching brigade.
       if (isEvilEnhancement && fromZone !== ZONES.BATTLEFIELD) {
         const evilCharsInBattle = (state.battlefield || []).filter(
           (c) => c.controllerId !== state.activePlayer && BattleCharacterClassifier.isEvilCharacter(c)
@@ -243,7 +261,7 @@ function _validateMove(
           return { valid: false, error: "No Evil Character in battle!" };
         }
         const hasMatchingBrigade = evilCharsInBattle.some((ec) =>
-          BattleCharacterClassifier.canEnhancementMatchCharacter(card, ec)
+          BattleCharacterClassifier.canEnhancementMatchCharacter(effectiveCard, ec)
         );
         if (!hasMatchingBrigade) {
           logger.warn(
@@ -255,13 +273,13 @@ function _validateMove(
     }
   }
 
-  // ✨ Kompakte und vollständige Regelprüfung für Lost Souls.
+  // Rule verification for Lost Souls:
   if (card.Type === CARD_TYPES.LOST_SOUL) {
-    // Erlaubt für Lost Souls:
-    // 1. Eigenes oder gegnerisches Land of Bondage
-    // 2. Eigenes Deck
-    // 3. Eigener Discard-Stapel
-    // 4. Gegnerisches Land of Redemption (nur aus eigenem Land of Bondage)
+    // Permitted moves for Lost Souls:
+    // 1. Own or opponent's Land of Bondage
+    // 2. Own Deck
+    // 3. Own Discard Pile
+    // 4. Opponent's Land of Redemption (only from own Land of Bondage)
     const canMoveToAnyBondage = toZone === ZONES.LAND_OF_BONDAGE;
     const canMoveToOwnDeck =
       toZone === ZONES.DECK && targetPlayerId === card.originalOwnerId;
@@ -280,25 +298,25 @@ function _validateMove(
       canMoveToOwnDiscard ||
       canMoveToOpponentRedemption
     ) {
-      return { valid: true }; // Der Zug ist gültig.
+      return { valid: true }; // Move is valid.
     }
 
-    // Wenn keine der obigen Regeln zutrifft, ist der Zug für eine Lost Soul ungültig.
+    // If none of the above conditions are met, the move is invalid for a Lost Soul.
     logger.warn(
-      `Ungültiger Zug für Lost Soul von '${fromZone}' nach '${toZone}'.`,
+      `Invalid move for Lost Soul from '${fromZone}' to '${toZone}'.`,
     );
     return { valid: false, error: "Invalid move for Lost Soul!" };
   }
 
-  // ✨ Regel: Karten dürfen nicht in die Pile-Zonen (Deck, Discard, Reserve, Banish) eines anderen Spielers gelegt werden.
+  // Rule: Cards cannot be placed into another player's pile zones (Deck, Discard, Reserve, Banish).
   if (PILE_ZONES.includes(toZone) && card.originalOwnerId !== targetPlayerId) {
     logger.warn(
-      `Ungültiger Zug: Versuch, eine Karte in die Zone '${toZone}' eines anderen Spielers zu legen. Aktion wird abgebrochen.`,
+      `Invalid move: Attempted to place a card into another player's '${toZone}' zone. Action cancelled.`,
     );
     return { valid: false, error: "Cannot move cards to opponent's pile!" };
   }
 
-  // ✨ Regel: In der 1. Runde dürfen keine Karten aus der Reserve entnommen werden.
+  // Rule: Cards cannot be taken from Reserve in Round 1.
   if (fromZone === ZONES.RESERVE && toZone !== ZONES.RESERVE) {
     const isFirstRound =
       state?.round !== undefined && state?.round !== null
@@ -307,18 +325,18 @@ function _validateMove(
 
     if (isFirstRound) {
       logger.warn(
-        `Ungültiger Zug: In der ersten Runde dürfen keine Karten aus der Reserve entnommen werden.`,
+        `Invalid move: Cards cannot be taken from Reserve in the first round.`,
       );
       return { valid: false, error: "Cannot take cards from Reserve in Round 1!" };
     }
   }
 
-  // ✨ Regel: Maximales Handlimit prüfen (keine Karten mehr in die Hand, wenn Maximum erreicht ist)
+  // Rule: Maximum hand size limit check
   if (toZone === ZONES.HAND) {
     const targetPlayer = state.players.get(targetPlayerId);
     if (targetPlayer && targetPlayer[ZONES.HAND]?.length >= MAX_HAND_SIZE) {
       logger.warn(
-        `Ungültiger Zug: Handlimit erreicht für Spieler '${targetPlayerId}' (${targetPlayer[ZONES.HAND].length}/${MAX_HAND_SIZE}).`,
+        `Invalid move: Hand limit reached for player '${targetPlayerId}' (${targetPlayer[ZONES.HAND].length}/${MAX_HAND_SIZE}).`,
       );
       return { valid: false, error: `Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!` };
     }
@@ -328,12 +346,13 @@ function _validateMove(
 }
 
 /**
- * ✨ REFACTORING: Findet eine Karte und ihren Besitzer mithilfe der zentralen Lookup-Map.
- * @param {Map<string, Card>} cardLookup - Die zentrale Lookup-Map für alle Karten.
- * @param {RoomState} state - Der globale Spielzustand, um den PlayerState zu finden.
- * @param {string} cardId - Die ID der zu suchenden Karte.
- * @param {string} fromZone - Die Zone, in der die Karte erwartet wird.
- * @returns {{card: Card, controller: PlayerState, fromArr: ArraySchema<Card>, cardIndex: number, controllerId: string} | null} Ein Objekt mit Karte, Controller und Quell-Array oder null.
+ * Finds a card and its controller using the central lookup map.
+ *
+ * @param {Map<string, Card>} cardLookup - Central lookup map for all cards.
+ * @param {RoomState} state - Global room state.
+ * @param {string} cardId - Card ID to find.
+ * @param {string} fromZone - Expected source zone.
+ * @returns {{card: Card, controller: PlayerState, fromArr: ArraySchema<Card>, cardIndex: number, actualZone: string, controllerId: string} | null}
  */
 function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
   if (!cardId || typeof cardId !== "string") {
@@ -346,7 +365,7 @@ function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
   const card = cardLookup.get(cardId);
   if (!card) {
     logger.warn(
-      `[FIND_CARD] Karte mit ID '${cardId}' in der globalen Lookup-Map nicht gefunden.`,
+      `[FIND_CARD] Card with ID '${cardId}' not found in global lookup map.`,
     );
     return null;
   }
@@ -363,7 +382,7 @@ function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
     return null;
   }
 
-  // ✨ FIX: Use the actual current zone of the card if it doesn't match 'fromZone'
+  // Use actual current zone of the card if it doesn't match 'fromZone'
   const actualZone = card.zone || fromZone || "unknown";
   let fromArr = getZoneCollection(controller, state, actualZone);
   let cardIndex = fromArr.findIndex((c) => c.id === cardId);
@@ -407,12 +426,14 @@ function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
 }
 
 /**
- * ✨ NEU (SCHRITT 1): Zieht Karten vom Deck unter Berücksichtigung der "Lost Soul"-Sonderregel.
- * Lost Souls werden direkt ins Land of Bondage umgeleitet und es wird eine Ersatzkarte gezogen.
- * @param {PlayerState} player - Der Spieler, der die Karten zieht.
- * @param {RoomState} state - Der globale Spielzustand.
- * @param {number} count - Die Anzahl der zu ziehenden "gültigen" Karten.
- * @returns {Card[]} Ein Array der "gültigen" Karten, die in die Zielzone (z.B. Hand) gelegt werden sollen.
+ * Draws cards from deck, applying the Lost Soul rule.
+ * Lost Souls are automatically diverted to Land of Bondage and a replacement card is drawn.
+ *
+ * @param {PlayerState} player - The player drawing cards.
+ * @param {RoomState} state - Global room state.
+ * @param {number} count - Number of valid cards to draw.
+ * @param {Map<string, Card>} cardLookup - Central lookup map.
+ * @returns {{validCards: Card[], divertedCards: Card[]}}
  */
 function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
   const deck = getZoneCollection(player, state, ZONES.DECK);
@@ -425,12 +446,12 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
     const shiftedCard = deck.shift();
     const card = shiftedCard.clone();
     
-    // ✨ WICHTIG: cardLookup auf die geklonte Instanz aktualisieren
+    // Update cardLookup with cloned instance
     if (cardLookup) cardLookup.set(card.id, card);
 
     if (card.Type === CARD_TYPES.LOST_SOUL || (card.Type && card.Type.includes("Lost Soul"))) {
       logger.debug(
-        `[LOST_SOUL_RULE] Lost Soul '${card.Name}' vom Deck gezogen. Wird nach ${ZONES.LAND_OF_BONDAGE} umgeleitet.`,
+        `[LOST_SOUL_RULE] Lost Soul '${card.Name}' drawn from deck. Diverting to ${ZONES.LAND_OF_BONDAGE}.`,
       );
       card.zone = ZONES.LAND_OF_BONDAGE;
       card.lastMoved = Date.now();
@@ -438,7 +459,7 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
       landOfBondage.push(card);
       divertedCards.push(card);
 
-      // ✨ NEU: Aktion für jede ins Land of Bondage gezogene Lost Soul hinzufügen
+      // Add available action for Lost Soul moved to Land of Bondage
       const action = new CardAction();
       action.id = `soul_${Date.now()}_${card.id}`;
       action.type = ActionType.ACTIVATE_ABILITY;
@@ -511,12 +532,21 @@ function _moveCardById(
 
   const effectiveFromZone = detectedZone || from || card.zone || "unknown";
 
-  // ✨ FINALE KORREKTUR: Der Zielspieler MUSS aus den Coords ermittelt werden, wenn vorhanden.
-  // `actingPlayer` ist nur der Fallback, wenn kein Ziel angegeben ist (z.B. Karte auf sich selbst ziehen).
+  // Determine target player:
+  // If an explicit targetPlayerId is requested (e.g. user manually drags onto a specific player's board/pile),
+  // use that requested target so _validateMove can enforce pile protection.
+  // Otherwise, for personal pile zones (Deck, Discard, Reserve, Banish), default to the card's true owner!
   const targetPlayerIdFromCoords = coords?.targetPlayerId;
-  const targetPlayer = targetPlayerIdFromCoords
-    ? state.players.get(targetPlayerIdFromCoords)
-    : actingPlayer;
+  const trueOwnerId = card.originalOwnerId || card.ownerId;
+  let targetPlayer;
+
+  if (targetPlayerIdFromCoords) {
+    targetPlayer = state.players.get(targetPlayerIdFromCoords);
+  } else if (PILE_ZONES.includes(to) && trueOwnerId && state.players.has(trueOwnerId)) {
+    targetPlayer = state.players.get(trueOwnerId);
+  } else {
+    targetPlayer = actingPlayer;
+  }
 
   // ✨ FIX: Prevent moving the card if it's already in the target zone to avoid 
   // index corruption and double-move side effects.
@@ -551,7 +581,7 @@ function _moveCardById(
     targetPlayer.sessionId,
     from,
     to,
-    options,
+    { ...options, inGameType, inGameAlignment },
   );
   if (!validation.valid) {
     card.lastMoved = Date.now(); // Update timestamp to trigger client snap-back
@@ -579,7 +609,7 @@ function _moveCardById(
   }
   card.counters.clear();
   
-  // ✨ NEU: inGame-Eigenschaften anwenden oder zurücksetzen
+  // Apply or clear inGame properties
   const isLeavingField = [ZONES.DECK, ZONES.DISCARD, ZONES.HAND, ZONES.BANISH, ZONES.RESERVE].includes(to);
   if (isLeavingField) {
     card.inGameType = "";
@@ -597,16 +627,16 @@ function _moveCardById(
   const [splicedCard] = actualFromArr.splice(cardIndex, 1);
   _syncParentIndexes(actualFromArr);
 
-  // ✨ CLONE FIX: Colyseus kann Race Conditions erzeugen, wenn dieselbe Referenz in ein 
-  // anderes Array verschoben wird (onAdd feuert vor Property-Sync). Wir klonen die Karte.
+  // Colyseus race condition mitigation: clone card before moving into another array
+  // (onAdd fires before property sync).
   const movedCard = splicedCard.clone();
-  cardLookup.set(cardId, movedCard); // WICHTIG: Lookup-Map auf die neue Instanz aktualisieren!
+  cardLookup.set(cardId, movedCard); // Update lookup map to new instance
   
   logger.debug(
     `[MOVE_BY_ID] SPLICED & CLONED: Array '${effectiveFromZone}' length AFTER: ${actualFromArr.length}`,
   );
 
-  // ✨ NEU: Token werden vollständig aufgelöst, wenn sie in Discard oder Banish verschoben werden.
+  // Tokens dissolve completely when moved to Discard or Banish.
   if (movedCard.isToken && (to === ZONES.DISCARD || to === ZONES.BANISH)) {
     const templateId = movedCard.templateId || movedCard.ImageFile;
     cardLookup.delete(cardId);
@@ -680,7 +710,7 @@ function _moveCardById(
       }
   }
 
-  // ✨ FIX: Nutze util.inspect innerhalb eines Template-Literals, um die Ausgabe zu erzwingen
+  // Format inspect string for debug logging
   const cardLog = util.inspect(
     {
       name: movedCard.Name,
@@ -695,7 +725,7 @@ function _moveCardById(
 
   logger.debug(`[MOVE_BY_ID] SUCCESS: ${cardLog}`);
 
-  // ✨ FIX: Update StateView AFTER the card has been added to the state array!
+  // Update StateView AFTER the card has been added to the state array
   if (state._clientViews) {
     const oldView = state._clientViews.get(controllerId);
     if (oldView) {
@@ -723,14 +753,16 @@ function _moveCardById(
 }
 
 /**
- * ✨ NEW HELPER: Draws cards from the deck, applying the Lost Soul rule.
- * This function is specifically for drawing from the DECK.
+ * Draws cards from the deck, applying the Lost Soul rule.
+ * Specifically handles drawing from the DECK.
+ *
  * @param {PlayerState} player - The player drawing cards.
  * @param {RoomState} state - The global game state.
  * @param {Map<string, Card>} cardLookup - The central lookup map.
- * @param {string} to - The target zone for drawn cards (e.g., HAND).
- * @param {number} count - The number of "valid" cards to draw.
- * @param {object} coords - Optional coordinates for the drop (though usually not relevant for drawing).
+ * @param {string} to - The target zone for drawn cards (e.g. HAND).
+ * @param {number} count - The number of valid cards to draw.
+ * @param {object} [coords=null] - Optional drop coordinates.
+ * @returns {{movedCards: Card[], divertedCards: Card[], logEntry: string, error?: string}}
  */
 function _drawCardsFromDeck(
   player,
@@ -740,7 +772,7 @@ function _drawCardsFromDeck(
   count,
   coords = null,
 ) {
-  // ✨ NEU: Handlimit für das Ziehen vom Deck berücksichtigen
+  // Check hand limit before drawing from deck
   let effectiveCount = count;
   if (to === ZONES.HAND) {
     if (!player[ZONES.DECK] || player[ZONES.DECK].length === 0) {
@@ -758,7 +790,7 @@ function _drawCardsFromDeck(
     effectiveCount = Math.min(count, capacity);
     if (effectiveCount <= 0) {
       logger.warn(
-        `[DRAW_FROM_DECK] Handlimit (${MAX_HAND_SIZE}/${MAX_HAND_SIZE}) für Spieler '${player.name}' erreicht. Ziehen abgebrochen.`,
+        `[DRAW_FROM_DECK] Hand limit (${MAX_HAND_SIZE}/${MAX_HAND_SIZE}) reached for player '${player.name}'. Draw cancelled.`,
       );
       return {
         movedCards: [],
@@ -778,7 +810,7 @@ function _drawCardsFromDeck(
     for (const card of validCards) {
       card.zone = to;
       card.lastMoved = Date.now();
-      card.counters.clear(); // ✨ NEU: Counter löschen bei Zonenwechsel
+      card.counters.clear(); // Clear counters on zone change
       if (to === ZONES.HAND || to === ZONES.TERRITORY) {
         card.isFaceUp = true;
       }
@@ -786,7 +818,7 @@ function _drawCardsFromDeck(
     }
     toArr.push(...validCards);
     
-    // ✨ FIX: StateView update for all drawn cards
+    // StateView update for all drawn cards
     if (state._clientViews) {
       for (const card of validCards) {
         const newView = state._clientViews.get(card.controllerId);
@@ -813,16 +845,21 @@ function _drawCardsFromDeck(
 }
 
 /**
- * Verschiebt eine oder mehrere Karten von einer Zone in eine andere, nachdem der Zug validiert wurde.
- * Dies ist jetzt ein Dispatcher, der die spezifischen Helfer aufruft.
- * @param {PlayerState} player - Spielerzustand (der Spieler, der die Aktion ausführt)
- * @param {RoomState} state - globaler Raumzustand
- * @param {Map<string, Card>} cardLookup - Die zentrale Lookup-Map.
- * @param {string} from - Ausgangszone (aus ZONES)
- * @param {string} to - Zielzone (aus ZONES)
- * @param {string|number} cardIdOrIndex - ID der Karte oder Index im Stapel (für Deck)
- * @param {number} count - Anzahl der zu verschiebenden Karten (Standard: 1)
- * @param {object} coords - Koordinaten für den Drop
+ * Moves one or more cards from one zone to another after validating the move.
+ * Acts as a dispatcher calling specific helpers.
+ *
+ * @param {PlayerState} player - Acting player state.
+ * @param {RoomState} state - Global room state.
+ * @param {Map<string, Card>} cardLookup - Central lookup map.
+ * @param {string} from - Source zone (from ZONES).
+ * @param {string} to - Destination zone (from ZONES).
+ * @param {string|number} cardIdOrIndex - Card ID or deck index.
+ * @param {number} [count=1] - Number of cards to move.
+ * @param {object} [coords={}] - Coordinates for drop positioning.
+ * @param {string} [inGameType=""] - Runtime type override.
+ * @param {string} [inGameAlignment=""] - Runtime alignment override.
+ * @param {object} [options={}] - Move options (e.g. isUndo, snapshot).
+ * @returns {{movedCards: Card[], logEntry: string, divertedCards?: Card[], error?: string}}
  */
 function moveCard(
   player,
@@ -832,7 +869,7 @@ function moveCard(
   to,
   cardIdOrIndex,
   count = 1,
-  coords = {}, // ✨ FIX: Standardwert von null auf {} geändert, damit coords?.position funktioniert
+  coords = {}, // Default to empty object to allow coords?.position checks
   inGameType = "",
   inGameAlignment = "",
   options = {},
@@ -864,16 +901,17 @@ function moveCard(
 }
 
 /**
- * Findet eine Karte anhand ihrer ID über alle Zonen hinweg.
- * @param {RoomState} state - Der globale Raumzustand.
- * @param {string} cardId - Die ID der zu suchenden Karte.
- * @returns {Card | null} Die gefundene Karte oder null.
+ * Finds a card by its ID across all player zones.
+ *
+ * @param {RoomState} state - Global room state.
+ * @param {string} cardId - Card ID to locate.
+ * @returns {Card | null} Found card or null.
  */
 function findCardById(state, cardId) {
-  // Durchsuche alle Zonen aller Spieler
+  // Search across all zones of all players
   for (const player of state.players.values()) {
     for (const zoneName of ALL_ZONES) {
-      if (!player[zoneName]) continue; // Überspringe Zonen, die der Spieler nicht hat
+      if (!player[zoneName]) continue; // Skip zones that player doesn't have
       const zone = player[zoneName];
       const card = zone?.find((c) => c.id === cardId);
       if (card) return card;
@@ -883,8 +921,9 @@ function findCardById(state, cardId) {
 }
 
 /**
- * Mischt ein Array in-place (Fisher-Yates).
- * @param {Array} arr - Das zu mischende Array (z.B. Deck)
+ * In-place Fisher-Yates array shuffle.
+ *
+ * @param {Array} arr - The array to shuffle (e.g. deck).
  */
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -894,11 +933,12 @@ function shuffle(arr) {
 }
 
 /**
- * Fügt einer Karte eine verfügbare Aktion hinzu und registriert diese 
- * sicher in der StateView des Controllers, sodass sie nicht geleakt wird.
- * @param {RoomState} state - Der globale Raumzustand.
- * @param {Card} card - Die Karte, die die Aktion erhält.
- * @param {CardAction} action - Die neue Aktion.
+ * Adds an available action to a card and securely registers it in the
+ * controller's StateView to prevent leaking.
+ *
+ * @param {RoomState} state - Global room state.
+ * @param {Card} card - Card receiving the action.
+ * @param {CardAction} action - New action instance.
  */
 function addAvailableAction(state, card, action) {
   if (!card || !action) return;
@@ -907,9 +947,8 @@ function addAvailableAction(state, card, action) {
   if (state && state._clientViews) {
     const clientView = state._clientViews.get(card.controllerId);
     if (clientView) {
-      // ✨ FIX: In Colyseus 0.15 muss bei einem @view() auf ein ArraySchema
-      // zwingend das ArraySchema SELBST der StateView hinzugefügt werden,
-      // damit der Encoder überhaupt in das Array hineinschaut!
+      // In Colyseus 0.15, when @view() is used on an ArraySchema,
+      // the ArraySchema itself must be added to StateView for the encoder to inspect it.
       clientView.add(card.availableActions);
       clientView.add(action);
     }

@@ -84,9 +84,20 @@ class SelectTargetCommand extends BaseCommand {
 
     // Execute effect via AbilityResolver with validated target options
     const astResult = this.room.abilityResolver.resolve(item, {
+      accepted: true,
       targetCardIds: selectedCardIds,
       targetPileId: selectedPileId,
     });
+
+    if (
+      astResult &&
+      (astResult.awaitingSpecialInitiative ||
+        astResult.awaitingConfirmation ||
+        astResult.awaitingTargetSelection)
+    ) {
+      logger.info(`[SelectTargetCommand] Item '${item.title}' is awaiting further response.`);
+      return;
+    }
 
     if (astResult && astResult.handled) {
       if (astResult.logEntries && astResult.logEntries.length > 0) {

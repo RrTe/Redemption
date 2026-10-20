@@ -62,6 +62,15 @@ class AstEffectRunner {
         effect,
       });
 
+      if (result?.awaitingSpecialInitiative) {
+        return {
+          handled: true,
+          awaitingSpecialInitiative: true,
+          targetCard: result.targetCard,
+          targetOwner: result.targetOwner,
+        };
+      }
+
       if (!result || !result.success) {
         logger.warn(
           `[AstEffectRunner] Handler failed for action '${action}': ${result?.error}`
