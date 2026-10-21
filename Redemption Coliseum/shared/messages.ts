@@ -46,6 +46,7 @@ export interface ResolveChronicleItemMessage {
 export interface RequestTargetSelectionMessage {
   abilityId: string;
   itemId?: string;
+  sourceCardId?: string;
   promptText: string;
   targetType: "card" | "pile";
   eligibleCardIds?: string[];
@@ -53,6 +54,19 @@ export interface RequestTargetSelectionMessage {
   minTargets: number;
   maxTargets: number;
   canCancel: boolean;
+}
+
+export interface ActionTelegraphMessage {
+  sourceCardId: string;
+  targetCardIds: string[];
+  durationMs?: number;
+  action?: string;
+  isSpecialInitiative?: boolean;
+  persistent?: boolean;
+}
+
+export interface ClearActionTelegraphMessage {
+  sourceCardId?: string;
 }
 
 export interface SelectTargetMessage {

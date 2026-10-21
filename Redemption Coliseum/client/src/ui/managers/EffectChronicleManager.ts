@@ -9,6 +9,13 @@ import { EffectChronicleFlyoutUI } from "../overlays/EffectChronicleFlyoutUI";
 import { EffectChronicleHandler } from "../handlers/EffectChronicleHandler";
 import { SettingsManager } from "../../managers/SettingsManager";
 import { EFFECT_CHRONICLE_CONFIG } from "../config/visualConfig";
+import { GameEvents } from "../../constants/EventNames";
+import type { ActionTelegraphMessage } from "../../../../shared/messages";
+import { TargetingArrowEffect } from "../effects/TargetingArrowEffect";
+import {
+  TARGETING_ARROW_CONFIG,
+  resolveCardAlignment,
+} from "../config/targetingConfig";
 import { log } from "../../utils/logger";
 
 /**
@@ -28,6 +35,8 @@ export class EffectChronicleManager {
   private currentLayout: GameLayout | null = null;
   private onPhaseLockCallback: ((locked: boolean) => void) | null = null;
   private knownItemIds = new Set<string>();
+  private activeTelegraphArrows: TargetingArrowEffect | null = null;
+  private persistentSiArrows: TargetingArrowEffect | null = null;
 
   constructor(
     room: Room<RoomState>,
@@ -88,6 +97,12 @@ export class EffectChronicleManager {
 
   public destroy(): void {
     this.scene.events.off("playChronicleFlight", this._onPlayFlight, this);
+    this.scene.events.off(GameEvents.NET_ACTION_TELEGRAPH, this._onActionTelegraph, this);
+    this.scene.events.off(GameEvents.NET_CLEAR_ACTION_TELEGRAPH, this._onClearActionTelegraph, this);
+    this.activeTelegraphArrows?.destroy();
+    this.activeTelegraphArrows = null;
+    this.persistentSiArrows?.destroy();
+    this.persistentSiArrows = null;
     this.effect.destroy();
     this.flyout.destroy();
   }
@@ -99,6 +114,50 @@ export class EffectChronicleManager {
     });
 
     this.scene.events.on("playChronicleFlight", this._onPlayFlight, this);
+    this.scene.events.on(GameEvents.NET_ACTION_TELEGRAPH, this._onActionTelegraph, this);
+    this.scene.events.on(GameEvents.NET_CLEAR_ACTION_TELEGRAPH, this._onClearActionTelegraph, this);
+  }
+
+  private _onActionTelegraph(msg: ActionTelegraphMessage): void {
+    if (!msg || !msg.sourceCardId || !Array.isArray(msg.targetCardIds) || msg.targetCardIds.length === 0) {
+      return;
+    }
+
+    const sourceCard = this.cardRenderer?.getCardUI(msg.sourceCardId);
+    const alignment = sourceCard ? resolveCardAlignment(sourceCard) : "NEUTRAL";
+    const sourcePos = sourceCard || {
+      x: this.currentLayout?.opponentHand.centerX ?? this.scene.scale.width / 2,
+      y: this.currentLayout?.opponentHand.centerY ?? this.scene.scale.height / 2,
+    };
+
+    if (msg.persistent || msg.isSpecialInitiative) {
+      this.persistentSiArrows?.destroy();
+      this.persistentSiArrows = new TargetingArrowEffect(this.scene, sourcePos, alignment);
+      msg.targetCardIds.forEach((tId) => {
+        const targetCard = this.cardRenderer?.getCardUI(tId);
+        if (targetCard) this.persistentSiArrows?.setTarget(tId, targetCard, true);
+      });
+    } else {
+      this.activeTelegraphArrows?.destroy();
+      this.activeTelegraphArrows = new TargetingArrowEffect(this.scene, sourcePos, alignment);
+      msg.targetCardIds.forEach((tId) => {
+        const targetCard = this.cardRenderer?.getCardUI(tId);
+        if (targetCard) this.activeTelegraphArrows?.setTarget(tId, targetCard, true);
+      });
+
+      const duration = msg.durationMs || TARGETING_ARROW_CONFIG.TIMINGS.TELEGRAPH_DURATION_MS;
+      this.scene.time.delayedCall(duration, () => {
+        this.activeTelegraphArrows?.fadeAndDestroy();
+        this.activeTelegraphArrows = null;
+      });
+    }
+  }
+
+  private _onClearActionTelegraph(): void {
+    if (this.persistentSiArrows) {
+      this.persistentSiArrows.fadeAndDestroy();
+      this.persistentSiArrows = null;
+    }
   }
 
   private _onPlayFlight(data: { x: number; y: number; texture: string; width?: number; height?: number; rotation?: number }): void {

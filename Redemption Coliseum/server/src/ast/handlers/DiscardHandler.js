@@ -135,6 +135,15 @@ class DiscardHandler {
           });
         }
 
+        if (typeof room.broadcast === "function" && item?.cardId) {
+          room.broadcast(AST_MESSAGES.ACTION_TELEGRAPH, {
+            sourceCardId: item.cardId,
+            targetCardIds: siTargetCards.map((c) => c.id),
+            isSpecialInitiative: true,
+            persistent: true,
+          });
+        }
+
         return {
           success: true,
           handled: true,
@@ -144,6 +153,16 @@ class DiscardHandler {
           targetOwner: targetController,
         };
       }
+    }
+
+    // Broadcast action telegraph to both players for deterministic/resolved targets
+    if (typeof room.broadcast === "function" && item?.cardId && targets.length > 0) {
+      room.broadcast(AST_MESSAGES.ACTION_TELEGRAPH, {
+        sourceCardId: item.cardId,
+        targetCardIds: targets.map((t) => t.card.id),
+        action: AST_ACTIONS.DISCARD,
+        durationMs: 500,
+      });
     }
 
     // Execute discard moves for each resolved target

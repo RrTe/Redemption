@@ -76,6 +76,8 @@ export const AST_MESSAGES = /** @type {const} */ ({
   SELECT_TARGET: "selectTarget",
   REQUEST_OPTIONAL_ABILITY: "requestOptionalAbility",
   RESPOND_OPTIONAL_ABILITY: "respondOptionalAbility",
+  ACTION_TELEGRAPH: "actionTelegraph",
+  CLEAR_ACTION_TELEGRAPH: "clearActionTelegraph",
 });
 
 if (typeof module !== "undefined" && module.exports) {

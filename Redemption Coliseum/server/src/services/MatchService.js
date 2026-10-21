@@ -14,6 +14,15 @@ class MatchService {
    * @param {import('../rooms/GameRoom').GameRoom} room
    */
   static initializeGame(room) {
+    if (room._gameInitialized) {
+      logger.warn(
+        `[MatchService] Game already initialized for room ${room.roomId}. Aborting duplicate initialization.`
+      );
+      return;
+    }
+    room._gameInitialized = true;
+    room._gameStarting = false;
+
     const isArena = Boolean(room.state.isArenaMode ?? room.state.isSandboxMode);
     logger.info(
       `[MatchService] Initializing game for room ${room.roomId} (Mode: ${isArena ? "Arena" : "Standard"}). Locking room.`,
@@ -70,13 +79,16 @@ class MatchService {
       client.send("chatHistory", room.chatHistory);
     }
 
-    if (
+    if (room.state.currentPhase || room._gameInitialized) {
+      const RoomLifecycleService = require("./RoomLifecycleService");
+      RoomLifecycleService.resendPendingPrompts(room, client);
+    } else if (
+      !room._gameStarting &&
       room.clients.length === room.maxClients &&
       room.readyClients.size === room.maxClients
     ) {
-      if (!room.state.currentPhase) {
-        room.clock.setTimeout(() => MatchService.initializeGame(room), 500);
-      }
+      room._gameStarting = true;
+      room.clock.setTimeout(() => MatchService.initializeGame(room), 500);
     }
   }
 

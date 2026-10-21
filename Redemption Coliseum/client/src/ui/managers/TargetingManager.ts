@@ -10,11 +10,18 @@ import type { CardUI } from "../CardUI";
 import type { CardRenderer } from "../renderers/CardRenderer";
 import type { ElementManager } from "./ElementManager";
 import type { TypedRoom } from "../gameUI";
+import { TargetingArrowEffect } from "../effects/TargetingArrowEffect";
+import {
+  TARGETING_ARROW_CONFIG,
+  resolveCardAlignment,
+} from "../config/targetingConfig";
 import { log } from "../../utils/logger";
+
+const POINTER_TARGET_ID = "__active_pointer_branch__";
 
 /**
  * High-level orchestrator managing interactive targeting state, in-world highlights,
- * and communication between Phaser board objects and the network manager.
+ * dynamic Bezier targeting arrows, and network communication.
  */
 export class TargetingManager {
   private scene: Phaser.Scene;
@@ -29,6 +36,11 @@ export class TargetingManager {
   private selectedCardIds: Set<string> = new Set();
   private selectedPileId: string | null = null;
   private activePiles: StackedPileUI[] = [];
+
+  // Visual Targeting Arrow Effect
+  private arrowEffect: TargetingArrowEffect | null = null;
+  private elevatedSourceCard: CardUI | null = null;
+  private originalSourceDepth: number = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -83,9 +95,29 @@ export class TargetingManager {
     this.selectedCardIds.clear();
     this.selectedPileId = null;
 
-    // HUD banner is omitted per Zero-Confirm / Zero-Bureaucracy specification.
     this.scene.input.keyboard?.on("keydown-ESC", this.handleEscKey, this);
 
+    // 1. Resolve source card and elevate depth by +10
+    let sourceCardId = request.sourceCardId;
+    if (!sourceCardId && request.itemId && this.room.state?.effectChronicle?.items) {
+      const item = this.room.state.effectChronicle.items.find((i) => i.id === request.itemId);
+      if (item) sourceCardId = item.cardId;
+    }
+
+    const sourceCard = sourceCardId ? this.cardRenderer.getCardUI(sourceCardId) : undefined;
+    if (sourceCard) {
+      this.elevatedSourceCard = sourceCard;
+      this.originalSourceDepth = sourceCard.depth;
+      sourceCard.setDepth(this.originalSourceDepth + TARGETING_ARROW_CONFIG.DEPTHS.SOURCE_ELEVATION_DELTA);
+
+      const alignment = resolveCardAlignment(sourceCard);
+      this.arrowEffect = new TargetingArrowEffect(this.scene, sourceCard, alignment);
+    }
+
+    // 2. Track pointer for interactive arrow guidance
+    this.scene.input.on("pointermove", this.handlePointerMove, this);
+
+    // 3. Activate focus spotlight
     if (request.targetType === "pile") {
       const allowedIds = new Set((request.eligiblePiles || []).map((p) => p.id));
       this.focusManager.activate("pile", undefined, allowedIds);
@@ -96,6 +128,43 @@ export class TargetingManager {
     } else {
       this.focusManager.activate("card", request.eligibleCardIds || []);
     }
+  }
+
+  private handlePointerMove(pointer: Phaser.Input.Pointer): void {
+    if (!this.arrowEffect || !this.activeRequest) return;
+
+    if (this.selectedCardIds.size >= this.activeRequest.maxTargets) {
+      this.arrowEffect.removeTarget(POINTER_TARGET_ID);
+      return;
+    }
+
+    // Snap to hovered eligible card or follow cursor
+    const hoveredCard = this.findHoveredEligibleCard(pointer.worldX, pointer.worldY);
+    if (hoveredCard) {
+      this.arrowEffect.setTarget(POINTER_TARGET_ID, hoveredCard, false);
+    } else {
+      this.arrowEffect.setTarget(
+        POINTER_TARGET_ID,
+        { x: pointer.worldX, y: pointer.worldY },
+        false
+      );
+    }
+  }
+
+  private findHoveredEligibleCard(worldX: number, worldY: number): CardUI | undefined {
+    for (const cardUI of this.cardRenderer.getAllCardUIs().values()) {
+      const cId = cardUI.cardData?.id;
+      if (!cId || !this.isCardEligible(cId) || this.selectedCardIds.has(cId)) continue;
+
+      const mat = cardUI.getWorldTransformMatrix();
+      const halfW = ((cardUI.displayWidth || cardUI.width) * (cardUI.scaleX || 1)) / 2;
+      const halfH = ((cardUI.displayHeight || cardUI.height) * (cardUI.scaleY || 1)) / 2;
+
+      if (Math.abs(worldX - mat.tx) <= halfW && Math.abs(worldY - mat.ty) <= halfH) {
+        return cardUI;
+      }
+    }
+    return undefined;
   }
 
   private handleEscKey(): void {
@@ -111,6 +180,11 @@ export class TargetingManager {
     if (!allowed) return;
 
     this.selectedPileId = pileId;
+    const pileEntry = this.focusManager.getPileEntries().find((e) => e.id === pileId);
+    if (pileEntry && this.arrowEffect) {
+      this.arrowEffect.setTarget(pileId, pileEntry.pile, true);
+    }
+
     this.confirmSelection();
   }
 
@@ -134,15 +208,17 @@ export class TargetingManager {
     if (this.selectedCardIds.has(cardId)) {
       this.selectedCardIds.delete(cardId);
       card.badge.hide();
+      this.arrowEffect?.removeTarget(cardId);
     } else {
       if (this.selectedCardIds.size < this.activeRequest.maxTargets) {
         this.selectedCardIds.add(cardId);
         card.badge.show("✓", "top-right");
+        this.arrowEffect?.setTarget(cardId, card, true);
       }
     }
 
-    // Zero-Confirm: auto-confirm immediately once maxTargets is reached
     if (this.selectedCardIds.size === this.activeRequest.maxTargets) {
+      this.arrowEffect?.removeTarget(POINTER_TARGET_ID);
       this.confirmSelection();
     }
   }
@@ -183,6 +259,18 @@ export class TargetingManager {
   public stopTargeting(animate: boolean = true): void {
     if (animate) this.hud.hide();
     this.scene.input.keyboard?.off("keydown-ESC", this.handleEscKey, this);
+    this.scene.input.off("pointermove", this.handlePointerMove, this);
+
+    if (this.elevatedSourceCard) {
+      this.elevatedSourceCard.setDepth(this.originalSourceDepth);
+      this.elevatedSourceCard = null;
+    }
+
+    if (this.arrowEffect) {
+      this.arrowEffect.fadeAndDestroy();
+      this.arrowEffect = null;
+    }
+
     this.focusManager.deactivate();
     this.activePiles = [];
     this.activeRequest = null;

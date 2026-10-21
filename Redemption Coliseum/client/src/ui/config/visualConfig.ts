@@ -69,5 +69,8 @@ export const PULSE_CONFIG = {
   },
 };
 
+export { TARGETING_ARROW_CONFIG, type TargetingAlignment } from "./targetingConfig";
+
+
 
 

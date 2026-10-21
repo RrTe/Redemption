@@ -4,6 +4,7 @@ const { EffectChronicleService } = require("../services/EffectChronicleService")
 const { ChronicleHistoryService } = require("../services/ChronicleHistoryService");
 const { ChronicleItem } = require("../state/EffectChronicleState");
 const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants");
+const { AST_MESSAGES } = require("../../../shared/astConstants");
 const { moveCard } = require("../services/cardService");
 const { formatChronicleUndoLog } = require("../utils/gameLogFormatter");
 const logger = require("../utils/logger");
@@ -77,6 +78,12 @@ class RespondOptionalAbilityCommand extends BaseCommand {
       if (item.pendingSpecialInitiative) {
         const psi = item.pendingSpecialInitiative;
         item.pendingSpecialInitiative = null;
+
+        if (typeof this.room.broadcast === "function") {
+          this.room.broadcast(AST_MESSAGES.CLEAR_ACTION_TELEGRAPH, {
+            sourceCardId: item.cardId,
+          });
+        }
 
         // Restore priority back to original ability owner
         chronicle.priorityPlayerId = psi.initiatorId;

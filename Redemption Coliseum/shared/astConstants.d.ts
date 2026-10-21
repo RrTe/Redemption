@@ -52,6 +52,8 @@ export declare const AST_MESSAGES: {
   readonly SELECT_TARGET: "selectTarget";
   readonly REQUEST_OPTIONAL_ABILITY: "requestOptionalAbility";
   readonly RESPOND_OPTIONAL_ABILITY: "respondOptionalAbility";
+  readonly ACTION_TELEGRAPH: "actionTelegraph";
+  readonly CLEAR_ACTION_TELEGRAPH: "clearActionTelegraph";
 };
 
 export type AstAction = typeof AST_ACTIONS[keyof typeof AST_ACTIONS];

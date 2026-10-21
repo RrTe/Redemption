@@ -3,6 +3,7 @@ const { PlayerFactory } = require("../factories/PlayerFactory");
 const GameStateService = require("./GameStateService");
 const MatchService = require("./MatchService");
 const { NETWORK_CONFIG } = require("../../../shared/networkConfig");
+const { AST_MESSAGES } = require("../../../shared/astConstants");
 
 class RoomLifecycleService {
   /**
@@ -142,6 +143,7 @@ class RoomLifecycleService {
           room.unlock();
         }
         logger.info(`[Lifecycle] Player reconnected: ${client.sessionId}`);
+        this.resendPendingPrompts(room, reconnectedClient);
       }
     } catch (e) {
       // Reconnection timeout expired
@@ -170,6 +172,70 @@ class RoomLifecycleService {
       if (room.state.players.size === 0) {
         logger.info(`[Lifecycle] Room empty after timeout. Disconnecting.`);
         room.disconnect();
+      }
+    }
+  }
+
+  /**
+   * Resends pending interactive prompts (Special Initiative, optional ability, target selection)
+   * to a reconnected client after their UI handlers are ready.
+   *
+   * @param {import('../rooms/GameRoom').GameRoom} room Active room.
+   * @param {import('colyseus').Client} client Target client.
+   */
+  static resendPendingPrompts(room, client) {
+    if (!room || !client || !client.sessionId) return;
+
+    const chronicle = room.state?.effectChronicle;
+    if (!chronicle || !chronicle.items || chronicle.items.length === 0) return;
+
+    // 1. Resend Special Initiative if this client is targeted and waiting
+    for (const item of chronicle.items) {
+      if (item.pendingSpecialInitiative) {
+        const psi = item.pendingSpecialInitiative;
+        if (psi.targetOwnerId === client.sessionId) {
+          const targetCard = room.cardLookup?.get(psi.targetCardId);
+          const isMultiple = Array.isArray(psi.targetCardIds) && psi.targetCardIds.length > 1;
+          const promptTargetText = isMultiple
+            ? `All characters (${psi.targetCardIds.length})`
+            : (targetCard?.Name || "character");
+
+          logger.info(
+            `[Lifecycle] Resending Special Initiative prompt to client '${client.sessionId}' for item '${item.id}'.`
+          );
+
+          client.send(AST_MESSAGES.REQUEST_OPTIONAL_ABILITY, {
+            abilityId: "special_initiative",
+            itemId: item.id || "",
+            cardId: psi.targetCardId,
+            cardTitle: targetCard?.Name || "Special Initiative",
+            promptText: `${promptTargetText} in battle targeted for discard! Declare Special Initiative?`,
+            action: "special_initiative",
+            cardImageFile: targetCard?.ImageFile || "",
+            templateId: targetCard?.templateId || "",
+          });
+
+          if (typeof room.broadcast === "function" && item.cardId) {
+            room.broadcast(AST_MESSAGES.ACTION_TELEGRAPH, {
+              sourceCardId: item.cardId,
+              targetCardIds: psi.targetCardIds || [psi.targetCardId],
+              isSpecialInitiative: true,
+              persistent: true,
+            });
+          }
+          return;
+        }
+      }
+    }
+
+    // 2. Resend active prompt for the priority player on the head chronicle item
+    if (chronicle.priorityPlayerId === client.sessionId && chronicle.items.length > 0) {
+      const activeItem = chronicle.items[0];
+      if (activeItem && !activeItem.pendingSpecialInitiative && room.abilityResolver) {
+        logger.info(
+          `[Lifecycle] Resending prompt for active chronicle item '${activeItem.id}' (${activeItem.title}) to client '${client.sessionId}'.`
+        );
+        room.abilityResolver.resolve(activeItem);
       }
     }
   }

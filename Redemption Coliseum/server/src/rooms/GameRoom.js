@@ -88,6 +88,8 @@ class GameRoom extends colyseus.Room {
 
     // ✨ NEU: Set, um zu speichern, welche Clients fertig geladen haben.
     this.readyClients = new Set();
+    this._gameStarting = false;
+    this._gameInitialized = false;
 
     // ✨ NEU: Arena Mode aus den Raumerstellungs-Optionen initialisieren
     const isArenaMode = Boolean(options.isArenaMode ?? options.isSandboxMode);

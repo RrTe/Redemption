@@ -138,6 +138,7 @@ class AbilityResolver {
           client.send(AST_MESSAGES.REQUEST_TARGET_SELECTION, {
             abilityId: targetAbility.ability_id,
             itemId: item.id,
+            sourceCardId: card?.id || item?.cardId,
             promptText: eligible.promptText,
             targetType: eligible.targetType,
             eligibleCardIds: eligible.eligibleCardIds,

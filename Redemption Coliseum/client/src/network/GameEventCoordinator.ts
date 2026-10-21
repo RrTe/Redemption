@@ -6,6 +6,8 @@ import { AST_MESSAGES } from "../../../shared/astConstants.js";
 import type {
   RequestTargetSelectionMessage,
   RequestOptionalAbilityMessage,
+  ActionTelegraphMessage,
+  ClearActionTelegraphMessage,
 } from "../../../shared/messages.js";
 
 /**
@@ -139,6 +141,20 @@ export class GameEventCoordinator {
       this.room.onMessage(AST_MESSAGES.REQUEST_OPTIONAL_ABILITY, (msg: RequestOptionalAbilityMessage) => {
         log("GameEventCoordinator", "[NET] requestOptionalAbility received:", msg);
         this.scene.events.emit(GameEvents.NET_OPTIONAL_ABILITY_REQUESTED, msg);
+      }),
+    );
+
+    this.roomListeners.push(
+      this.room.onMessage(AST_MESSAGES.ACTION_TELEGRAPH, (msg: ActionTelegraphMessage) => {
+        log("GameEventCoordinator", "[NET] actionTelegraph received:", msg);
+        this.scene.events.emit(GameEvents.NET_ACTION_TELEGRAPH, msg);
+      }),
+    );
+
+    this.roomListeners.push(
+      this.room.onMessage(AST_MESSAGES.CLEAR_ACTION_TELEGRAPH, (msg: ClearActionTelegraphMessage) => {
+        log("GameEventCoordinator", "[NET] clearActionTelegraph received:", msg);
+        this.scene.events.emit(GameEvents.NET_CLEAR_ACTION_TELEGRAPH, msg);
       }),
     );
 
