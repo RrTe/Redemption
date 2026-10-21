@@ -185,7 +185,12 @@ describe("Optional Ability (May) AST Prompt & Execution", () => {
 
     expect(result.handled).toBe(true);
     expect(result.awaitingConfirmation).toBeUndefined();
-    expect(sentMessages).toHaveLength(0);
+    const promptMessages = sentMessages.filter((m) => m.msgType === AST_MESSAGES.REQUEST_OPTIONAL_ABILITY);
+    expect(promptMessages).toHaveLength(0);
+    expect(sentMessages).toContainEqual({
+      msgType: "cardsDrawn",
+      payload: { cardIds: ["deck_1"] },
+    });
     expect(player1.hand).toHaveLength(2); // starHero + drawn card
   });
 

@@ -124,6 +124,76 @@ describe("AST Special Abilities Engine - Phase 1 Walking Skeleton", () => {
       expect(result.snapshot.movedCardIds.length).toBe(2);
       expect(result.snapshot.action).toBe("draw");
     });
+
+    test("sends cardsDrawn message to client with drawn card IDs", () => {
+      client1.send = jest.fn();
+
+      createTestCard("d1", "101", "Deck Card 1", ZONES.DECK, "p1");
+      createTestCard("d2", "102", "Deck Card 2", ZONES.DECK, "p1");
+
+      const horsemen = createTestCard("c_horse", "2041723113", "Egyptian Horsemen", ZONES.TERRITORY, "p1");
+      const ability = AbilityLookup.resolveAbilities("2041723113")[0];
+
+      DrawHandler.execute({
+        room,
+        player: player1,
+        effect: ability.effects[0],
+        item: { cardId: horsemen.id },
+      });
+
+      expect(client1.send).toHaveBeenCalledTimes(1);
+      expect(client1.send).toHaveBeenCalledWith("cardsDrawn", {
+        cardIds: ["d1", "d2"],
+      });
+    });
+
+    test("excludes diverted Lost Souls from cardsDrawn event", () => {
+      client1.send = jest.fn();
+
+      createTestCard("ls1", "ls_100", "Lost Soul (Wanderer)", ZONES.DECK, "p1", { Type: "Lost Soul" });
+      createTestCard("d1", "101", "Deck Card 1", ZONES.DECK, "p1");
+
+      const horsemen = createTestCard("c_horse", "2041723113", "Egyptian Horsemen", ZONES.TERRITORY, "p1");
+      const ability = {
+        action: "draw",
+        destination: "hand",
+        target: { count: { fixed_value: 1 } },
+      };
+
+      const result = DrawHandler.execute({
+        room,
+        player: player1,
+        effect: ability,
+        item: { cardId: horsemen.id },
+      });
+
+      expect(result.success).toBe(true);
+      expect(player1[ZONES.LAND_OF_BONDAGE].length).toBe(1);
+      expect(player1.hand.length).toBe(1);
+      expect(player1.hand[0].id).toBe("d1");
+
+      expect(client1.send).toHaveBeenCalledTimes(1);
+      expect(client1.send).toHaveBeenCalledWith("cardsDrawn", {
+        cardIds: ["d1"],
+      });
+    });
+
+    test("does not send cardsDrawn if no cards could be moved (empty deck)", () => {
+      client1.send = jest.fn();
+
+      const horsemen = createTestCard("c_horse", "2041723113", "Egyptian Horsemen", ZONES.TERRITORY, "p1");
+      const ability = AbilityLookup.resolveAbilities("2041723113")[0];
+
+      const result = DrawHandler.execute({
+        room,
+        player: player1,
+        effect: ability.effects[0],
+        item: { cardId: horsemen.id },
+      });
+
+      expect(result.success).toBe(true);
+      expect(client1.send).not.toHaveBeenCalled();
+    });
   });
 
   describe("4. DiscardHandler & Samuel's Edict Primitive", () => {

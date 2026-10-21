@@ -56,6 +56,16 @@ class DrawHandler {
     const movedCards = result?.movedCards || [];
     const divertedCards = result?.divertedCards || [];
 
+    // Notify client to trigger card draw animation for cards successfully drawn to hand
+    if (destination === ZONES.HAND && movedCards.length > 0 && room?.clients) {
+      const client = room.clients.find((c) => c.sessionId === player.sessionId);
+      if (client && typeof client.send === "function") {
+        client.send("cardsDrawn", {
+          cardIds: movedCards.map((c) => c.id),
+        });
+      }
+    }
+
     // Construct atomic mutation snapshot for generic and legacy rollbacks
     const movedCardsList = [
       ...movedCards.map((c) => ({
