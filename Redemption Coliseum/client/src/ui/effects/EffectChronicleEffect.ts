@@ -118,8 +118,6 @@ export class EffectChronicleEffect {
       new Phaser.Math.Vector2(targetX, targetY)
     );
 
-    this._playFlightSound();
-
     const tweenObj = { t: 0 };
     this.scene.tweens.add({
       targets: tweenObj,
@@ -239,15 +237,6 @@ export class EffectChronicleEffect {
         }
       },
     });
-  }
-
-  private _lastFlightSoundTime = 0;
-
-  private _playFlightSound(): void {
-    const now = Date.now();
-    if (now - this._lastFlightSoundTime < 200) return;
-    this._lastFlightSoundTime = now;
-    this.scene.game?.events?.emit("playSound", "CHRONICLE_CARD_FLIGHT");
   }
 
   private _drawBadge(radius: number, isHistory = false): void {

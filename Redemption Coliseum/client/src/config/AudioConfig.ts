@@ -112,15 +112,6 @@ export const AUDIO_CONFIG: Record<string, SoundEffectConfig> = {
     ],
   },
 
-  CHRONICLE_CARD_FLIGHT: {
-    layers: [
-      // Layer 1: Transition whoosh starting immediately with card flight
-      { key: "chronicle_whoosh", vol: 0.35, detuneRange: 30 },
-      // Layer 2: Writing on paper overlapping into card impact and bump animation
-      { key: "chronicle_writing", vol: 0.8, delay: 250, detuneRange: 20 },
-    ],
-  },
-
   // --- Background Ambience ---
 
   AMBIENCE_TEMPLE: {
