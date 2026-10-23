@@ -124,15 +124,30 @@ export class HandRenderer {
     const validHandCards = opponent.hand.filter(
       (c) => !c.zone || c.zone === ZONES.HAND,
     );
-    const revealedStarCards = validHandCards.filter((cardData) =>
-      this.isCardRevealedFn
-        ? this.isCardRevealedFn(cardData.id)
-        : Boolean(
-            this.room?.state?.activeSequenceCardIds?.includes?.(cardData.id) ||
-            this.room?.state?.effectChronicle?.items?.some?.((item: any) => item.cardId === cardData.id)
-          )
-    );
+    const isCardRevealed = (cardId: string): boolean => {
+      if (this.isCardRevealedFn) return this.isCardRevealedFn(cardId);
+      const seq = this.room?.state?.activeSequenceCardIds;
+      const inSeq = Boolean(seq && (seq.some ? seq.some((id: string) => id === cardId) : Array.from(seq).includes(cardId)));
+      return inSeq || Boolean(this.room?.state?.effectChronicle?.items?.some?.((item: any) => item.cardId === cardId));
+    };
+
+    const revealedStarCards = validHandCards.filter((cardData) => isCardRevealed(cardData.id));
     const revealedCount = revealedStarCards.length;
+
+    const activeSeq: string[] = [];
+    if (this.room?.state?.activeSequenceCardIds) {
+      this.room.state.activeSequenceCardIds.forEach((id: string) => activeSeq.push(id));
+    }
+
+    // Sort revealed cards ascending by their selection sequence order
+    revealedStarCards.sort((a, b) => {
+      const idxA = activeSeq.indexOf(a.id);
+      const idxB = activeSeq.indexOf(b.id);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return 0;
+    });
 
     // Dynamische Vergrößerung (+15%) und proportionale Abstände für aufgedeckte Star-Karten
     const REVEAL_SCALE_FACTOR = 1.15;
@@ -143,8 +158,6 @@ export class HandRenderer {
     const revealedStartX = this.layout.opponentHand.centerX - revealedTotalWidth / 2;
     const revealedY = this.layout.opponentHand.centerY + this.layout.handCardHeight * 0.65;
 
-    let revealedIndexTracker = 0;
-
     opponent.hand.forEach((cardData, index) => {
       // Validate zone to prevent rendering phantom cards that left opponent hand
       if (cardData.zone && cardData.zone !== ZONES.HAND) {
@@ -152,12 +165,7 @@ export class HandRenderer {
         return;
       }
 
-      const isRevealedStarCard = this.isCardRevealedFn
-        ? this.isCardRevealedFn(cardData.id)
-        : Boolean(
-            this.room?.state?.activeSequenceCardIds?.includes?.(cardData.id) ||
-            this.room?.state?.effectChronicle?.items?.some?.((item: any) => item.cardId === cardData.id)
-          );
+      const isRevealedStarCard = isCardRevealed(cardData.id);
 
       let x: number;
       let y: number;
@@ -166,13 +174,14 @@ export class HandRenderer {
       let targetHeight: number;
 
       if (isRevealedStarCard) {
-        // Kerzengerade (angle = 0), symmetrisch nebeneinander und leicht vergrößert
-        x = revealedStartX + revealedIndexTracker * revealedSpacing;
+        const positionIndex = revealedStarCards.findIndex((c) => c.id === cardData.id);
+        const resolvedPos = positionIndex !== -1 ? positionIndex : 0;
+        // Kerzengerade (angle = 0), aufsteigend nach Auswahlreihenfolge von links nach rechts
+        x = revealedStartX + resolvedPos * revealedSpacing;
         y = revealedY;
         finalAngle = 0;
         targetWidth = revealedWidth;
         targetHeight = revealedHeight;
-        revealedIndexTracker++;
       } else {
         const pos = this.getHandCardTargetPosition(index, handSize, true);
         x = pos.x;
@@ -194,6 +203,16 @@ export class HandRenderer {
       );
       const baseDepth = isRevealedStarCard ? 300 : 100;
       cardUI.setDepth(baseDepth + index);
+
+      if (isRevealedStarCard) {
+        const seqIdx = activeSeq.indexOf(cardData.id);
+        const badgeNumber = seqIdx !== -1
+          ? seqIdx + 1
+          : revealedStarCards.findIndex((c) => c.id === cardData.id) + 1;
+        cardUI.badge.show(String(badgeNumber), "top-left", cardUI.visuals?.getStarIcon?.() || null);
+      } else {
+        cardUI.badge.hide();
+      }
     });
   }
 

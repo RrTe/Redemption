@@ -50,6 +50,9 @@ export class DrawSequenceManager {
     if (isArena) return;
     if (this.currentStep !== DRAW_STEPS.NONE && this.currentStep !== DRAW_STEPS.COMPLETED) {
       this.updateCardHighlights();
+      if (this.room?.state?.activeSequenceCardIds && this.room.state.activeSequenceCardIds.length > 0) {
+        this.syncSequenceBadges(this.room.state.activeSequenceCardIds);
+      }
     }
   }
 
@@ -82,7 +85,7 @@ export class DrawSequenceManager {
       this.updateCardHighlights();
     }
 
-    if (activeSequenceCardIds && activeSequenceCardIds.length > 0 && this.chronicleCount === 0) {
+    if (activeSequenceCardIds && activeSequenceCardIds.length > 0) {
       this.syncSequenceBadges(activeSequenceCardIds);
     }
   }
@@ -222,11 +225,18 @@ export class DrawSequenceManager {
     });
   }
 
-  private syncSequenceBadges(sequenceCardIds: string[]) {
+  private syncSequenceBadges(sequenceCardIds: any) {
     const isStars = this.currentStep === DRAW_STEPS.ACTIVE_STARS || this.currentStep === DRAW_STEPS.OPPONENT_STARS;
     const isSouls = this.currentStep === DRAW_STEPS.ACTIVE_SOULS || this.currentStep === DRAW_STEPS.OPPONENT_SOULS;
 
-    sequenceCardIds.forEach((id, index) => {
+    const ids: string[] = [];
+    if (Array.isArray(sequenceCardIds)) {
+      ids.push(...sequenceCardIds);
+    } else if (sequenceCardIds && typeof sequenceCardIds.forEach === "function") {
+      sequenceCardIds.forEach((id: string) => ids.push(id));
+    }
+
+    ids.forEach((id, index) => {
       const card = this.cardRenderer.getCardUI(id);
       if (!card) return;
       const isHand = card.currentZone === ZONES.HAND;

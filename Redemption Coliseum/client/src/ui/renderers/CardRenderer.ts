@@ -202,8 +202,12 @@ export class CardRenderer {
    * @returns {boolean} True if the card is revealed in a Star sequence, Chronicle, or active telegraph.
    */
   public isCardRevealed(cardId: string): boolean {
+    const seq = this.room.state?.activeSequenceCardIds;
+    const inActiveSeq = Boolean(
+      seq && (seq.some ? seq.some((id: string) => id === cardId) : Array.from(seq).includes(cardId))
+    );
     return Boolean(
-      this.room.state?.activeSequenceCardIds?.includes?.(cardId) ||
+      inActiveSeq ||
       this.room.state?.effectChronicle?.items?.some?.((item: any) => item.cardId === cardId) ||
       this.telegraphRevealedCardIds.has(cardId)
     );
