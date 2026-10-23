@@ -26,6 +26,7 @@ export class TargetingFocusManager {
   private currentTargetType: "card" | "pile" | null = null;
   private currentEligibleCardIds: string[] = [];
   private currentEligiblePileIds: Set<string> | null = null;
+  private currentSourceCardId: string | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -67,11 +68,17 @@ export class TargetingFocusManager {
     }
   }
 
-  public activate(targetType: "card" | "pile", eligibleCardIds?: string[], eligiblePileIds?: Set<string>): void {
+  public activate(
+    targetType: "card" | "pile",
+    eligibleCardIds?: string[],
+    eligiblePileIds?: Set<string>,
+    sourceCardId?: string
+  ): void {
     this.isActive = true;
     this.currentTargetType = targetType;
     this.currentEligibleCardIds = eligibleCardIds || [];
     this.currentEligiblePileIds = eligiblePileIds || null;
+    this.currentSourceCardId = sourceCardId || null;
 
     if (this.overlay) {
       this.overlay.setSize(this.scene.scale.width, this.scene.scale.height);
@@ -88,9 +95,13 @@ export class TargetingFocusManager {
     if (!this.isActive) return;
 
     if (this.currentTargetType === "pile") {
-      this.cardRenderer.getAllCardUIs().forEach((cardUI) => {
+      this.cardRenderer.getAllCardUIs().forEach((cardUI, id) => {
+        const isSource = id === this.currentSourceCardId;
         cardUI.visuals.updateTargetBorder(false);
-        cardUI.visuals.setDimmed(true);
+        cardUI.visuals.setDimmed(!isSource);
+        if (isSource) {
+          this.elevateObject(cardUI);
+        }
       });
 
       this.getPileEntries().forEach(({ pile, id }) => {
@@ -105,9 +116,10 @@ export class TargetingFocusManager {
       const allowed = new Set(this.currentEligibleCardIds);
       this.cardRenderer.getAllCardUIs().forEach((cardUI, id) => {
         const isEligible = allowed.has(id);
+        const isSource = id === this.currentSourceCardId;
         cardUI.visuals.updateTargetBorder(isEligible);
-        cardUI.visuals.setDimmed(!isEligible);
-        if (isEligible) {
+        cardUI.visuals.setDimmed(!isEligible && !isSource);
+        if (isEligible || isSource) {
           this.elevateObject(cardUI);
         }
       });
@@ -127,6 +139,7 @@ export class TargetingFocusManager {
     this.currentTargetType = null;
     this.currentEligibleCardIds = [];
     this.currentEligiblePileIds = null;
+    this.currentSourceCardId = null;
     this.scene.events.off("cardsRendered", this.onCardsRendered, this);
 
     if (this.overlay) {

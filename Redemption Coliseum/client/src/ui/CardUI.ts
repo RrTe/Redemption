@@ -152,15 +152,32 @@ export class CardUI extends Phaser.GameObjects.Container {
     this.visuals.setTint(undefined);
   }
 
-  /** ✨ NEU: Aktualisiert den Face-Down-Status und synchronisiert die Layer-Sichtbarkeit. */
-  public updateFaceDownStatus(isFaceDown: boolean) {
+  /**
+   * Updates face-down status and synchronizes visual layer visibility.
+   *
+   * @param {boolean} isFaceDown Whether the card should be face-down.
+   */
+  public updateFaceDownStatus(isFaceDown: boolean): void {
+    const previousState = this.isFaceDown;
+    if (previousState === isFaceDown) return;
+
     this.isFaceDown = isFaceDown;
     this.visuals.updateVisibility(this.isFaceDown, this.isLockedHidden);
-
-    // ✨ FIX: Wenn die Zone vom Server bestätigt wurde, beende den "Drag-Limbo"
     if (this.currentZone !== this.cardData.zone) {
       this.isBeingDragged = false;
     }
+    if (!isFaceDown && this.cardData?.ImageFile) {
+      this.visuals.ensureFrontImageLoaded();
+    }
+  }
+
+  /**
+   * Sets prominent visual highlight for active execution in the Effect Chronicle.
+   *
+   * @param {boolean} active Whether execution highlight is active.
+   */
+  public setChronicleExecutionHighlight(active: boolean): void {
+    this.visuals.updateChronicleExecutionHighlight(active);
   }
 
   /** ✨ NEU: Aktualisiert die Anzeige der Paralyze- und Set-Aside-Counter. */

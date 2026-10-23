@@ -3,6 +3,7 @@ import { type GameLayout } from "../layout";
 import { type ElementManager } from "../managers/ElementManager";
 import { type AnimationManager } from "../managers/AnimationManager";
 import { type CardUI } from "../CardUI";
+import { type TypedRoom } from "../gameUI.js";
 import { type PlayerState, type CardState } from "../../../../shared/types";
 import { ZONES } from "../../../../shared/zones";
 import { log } from "../../utils/logger";
@@ -32,20 +33,26 @@ export class HandRenderer {
   private elementManager: ElementManager;
   private animationManager: AnimationManager;
   private processCard: CardProcessor;
-  private settingsManager: any; // ✨ NEU
+  private settingsManager: any;
+  private room?: TypedRoom;
+  private isCardRevealedFn?: (cardId: string) => boolean;
 
   constructor(
     layout: GameLayout,
     elementManager: ElementManager,
     animationManager: AnimationManager,
     processCard: CardProcessor,
-    settingsManager: any // ✨ NEU
+    settingsManager: any, // ✨ NEU
+    room?: TypedRoom,
+    isCardRevealedFn?: (cardId: string) => boolean,
   ) {
     this.layout = layout;
     this.elementManager = elementManager;
     this.animationManager = animationManager;
     this.processCard = processCard;
     this.settingsManager = settingsManager; // ✨ NEU
+    this.room = room;
+    this.isCardRevealedFn = isCardRevealedFn;
   }
 
   /** ✨ FIX: Aktualisiert das Layout, wenn sich die Fenstergröße ändert. */
@@ -122,11 +129,25 @@ export class HandRenderer {
         return;
       }
 
-      const { x, y, angle } = this.getHandCardTargetPosition(
+      let { x, y, angle } = this.getHandCardTargetPosition(
         index,
         handSize,
         true,
       );
+
+      const isRevealedStarCard = this.isCardRevealedFn
+        ? this.isCardRevealedFn(cardData.id)
+        : Boolean(
+            this.room?.state?.activeSequenceCardIds?.includes?.(cardData.id) ||
+            this.room?.state?.effectChronicle?.items?.some?.((item: any) => item.cardId === cardData.id)
+          );
+
+      // Dynamischer Pop-Out für aufgedeckte Star-Karten: proportional zur Handkartenhöhe
+      if (isRevealedStarCard) {
+        y += this.layout.handCardHeight * 0.45;
+        angle *= 0.4;
+      }
+
       const finalAngle = angle;
 
       const cardUI = this.processCard(
@@ -139,7 +160,8 @@ export class HandRenderer {
         this.layout.handCardWidth,
         this.layout.handCardHeight,
       );
-      cardUI.setDepth(100 + index);
+      const baseDepth = isRevealedStarCard ? 300 : 100;
+      cardUI.setDepth(baseDepth + index);
     });
   }
 

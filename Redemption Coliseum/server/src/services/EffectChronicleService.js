@@ -1,6 +1,7 @@
 // server/src/services/EffectChronicleService.js
 const { ChronicleItem } = require("../state/EffectChronicleState");
 const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants");
+const { ActionType } = require("../../../shared/actions");
 const { ChronicleHistoryService } = require("./ChronicleHistoryService");
 const GameLogService = require("./GameLogService");
 const logger = require("../utils/logger");
@@ -42,6 +43,10 @@ class EffectChronicleService {
           abilityId: card.abilityId || options.abilityId || "",
           isOptional: Boolean(card.isOptional || options.isOptional || false),
         });
+        if (options.isDeclared || options.accepted || actionType === ActionType.ACTIVATE_STAR_ABILITY) {
+          item.isConfirmed = true;
+          item.isDeclared = true;
+        }
         chronicle.items.push(item);
       });
     }

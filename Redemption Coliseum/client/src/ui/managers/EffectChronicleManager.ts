@@ -10,6 +10,7 @@ import { EffectChronicleHandler } from "../handlers/EffectChronicleHandler";
 import { SettingsManager } from "../../managers/SettingsManager";
 import { EFFECT_CHRONICLE_CONFIG } from "../config/visualConfig";
 import { GameEvents } from "../../constants/EventNames";
+import { ZONES } from "../../../../shared/zones";
 import type { ActionTelegraphMessage } from "../../../../shared/messages";
 import { TargetingArrowEffect } from "../effects/TargetingArrowEffect";
 import {
@@ -37,6 +38,7 @@ export class EffectChronicleManager {
   private knownItemIds = new Set<string>();
   private activeTelegraphArrows: TargetingArrowEffect | null = null;
   private persistentSiArrows: TargetingArrowEffect | null = null;
+  private activeChronicleCardId: string | null = null;
 
   constructor(
     room: Room<RoomState>,
@@ -103,6 +105,11 @@ export class EffectChronicleManager {
     this.activeTelegraphArrows = null;
     this.persistentSiArrows?.destroy();
     this.persistentSiArrows = null;
+    if (this.activeChronicleCardId) {
+      const prevCard = this.cardRenderer?.getCardUI(this.activeChronicleCardId);
+      prevCard?.setChronicleExecutionHighlight(false);
+      this.activeChronicleCardId = null;
+    }
     this.effect.destroy();
     this.flyout.destroy();
   }
@@ -119,7 +126,12 @@ export class EffectChronicleManager {
   }
 
   private _onActionTelegraph(msg: ActionTelegraphMessage): void {
-    if (!msg || !msg.sourceCardId || !Array.isArray(msg.targetCardIds) || msg.targetCardIds.length === 0) {
+    if (!msg || !msg.sourceCardId) {
+      return;
+    }
+    const hasCardTargets = Array.isArray(msg.targetCardIds) && msg.targetCardIds.length > 0;
+    const hasPileTarget = Boolean(msg.targetPileId);
+    if (!hasCardTargets && !hasPileTarget) {
       return;
     }
 
@@ -130,22 +142,76 @@ export class EffectChronicleManager {
       y: this.currentLayout?.opponentHand.centerY ?? this.scene.scale.height / 2,
     };
 
+    const resolvePilePosition = (pileId: string): { x: number; y: number } | undefined => {
+      if (!this.currentLayout) return undefined;
+      const [targetOwnerId, targetZone] = pileId.split(":");
+      const isMe = targetOwnerId === this.mySessionId;
+      const zone = targetZone || ZONES.DECK;
+      if (zone === ZONES.DECK) {
+        const rect = isMe ? this.currentLayout.playerDeckPile : this.currentLayout.opponentDeckPile;
+        return { x: rect.centerX, y: rect.centerY };
+      }
+      if (zone === ZONES.DISCARD) {
+        const rect = isMe ? this.currentLayout.playerDiscardPile : this.currentLayout.opponentDiscardPile;
+        return { x: rect.centerX, y: rect.centerY };
+      }
+      if (zone === ZONES.RESERVE) {
+        const rect = isMe ? this.currentLayout.playerReservePile : this.currentLayout.opponentReservePile;
+        return { x: rect.centerX, y: rect.centerY };
+      }
+      if (zone === ZONES.BANISH) {
+        const rect = isMe ? this.currentLayout.playerBanishPile : this.currentLayout.opponentBanishPile;
+        return { x: rect.centerX, y: rect.centerY };
+      }
+      return undefined;
+    };
+
+    const attachTargets = (arrowEffect: TargetingArrowEffect) => {
+      if (msg.targetPileId) {
+        const pilePos = resolvePilePosition(msg.targetPileId);
+        if (pilePos) arrowEffect.setTarget(msg.targetPileId, pilePos, true);
+      }
+
+      if (Array.isArray(msg.targetCardIds)) {
+        msg.targetCardIds.forEach((tId) => {
+          const targetCard = this.cardRenderer?.getCardUI(tId);
+          if (targetCard) {
+            arrowEffect.setTarget(tId, targetCard, true);
+          } else if (!msg.targetPileId && this.room.state?.players) {
+            for (const [pId, p] of this.room.state.players.entries()) {
+              const inDeck = p.deck && (p.deck as any).some((c: any) => c.id === tId);
+              if (inDeck) {
+                const pos = resolvePilePosition(`${pId}:${ZONES.DECK}`);
+                if (pos) arrowEffect.setTarget(`pile_${tId}`, pos, true);
+                break;
+              }
+              const inDiscard = p.discard && (p.discard as any).some((c: any) => c.id === tId);
+              if (inDiscard) {
+                const pos = resolvePilePosition(`${pId}:${ZONES.DISCARD}`);
+                if (pos) arrowEffect.setTarget(`pile_${tId}`, pos, true);
+                break;
+              }
+            }
+          }
+        });
+      }
+    };
+
     if (msg.persistent || msg.isSpecialInitiative) {
       this.persistentSiArrows?.destroy();
       this.persistentSiArrows = new TargetingArrowEffect(this.scene, sourcePos, alignment);
-      msg.targetCardIds.forEach((tId) => {
-        const targetCard = this.cardRenderer?.getCardUI(tId);
-        if (targetCard) this.persistentSiArrows?.setTarget(tId, targetCard, true);
-      });
+      attachTargets(this.persistentSiArrows);
     } else {
       this.activeTelegraphArrows?.destroy();
       this.activeTelegraphArrows = new TargetingArrowEffect(this.scene, sourcePos, alignment);
-      msg.targetCardIds.forEach((tId) => {
-        const targetCard = this.cardRenderer?.getCardUI(tId);
-        if (targetCard) this.activeTelegraphArrows?.setTarget(tId, targetCard, true);
-      });
+      attachTargets(this.activeTelegraphArrows);
 
       const duration = msg.durationMs || TARGETING_ARROW_CONFIG.TIMINGS.TELEGRAPH_DURATION_MS;
+      const totalTelegraphMs = duration + TARGETING_ARROW_CONFIG.TIMINGS.FADE_OUT_MS;
+      if (msg.sourceCardId) {
+        this.cardRenderer?.addTelegraphRevealedCard(msg.sourceCardId, totalTelegraphMs);
+      }
+
       this.scene.time.delayedCall(duration, () => {
         this.activeTelegraphArrows?.fadeAndDestroy();
         this.activeTelegraphArrows = null;
@@ -242,7 +308,29 @@ export class EffectChronicleManager {
 
     // 4. Update next phase button lock
     this.onPhaseLockCallback?.(items.length > 0);
+
+    // 5. Update active chronicle card highlight for both players
+    const activeItem = chronicle.items[0];
+    const activeCardId = activeItem?.cardId || null;
+    this._updateActiveCardHighlight(activeCardId);
+
     log("EffectChronicleManager", `Synced ${items.length} items, ${history.length} history (isSupport=${isSupport})`);
+  }
+
+  private _updateActiveCardHighlight(newActiveCardId: string | null): void {
+    if (this.activeChronicleCardId === newActiveCardId) return;
+
+    if (this.activeChronicleCardId) {
+      const prevCard = this.cardRenderer?.getCardUI(this.activeChronicleCardId);
+      prevCard?.setChronicleExecutionHighlight(false);
+    }
+
+    this.activeChronicleCardId = newActiveCardId;
+
+    if (newActiveCardId) {
+      const nextCard = this.cardRenderer?.getCardUI(newActiveCardId);
+      nextCard?.setChronicleExecutionHighlight(true);
+    }
   }
 
   private _animateOpponentItemFlight(item: ChronicleItemData, delayMs = 0): void {
@@ -262,7 +350,7 @@ export class EffectChronicleManager {
         width = (c.displayWidth && c.displayWidth > 0) ? c.displayWidth : (c.width * (c.scaleX || 1));
         height = (c.displayHeight && c.displayHeight > 0) ? c.displayHeight : (c.height * (c.scaleY || 1));
         rotation = c.rotation || 0;
-        texture = c.cardData.isFaceDown || !c.cardData.ImageFile ? "cardback" : `card-${c.cardData.ImageFile}`;
+        texture = c.isCurrentlyFaceDown() || !c.cardData.ImageFile ? "cardback" : `card-${c.cardData.ImageFile}`;
       } else if (this.currentLayout) {
         x = this.currentLayout.opponentHand.centerX;
         y = this.currentLayout.opponentHand.centerY;

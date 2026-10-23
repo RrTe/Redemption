@@ -4,6 +4,7 @@ const { ConditionEvaluator } = require("./ConditionEvaluator");
 const { AstEffectRunner } = require("./AstEffectRunner");
 const { TargetSelectionService } = require("./TargetSelectionService");
 const { AST_MESSAGES } = require("../../../shared/astConstants");
+const { ActionType } = require("../../../shared/actions");
 const logger = require("../utils/logger");
 
 /**
@@ -87,9 +88,17 @@ class AbilityResolver {
     }
 
     // 3. Optional ability confirmation check (both AST and Tabletop)
-    const isStarActivation = item.actionType === "ACTIVATE_STAR_ABILITY";
-    const isAlreadyAccepted = Boolean(item.isConfirmed || item.accepted || options.accepted === true);
-    if (options.accepted === true) {
+    const isStarActivation =
+      item.actionType === "ACTIVATE_STAR_ABILITY" ||
+      item.actionType === ActionType?.ACTIVATE_STAR_ABILITY ||
+      Boolean(item.isDeclared) ||
+      Boolean(options.isDeclared) ||
+      Boolean(card?.IsStarCard) ||
+      Boolean(card?.Class && card.Class.includes("Star"));
+
+    const isAlreadyAccepted =
+      Boolean(item.isConfirmed || item.accepted || item.isDeclared || options.accepted === true || options.isDeclared);
+    if (options.accepted === true || options.isDeclared || item.isDeclared) {
       item.isConfirmed = true;
     }
     const isOptional = Boolean(targetAbility?.is_optional || item.isOptional) && !isAlreadyAccepted;

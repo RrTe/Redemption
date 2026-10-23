@@ -26,6 +26,7 @@ export class CardRenderer {
   private handRenderer: HandRenderer;
   private fieldRenderer: FieldRenderer; // ✨ NEU
   private pileRenderer: PileRenderer; // ✨ NEU
+  private telegraphRevealedCardIds = new Set<string>();
 
   constructor(
     scene: Phaser.Scene,
@@ -48,7 +49,9 @@ export class CardRenderer {
       this.elementManager,
       this.animationManager,
       this.processCard.bind(this), // Wir übergeben die Methode gebunden an diese Instanz
-      this.scene.registry.get("settingsManager") // ✨ NEU
+      this.scene.registry.get("settingsManager"), // ✨ NEU
+      this.room,
+      this.isCardRevealed.bind(this),
     );
 
     // ✨ NEU: Field-Renderer initialisieren
@@ -172,6 +175,40 @@ export class CardRenderer {
     return attachmentMap;
   }
 
+  /**
+   * Extends the revealed state of a card for the duration of an active telegraph arrow.
+   *
+   * @param {string} cardId ID of the card acting as the source of the telegraph.
+   * @param {number} durationMs Duration in ms before the card conceals again.
+   */
+  public addTelegraphRevealedCard(cardId: string, durationMs: number): void {
+    this.telegraphRevealedCardIds.add(cardId);
+    this.scene.time.delayedCall(durationMs, () => {
+      this.telegraphRevealedCardIds.delete(cardId);
+      const player = this.room.state?.players?.get(this.room.sessionId) as PlayerState | undefined;
+      const opponent = Array.from(this.room.state?.players?.values() || []).find(
+        (p: any) => p.sessionId !== this.room.sessionId
+      ) as PlayerState | undefined;
+      if (player) {
+        this.renderAllCards(player, opponent);
+      }
+    });
+  }
+
+  /**
+   * Checks whether a given card should currently be revealed face-up.
+   *
+   * @param {string} cardId ID of the card.
+   * @returns {boolean} True if the card is revealed in a Star sequence, Chronicle, or active telegraph.
+   */
+  public isCardRevealed(cardId: string): boolean {
+    return Boolean(
+      this.room.state?.activeSequenceCardIds?.includes?.(cardId) ||
+      this.room.state?.effectChronicle?.items?.some?.((item: any) => item.cardId === cardId) ||
+      this.telegraphRevealedCardIds.has(cardId)
+    );
+  }
+
   /** ✨ FIX: Public gemacht, damit Sub-Renderer darauf zugreifen können. */
   public processCard(
     cardData: CardState,
@@ -196,12 +233,17 @@ export class CardRenderer {
     // ✨ KORREKTUR: Berücksichtige den Status der Karte (isFaceDown) vom Server.
     let isFaceDown = cardData.isFaceDown;
 
-    if (
-      CONCEALED_ZONES.includes(cardData.zone) ||
-      (cardData.zone === ZONES.HAND &&
-        cardData.controllerId !== this.room.sessionId)
-    ) {
+    if (CONCEALED_ZONES.includes(cardData.zone)) {
       isFaceDown = true;
+    } else if (cardData.zone === ZONES.HAND) {
+      if (cardData.controllerId === this.room.sessionId) {
+        // Own hand cards are strictly visible face-up to the player at all times
+        isFaceDown = false;
+      } else {
+        // Opponent hand cards are concealed unless revealed as active Star sequence, chronicle execution, or active telegraph
+        const isRevealedStarCard = this.isCardRevealed(cardData.id);
+        isFaceDown = !isRevealedStarCard;
+      }
     }
 
     // ✨ KORREKTUR: Berücksichtige Drehung (Flip/Tap) bei der Winkelberechnung.

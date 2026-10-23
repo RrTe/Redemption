@@ -157,9 +157,13 @@ class DiscardHandler {
 
     // Broadcast action telegraph to both players for deterministic/resolved targets
     if (typeof room.broadcast === "function" && item?.cardId && targets.length > 0) {
+      const explicitPileId =
+        options.targetPileId ||
+        (targets[0]?.card?.zone === ZONES.DECK ? `${targets[0].owner.sessionId}:${ZONES.DECK}` : undefined);
       room.broadcast(AST_MESSAGES.ACTION_TELEGRAPH, {
         sourceCardId: item.cardId,
         targetCardIds: targets.map((t) => t.card.id),
+        targetPileId: explicitPileId,
         action: AST_ACTIONS.DISCARD,
         durationMs: 500,
       });

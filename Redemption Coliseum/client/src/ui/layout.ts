@@ -188,14 +188,16 @@ export function calculateLayout(
     playerLandOfRedemptionPile = new Phaser.Geom.Rectangle(playerOuterColX, playerReservePile.y - PILE_SPACING, pileWidth, pileHeight);
   }
 
+  // Dynamische Absenkung der gegnerischen Hand relativ zur Kartenhöhe
+  const opponentHandY = Math.round(cardHeight * 0.12);
   const opponentHand = new Phaser.Geom.Rectangle(
     handZoneX,
-    0,
+    opponentHandY,
     handZoneWidth,
     handZoneHeight,
   );
 
-  const totalOpponentBoardHeight = height / 2 - opponentHand.height;
+  const totalOpponentBoardHeight = height / 2 - opponentHand.bottom;
   const opponentTerritoryHeight = totalOpponentBoardHeight * (isBattlePhase ? 0.4 : 0.6);
   const opponentLandOfBondageHeight = totalOpponentBoardHeight * (isBattlePhase ? 0.2 : 0.3);
 

@@ -42,6 +42,16 @@ class SubmitDrawSequenceCommand extends BaseCommand {
           if (card && isStarStep) {
             card.isFaceUp = true;
             card.isFaceDown = false;
+            // Synchronize revealed Star cards into all client StateViews
+            if (this.state._clientViews) {
+              this.state._clientViews.forEach((view) => {
+                try {
+                  view.add(card);
+                } catch {
+                  // Ignore if already added to view
+                }
+              });
+            }
           }
         });
       }
@@ -92,6 +102,9 @@ class SubmitDrawSequenceCommand extends BaseCommand {
         actionType,
         {
           autoExecuteSupported: true,
+          isDeclared: isStarStep,
+          isConfirmed: isStarStep,
+          accepted: isStarStep,
           onComplete: room => {
             DrawPhaseStepService.advanceStep(room);
           },

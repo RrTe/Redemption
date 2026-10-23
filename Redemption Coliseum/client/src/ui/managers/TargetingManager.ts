@@ -120,13 +120,13 @@ export class TargetingManager {
     // 3. Activate focus spotlight
     if (request.targetType === "pile") {
       const allowedIds = new Set((request.eligiblePiles || []).map((p) => p.id));
-      this.focusManager.activate("pile", undefined, allowedIds);
+      this.focusManager.activate("pile", undefined, allowedIds, sourceCardId);
       this.activePiles = this.focusManager
         .getPileEntries()
         .filter(({ id }) => allowedIds.has(id))
         .map(({ pile }) => pile);
     } else {
-      this.focusManager.activate("card", request.eligibleCardIds || []);
+      this.focusManager.activate("card", request.eligibleCardIds || [], undefined, sourceCardId);
     }
   }
 

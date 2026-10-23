@@ -193,7 +193,7 @@ export class DrawSequenceManager {
     const m = c.getWorldTransformMatrix();
     const w = (c.displayWidth && c.displayWidth > 0) ? c.displayWidth : (c.width * (c.scaleX || 1));
     const h = (c.displayHeight && c.displayHeight > 0) ? c.displayHeight : (c.height * (c.scaleY || 1));
-    const tex = c.cardData.isFaceDown || !c.cardData.ImageFile ? "cardback" : `card-${c.cardData.ImageFile}`;
+    const tex = c.isCurrentlyFaceDown() || !c.cardData.ImageFile ? "cardback" : `card-${c.cardData.ImageFile}`;
     const delay = index * EFFECT_CHRONICLE_CONFIG.CARD_FLIGHT_STAGGER_MS;
     const emit = () => this.scene.events.emit("playChronicleFlight", { x: m.tx, y: m.ty, width: w, height: h, rotation: c.rotation || 0, texture: tex });
     if (delay > 0) this.scene.time.delayedCall(delay, emit);

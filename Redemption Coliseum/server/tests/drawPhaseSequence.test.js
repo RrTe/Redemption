@@ -265,4 +265,64 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
       expect(state.drawStep).toBe(DRAW_STEPS.ACTIVE_STARS);
     });
   });
+
+  describe("Star-Cards Reveal & StateView Synchronization", () => {
+    test("reveals confirmed Star-cards face-up and registers them in all clients' StateViews", () => {
+      const starCard = createStarCard("s_reveal", "p1");
+      starCard.isFaceDown = true;
+      starCard.isFaceUp = false;
+      player1.hand.push(starCard);
+
+      const mockViewP1 = { add: jest.fn() };
+      const mockViewP2 = { add: jest.fn() };
+      state._clientViews = new Map([
+        ["p1", mockViewP1],
+        ["p2", mockViewP2],
+      ]);
+
+      DrawPhaseStepService.startTurnDrawSequence(room);
+      expect(state.drawStep).toBe(DRAW_STEPS.ACTIVE_STARS);
+
+      const cmd = new SubmitDrawSequenceCommand(room, client1);
+      cmd.execute({ step: DRAW_STEPS.ACTIVE_STARS, orderedCardIds: ["s_reveal"] });
+
+      // 1. Verified face up
+      expect(starCard.isFaceUp).toBe(true);
+      expect(starCard.isFaceDown).toBe(false);
+
+      // 2. Verified registered in both StateViews
+      expect(mockViewP1.add).toHaveBeenCalledWith(starCard);
+      expect(mockViewP2.add).toHaveBeenCalledWith(starCard);
+
+      // 3. Verified enqueued item marked as declared & confirmed
+      expect(state.effectChronicle.items.length).toBe(1);
+      const item = state.effectChronicle.items[0];
+      expect(item.isConfirmed).toBe(true);
+      expect(item.isDeclared).toBe(true);
+    });
+
+    test("bypasses optional ability prompt for declared Star cards even if isOptional is true", () => {
+      const starCard = createStarCard("s_opt", "p1");
+      starCard.isOptional = true;
+      player1.hand.push(starCard);
+
+      const { AbilityResolver } = require("../src/ast/AbilityResolver");
+      const resolver = new AbilityResolver(room);
+      room.abilityResolver = resolver;
+
+      client1.send = jest.fn();
+
+      DrawPhaseStepService.startTurnDrawSequence(room);
+      const cmd = new SubmitDrawSequenceCommand(room, client1);
+      cmd.execute({ step: DRAW_STEPS.ACTIVE_STARS, orderedCardIds: ["s_opt"] });
+
+      // Resolve item through AbilityResolver
+      const item = state.effectChronicle.items[0];
+      const result = resolver.resolve(item, { isDeclared: true });
+
+      // Must not await confirmation via REQUEST_OPTIONAL_ABILITY
+      expect(result.awaitingConfirmation).toBeFalsy();
+      expect(client1.send).not.toHaveBeenCalledWith("REQUEST_OPTIONAL_ABILITY", expect.anything());
+    });
+  });
 });

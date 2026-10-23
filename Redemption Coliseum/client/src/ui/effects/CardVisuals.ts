@@ -59,6 +59,10 @@ export class CardVisuals {
   private starIcon: Phaser.GameObjects.Image | null = null;
   private starPulseControl: { stop: () => void } | null = null;
 
+  // Chronicle Execution Highlight State
+  private chronicleHighlightActive: boolean = false;
+  private originalDepthBeforeChronicle: number | null = null;
+
   // Set Aside Effect
   private setAsideEffect: CardSetAsideEffect;
   private targetBorderEffect: TargetBorderEffect;
@@ -184,6 +188,25 @@ export class CardVisuals {
       },
       this.scene,
     );
+  }
+
+  /** Ensures the front image texture is loaded and visible. */
+  public ensureFrontImageLoaded(): void {
+    const { cardData } = this.cardUI;
+    if (!cardData?.ImageFile) return;
+
+    const frontKey = `card-${cardData.ImageFile}`;
+    if (this.scene.textures.exists(frontKey)) {
+      if (!this.cardFrontImage || this.cardFrontImage.texture.key !== frontKey) {
+        this.setFrontImage(frontKey);
+        this.finalizeImageSetup();
+      }
+    } else {
+      const assetManager = this.scene.registry.get("assetManager") as AssetManager;
+      if (assetManager) {
+        this.loadImages(assetManager);
+      }
+    }
   }
 
   private finalizeImageSetup() {
@@ -414,7 +437,7 @@ export class CardVisuals {
   /** Startet den Glow-Effekt (z.B. bei Mouseover). */
   public startGlow(ignoreZoneCheck: boolean = false) {
     if (!this.areEffectsEnabled()) return;
-    if (this.starHighlightActive || this.lostSoulHighlightActive) return;
+    if (this.starHighlightActive || this.lostSoulHighlightActive || this.chronicleHighlightActive) return;
     if (!ignoreZoneCheck && PILE_ZONES.includes(this.cardUI.currentZone))
       return;
     this.updateGlowZone(true, true);
@@ -422,7 +445,7 @@ export class CardVisuals {
 
   /** Stoppt den Glow-Effekt. */
   public stopGlow() {
-    if (this.starHighlightActive || this.lostSoulHighlightActive) return;
+    if (this.starHighlightActive || this.lostSoulHighlightActive || this.chronicleHighlightActive) return;
 
     if (this.glowEmitter) {
       this.glowEmitter.stop();
@@ -506,6 +529,36 @@ export class CardVisuals {
 
   public getStarIcon(): Phaser.GameObjects.Image | null {
     return this.starIcon;
+  }
+
+  /**
+   * Activates or deactivates the prominent Chronicle execution highlight.
+   *
+   * @param {boolean} isActive Whether the card is actively resolving in the chronicle.
+   */
+  public updateChronicleExecutionHighlight(isActive: boolean): void {
+    if (this.chronicleHighlightActive === isActive) return;
+    this.chronicleHighlightActive = isActive;
+
+    if (isActive) {
+      if (this.originalDepthBeforeChronicle === null) {
+        this.originalDepthBeforeChronicle = this.cardUI.depth;
+      }
+      this.cardUI.setDepth(this.originalDepthBeforeChronicle + 25);
+
+      // Celestial radiant aura
+      const celestialTint = [0xFFF8DC, 0xFFD700, 0x87CEEB, 0x1E90FF];
+      this.updateGlowZone(true, true, celestialTint);
+    } else {
+      if (this.originalDepthBeforeChronicle !== null) {
+        this.cardUI.setDepth(this.originalDepthBeforeChronicle);
+        this.originalDepthBeforeChronicle = null;
+      }
+      if (!this.starHighlightActive && !this.lostSoulHighlightActive && this.glowEmitter) {
+        this.glowEmitter.stop();
+        this.glowEmitter.setVisible(false);
+      }
+    }
   }
 
   /** Schaltet den rubinroten Glitzer- und Umlaufeffekt für das Targeting ein oder aus. */
@@ -602,9 +655,12 @@ export class CardVisuals {
 
         const shape = new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h);
 
-        // Wenn Star- oder Lost Soul Highlight aktiv ist, entsprechende Partikel und Farben erzwingen
-        const textureKey = (this.starHighlightActive || this.lostSoulHighlightActive) ? "blue_spark_small" : "spark";
-        const finalTint = this.starHighlightActive
+        // Wenn Star-, Lost Soul- oder Chronicle-Highlight aktiv ist, entsprechende Partikel und Farben erzwingen
+        const isSpecialHighlight = this.starHighlightActive || this.lostSoulHighlightActive || this.chronicleHighlightActive;
+        const textureKey = isSpecialHighlight ? "blue_spark_small" : "spark";
+        const finalTint = this.chronicleHighlightActive
+          ? [0xFFF8DC, 0xFFD700, 0x87CEEB, 0x1E90FF]
+          : this.starHighlightActive
           ? [0xCFEAFF, 0x87CEFA, 0x1E90FF, 0x7DC5F5]
           : this.lostSoulHighlightActive
           ? [0x80E5FF, 0x00C0FF, 0x0080FF, 0x00E5FF]

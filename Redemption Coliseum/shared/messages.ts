@@ -58,7 +58,8 @@ export interface RequestTargetSelectionMessage {
 
 export interface ActionTelegraphMessage {
   sourceCardId: string;
-  targetCardIds: string[];
+  targetCardIds?: string[];
+  targetPileId?: string;
   durationMs?: number;
   action?: string;
   isSpecialInitiative?: boolean;
