@@ -87,4 +87,62 @@ describe("MoveCardCommand - Lost Soul Undo", () => {
     expect(player[ZONES.DECK][0].zone).toBe(ZONES.DECK);
     expect(player[ZONES.DECK][1].zone).toBe(ZONES.DECK);
   });
+
+  test("should divert Lost Soul to Land of Bondage on discard from deck without replacement card and restore it on top of deck on undo", () => {
+    // Top card is Lost Soul
+    const lsCard = new Card();
+    lsCard.id = "ls_discard";
+    lsCard.Name = "Lost Soul (Hopper)";
+    lsCard.Type = CARD_TYPES.LOST_SOUL;
+    lsCard.controllerId = "p1";
+    lsCard.originalOwnerId = "p1";
+    lsCard.zone = ZONES.DECK;
+    room.cardLookup.set("ls_discard", lsCard);
+    player[ZONES.DECK].push(lsCard);
+
+    // Second card is regular Hero
+    const heroCard = new Card();
+    heroCard.id = "hero_under";
+    heroCard.Name = "Moses";
+    heroCard.Type = CARD_TYPES.HERO;
+    heroCard.controllerId = "p1";
+    heroCard.originalOwnerId = "p1";
+    heroCard.zone = ZONES.DECK;
+    room.cardLookup.set("hero_under", heroCard);
+    player[ZONES.DECK].push(heroCard);
+
+    expect(player[ZONES.DECK].length).toBe(2);
+    expect(player[ZONES.DISCARD].length).toBe(0);
+    expect(player[ZONES.LAND_OF_BONDAGE].length).toBe(0);
+
+    const cmd = new MoveCardCommand(room, client);
+    cmd.execute({
+      from: ZONES.DECK,
+      to: ZONES.DISCARD,
+      cardId: "ls_discard",
+    });
+
+    // Verify after execute:
+    // Lost Soul diverted to Land of Bondage, Discard is empty, Hero is STILL in deck (no replacement drawn!)
+    expect(cmd.canUndo).toBe(true);
+    expect(player[ZONES.LAND_OF_BONDAGE].length).toBe(1);
+    expect(player[ZONES.LAND_OF_BONDAGE][0].id).toBe("ls_discard");
+    expect(player[ZONES.LAND_OF_BONDAGE][0].zone).toBe(ZONES.LAND_OF_BONDAGE);
+    expect(player[ZONES.DISCARD].length).toBe(0);
+    expect(player[ZONES.DECK].length).toBe(1);
+    expect(player[ZONES.DECK][0].id).toBe("hero_under");
+
+    // Perform Undo
+    cmd.undo();
+
+    // Verify after undo:
+    // Land of Bondage is empty, Discard is empty, Deck has both cards with Lost Soul back on top!
+    expect(player[ZONES.LAND_OF_BONDAGE].length).toBe(0);
+    expect(player[ZONES.DISCARD].length).toBe(0);
+    expect(player[ZONES.DECK].length).toBe(2);
+    expect(player[ZONES.DECK][0].id).toBe("ls_discard");
+    expect(player[ZONES.DECK][1].id).toBe("hero_under");
+    expect(player[ZONES.DECK][0].zone).toBe(ZONES.DECK);
+    expect(player[ZONES.DECK][1].zone).toBe(ZONES.DECK);
+  });
 });

@@ -78,6 +78,9 @@ function getZoneDisplayName(zone, isOpponent = false) {
     case ZONES.RESERVE: return prefix + "Reserve";
     case ZONES.BANISH: return prefix + "Banish Zone";
     case ZONES.TERRITORY: return prefix + "Territory";
+    case ZONES.LAND_OF_BONDAGE: return prefix + "Land of Bondage";
+    case ZONES.LAND_OF_REDEMPTION: return prefix + "Land of Redemption";
+    case ZONES.BATTLEFIELD: return "Battlefield";
     default: return zone;
   }
 }
@@ -274,7 +277,7 @@ function _validateMove(
   }
 
   // Rule verification for Lost Souls:
-  if (card.Type === CARD_TYPES.LOST_SOUL) {
+  if (card.Type === CARD_TYPES.LOST_SOUL || (card.Type && card.Type.includes("Lost Soul"))) {
     // Permitted moves for Lost Souls:
     // 1. Own or opponent's Land of Bondage
     // 2. Own Deck
@@ -433,9 +436,10 @@ function _findCardAndOwner(cardLookup, state, cardId, fromZone) {
  * @param {RoomState} state - Global room state.
  * @param {number} count - Number of valid cards to draw.
  * @param {Map<string, Card>} cardLookup - Central lookup map.
+ * @param {boolean} [allowReplacement=true] - Whether to draw a replacement card on diversion.
  * @returns {{validCards: Card[], divertedCards: Card[]}}
  */
-function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
+function _drawCardsWithLostSoulRule(player, state, count, cardLookup, allowReplacement = true) {
   const deck = getZoneCollection(player, state, ZONES.DECK);
   const landOfBondage = getZoneCollection(player, state, ZONES.LAND_OF_BONDAGE);
   const validCards = [];
@@ -455,6 +459,7 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
       );
       card.zone = ZONES.LAND_OF_BONDAGE;
       card.lastMoved = Date.now();
+      card.isFaceUp = true;
       card.counters.clear();
       landOfBondage.push(card);
       divertedCards.push(card);
@@ -480,6 +485,10 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup) {
           newView.add(card);
           logger.debug(`[DRAW_FROM_DECK/LS] Added cloned Lost Soul ${card.Name} to StateView of ${card.controllerId}`);
         }
+      }
+
+      if (!allowReplacement) {
+        drawnCount++;
       }
     } else {
       validCards.push(card);
@@ -526,13 +535,20 @@ function _moveCardById(
     logger.warn(
       `[MOVE_BY_ID_FAIL] Card '${cardId}' not found in zone '${from}' or controller info missing.`,
     );
-    return { movedCards: [], logEntry: "" };
+    return { movedCards: [], divertedCards: [], logEntry: "" };
   }
   const { fromArr: actualFromArr, controllerId, cardIndex, card, actualZone: detectedZone } = findResult;
 
   const effectiveFromZone = detectedZone || from || card.zone || "unknown";
 
+  // Check if Lost Soul is being removed from deck -> Divert to Land of Bondage
+  const isLostSoul = card.Type === CARD_TYPES.LOST_SOUL || (card.Type && card.Type.includes("Lost Soul"));
+  const isLeavingDeck = effectiveFromZone === ZONES.DECK && to !== ZONES.DECK;
+  const isDiverted = isLeavingDeck && isLostSoul && !options?.isUndo;
+  const effectiveTo = isDiverted ? ZONES.LAND_OF_BONDAGE : to;
+
   // Determine target player:
+  // If diverted to Land of Bondage, default to the card's true owner!
   // If an explicit targetPlayerId is requested (e.g. user manually drags onto a specific player's board/pile),
   // use that requested target so _validateMove can enforce pile protection.
   // Otherwise, for personal pile zones (Deck, Discard, Reserve, Banish), default to the card's true owner!
@@ -540,9 +556,11 @@ function _moveCardById(
   const trueOwnerId = card.originalOwnerId || card.ownerId;
   let targetPlayer;
 
-  if (targetPlayerIdFromCoords) {
+  if (isDiverted) {
+    targetPlayer = (trueOwnerId && state.players.get(trueOwnerId)) || state.players.get(controllerId) || actingPlayer;
+  } else if (targetPlayerIdFromCoords) {
     targetPlayer = state.players.get(targetPlayerIdFromCoords);
-  } else if (PILE_ZONES.includes(to) && trueOwnerId && state.players.has(trueOwnerId)) {
+  } else if (PILE_ZONES.includes(effectiveTo) && trueOwnerId && state.players.has(trueOwnerId)) {
     targetPlayer = state.players.get(trueOwnerId);
   } else {
     targetPlayer = actingPlayer;
@@ -551,14 +569,14 @@ function _moveCardById(
   // ✨ FIX: Prevent moving the card if it's already in the target zone to avoid 
   // index corruption and double-move side effects.
   // EXCEPT when reordering within the same zone (e.g. Look/Reveal top/bottom placement).
-  const isReordering = effectiveFromZone === to && (coords?.position === "top" || coords?.position === "bottom");
-  if (effectiveFromZone === to && card.controllerId === targetPlayer?.sessionId && !isReordering) {
-    logger.debug(`[MOVE_SKIP] Card '${card.id}' is already in target zone '${to}'. Skipping.`);
+  const isReordering = effectiveFromZone === effectiveTo && (coords?.position === "top" || coords?.position === "bottom");
+  if (effectiveFromZone === effectiveTo && card.controllerId === targetPlayer?.sessionId && !isReordering) {
+    logger.debug(`[MOVE_SKIP] Card '${card.id}' is already in target zone '${effectiveTo}'. Skipping.`);
     // ✨ FIX: Even if skip, ensure visibility is correct for the zone.
-    if (to === ZONES.HAND || to === ZONES.TERRITORY) {
+    if (effectiveTo === ZONES.HAND || effectiveTo === ZONES.TERRITORY || effectiveTo === ZONES.LAND_OF_BONDAGE) {
       card.isFaceUp = true;
     }
-    return { movedCards: [card], logEntry: "" };
+    return { movedCards: [card], divertedCards: [], logEntry: "" };
   }
 
   logger.debug(
@@ -570,7 +588,7 @@ function _moveCardById(
     logger.error(
       `[MOVE_BY_ID_FATAL] Critical error: targetPlayer could not be determined. ID from Coords: '${targetPlayerIdFromCoords}', Fallback player: '${actingPlayer?.sessionId}'`,
     );
-    return { movedCards: [], logEntry: "" };
+    return { movedCards: [], divertedCards: [], logEntry: "" };
   }
 
   logger.debug(`[MOVE_BY_ID] moveCard determined targetPlayer: ${targetPlayer.sessionId}`);
@@ -580,15 +598,15 @@ function _moveCardById(
     controllerId,
     targetPlayer.sessionId,
     from,
-    to,
+    effectiveTo,
     { ...options, inGameType, inGameAlignment },
   );
   if (!validation.valid) {
     card.lastMoved = Date.now(); // Update timestamp to trigger client snap-back
     logger.warn(
-      `[MOVE_BY_ID_FAIL] Move validation failed for card '${cardId}' from ${from} to ${to}. Reason: ${validation.error}`,
+      `[MOVE_BY_ID_FAIL] Move validation failed for card '${cardId}' from ${from} to ${effectiveTo}. Reason: ${validation.error}`,
     );
-    return { movedCards: [], logEntry: "", error: validation.error };
+    return { movedCards: [], divertedCards: [], logEntry: "", error: validation.error };
   }
 
   const pileController = state.players.get(controllerId);
@@ -596,21 +614,21 @@ function _moveCardById(
     logger.error(
       `[MOVE_BY_ID_FATAL] Pile controller with ID '${controllerId}' not found in state. Aborting move.`,
     );
-    return { movedCards: [], logEntry: "" };
+    return { movedCards: [], divertedCards: [], logEntry: "" };
   }
 
   // ✨ ATOMIC SYNC FIX: Update properties BEFORE splicing/pushing
   // This ensures the object carries the correct metadata when collection observers fire.
-  card.zone = to;
+  card.zone = effectiveTo;
   card.lastMoved = Date.now();
   card.controllerId = targetPlayer.sessionId;
-  if (to === ZONES.HAND || to === ZONES.TERRITORY) {
+  if (effectiveTo === ZONES.HAND || effectiveTo === ZONES.TERRITORY || effectiveTo === ZONES.LAND_OF_BONDAGE) {
     card.isFaceUp = true;
   }
   card.counters.clear();
   
   // Apply or clear inGame properties
-  const isLeavingField = [ZONES.DECK, ZONES.DISCARD, ZONES.HAND, ZONES.BANISH, ZONES.RESERVE].includes(to);
+  const isLeavingField = [ZONES.DECK, ZONES.DISCARD, ZONES.HAND, ZONES.BANISH, ZONES.RESERVE].includes(effectiveTo);
   if (isLeavingField) {
     card.inGameType = "";
     card.inGameAlignment = "";
@@ -637,7 +655,7 @@ function _moveCardById(
   );
 
   // Tokens dissolve completely when moved to Discard or Banish.
-  if (movedCard.isToken && (to === ZONES.DISCARD || to === ZONES.BANISH)) {
+  if (movedCard.isToken && (effectiveTo === ZONES.DISCARD || effectiveTo === ZONES.BANISH)) {
     const templateId = movedCard.templateId || movedCard.ImageFile;
     cardLookup.delete(cardId);
     if (state._clientViews) {
@@ -646,7 +664,7 @@ function _moveCardById(
         oldView.remove(splicedCard);
       }
     }
-    return { movedCards: [movedCard], logEntry: `${actingPlayer.name} dissolves token {{${templateId}|${movedCard.Name}}}.` };
+    return { movedCards: [movedCard], divertedCards: [], logEntry: `${actingPlayer.name} dissolves token {{${templateId}|${movedCard.Name}}}.` };
   }
 
   if (coords) {
@@ -654,18 +672,28 @@ function _moveCardById(
     movedCard.y = coords.y;
   }
 
-  const toArr = getZoneCollection(targetPlayer, state, to);
+  const toArr = getZoneCollection(targetPlayer, state, effectiveTo);
   const position = coords?.position;
 
-  if (to === ZONES.DECK && position === "bottom") {
-    logger.debug(`[MOVE_BY_ID] PUSHING to bottom of ${to}.`);
+  if (effectiveTo === ZONES.DECK && position === "bottom") {
+    logger.debug(`[MOVE_BY_ID] PUSHING to bottom of ${effectiveTo}.`);
     toArr.push(movedCard);
-  } else if (to === ZONES.DECK) {
-    logger.debug(`[MOVE_BY_ID] UNSHIFTING to top of ${to}.`);
+  } else if (effectiveTo === ZONES.DECK) {
+    logger.debug(`[MOVE_BY_ID] UNSHIFTING to top of ${effectiveTo}.`);
     _unshiftToZone(toArr, movedCard);
   } else {
-    logger.debug(`[MOVE_BY_ID] PUSHING to ${to}. New length: ${toArr.length + 1}`);
+    logger.debug(`[MOVE_BY_ID] PUSHING to ${effectiveTo}. New length: ${toArr.length + 1}`);
     toArr.push(movedCard);
+  }
+
+  // Add available action for Lost Soul moved to Land of Bondage
+  if (isDiverted) {
+    const action = new CardAction();
+    action.id = `soul_${Date.now()}_${movedCard.id}`;
+    action.type = ActionType.ACTIVATE_ABILITY;
+    action.description = ACTION_DESCRIPTIONS.ACTIVATE_ABILITY;
+    action.isMandatory = false;
+    addAvailableAction(state, movedCard, action);
   }
 
   // Restore snapshot properties if undoing
@@ -692,18 +720,19 @@ function _moveCardById(
   const templateId = movedCard.templateId || movedCard.ImageFile;
   
   // Special logging for Lost Souls being moved to Land of Bondage
-  if (movedCard && movedCard.Type === CARD_TYPES.LOST_SOUL && to === ZONES.LAND_OF_BONDAGE) {
-      logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} to ${getZoneDisplayName(to, false)}. (Lost Soul rule)`;
+  if (isDiverted || (movedCard && isLostSoul && effectiveTo === ZONES.LAND_OF_BONDAGE)) {
+      const isToOpponent = targetPlayer.sessionId !== actingPlayer.sessionId;
+      logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} to ${getZoneDisplayName(effectiveTo, isToOpponent)}. (Lost Soul rule)`;
   } else {
       const isFromOpponent = controllerId !== actingPlayer.sessionId;
       const isToOpponent = targetPlayer.sessionId !== actingPlayer.sessionId;
       
-      let toDisplay = getZoneDisplayName(to, isToOpponent);
-      if (to === ZONES.DECK) {
+      let toDisplay = getZoneDisplayName(effectiveTo, isToOpponent);
+      if (effectiveTo === ZONES.DECK) {
           toDisplay = position === "bottom" ? `the bottom of ${toDisplay}` : `the top of ${toDisplay}`;
       }
 
-      if (effectiveFromZone === ZONES.HAND && to === ZONES.DECK) {
+      if (effectiveFromZone === ZONES.HAND && effectiveTo === ZONES.DECK) {
           logEntry = `${actingPlayer.name} moves a card from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${toDisplay}.`;
       } else {
           logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${toDisplay}.`;
@@ -715,7 +744,7 @@ function _moveCardById(
     {
       name: movedCard.Name,
       from,
-      to,
+      to: effectiveTo,
       id: cardId,
       owner: movedCard.originalOwnerId,
       controller: movedCard.controllerId,
@@ -749,7 +778,11 @@ function _moveCardById(
     }
   }
 
-  return { movedCards: [movedCard], logEntry: logEntry };
+  return {
+    movedCards: isDiverted ? [] : [movedCard],
+    divertedCards: isDiverted ? [movedCard] : [],
+    logEntry: logEntry,
+  };
 }
 
 /**
@@ -803,7 +836,13 @@ function _drawCardsFromDeck(
   logger.debug(
     `[DRAW_FROM_DECK] Player '${player.sessionId}' drawing ${effectiveCount} cards to '${to}'.`,
   );
-  const { validCards, divertedCards } = _drawCardsWithLostSoulRule(player, state, effectiveCount, cardLookup);
+  const { validCards, divertedCards } = _drawCardsWithLostSoulRule(
+    player,
+    state,
+    effectiveCount,
+    cardLookup,
+    to === ZONES.HAND,
+  );
 
   if (validCards.length > 0) {
     const toArr = getZoneCollection(player, state, to);

@@ -275,6 +275,77 @@ describe("cardService (moveCard)", () => {
       expect(player[ZONES.DISCARD].length).toBe(1);
     });
 
+    test("sollte Lost Souls beim Entfernen aus dem Deck immer ins Land of Bondage des Besitzers umleiten und keine Ersatzkarte ziehen", () => {
+      player[ZONES.DECK].length = 0;
+
+      const lsDeck = new Card();
+      lsDeck.id = "ls_deck";
+      lsDeck.Name = "Lost Soul (Deck)";
+      lsDeck.Type = CARD_TYPES.LOST_SOUL;
+      lsDeck.controllerId = "p1";
+      lsDeck.originalOwnerId = "p1";
+      lsDeck.zone = ZONES.DECK;
+      player[ZONES.DECK].push(lsDeck);
+      cardLookup.set(lsDeck.id, lsDeck);
+
+      const heroDeck = new Card();
+      heroDeck.id = "hero_deck";
+      heroDeck.Name = "King David";
+      heroDeck.Type = CARD_TYPES.HERO;
+      heroDeck.controllerId = "p1";
+      heroDeck.originalOwnerId = "p1";
+      heroDeck.zone = ZONES.DECK;
+      player[ZONES.DECK].push(heroDeck);
+      cardLookup.set(heroDeck.id, heroDeck);
+
+      expect(player[ZONES.DECK].length).toBe(2);
+
+      // Discard Lost Soul from Deck
+      const result = moveCard(player, state, cardLookup, ZONES.DECK, ZONES.DISCARD, "ls_deck");
+
+      // Verify diversion
+      expect(result.divertedCards.length).toBe(1);
+      expect(result.divertedCards[0].id).toBe("ls_deck");
+      expect(result.movedCards.length).toBe(0);
+      expect(player[ZONES.LAND_OF_BONDAGE].length).toBe(1);
+      expect(player[ZONES.LAND_OF_BONDAGE][0].id).toBe("ls_deck");
+      expect(player[ZONES.LAND_OF_BONDAGE][0].zone).toBe(ZONES.LAND_OF_BONDAGE);
+      expect(player[ZONES.DISCARD].length).toBe(0);
+
+      // Verify NO replacement card is drawn: Hero is still in deck
+      expect(player[ZONES.DECK].length).toBe(1);
+      expect(player[ZONES.DECK][0].id).toBe("hero_deck");
+
+      // Verify available action registered
+      expect(player[ZONES.LAND_OF_BONDAGE][0].availableActions.length).toBeGreaterThan(0);
+    });
+
+    test("sollte beim Discard einer gegnerischen Lost Soul vom gegnerischen Deck diese im Land of Bondage des Besitzers platzieren", () => {
+      const opponent = new PlayerState();
+      opponent.sessionId = "p2";
+      opponent.name = "Player 2";
+      state.players.set("p2", opponent);
+
+      const lsOpponent = new Card();
+      lsOpponent.id = "ls_p2";
+      lsOpponent.Name = "Lost Soul (P2)";
+      lsOpponent.Type = CARD_TYPES.LOST_SOUL;
+      lsOpponent.controllerId = "p2";
+      lsOpponent.originalOwnerId = "p2";
+      lsOpponent.zone = ZONES.DECK;
+      opponent[ZONES.DECK].push(lsOpponent);
+      cardLookup.set(lsOpponent.id, lsOpponent);
+
+      // Player 1 triggers discard of Player 2's top deck card
+      const result = moveCard(player, state, cardLookup, ZONES.DECK, ZONES.DISCARD, "ls_p2");
+
+      expect(result.divertedCards.length).toBe(1);
+      expect(opponent[ZONES.LAND_OF_BONDAGE].length).toBe(1);
+      expect(opponent[ZONES.LAND_OF_BONDAGE][0].id).toBe("ls_p2");
+      expect(opponent[ZONES.DISCARD].length).toBe(0);
+      expect(player[ZONES.LAND_OF_BONDAGE].length).toBe(0);
+    });
+
     test("sollte Kartenbewegungen auf gegnerische Pile-Zonen blockieren", () => {
       const opponent = new PlayerState();
       opponent.sessionId = "p2";

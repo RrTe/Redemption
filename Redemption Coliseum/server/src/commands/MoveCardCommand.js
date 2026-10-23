@@ -123,6 +123,9 @@ class MoveCardCommand extends BaseCommand {
           this.preMoveSnapshot = MoveCardSnapshotHelper.createSnapshot(movedCards[0], message.from, player);
         }
         if (divertedCards.length > 0) {
+          if (this.preMoveSnapshot && divertedCards.some((c) => c.id === this.preMoveSnapshot.cardId)) {
+            this.preMoveSnapshot = null;
+          }
           this.divertedSnapshots = divertedCards.map((card) =>
             MoveCardSnapshotHelper.createDeckSnapshot(card, player)
           );

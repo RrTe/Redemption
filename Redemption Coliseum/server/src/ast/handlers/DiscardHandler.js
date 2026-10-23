@@ -183,12 +183,16 @@ class DiscardHandler {
         card.id
       );
 
-      if (result && result.movedCards && result.movedCards.length > 0) {
+      const movedOrDiverted =
+        (result?.movedCards && result.movedCards[0]) ||
+        (result?.divertedCards && result.divertedCards[0]);
+
+      if (movedOrDiverted) {
         discardedSnapshots.push({
           cardId: card.id,
           name: card.Name,
           fromZone,
-          toZone: ZONES.DISCARD,
+          toZone: movedOrDiverted.zone || ZONES.DISCARD,
           ownerId: trueOwner.sessionId,
         });
         if (result.logEntry) logEntries.push(result.logEntry);
