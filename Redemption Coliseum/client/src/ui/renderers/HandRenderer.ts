@@ -120,7 +120,30 @@ export class HandRenderer {
     renderedCardIds: Set<string>,
   ) {
     const handSize = opponent.hand.length;
-    if (handSize === 0) return;
+    // Identify revealed star cards for horizontal row placement
+    const validHandCards = opponent.hand.filter(
+      (c) => !c.zone || c.zone === ZONES.HAND,
+    );
+    const revealedStarCards = validHandCards.filter((cardData) =>
+      this.isCardRevealedFn
+        ? this.isCardRevealedFn(cardData.id)
+        : Boolean(
+            this.room?.state?.activeSequenceCardIds?.includes?.(cardData.id) ||
+            this.room?.state?.effectChronicle?.items?.some?.((item: any) => item.cardId === cardData.id)
+          )
+    );
+    const revealedCount = revealedStarCards.length;
+
+    // Dynamische Vergrößerung (+15%) und proportionale Abstände für aufgedeckte Star-Karten
+    const REVEAL_SCALE_FACTOR = 1.15;
+    const revealedWidth = this.layout.handCardWidth * REVEAL_SCALE_FACTOR;
+    const revealedHeight = this.layout.handCardHeight * REVEAL_SCALE_FACTOR;
+    const revealedSpacing = revealedWidth * 1.08;
+    const revealedTotalWidth = (revealedCount - 1) * revealedSpacing;
+    const revealedStartX = this.layout.opponentHand.centerX - revealedTotalWidth / 2;
+    const revealedY = this.layout.opponentHand.centerY + this.layout.handCardHeight * 0.65;
+
+    let revealedIndexTracker = 0;
 
     opponent.hand.forEach((cardData, index) => {
       // Validate zone to prevent rendering phantom cards that left opponent hand
@@ -129,12 +152,6 @@ export class HandRenderer {
         return;
       }
 
-      let { x, y, angle } = this.getHandCardTargetPosition(
-        index,
-        handSize,
-        true,
-      );
-
       const isRevealedStarCard = this.isCardRevealedFn
         ? this.isCardRevealedFn(cardData.id)
         : Boolean(
@@ -142,13 +159,28 @@ export class HandRenderer {
             this.room?.state?.effectChronicle?.items?.some?.((item: any) => item.cardId === cardData.id)
           );
 
-      // Dynamischer Pop-Out für aufgedeckte Star-Karten: proportional zur Handkartenhöhe
-      if (isRevealedStarCard) {
-        y += this.layout.handCardHeight * 0.45;
-        angle *= 0.4;
-      }
+      let x: number;
+      let y: number;
+      let finalAngle: number;
+      let targetWidth: number;
+      let targetHeight: number;
 
-      const finalAngle = angle;
+      if (isRevealedStarCard) {
+        // Kerzengerade (angle = 0), symmetrisch nebeneinander und leicht vergrößert
+        x = revealedStartX + revealedIndexTracker * revealedSpacing;
+        y = revealedY;
+        finalAngle = 0;
+        targetWidth = revealedWidth;
+        targetHeight = revealedHeight;
+        revealedIndexTracker++;
+      } else {
+        const pos = this.getHandCardTargetPosition(index, handSize, true);
+        x = pos.x;
+        y = pos.y;
+        finalAngle = pos.angle;
+        targetWidth = this.layout.handCardWidth;
+        targetHeight = this.layout.handCardHeight;
+      }
 
       const cardUI = this.processCard(
         cardData,
@@ -157,8 +189,8 @@ export class HandRenderer {
         finalAngle,
         attachmentMap,
         renderedCardIds,
-        this.layout.handCardWidth,
-        this.layout.handCardHeight,
+        targetWidth,
+        targetHeight,
       );
       const baseDepth = isRevealedStarCard ? 300 : 100;
       cardUI.setDepth(baseDepth + index);

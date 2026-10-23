@@ -402,16 +402,22 @@ export class CardRenderer {
     // 2. KEINE Animation läuft (frische Prüfung!)
     // 3. Sie NICHT gerade vom User gezogen wird (oder auf Server-Drop-Bestätigung wartet)
     if (!isAtTarget && !isAnimating && !cardUI.isBeingDragged && !cardUI.getData("waiting_for_overlay")) {
-      // ✨ NEU: Smooth transition for cards shifting within the same play area (like Lost Souls adjusting to hand size)
-      if (oldZone === newZone &&
-        (oldZone === ZONES.LAND_OF_BONDAGE || oldZone === ZONES.TERRITORY || oldZone === ZONES.BATTLEFIELD)) {
+      // ✨ NEU: Smooth transition for cards shifting within the same play area or revealed opponent Star cards
+      if (
+        oldZone === newZone &&
+        (oldZone === ZONES.LAND_OF_BONDAGE ||
+          oldZone === ZONES.TERRITORY ||
+          oldZone === ZONES.BATTLEFIELD ||
+          (oldZone === ZONES.HAND && cardData.controllerId !== this.room.sessionId))
+      ) {
+        this.scene.tweens.killTweensOf(cardUI);
         this.scene.tweens.add({
           targets: cardUI,
           x: targetX,
           y: targetY,
           angle: normalizedTargetAngle,
           duration: 300,
-          ease: 'Power2'
+          ease: "Power2",
         });
       } else {
         cardUI.x = targetX;
