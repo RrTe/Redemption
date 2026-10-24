@@ -1,4 +1,6 @@
 const { BaseCommand } = require("./BaseCommand");
+const { BattleService } = require("../services/BattleService");
+const { ZONES } = require("../../../shared/zones");
 const logger = require("../utils/logger");
 
 class UpdateCardStateCommand extends BaseCommand {
@@ -40,6 +42,10 @@ class UpdateCardStateCommand extends BaseCommand {
     logger.debug(`Card ${card.Name} (${cardId}) updated via Command`, {
       updates,
     });
+
+    if (card.zone === ZONES.BATTLEFIELD) {
+      BattleService.recalculate(this.room);
+    }
   }
 
   undo() {
@@ -61,6 +67,10 @@ class UpdateCardStateCommand extends BaseCommand {
     const templateId = this.templateId || this.cardName;
     const logMsg = `[UNDO] ${player ? player.name : "Player"} reverted state of {{${templateId}|${this.cardName}}}.`;
     this.room.broadcastGameLog(logMsg);
+
+    if (card.zone === ZONES.BATTLEFIELD) {
+      BattleService.recalculate(this.room);
+    }
   }
 }
 

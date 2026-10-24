@@ -4,6 +4,7 @@ const { CardAction } = require("../../../shared/actionSchema");
 const MatchService = require("./MatchService");
 const { DrawPhaseStepService } = require("./DrawPhaseStepService");
 const { EffectChronicleService } = require("./EffectChronicleService");
+const { BattleService } = require("./BattleService");
 const logger = require("../utils/logger");
 
 /**
@@ -69,6 +70,13 @@ class PhaseTransitionService {
       // Decrement upkeep counters
       if (state.currentPhase === PHASES.UPKEEP) {
         MatchService.handleUpkeepPhase(room);
+      }
+
+      // Update Battle state & tracker upon phase transition
+      if (state.currentPhase === PHASES.BATTLE) {
+        BattleService.recalculate(room);
+      } else {
+        BattleService.reset(room);
       }
 
       if (result) {

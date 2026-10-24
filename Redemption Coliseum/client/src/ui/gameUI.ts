@@ -469,6 +469,7 @@ export class GameUI {
     this.abilityPromptManager?.destroy();
     this.phaseHandshakeManager?.destroy();
     this.phaseManager?.destroy();
+    this.elementManager?.battleHUD?.destroy();
     this.previewManager?.hide(); // Hide any active preview
   }
 

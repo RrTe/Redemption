@@ -75,6 +75,16 @@ export interface EffectChronicleStateData {
   onChange?: (changes: any) => void;
 }
 
+export interface BattleStateData {
+  rescuerStrength: number;
+  rescuerToughness: number;
+  blockerStrength: number;
+  blockerToughness: number;
+  initiativePlayerId: string;
+  stateReason: string;
+  lastCardPlayedPlayerId: string;
+}
+
 export interface RoomState {
   players: MapSchema<PlayerState>;
   activePlayer: string;
@@ -85,6 +95,8 @@ export interface RoomState {
   actionTakerId: string; // General flag for who is taking an action
   activeActionPiles: MapSchema<string>; // ✨ REFACTOR: pileId -> sessionId
   battlefield: ArraySchema<CardState>;
+  battle?: BattleStateData; // ✨ NEU: Live battle numbers & initiative state
+  lastBattleCardPlayerId?: string; // ✨ NEU: Session ID of player who played the last card in battle
   winnerId?: string;
   gameOverReason?: string;
   drawStep?: string;
@@ -93,6 +105,7 @@ export interface RoomState {
   effectChronicle?: EffectChronicleStateData;
   isArenaMode?: boolean;
 }
+
 
 
 

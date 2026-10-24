@@ -2,6 +2,7 @@ const { BaseCommand } = require("./BaseCommand");
 const { moveCard } = require("../services/cardService");
 const { MoveCardSnapshotHelper } = require("./MoveCardSnapshotHelper");
 const { BattleTriggerService } = require("../services/BattleTriggerService");
+const { BattleService } = require("../services/BattleService");
 const { ZONES } = require("../../../shared/zones");
 const logger = require("../utils/logger");
 
@@ -149,8 +150,15 @@ class MoveCardCommand extends BaseCommand {
       }
 
       // ✨ Phase 3: Battlefield & Battle Entry Triggers
-      if (!result.error && message.to === ZONES.BATTLEFIELD && message.from !== ZONES.BATTLEFIELD) {
-        BattleTriggerService.onCardEnteredBattlefield(this.room, player, movedCards, message);
+      if (!result.error) {
+        if (message.to === ZONES.BATTLEFIELD && message.from !== ZONES.BATTLEFIELD) {
+          BattleTriggerService.onCardEnteredBattlefield(this.room, player, movedCards, message);
+          for (const card of movedCards) {
+            BattleService.onCardEnteredBattle(this.room, player, card, message.to);
+          }
+        } else if (message.from === ZONES.BATTLEFIELD || message.to === ZONES.BATTLEFIELD) {
+          BattleService.recalculate(this.room);
+        }
       }
     } catch (err) {
       this.canUndo = false;
@@ -178,6 +186,10 @@ class MoveCardCommand extends BaseCommand {
       for (let i = this.divertedSnapshots.length - 1; i >= 0; i--) {
         MoveCardSnapshotHelper.undoSingleCard(this.room, this.state, this.divertedSnapshots[i], player);
       }
+    }
+
+    if (this.preMoveSnapshot?.fromZone === ZONES.BATTLEFIELD || this.preMoveSnapshot?.toZone === ZONES.BATTLEFIELD) {
+      BattleService.recalculate(this.room);
     }
   }
 }

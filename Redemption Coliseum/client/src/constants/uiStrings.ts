@@ -53,5 +53,25 @@ export const UI_STRINGS = Object.freeze({
     CONFIRM_DEFAULT_DECLINE: "Decline",
     ROOM_NO_OPEN_GAMES: "No open games.",
   },
+  BATTLE_HUD: {
+    ROLE_RESCUER: "RESCUER",
+    ROLE_BLOCKER: "BLOCKER",
+    YOU_SUFFIX: "(YOU)",
+    AWAITING_ATTACKER: "Battle Phase: Awaiting Attacker",
+    AWAITING_BLOCKER: "Rescue Attempt (Awaiting Blocker)",
+    HERO_REMOVED: "Hero Removed (Rescue Failed)",
+    INITIATIVE_NUMBERS: (isMine: boolean) =>
+      isMine
+        ? "You Have Initiative (Losing by Numbers)"
+        : "Opponent Initiative (Losing by Numbers)",
+    INITIATIVE_STALEMATE: (isMine: boolean) =>
+      isMine
+        ? "You Have Initiative (Stalemate)"
+        : "Opponent Initiative (Stalemate)",
+    INITIATIVE_MUTUAL: (isMine: boolean) =>
+      isMine
+        ? "You Have Initiative (Mutual Destruction)"
+        : "Opponent Initiative (Mutual Destruction)",
+  },
 });
 

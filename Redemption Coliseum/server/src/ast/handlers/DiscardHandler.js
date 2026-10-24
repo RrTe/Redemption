@@ -10,6 +10,7 @@ const {
 } = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
 const { BattleCharacterClassifier } = require("../../services/BattleCharacterClassifier");
+const { BattleService } = require("../../services/BattleService");
 const logger = require("../../utils/logger");
 
 /**
@@ -197,6 +198,10 @@ class DiscardHandler {
         });
         if (result.logEntry) logEntries.push(result.logEntry);
       }
+    }
+
+    if (discardedSnapshots.some((s) => s.fromZone === ZONES.BATTLEFIELD)) {
+      BattleService.recalculate(room);
     }
 
     const snapshot = {

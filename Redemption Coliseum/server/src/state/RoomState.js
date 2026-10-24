@@ -3,6 +3,7 @@ const { Schema, type, ArraySchema, MapSchema } = require("@colyseus/schema");
 const { Card } = require("./Card");
 const { PlayerState } = require("./PlayerState");
 const { EffectChronicleState } = require("./EffectChronicleState");
+const { BattleState } = require("./BattleState");
 
 /**
  * RoomState enthält alle Spieler + globalen Zonen.
@@ -25,6 +26,8 @@ class RoomState extends Schema {
     // ✨ REFACTOR: Map für aktive Stapel-Sperren (pileId -> sessionId)
     this.activeActionPiles = new MapSchema(); 
     this.battlefield = new ArraySchema();
+    this.battle = new BattleState(); // ✨ NEU: Live-Berechnung von Battle Numbers & Initiative
+    this.lastBattleCardPlayerId = ""; // ✨ NEU: ID des Spielers, der zuletzt eine Karte im Kampf spielte
     this.round = 1;
     this.startingPlayerId = "";
     // ✨ NEU: Game Over Status
@@ -66,6 +69,10 @@ type("string")(RoomState.prototype, "gameOverReason");
 
 // Battlefield (Array von Card)
 type([Card])(RoomState.prototype, "battlefield");
+
+// ✨ NEU: Live Battle Numbers & Initiative
+type(BattleState)(RoomState.prototype, "battle");
+type("string")(RoomState.prototype, "lastBattleCardPlayerId");
 
 // ✨ NEU: Coordinated Draw Phase sub-steps & priority tracking
 type("string")(RoomState.prototype, "drawStep");

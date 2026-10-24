@@ -49,6 +49,9 @@ export class HUDManager {
 
     const isActive = state.activePlayer === mySessionId;
 
+    // ✨ NEU: Battle HUD (Live Kampfwerte & Initiative) aktualisieren
+    this.elementManager.battleHUD?.updateState(state, mySessionId);
+
     // Phasen-Icons aktualisieren
     const phasesToShow = [
       PHASES.DRAW,

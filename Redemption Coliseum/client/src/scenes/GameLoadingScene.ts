@@ -335,6 +335,7 @@ export class GameLoadingScene extends BaseLoadingScene {
     this.load.image("icon_flip", "assets/ui/icons/icon_flip.png");
     this.load.image("icon_paralyze", "assets/ui/icons/icon_paralyze.png");
     this.load.image("icon_setaside", "assets/ui/icons/icon_setaside.png");
+    this.load.image("icon_initiative_chevron", "assets/ui/icons/initiative_chevron.png");
 
     // === Stapel & Zonen ===
     this.load.image("pile_discard", "assets/gfx/Empty_Discard_Pile.png");

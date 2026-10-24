@@ -11,6 +11,7 @@ import { StaticElementFactory } from "../factories/StaticElementFactory"; // ✨
 import { ZoneFactory } from "../factories/ZoneFactory"; // ✨ NEU
 import { type StaticElements, type ZoneElements } from "../types/ElementTypes"; // ✨ NEU
 import { PHASE_BAR_STYLE } from "../config/visualConfig"; // ✨ NEU
+import { BattleHUD } from "../components/BattleHUD";
 
 /**
  * ✨ REFACTORING: Verwaltet die Erstellung, Positionierung und den Zugriff
@@ -25,6 +26,7 @@ export class ElementManager {
   // ✨ REFACTORING: Öffentliche Eigenschaften, um die erstellten Elemente zu speichern.
   public staticElements!: StaticElements;
   public zoneElements!: ZoneElements;
+  public battleHUD!: BattleHUD;
 
   private staticFactory: StaticElementFactory;
   private zoneFactory: ZoneFactory;
@@ -48,11 +50,13 @@ export class ElementManager {
   public createAllElements() {
     this.staticElements = this.staticFactory.create();
     this.zoneElements = this.zoneFactory.create(this.layout);
+    this.battleHUD = new BattleHUD(this.scene, this.layout);
   }
 
   /** Positioniert alle UI-Elemente neu, z.B. bei einer Fenstergrößen-Änderung. */
   public repositionUI(newLayout: GameLayout) {
     this.layout = newLayout;
+    this.battleHUD?.reposition(newLayout);
 
     // === ZONEN NEU POSITIONIEREN UND INTERAKTIV MACHEN ===
     const repositionZone = (
