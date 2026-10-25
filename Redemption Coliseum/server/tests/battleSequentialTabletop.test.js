@@ -64,7 +64,10 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
   }
 
   test("Horsemen draw resolution does not break subsequent defenders with tabletop abilities", () => {
-    // 1. Setup deck and Egyptian Horsemen for Player 2
+    // 1. Setup deck and Egyptian Horsemen for Player 2, and attacking Hero for Player 1
+    createCard("c_hero_test1", "hero_t1", "Attacking Hero", ZONES.BATTLEFIELD, "p1", {
+      Type: "Hero", Alignment: "Good", IsCharacter: true, Brigade: "Silver",
+    });
     createCard("deck_ec1", "101", "Evil Deck 1", ZONES.DECK, "p2");
     createCard("deck_ec2", "102", "Evil Deck 2", ZONES.DECK, "p2");
     const horsemen = createCard("c_horse", "2041723113", "Egyptian Horsemen (1st Print - K)", ZONES.TERRITORY, "p2", {
@@ -94,6 +97,7 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
 
     // 2. Player 2 blocks with Pharaoh (no AST logic, but has tabletop Special Ability)
     client2.send.mockClear();
+    state.battle.initiativePlayerId = "p2";
     const pharaoh = createCard("c_pharaoh", "-1946607650", "Pharaoh Ramses II", ZONES.HAND, "p2", {
       Type: "Evil Character",
       Alignment: "Evil",
@@ -128,6 +132,7 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
 
     // 4. Opponent plays a character with a Special Ability (e.g. Miriam)
     client1.send.mockClear();
+    state.battle.initiativePlayerId = "p1";
     const miriam = createCard("c_miriam", "3001", "Miriam", ZONES.HAND, "p1", {
       Type: "Hero",
       Alignment: "Good",
@@ -183,6 +188,7 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
 
     // 2. Play Eli the Priest (RoA)
     client1.send.mockClear();
+    state.battle.initiativePlayerId = "p1";
     const eli = createCard("c_eli", "-175529066", "Eli the Priest (RoA)", ZONES.HAND, "p1", {
       Type: "Hero",
       Alignment: "Good",

@@ -167,12 +167,48 @@ function _validateMove(
       })
     : card;
 
-  // ✨ COMBAT GUARDS (Rule Validation for Battlefield Moves)
-  // In Arena Mode, all combat guards (phase lock, character/enhancement restrictions, brigade match) are bypassed.
+  // ✨ COMBAT GUARDS (Rule Validation for Battlefield & Battle Phase Moves)
+  // In Arena Mode, all combat guards (phase lock, character/enhancement restrictions, brigade match, initiative) are bypassed.
   const isArena = Boolean(state?.isArenaMode ?? state?.isSandboxMode);
-  if (toZone === ZONES.BATTLEFIELD && !isArena) {
 
-    // 1. Phase Guard: Moving cards to battlefield is only permitted during BATTLE phase.
+  const isDominant = BattleCharacterClassifier.isDominant(effectiveCard);
+  const isGoodEnhancement = BattleCharacterClassifier.isGoodEnhancement(effectiveCard);
+  const isEvilEnhancement = BattleCharacterClassifier.isEvilEnhancement(effectiveCard);
+  const isHero = BattleCharacterClassifier.isHero(effectiveCard);
+  const isEvilChar = BattleCharacterClassifier.isEvilCharacter(effectiveCard);
+
+  // 1. Special Initiative Restriction (REG v11.0.0)
+  // When a player is in Special Initiative, they may ONLY play an Enhancement into battle.
+  const isSpecialInitiativeActive = Boolean(
+    state?.battle?.specialInitiativePlayerId &&
+    state.battle.specialInitiativePlayerId === targetPlayerId
+  );
+  if (isSpecialInitiativeActive && !isArena) {
+    const isEnhancement = isGoodEnhancement || isEvilEnhancement;
+    if (!isEnhancement || isDominant || toZone !== ZONES.BATTLEFIELD) {
+      logger.warn(
+        `[COMBAT_GUARD] Player '${targetPlayerId}' in Special Initiative attempted invalid move (dominant: ${isDominant}, toZone: ${toZone}, card: '${card.Name}').`
+      );
+      return { valid: false, error: "Only Enhancements in Special Initiative!" };
+    }
+  }
+
+  // 2. General Ability Lock (REG v11.0.0 Sequential Resolution)
+  // While abilities in the Effect Chronicle are unresolved (including active prompts), no player may play cards.
+  // Exception: An ability that triggers Special Initiative allows the defending player to respond.
+  const isPlayingCard = toZone === ZONES.BATTLEFIELD || (fromZone === ZONES.HAND && toZone !== ZONES.DISCARD);
+  if (isPlayingCard && state?.currentPhase === PHASES.BATTLE && !isArena && !options.isAbilityAction && !isSpecialInitiativeActive) {
+    const chronicleItems = state?.effectChronicle?.items || [];
+    if (chronicleItems.length > 0) {
+      logger.warn(
+        `[COMBAT_GUARD] Card move blocked for player '${targetPlayerId}': Chronicle abilities must resolve first.`
+      );
+      return { valid: false, error: "Abilities must resolve first!" };
+    }
+  }
+
+  if (toZone === ZONES.BATTLEFIELD && !isArena) {
+    // Phase Guard: Moving cards to battlefield is only permitted during BATTLE phase.
     if (state?.currentPhase !== PHASES.BATTLE) {
       logger.warn(
         `[COMBAT_GUARD] Invalid move: Battlefield is only accessible during Battle Phase (current phase: '${state?.currentPhase}').`,
@@ -184,13 +220,9 @@ function _validateMove(
     // Active player is Attacker, non-active player is Defender (Blocker).
     // Note: Banding allows players to bring opponent characters into battle on their side.
     const isAttacker = targetPlayerId === state.activePlayer;
-    const isHero = BattleCharacterClassifier.isHero(effectiveCard);
-    const isGoodEnhancement = BattleCharacterClassifier.isGoodEnhancement(effectiveCard);
-    const isEvilChar = BattleCharacterClassifier.isEvilCharacter(effectiveCard);
-    const isEvilEnhancement = BattleCharacterClassifier.isEvilEnhancement(effectiveCard);
 
     if (isAttacker) {
-      // 2. Attacker (active player): Only Heroes and Good Enhancements may enter battle.
+      // Attacker (active player): Only Heroes, Good Enhancements, and Good Dominants may enter battle.
       if (isEvilEnhancement) {
         logger.warn(
           `[COMBAT_GUARD] Attacker '${targetPlayerId}' attempted to play Evil Enhancement '${card.Name}' into battle.`,
@@ -203,14 +235,14 @@ function _validateMove(
         );
         return { valid: false, error: "Evil cards cannot attack!" };
       }
-      if (!isHero && !isGoodEnhancement) {
+      if (!isHero && !isGoodEnhancement && !isDominant) {
         logger.warn(
           `[COMBAT_GUARD] Attacker '${targetPlayerId}' attempted to play invalid card '${card.Name}' into battle.`,
         );
         return { valid: false, error: "Invalid card for battle!" };
       }
 
-      // 4. Enhancement prerequisite: Good Enhancements require a Hero in battle with a matching brigade.
+      // Enhancement prerequisite: Good Enhancements require a Hero in battle with a matching brigade.
       if (isGoodEnhancement && fromZone !== ZONES.BATTLEFIELD) {
         const heroesInBattle = (state.battlefield || []).filter(
           (c) => c.controllerId === state.activePlayer && BattleCharacterClassifier.isHero(c)
@@ -231,8 +263,28 @@ function _validateMove(
           return { valid: false, error: "Brigade mismatch!" };
         }
       }
+
+      // Initiative Enforcement for Attacker:
+      if (!isDominant && fromZone !== ZONES.BATTLEFIELD) {
+        const heroesInBattle = (state.battlefield || []).filter(
+          (c) => c.controllerId === state.activePlayer && BattleCharacterClassifier.isHero(c)
+        );
+        const isInitialHero = isHero && heroesInBattle.length === 0;
+        const hasActiveEffect = Boolean(
+          options.isAbilityAction ||
+          (state.effectChronicle?.isResolving && state.effectChronicle?.priorityPlayerId === targetPlayerId)
+        );
+        const hasRegularInitiative = state.battle?.initiativePlayerId === targetPlayerId;
+
+        if (!isInitialHero && !hasRegularInitiative && !isSpecialInitiativeActive && !hasActiveEffect) {
+          logger.warn(
+            `[COMBAT_GUARD] Attacker '${targetPlayerId}' attempted to play '${card.Name}' without initiative.`
+          );
+          return { valid: false, error: "You do not have initiative!" };
+        }
+      }
     } else {
-      // 3. Defender (non-active player): Only Evil Characters and Evil Enhancements may enter battle.
+      // Defender (non-active player): Only Evil Characters, Evil Enhancements, and Evil Dominants may enter battle.
       if (isGoodEnhancement) {
         logger.warn(
           `[COMBAT_GUARD] Defender '${targetPlayerId}' attempted to play Good Enhancement '${card.Name}' into battle.`,
@@ -245,14 +297,27 @@ function _validateMove(
         );
         return { valid: false, error: "Good cards cannot block!" };
       }
-      if (!isEvilChar && !isEvilEnhancement) {
+      if (!isEvilChar && !isEvilEnhancement && !isDominant) {
         logger.warn(
           `[COMBAT_GUARD] Defender '${targetPlayerId}' attempted to play invalid card '${card.Name}' into battle.`,
         );
         return { valid: false, error: "Invalid card for battle!" };
       }
 
-      // 4. Enhancement prerequisite: Evil Enhancements require an Evil Character in battle with a matching brigade.
+      // Blocker Gate: An Evil Character can only block if a Hero is already in battle!
+      if (isEvilChar && fromZone !== ZONES.BATTLEFIELD) {
+        const heroesInBattle = (state.battlefield || []).filter(
+          (c) => c.controllerId === state.activePlayer && BattleCharacterClassifier.isHero(c)
+        );
+        if (heroesInBattle.length === 0) {
+          logger.warn(
+            `[COMBAT_GUARD] Defender '${targetPlayerId}' attempted to block with '${card.Name}' without a Hero in battle.`,
+          );
+          return { valid: false, error: "No Hero in battle to block!" };
+        }
+      }
+
+      // Enhancement prerequisite: Evil Enhancements require an Evil Character in battle with a matching brigade.
       if (isEvilEnhancement && fromZone !== ZONES.BATTLEFIELD) {
         const evilCharsInBattle = (state.battlefield || []).filter(
           (c) => c.controllerId !== state.activePlayer && BattleCharacterClassifier.isEvilCharacter(c)
@@ -271,6 +336,26 @@ function _validateMove(
             `[COMBAT_GUARD] Defender '${targetPlayerId}' attempted to play Evil Enhancement '${card.Name}' without matching brigade.`,
           );
           return { valid: false, error: "Brigade mismatch!" };
+        }
+      }
+
+      // Initiative Enforcement for Defender:
+      if (!isDominant && fromZone !== ZONES.BATTLEFIELD) {
+        const evilCharsInBattle = (state.battlefield || []).filter(
+          (c) => c.controllerId !== state.activePlayer && BattleCharacterClassifier.isEvilCharacter(c)
+        );
+        const isInitialBlocker = isEvilChar && evilCharsInBattle.length === 0;
+        const hasActiveEffect = Boolean(
+          options.isAbilityAction ||
+          (state.effectChronicle?.isResolving && state.effectChronicle?.priorityPlayerId === targetPlayerId)
+        );
+        const hasRegularInitiative = state.battle?.initiativePlayerId === targetPlayerId;
+
+        if (!isInitialBlocker && !hasRegularInitiative && !isSpecialInitiativeActive && !hasActiveEffect) {
+          logger.warn(
+            `[COMBAT_GUARD] Defender '${targetPlayerId}' attempted to play '${card.Name}' without initiative.`
+          );
+          return { valid: false, error: "You do not have initiative!" };
         }
       }
     }

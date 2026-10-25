@@ -129,6 +129,10 @@ class RespondOptionalAbilityCommand extends BaseCommand {
           `✨ ${player.name} declares Special Initiative to defend ${cardName}!`
         );
 
+        if (this.state.battle) {
+          this.state.battle.specialInitiativePlayerId = this.client.sessionId;
+        }
+
         ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
         chronicle.items.splice(index, 1);
         EffectChronicleService._reindexOrders(chronicle);

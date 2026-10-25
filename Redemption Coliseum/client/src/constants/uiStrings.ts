@@ -47,6 +47,10 @@ export const UI_STRINGS = Object.freeze({
     NO_UNDO_ACTIONS: "No actions to undo in the current phase.",
     PARALYZED_BATTLE_RESTRICTED: "Paralyzed cards cannot enter the Field of Battle!",
     SET_ASIDE_BATTLE_RESTRICTED: "Cards in Set Aside cannot enter the Field of Battle!",
+    NO_HERO_IN_BATTLE: "No Hero in battle to block!",
+    ABILITIES_MUST_RESOLVE: "Abilities must resolve first!",
+    NO_INITIATIVE: "You do not have initiative!",
+    ONLY_ENHANCEMENTS_IN_SI: "Only Enhancements in Special Initiative!",
   },
   DIALOGS: {
     CONFIRM_DEFAULT_ACCEPT: "Accept",

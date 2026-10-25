@@ -66,6 +66,9 @@ describe("Phase 3: Battlefield & Combat Triggers (Battle Primitives)", () => {
 
   test("1. Blocking with Egyptian Horsemen triggers BLOCK_RESCUE and requests optional ability prompt", () => {
     // Setup player 2's deck and Egyptian Horsemen in Territory
+    createCard("c_hero_test1", "hero_t1", "Attacking Hero", ZONES.BATTLEFIELD, "p1", {
+      Type: "Hero", Alignment: "Good", IsCharacter: true, Brigade: "Silver",
+    });
     createCard("deck_ec1", "101", "Evil Deck 1", ZONES.DECK, "p2");
     createCard("deck_ec2", "102", "Evil Deck 2", ZONES.DECK, "p2");
     const horsemen = createCard("c_horse", "2041723113", "Egyptian Horsemen (1st Print - K)", ZONES.TERRITORY, "p2", {
@@ -85,9 +88,9 @@ describe("Phase 3: Battlefield & Combat Triggers (Battle Primitives)", () => {
       cardId: horsemen.id,
     });
 
-    // Card is on the battlefield
+    // Card is on the battlefield (along with attacking hero)
     expect(horsemen.zone).toBe(ZONES.BATTLEFIELD);
-    expect(state.battlefield.length).toBe(1);
+    expect(state.battlefield.length).toBe(2);
 
     // Enqueued into Effect Chronicle with actionType BLOCK_RESCUE
     expect(state.effectChronicle.items.length).toBe(1);
@@ -123,6 +126,9 @@ describe("Phase 3: Battlefield & Combat Triggers (Battle Primitives)", () => {
   });
 
   test("2. Declining Egyptian Horsemen block trigger passes without drawing", () => {
+    createCard("c_hero_test2", "hero_t2", "Attacking Hero", ZONES.BATTLEFIELD, "p1", {
+      Type: "Hero", Alignment: "Good", IsCharacter: true, Brigade: "Silver",
+    });
     createCard("deck_ec1", "101", "Evil Deck 1", ZONES.DECK, "p2");
     const horsemen = createCard("c_horse", "2041723113", "Egyptian Horsemen", ZONES.HAND, "p2", {
       Type: "Evil Character",
@@ -269,6 +275,7 @@ describe("Phase 3: Battlefield & Combat Triggers (Battle Primitives)", () => {
       SpecialAbility: "You may draw 2 cards.",
     });
 
+    state.battle.initiativePlayerId = "p1";
     const moveCmd = new MoveCardCommand(room, client1);
     moveCmd.execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: goodEnh.id });
 
@@ -296,6 +303,7 @@ describe("Phase 3: Battlefield & Combat Triggers (Battle Primitives)", () => {
       SpecialAbility: "Discard all Heroes in battle.",
     });
 
+    state.battle.initiativePlayerId = "p2";
     const moveCmd = new MoveCardCommand(room, client2);
     moveCmd.execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: evilEnh.id });
 

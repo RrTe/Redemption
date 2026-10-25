@@ -58,6 +58,13 @@ class BattleService {
       logger.info(
         `[BattleService] Last card played in battle set to '${playerId}' (${card?.Name || card?.id}).`
       );
+
+      if (room.state.battle && room.state.battle.specialInitiativePlayerId === playerId) {
+        room.state.battle.specialInitiativePlayerId = "";
+        logger.info(
+          `[BattleService] Special Initiative fulfilled by '${playerId}'. Cleared specialInitiativePlayerId.`
+        );
+      }
     }
 
     this.recalculate(room);
@@ -116,6 +123,7 @@ class BattleService {
     state.battle.blockerStrength = 0;
     state.battle.blockerToughness = 0;
     state.battle.initiativePlayerId = "";
+    state.battle.specialInitiativePlayerId = "";
     state.battle.stateReason = BATTLE_STATE_REASON.NO_BATTLE;
     state.battle.lastCardPlayedPlayerId = "";
 

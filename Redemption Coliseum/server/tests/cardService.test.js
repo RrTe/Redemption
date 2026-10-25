@@ -497,6 +497,19 @@ describe("cardService (moveCard)", () => {
     });
 
     test("3. Verteidiger: darf Evil Characters ins Kampffeld spielen, aber keine Heroes oder Good Enhancements", () => {
+      // Setup opposing Hero in battle for attacker
+      const heroOpposing = new Card();
+      heroOpposing.id = "hero_opposing";
+      heroOpposing.Name = "Moses";
+      heroOpposing.Type = CARD_TYPES.HERO;
+      heroOpposing.Alignment = ALIGNMENTS.GOOD;
+      heroOpposing.IsCharacter = true;
+      heroOpposing.controllerId = "p1";
+      heroOpposing.originalOwnerId = "p1";
+      heroOpposing.zone = ZONES.BATTLEFIELD;
+      state.battlefield.push(heroOpposing);
+      cardLookup.set(heroOpposing.id, heroOpposing);
+
       // Evil Character -> valid for blocker
       const ec = new Card();
       ec.id = "ec_def";
@@ -512,7 +525,7 @@ describe("cardService (moveCard)", () => {
 
       const resEC = moveCard(defender, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, ec.id);
       expect(resEC.movedCards.length).toBe(1);
-      expect(state.battlefield.length).toBe(1);
+      expect(state.battlefield.length).toBe(2);
       expect(ec.zone).toBe(ZONES.BATTLEFIELD);
 
       // Hero -> forbidden for defender
@@ -603,6 +616,7 @@ describe("cardService (moveCard)", () => {
       heroSilver.zone = ZONES.BATTLEFIELD;
       state.battlefield.push(heroSilver);
       cardLookup.set(heroSilver.id, heroSilver);
+      state.battle.initiativePlayerId = "p1";
 
       // Silver GE succeeds with Silver Hero in battlefield
       const resGESuccess = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, ge.id);
@@ -749,6 +763,7 @@ describe("cardService (moveCard)", () => {
       hero.zone = ZONES.BATTLEFIELD;
       state.battlefield.push(hero);
       cardLookup.set(hero.id, hero);
+      state.battle.initiativePlayerId = "p1";
 
       // Setup dual GE/EE card in hand
       const dualCard = new Card();
@@ -817,6 +832,7 @@ describe("cardService (moveCard)", () => {
       ec.zone = ZONES.BATTLEFIELD;
       state.battlefield.push(ec);
       cardLookup.set(ec.id, ec);
+      state.battle.initiativePlayerId = "p2";
 
       // Setup dual GE/EE card in defender's hand
       const dualCard = new Card();

@@ -15,6 +15,7 @@ class BattleState extends Schema {
     this.initiativePlayerId = "";
     this.stateReason = BATTLE_STATE_REASON.NO_BATTLE;
     this.lastCardPlayedPlayerId = "";
+    this.specialInitiativePlayerId = "";
   }
 }
 
@@ -25,5 +26,6 @@ type("number")(BattleState.prototype, "blockerToughness");
 type("string")(BattleState.prototype, "initiativePlayerId");
 type("string")(BattleState.prototype, "stateReason");
 type("string")(BattleState.prototype, "lastCardPlayedPlayerId");
+type("string")(BattleState.prototype, "specialInitiativePlayerId");
 
 module.exports = { BattleState };

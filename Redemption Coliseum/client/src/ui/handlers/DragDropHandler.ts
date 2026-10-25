@@ -129,6 +129,10 @@ export class DragDropHandler {
         this.snapBack(fallbackCard);
       }
     }
+
+    if (data.error) {
+      ToastManager.show(data.error, "warning");
+    }
   }
 
   private onDragStart(pointer: Phaser.Input.Pointer, gameObject: CardUI) {

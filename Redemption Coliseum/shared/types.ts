@@ -83,6 +83,7 @@ export interface BattleStateData {
   initiativePlayerId: string;
   stateReason: string;
   lastCardPlayedPlayerId: string;
+  specialInitiativePlayerId: string;
 }
 
 export interface RoomState {

@@ -19,6 +19,24 @@ class BattleCharacterClassifier {
   }
 
   /**
+   * Determines if a card is a Dominant.
+   *
+   * @param {object} card Card instance.
+   * @returns {boolean} True if card is a Dominant.
+   */
+  static isDominant(card) {
+    if (!card) return false;
+    const inGameType = this._normalize(card.inGameType || card.Type);
+    const identifier = this._normalize(card.Identifier);
+    const cardClass = this._normalize(card.Class);
+    return (
+      inGameType.includes("dominant") ||
+      identifier.includes("dominant") ||
+      cardClass.includes("dominant")
+    );
+  }
+
+  /**
    * Determines if a card is a Good Enhancement.
    *
    * @param {object} card Card instance.
