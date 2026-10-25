@@ -319,4 +319,48 @@ describe("Combat Rules Expansion (Blocker Gates, Ability Lock & Initiative Enfor
       expect(ec.zone).toBe(ZONES.BATTLEFIELD);
     });
   });
+
+  describe("6. Condition Guards (Paralyzed & Set-Aside)", () => {
+    test("6.1 Paralyzed card rejected from entering battle (via boolean or counter)", () => {
+      const hero = createCard("hero_para", "Peter", CARD_TYPES.HERO, ALIGNMENTS.GOOD, "Silver", "p1", ZONES.TERRITORY, {
+        IsCharacter: true,
+        isParalyzed: true,
+      });
+
+      const resBool = moveCard(attacker, state, cardLookup, ZONES.TERRITORY, ZONES.BATTLEFIELD, hero.id);
+      expect(resBool.movedCards.length).toBe(0);
+      expect(resBool.error).toBe("Paralyzed cards cannot enter the Field of Battle!");
+      expect(hero.zone).toBe(ZONES.TERRITORY);
+
+      // Test via counter
+      hero.isParalyzed = false;
+      hero.counters.set("paralyze", 2);
+
+      const resCounter = moveCard(attacker, state, cardLookup, ZONES.TERRITORY, ZONES.BATTLEFIELD, hero.id);
+      expect(resCounter.movedCards.length).toBe(0);
+      expect(resCounter.error).toBe("Paralyzed cards cannot enter the Field of Battle!");
+      expect(hero.zone).toBe(ZONES.TERRITORY);
+    });
+
+    test("6.2 Set-Aside card rejected from entering battle (via boolean or counter)", () => {
+      const hero = createCard("hero_sa", "John", CARD_TYPES.HERO, ALIGNMENTS.GOOD, "Silver", "p1", ZONES.TERRITORY, {
+        IsCharacter: true,
+        isSetAside: true,
+      });
+
+      const resBool = moveCard(attacker, state, cardLookup, ZONES.TERRITORY, ZONES.BATTLEFIELD, hero.id);
+      expect(resBool.movedCards.length).toBe(0);
+      expect(resBool.error).toBe("Cards in Set Aside cannot enter the Field of Battle!");
+      expect(hero.zone).toBe(ZONES.TERRITORY);
+
+      // Test via counter
+      hero.isSetAside = false;
+      hero.counters.set("setaside", 1);
+
+      const resCounter = moveCard(attacker, state, cardLookup, ZONES.TERRITORY, ZONES.BATTLEFIELD, hero.id);
+      expect(resCounter.movedCards.length).toBe(0);
+      expect(resCounter.error).toBe("Cards in Set Aside cannot enter the Field of Battle!");
+      expect(hero.zone).toBe(ZONES.TERRITORY);
+    });
+  });
 });

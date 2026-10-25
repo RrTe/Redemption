@@ -216,6 +216,28 @@ function _validateMove(
       return { valid: false, error: "Only allowed during Battle!" };
     }
 
+    // Condition Guards: Paralyzed and Set-Aside cards cannot enter the Field of Battle (REG v11.0.0).
+    const getCounter = (key) => {
+      if (!card.counters) return 0;
+      if (typeof card.counters.get === "function") return card.counters.get(key) || 0;
+      return card.counters[key] || 0;
+    };
+    const isParalyzed = Boolean(card.isParalyzed || getCounter("paralyze") > 0);
+    if (isParalyzed) {
+      logger.warn(
+        `[COMBAT_GUARD] Player '${targetPlayerId}' attempted to play Paralyzed card '${card.Name}' into battle.`
+      );
+      return { valid: false, error: "Paralyzed cards cannot enter the Field of Battle!" };
+    }
+
+    const isSetAside = Boolean(card.isSetAside || getCounter("setaside") > 0);
+    if (isSetAside) {
+      logger.warn(
+        `[COMBAT_GUARD] Player '${targetPlayerId}' attempted to play Set-Aside card '${card.Name}' into battle.`
+      );
+      return { valid: false, error: "Cards in Set Aside cannot enter the Field of Battle!" };
+    }
+
     // Role determined by who controls the card on their side of the battlefield:
     // Active player is Attacker, non-active player is Defender (Blocker).
     // Note: Banding allows players to bring opponent characters into battle on their side.
