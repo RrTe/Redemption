@@ -120,10 +120,11 @@ export class SoundManager {
         // Loop sofort starten
         const sound = this.playLayer(targetScene, layer, masterVol * musicVol, true); // ✨ FIX: targetScene
         if (sound) {
+          const targetVol = (sound as any)._targetVolume ?? (layer.vol ?? 1.0) * masterVol * musicVol;
           // Fade In für sanften Übergang
           targetScene.tweens.add({ // ✨ FIX: targetScene
             targets: sound,
-            volume: { from: 0, to: (sound as any).volume }, // Ziel-Volume wurde in playLayer berechnet
+            volume: { from: 0, to: targetVol }, // Ziel-Volume direkt aus vorberechnetem Wert
             duration: 2000,
           });
           this.activeAmbienceSounds.push(sound);
@@ -199,7 +200,7 @@ export class SoundManager {
     }
 
     const soundConfig: Phaser.Types.Sound.SoundConfig = {
-      volume: vol,
+      volume: isAmbienceLoop ? 0 : vol,
       detune: detune,
       rate: layer.rate ?? 1.0,
       loop: layer.loop ?? false,
@@ -209,6 +210,8 @@ export class SoundManager {
     if (layer.delay && !isAmbienceLoop) {
       scene.time.delayedCall(layer.delay, () => {
         const sound = scene.sound.add(layer.key, soundConfig);
+        (sound as any)._baseConfigVol = layerBaseVol;
+        (sound as any)._targetVolume = vol;
         if (layer.panRange) {
           const pan = Phaser.Math.FloatBetween(-layer.panRange, layer.panRange);
           (sound as any).setPan(pan);
@@ -218,11 +221,15 @@ export class SoundManager {
       return null; // Kein direktes Sound-Objekt zurückgeben bei Delay
     } else {
       const sound = scene.sound.add(layer.key, soundConfig);
-      // ✨ NEU: Speichere die Basis-Lautstärke im Sound-Objekt für spätere Updates
+      // ✨ NEU: Speichere die Basis-Lautstärke und Ziel-Lautstärke im Sound-Objekt für spätere Updates
       (sound as any)._baseConfigVol = layerBaseVol;
+      (sound as any)._targetVolume = vol;
       if (layer.panRange) {
         const pan = Phaser.Math.FloatBetween(-layer.panRange, layer.panRange);
         (sound as any).setPan(pan);
+      }
+      if (isAmbienceLoop) {
+        (sound as any).setVolume(0);
       }
       sound.play();
 
@@ -248,12 +255,12 @@ export class SoundManager {
     );
 
     const timer = scene.time.delayedCall(delay, () => {
-      // Sound abspielen (als SFX behandeln, da One-Shot)
+      // Ambience-One-Shots (z.B. Eule) folgen musicVolume, um konsistent mit dem Hintergrund zu bleiben
       const masterVol = this.settingsManager.get("masterVolume");
-      const sfxVol = this.settingsManager.get("sfxVolume");
+      const musicVol = this.settingsManager.get("musicVolume");
 
-      if (masterVol > 0 && sfxVol > 0) {
-        this.playLayer(scene, layer, masterVol * sfxVol, false);
+      if (masterVol > 0 && musicVol > 0) {
+        this.playLayer(scene, layer, masterVol * musicVol, false);
       }
 
       // Nächsten Aufruf planen (Rekursion)
@@ -269,13 +276,29 @@ export class SoundManager {
   private updateVolumes() {
     const masterVol = this.settingsManager.get("masterVolume");
     const musicVol = this.settingsManager.get("musicVolume");
+    const sfxVol = this.settingsManager.get("sfxVolume");
 
     // Aktualisiere laufende Ambience Loops
+    this.activeAmbienceSounds = this.activeAmbienceSounds.filter(
+      (sound) => sound && (sound.isPlaying || !(sound as any).pendingRemove)
+    );
     this.activeAmbienceSounds.forEach((sound) => {
       if (sound.isPlaying) {
         // ✨ FIX: Berechne die Lautstärke basierend auf der gespeicherten Basis-Lautstärke neu.
         const baseVol = (sound as any)._baseConfigVol ?? 1.0;
         const newVol = baseVol * masterVol * musicVol;
+        (sound as any).setVolume(newVol);
+      }
+    });
+
+    // Aktualisiere laufende SFX Loops
+    this.activeSFXLoops = this.activeSFXLoops.filter(
+      (sound) => sound && (sound.isPlaying || !(sound as any).pendingRemove)
+    );
+    this.activeSFXLoops.forEach((sound) => {
+      if (sound.isPlaying) {
+        const baseVol = (sound as any)._baseConfigVol ?? 1.0;
+        const newVol = baseVol * masterVol * sfxVol;
         (sound as any).setVolume(newVol);
       }
     });
