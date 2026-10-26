@@ -237,9 +237,14 @@ describe("Combat Rules Expansion (Blocker Gates, Ability Lock & Initiative Enfor
         Type: "Dominant",
       });
 
-      const res = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, dominant.id);
+      // Dominants cannot enter the Field of Battle
+      const invalidRes = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, dominant.id);
+      expect(invalidRes.error).toBe("Invalid card for battle!");
+
+      // Dominants can be played to Territory during battle even without initiative
+      const res = moveCard(attacker, state, cardLookup, ZONES.HAND, ZONES.TERRITORY, dominant.id);
       expect(res.movedCards.length).toBe(1);
-      expect(dominant.zone).toBe(ZONES.BATTLEFIELD);
+      expect(dominant.zone).toBe(ZONES.TERRITORY);
     });
   });
 
