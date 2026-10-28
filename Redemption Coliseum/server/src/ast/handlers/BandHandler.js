@@ -5,6 +5,7 @@ const { AST_ACTIONS, AST_MESSAGES, AST_SELECTION_MODES } = require("../../../../
 const { TargetSelectionService } = require("../TargetSelectionService");
 const { BattleCharacterClassifier } = require("../../services/BattleCharacterClassifier");
 const { BattleService } = require("../../services/BattleService");
+const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
 const { ProtectionService } = require("../../../../shared/rules/ProtectionService");
 const logger = require("../../utils/logger");
 
@@ -91,14 +92,12 @@ class BandHandler {
     );
 
     // Broadcast action telegraph
-    if (typeof room.broadcast === "function" && leaderCard) {
-      room.broadcast(AST_MESSAGES.ACTION_TELEGRAPH, {
-        sourceCardId: leaderCard.id,
-        targetCardIds: [targetCard.id],
-        action: AST_ACTIONS.BAND,
-        durationMs: 500,
-      });
-    }
+    ActionTelegraphService.send(room, {
+      sourceCardId: leaderCard?.id,
+      targetCardIds: [targetCard.id],
+      action: AST_ACTIONS.BAND,
+      durationMs: 500,
+    });
 
     // Move character to battlefield
     const moveResult = moveCard(

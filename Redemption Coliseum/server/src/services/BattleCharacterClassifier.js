@@ -207,9 +207,9 @@ class BattleCharacterClassifier {
     const mode = (ability.activation_mode || "").toLowerCase();
     const event = (ability.trigger_event || "").toLowerCase();
 
-    // Immediate or untargeted event abilities fire on battle enter / play
+    // Immediate, triggered, or static continuous abilities fire on battle enter / play
     if (!event) {
-      return mode === "immediate" || mode === "triggered";
+      return mode === "immediate" || mode === "triggered" || mode === "static";
     }
 
     if (

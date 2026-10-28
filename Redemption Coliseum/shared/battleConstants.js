@@ -7,6 +7,7 @@ export const BATTLE_STATE_REASON = /** @type {const} */ ({
   NO_BATTLE: "NO_BATTLE",                 // Outside battle phase or empty battlefield before attack
   UNBLOCKED: "UNBLOCKED",                 // Hero attacks, 0 blockers present (initial or blocker removed)
   BLOCKER_UNOPPOSED: "BLOCKER_UNOPPOSED", // Blocker in battle, 0 heroes present (all heroes removed)
+  RESCUER_UNOPPOSED: "RESCUER_UNOPPOSED", // Hero in battle, blocker was defeated/removed (rescue attempt successful)
   LOSING_NUMBERS: "LOSING_NUMBERS",       // Both sides have characters; losing side holds regular initiative
   STALEMATE: "STALEMATE",                 // Both sides have characters; neither reaches toughness -> non-last-card player holds initiative
   MUTUAL_DESTRUCTION: "MUTUAL_DESTRUCTION",// Both sides have characters; both reach toughness -> non-last-card player holds initiative

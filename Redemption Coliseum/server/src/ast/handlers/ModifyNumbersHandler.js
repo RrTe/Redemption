@@ -3,6 +3,8 @@ const { moveCard } = require("../../services/cardService");
 const { ZONES } = require("../../../../shared/zones");
 const { AST_ACTIONS, AST_MESSAGES, AST_SELECTION_MODES } = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
+const { SpecialInitiativeService } = require("../../services/SpecialInitiativeService");
+const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
 const { BattleCalculator } = require("../../../../shared/BattleCalculator");
 const { BattleService } = require("../../services/BattleService");
 const logger = require("../../utils/logger");
@@ -49,6 +51,50 @@ class ModifyNumbersHandler {
     // 2. Resolve target cards
     const targets = this._resolveTargets(room, player, targetDef, sourceCard, options);
 
+    if (options.specialInitiativeDeclined) {
+      const discardedSnapshots = [];
+      const logEntries = [];
+      let battlefieldAffected = false;
+
+      const defeatedTargets = targets.filter(({ card }) => {
+        if (card.zone === ZONES.BATTLEFIELD && BattleCalculator.isCharacter(card)) {
+          const stats = BattleCalculator.getCardStats(card);
+          return stats.toughness <= 0;
+        }
+        return false;
+      });
+
+      ActionTelegraphService.send(room, {
+        sourceCardId: item?.cardId,
+        targetCardIds: defeatedTargets.map((t) => t.card.id),
+        action: AST_ACTIONS.DISCARD,
+        durationMs: 500,
+      });
+
+      for (const { card, owner } of defeatedTargets) {
+        moveCard(owner, room.state, room.cardLookup, card.zone, ZONES.DISCARD, card.id);
+        discardedSnapshots.push({ cardId: card.id, name: card.Name });
+        logEntries.push(`${card.Name} was defeated due to zero toughness and discarded.`);
+        battlefieldAffected = true;
+      }
+
+      if (battlefieldAffected) {
+        BattleService.recalculate(room);
+      }
+
+      return {
+        success: true,
+        snapshot: {
+          action: AST_ACTIONS.MODIFY_NUMBERS,
+          timestamp: Date.now(),
+          playerId: player.sessionId,
+          cardId: item?.cardId || "",
+          discardedCards: discardedSnapshots,
+        },
+        logEntry: logEntries.join(" ") || "Defeated characters discarded.",
+      };
+    }
+
     if (targets.length === 0) {
       logger.info("[ModifyNumbersHandler] No targets found to modify stats.");
       return {
@@ -65,14 +111,12 @@ class ModifyNumbersHandler {
     }
 
     // Broadcast action telegraph
-    if (typeof room.broadcast === "function" && item?.cardId) {
-      room.broadcast(AST_MESSAGES.ACTION_TELEGRAPH, {
-        sourceCardId: item.cardId,
-        targetCardIds: targets.map((t) => t.card.id),
-        action: AST_ACTIONS.MODIFY_NUMBERS,
-        durationMs: 500,
-      });
-    }
+    ActionTelegraphService.send(room, {
+      sourceCardId: item?.cardId,
+      targetCardIds: targets.map((t) => t.card.id),
+      action: AST_ACTIONS.MODIFY_NUMBERS,
+      durationMs: 500,
+    });
 
     const modifications = [];
     const logEntries = [];
@@ -115,16 +159,48 @@ class ModifyNumbersHandler {
       if (card.zone === ZONES.BATTLEFIELD) {
         battlefieldAffected = true;
       }
+    }
 
-      // REG line 1815: If toughness of a character is decreased to 0 or less, it is discarded
+    // REG line 1815: Check characters whose toughness drops to 0 or less
+    const defeatedCombatants = [];
+    for (const { card, owner } of targets) {
       if (BattleCalculator.isCharacter(card)) {
         const stats = BattleCalculator.getCardStats(card);
         if (stats.toughness <= 0) {
-          logger.info(`[ModifyNumbersHandler] ${card.Name} reduced to <= 0 toughness (${stats.toughness}). Discarding.`);
-          moveCard(owner, room.state, room.cardLookup, card.zone, ZONES.DISCARD, card.id);
-          logEntries.push(`${card.Name} was defeated due to zero toughness and discarded.`);
-          battlefieldAffected = true;
+          if (card.zone === ZONES.BATTLEFIELD) {
+            defeatedCombatants.push({ card, owner });
+          } else {
+            // Discard immediately if outside battlefield (e.g. territory)
+            moveCard(owner, room.state, room.cardLookup, card.zone, ZONES.DISCARD, card.id);
+            logEntries.push(`${card.Name} was defeated due to zero toughness and discarded.`);
+          }
         }
+      }
+    }
+
+    if (defeatedCombatants.length > 0) {
+      // Check Special Initiative if removing these combatants clears all opponent characters in battle
+      const siResult = SpecialInitiativeService.checkAndTrigger(
+        room,
+        player,
+        defeatedCombatants,
+        item,
+        options,
+        "defeated due to zero toughness"
+      );
+      if (siResult) {
+        if (battlefieldAffected) {
+          BattleService.recalculate(room);
+        }
+        return siResult;
+      }
+
+      // If Special Initiative did not trigger (not last characters or not opponent), discard now:
+      for (const { card, owner } of defeatedCombatants) {
+        logger.info(`[ModifyNumbersHandler] ${card.Name} reduced to <= 0 toughness. Discarding.`);
+        moveCard(owner, room.state, room.cardLookup, card.zone, ZONES.DISCARD, card.id);
+        logEntries.push(`${card.Name} was defeated due to zero toughness and discarded.`);
+        battlefieldAffected = true;
       }
     }
 

@@ -2,6 +2,7 @@
 const { ZONES } = require("../../../../shared/zones");
 const { AST_ACTIONS, AST_MESSAGES, AST_SELECTION_MODES } = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
+const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
 const { BattleService } = require("../../services/BattleService");
 const logger = require("../../utils/logger");
 
@@ -53,14 +54,12 @@ class ImmunityHandler {
     const protectionDef = this._buildProtectionDef(effect);
 
     // Broadcast action telegraph
-    if (typeof room.broadcast === "function" && item?.cardId) {
-      room.broadcast(AST_MESSAGES.ACTION_TELEGRAPH, {
-        sourceCardId: item.cardId,
-        targetCardIds: targets.map((t) => t.card.id),
-        action: AST_ACTIONS.SET_IMMUNITY,
-        durationMs: 500,
-      });
-    }
+    ActionTelegraphService.send(room, {
+      sourceCardId: item?.cardId,
+      targetCardIds: targets.map((t) => t.card.id),
+      action: AST_ACTIONS.SET_IMMUNITY,
+      durationMs: 500,
+    });
 
     let battleRecalculateNeeded = false;
     const protectedCardIds = [];
@@ -124,13 +123,30 @@ class ImmunityHandler {
       ...(targetDef.alignment ? [targetDef.alignment] : []),
     ];
 
-    const actions = Array.isArray(rawProtectedFrom.actions) ? rawProtectedFrom.actions : [];
+    const actions = Array.isArray(rawProtectedFrom.actions) ? [...rawProtectedFrom.actions] : [];
+    if (Array.isArray(targetDef.identifiers)) {
+      for (const id of targetDef.identifiers) {
+        const lower = String(id).toLowerCase();
+        if (lower.includes("discard") && !actions.includes("discard")) actions.push("discard");
+        if (lower.includes("capture") && !actions.includes("capture")) actions.push("capture");
+        if ((lower.includes("banish") || lower.includes("remove")) && !actions.includes("banish")) actions.push("banish");
+        if ((lower.includes("convert") || lower.includes("conversion")) && !actions.includes("convert")) actions.push("convert");
+        if (lower.includes("negat") && !actions.includes("negate")) actions.push("negate");
+        if (lower.includes("interrupt") && !actions.includes("interrupt")) actions.push("interrupt");
+        if (lower.includes("band") && !actions.includes("band")) actions.push("band");
+      }
+    }
+
     const harm = Boolean(
       rawProtectedFrom.harm ||
       (effect.action || "").includes("harm") ||
       (targetDef.target_type || "").includes("harm") ||
-      alignments.length > 0 ||
-      brigades.length > 0
+      (Array.isArray(targetDef.identifiers) && targetDef.identifiers.some((id) => String(id).toLowerCase().includes("harm")))
+    );
+
+    const opponent = Boolean(
+      rawProtectedFrom.opponent === true ||
+      (Array.isArray(targetDef.identifiers) && targetDef.identifiers.some((id) => String(id).toLowerCase().includes("opponent")))
     );
 
     return {
@@ -138,7 +154,7 @@ class ImmunityHandler {
       alignments,
       actions,
       harm,
-      opponent: rawProtectedFrom.opponent !== false,
+      opponent,
       duration: effect?.duration || "phase",
     };
   }

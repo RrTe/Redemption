@@ -10,6 +10,8 @@ const {
 } = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
 const { BattleCharacterClassifier } = require("../../services/BattleCharacterClassifier");
+const { SpecialInitiativeService } = require("../../services/SpecialInitiativeService");
+const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
 const { BattleService } = require("../../services/BattleService");
 const logger = require("../../utils/logger");
 
@@ -42,8 +44,9 @@ class DiscardHandler {
       ? Infinity
       : (typeof targetDef.count?.fixed_value === "number" ? targetDef.count.fixed_value : 1);
 
+    const sourceCard = item?.cardId ? room.cardLookup?.get(item.cardId) : null;
     // Resolve eligible target cards based on dynamic filter criteria
-    const targets = this._resolveTargets(room, player, targetDef, options, count);
+    const targets = this._resolveTargets(room, player, targetDef, options, count, sourceCard);
 
     if (targets.length === 0) {
       logger.info("[DiscardHandler] No eligible targets found for discard.");
@@ -64,111 +67,29 @@ class DiscardHandler {
     const logEntries = [];
 
     // Special Initiative Interception Check:
-    // If an opponent's card ability would remove the last remaining character(s) of a player in battle during Battle Phase,
-    // suspend the discard and prompt the defending player to declare Special Initiative.
-    if (
-      room.state?.currentPhase === PHASES.BATTLE &&
-      !options.specialInitiativeDeclined
-    ) {
-      // Group battle targets by combatant controller to detect if all characters of that player are being removed
-      const opponentBattleTargetsByController = new Map();
-      for (const { card, owner } of targets) {
-        const combatantControllerId = card.controllerId || owner.sessionId;
-        const isCharacter = BattleCharacterClassifier.isHero(card) || BattleCharacterClassifier.isEvilCharacter(card);
-        if (isCharacter && card.zone === ZONES.BATTLEFIELD && combatantControllerId !== player.sessionId) {
-          if (!opponentBattleTargetsByController.has(combatantControllerId)) {
-            opponentBattleTargetsByController.set(combatantControllerId, []);
-          }
-          opponentBattleTargetsByController.get(combatantControllerId).push(card);
-        }
-      }
-
-      let siControllerId = null;
-      let siTargetCards = null;
-
-      for (const [cId, cardsBeingRemoved] of opponentBattleTargetsByController.entries()) {
-        if (BattleCharacterClassifier.isLastCharacterInBattle(room.state.battlefield, cardsBeingRemoved, cId)) {
-          siControllerId = cId;
-          siTargetCards = cardsBeingRemoved;
-          break;
-        }
-      }
-
-      if (siTargetCards && siTargetCards.length > 0) {
-        const primaryTarget = siTargetCards[0];
-        const targetController = room.state.players.get(siControllerId) || primaryTarget.owner;
-        const targetCard = primaryTarget;
-        const isMultiple = siTargetCards.length > 1;
-        const promptTargetText = isMultiple
-          ? `All characters (${siTargetCards.length})`
-          : targetCard.Name;
-
-        logger.info(
-          `[DiscardHandler] Special Initiative triggered: Opponent '${player.name}' targets ${promptTargetText} of '${targetController.name}'.`
-        );
-
-        const chronicle = room.state.effectChronicle;
-        if (chronicle) {
-          chronicle.priorityPlayerId = targetController.sessionId;
-        }
-
-        if (item) {
-          item.pendingSpecialInitiative = {
-            targetCardId: targetCard.id,
-            targetCardIds: siTargetCards.map((c) => c.id),
-            targetOwnerId: targetController.sessionId,
-            initiatorId: player.sessionId,
-            options,
-          };
-        }
-
-        const targetClient = room.clients?.find((c) => c.sessionId === targetController.sessionId);
-        if (targetClient && typeof targetClient.send === "function") {
-          targetClient.send(AST_MESSAGES.REQUEST_OPTIONAL_ABILITY, {
-            abilityId: "special_initiative",
-            itemId: item?.id || "",
-            cardId: targetCard.id,
-            cardTitle: targetCard.Name,
-            promptText: `${promptTargetText} in battle targeted for discard! Declare Special Initiative?`,
-            action: "special_initiative",
-            cardImageFile: targetCard.ImageFile || "",
-            templateId: targetCard.templateId || "",
-          });
-        }
-
-        if (typeof room.broadcast === "function" && item?.cardId) {
-          room.broadcast(AST_MESSAGES.ACTION_TELEGRAPH, {
-            sourceCardId: item.cardId,
-            targetCardIds: siTargetCards.map((c) => c.id),
-            isSpecialInitiative: true,
-            persistent: true,
-          });
-        }
-
-        return {
-          success: true,
-          handled: true,
-          awaitingSpecialInitiative: true,
-          targetCard,
-          targetCards: siTargetCards,
-          targetOwner: targetController,
-        };
-      }
+    const siResult = SpecialInitiativeService.checkAndTrigger(
+      room,
+      player,
+      targets,
+      item,
+      options,
+      "targeted for discard"
+    );
+    if (siResult) {
+      return siResult;
     }
 
     // Broadcast action telegraph to both players for deterministic/resolved targets
-    if (typeof room.broadcast === "function" && item?.cardId && targets.length > 0) {
-      const explicitPileId =
-        options.targetPileId ||
-        (targets[0]?.card?.zone === ZONES.DECK ? `${targets[0].owner.sessionId}:${ZONES.DECK}` : undefined);
-      room.broadcast(AST_MESSAGES.ACTION_TELEGRAPH, {
-        sourceCardId: item.cardId,
-        targetCardIds: targets.map((t) => t.card.id),
-        targetPileId: explicitPileId,
-        action: AST_ACTIONS.DISCARD,
-        durationMs: 500,
-      });
-    }
+    const explicitPileId =
+      options.targetPileId ||
+      (targets[0]?.card?.zone === ZONES.DECK ? `${targets[0].owner.sessionId}:${ZONES.DECK}` : undefined);
+    ActionTelegraphService.send(room, {
+      sourceCardId: item?.cardId,
+      targetCardIds: targets.map((t) => t.card.id),
+      targetPileId: explicitPileId,
+      action: AST_ACTIONS.DISCARD,
+      durationMs: 500,
+    });
 
     // Execute discard moves for each resolved target
     for (const { card, owner } of targets) {
@@ -231,7 +152,7 @@ class DiscardHandler {
    * @returns {Array<{ card: object, owner: object }>} Selected targets with owners.
    * @private
    */
-  static _resolveTargets(room, actingPlayer, targetDef, options, count) {
+  static _resolveTargets(room, actingPlayer, targetDef, options, count, sourceCard = null) {
     // 1. Explicit pile target (e.g. discard top card of targeted deck)
     if (options.targetPileId) {
       const [targetOwnerId, targetZone] = options.targetPileId.split(":");
@@ -276,12 +197,13 @@ class DiscardHandler {
           ? (room?.state?.battlefield || []).filter(c => (c.controllerId || c.ownerId) === p.sessionId)
           : (p[zName] || []);
         for (const card of zoneCards) {
+          const filterContext = { sourceCard, actionType: AST_ACTIONS.DISCARD };
           if (explicitIds.length > 0) {
-            if (explicitIds.includes(card.id)) {
+            if (explicitIds.includes(card.id) && TargetSelectionService.matchesFilter(card, targetDef, filterContext)) {
               candidates.push({ card, owner: p });
               if (candidates.length >= count) return candidates;
             }
-          } else if (TargetSelectionService.matchesFilter(card, targetDef)) {
+          } else if (TargetSelectionService.matchesFilter(card, targetDef, filterContext)) {
             candidates.push({ card, owner: p });
             if (candidates.length >= count) return candidates;
           }

@@ -131,33 +131,23 @@ class TargetSelectionService {
    * @returns {{ valid: boolean, reason?: string }} Validation result.
    */
   static validateSelection(selection, eligible) {
-    if (!selection || !eligible) {
-      return { valid: false, reason: "MISSING_PAYLOAD" };
-    }
-
+    if (!selection || !eligible) return { valid: false, reason: "MISSING_PAYLOAD" };
     if (eligible.targetType === "pile") {
       const chosenPile = selection.selectedPileId;
-      if (!chosenPile) {
-        return { valid: false, reason: "MISSING_PILE_ID" };
-      }
-      const isAllowed = eligible.eligiblePiles.some((p) => p.id === chosenPile);
-      if (!isAllowed) {
-        return { valid: false, reason: "INVALID_PILE_TARGET" };
-      }
-      return { valid: true };
+      if (!chosenPile) return { valid: false, reason: "MISSING_PILE_ID" };
+      return eligible.eligiblePiles.some((p) => p.id === chosenPile)
+        ? { valid: true }
+        : { valid: false, reason: "INVALID_PILE_TARGET" };
     }
-
     const chosenIds = Array.isArray(selection.selectedCardIds) ? selection.selectedCardIds : [];
     if (chosenIds.length < eligible.minTargets || chosenIds.length > eligible.maxTargets) {
       return { valid: false, reason: "INVALID_TARGET_COUNT" };
     }
-
     for (const cardId of chosenIds) {
       if (!eligible.eligibleCardIds.includes(cardId)) {
         return { valid: false, reason: `CARD_NOT_ELIGIBLE: ${cardId}` };
       }
     }
-
     return { valid: true };
   }
 
@@ -184,57 +174,65 @@ class TargetSelectionService {
     // Check card type filter
     const rawType = (targetDef.target_type || "").toLowerCase().trim();
     if (rawType) {
-      const isCardEnh = Boolean(card.IsEnhancement) ||
-        BattleCharacterClassifier.isGoodEnhancement(card) ||
-        BattleCharacterClassifier.isEvilEnhancement(card) ||
-        String(card.Type || "").toLowerCase().includes("enhancement");
+      const isCardEnh = Boolean(card.IsEnhancement) || BattleCharacterClassifier.isGoodEnhancement(card) || BattleCharacterClassifier.isEvilEnhancement(card) || String(card.Type || "").toLowerCase().includes("enhancement");
       const isCardHero = BattleCharacterClassifier.isHero(card);
       const isCardEvilChar = BattleCharacterClassifier.isEvilCharacter(card);
       const isCardChar = card.IsCharacter || isCardHero || isCardEvilChar;
       const isCardSoul = card.isLostSoul || (card.Name && card.Name.startsWith("Lost Soul"));
       const isCardArt = Boolean(card.IsArtifact) || String(card.Type || "").toLowerCase() === "artifact";
 
-      if (rawType.includes("enhancement")) {
-        if (!isCardEnh) return false;
-        if (rawType.includes("evil") && !BattleCharacterClassifier.isEvilEnhancement(card)) return false;
-        if (rawType.includes("good") && !BattleCharacterClassifier.isGoodEnhancement(card)) return false;
-      } else if (rawType === "hero") {
-        if (!isCardHero) return false;
-      } else if (rawType.includes("evil character") || rawType.includes("evil_character") || rawType === "ec") {
-        if (!isCardEvilChar) return false;
-      } else if (rawType.includes("character")) {
-        if (!isCardChar) return false;
-      } else if (rawType === "lost soul" || rawType === "lost_soul") {
-        if (!isCardSoul) return false;
-      } else if (rawType === "artifact") {
-        if (!isCardArt) return false;
+      if (rawType === "card" || rawType === "any" || rawType === "all") {
+        // Generic card target: all match
+      } else if (rawType.includes("enhancement")) {
+        if (!isCardEnh || (rawType.includes("evil") && !BattleCharacterClassifier.isEvilEnhancement(card)) || (rawType.includes("good") && !BattleCharacterClassifier.isGoodEnhancement(card))) return false;
+      } else if (rawType === "hero" && !isCardHero) return false;
+      else if ((rawType.includes("evil character") || rawType.includes("evil_character") || rawType === "ec") && !isCardEvilChar) return false;
+      else if (rawType.includes("character") && !isCardChar) return false;
+      else if ((rawType === "lost soul" || rawType === "lost_soul") && !isCardSoul) return false;
+      else if (rawType === "artifact" && !isCardArt) return false;
+      else if (!["hero", "character", "artifact", "lost soul", "card", "any", "all"].some((t) => rawType.includes(t))) {
+        const cardName = String(card.Name || card.card_name || "").toLowerCase();
+        if (rawType === "self" || rawType === "this card") {
+          if (context.sourceCard && card.id !== context.sourceCard.id) return false;
+        } else if (!cardName.includes(rawType) && !rawType.includes(cardName)) {
+          return false;
+        }
       }
     }
 
     // Check brigades filter
     if (Array.isArray(targetDef.brigades) && targetDef.brigades.length > 0) {
       const cardBrigades = Array.isArray(card.Brigades) ? card.Brigades.map((b) => b.toLowerCase()) : [];
-      const hasMatch = targetDef.brigades.some((b) => cardBrigades.includes(b.toLowerCase()));
-      if (!hasMatch) return false;
+      if (!targetDef.brigades.some((b) => cardBrigades.includes(b.toLowerCase()))) return false;
     }
 
     // Check card titles filter
     if (Array.isArray(targetDef.card_titles) && targetDef.card_titles.length > 0) {
       const cardName = String(card.Name || card.card_name || "").toLowerCase();
-      if (!targetDef.card_titles.some((t) => cardName.includes(String(t).toLowerCase()))) {
-        return false;
-      }
+      if (!targetDef.card_titles.some((t) => cardName.includes(String(t).toLowerCase()))) return false;
     }
 
     // Check identifiers filter (matches Identifier box and ORDIR descriptors)
     if (Array.isArray(targetDef.identifiers) && targetDef.identifiers.length > 0) {
-      const cardIdent = String(card.Identifier || "").toLowerCase();
-      const ordir = Array.isArray(card.ORDIR) ? card.ORDIR.join(" ").toLowerCase() : "";
-      const hasIdentMatch = targetDef.identifiers.some((id) => {
-        const needle = String(id).toLowerCase();
-        return cardIdent.includes(needle) || ordir.includes(needle);
-      });
-      if (!hasIdentMatch) return false;
+      let idents = targetDef.identifiers;
+      const act = context.actionType || targetDef.action || "";
+      if (act === AST_ACTIONS.SET_IMMUNITY || act === AST_ACTIONS.PROTECT || act === AST_ACTIONS.IMMUNE || act.includes("protect") || act.includes("immune")) {
+        idents = idents.filter((id) => {
+          const l = String(id).toLowerCase();
+          return !l.includes("discard") && !l.includes("capture") && !l.includes("harm") &&
+                 !l.includes("convert") && !l.includes("banish") && !l.includes("remove") &&
+                 !l.includes("ability") && !l.includes("evil card") && !l.includes("opponent");
+        });
+      }
+      if (idents.length > 0) {
+        const cardIdent = String(card.Identifier || "").toLowerCase();
+        const ordir = Array.isArray(card.ORDIR) ? card.ORDIR.join(" ").toLowerCase() : "";
+        const hasIdentMatch = idents.some((id) => {
+          const needle = String(id).toLowerCase();
+          return cardIdent.includes(needle) || ordir.includes(needle);
+        });
+        if (!hasIdentMatch) return false;
+      }
     }
 
     // Check explicit card IDs filter
@@ -262,11 +260,7 @@ class TargetSelectionService {
   static _isPileTargeting(scope, targetType) {
     const s = (scope || "").toLowerCase().trim();
     const t = (targetType || "").toLowerCase().replace(/[\s_-]+/g, "_").trim();
-
-    // Any targeting in deck scope is pile targeting (selecting a player's deck)
-    if (s === "deck") {
-      return true;
-    }
+    if (s === "deck") return true;
     if (s === "discard_pile" || s === "discard") {
       return !t || t === "discard_pile" || t === "pile" || t === "top_card" || t === "deck";
     }
@@ -292,20 +286,13 @@ class TargetSelectionService {
    * @private
    */
   static _getPlayersToScan(room, actingPlayer, zoneOwner = AST_ZONE_OWNERS.EITHER) {
-    const players = [];
-    if (!room?.state?.players) return players;
-
-    for (const p of room.state.players.values()) {
+    if (!room?.state?.players) return [];
+    return Array.from(room.state.players.values()).filter((p) => {
       const isSelf = p.sessionId === actingPlayer.sessionId;
-      if (zoneOwner === AST_ZONE_OWNERS.CONTROLLER && isSelf) {
-        players.push(p);
-      } else if (zoneOwner === AST_ZONE_OWNERS.OPPONENT && !isSelf) {
-        players.push(p);
-      } else if (zoneOwner === AST_ZONE_OWNERS.EITHER || zoneOwner === AST_ZONE_OWNERS.BOTH) {
-        players.push(p);
-      }
-    }
-    return players;
+      if (zoneOwner === AST_ZONE_OWNERS.CONTROLLER) return isSelf;
+      if (zoneOwner === AST_ZONE_OWNERS.OPPONENT) return !isSelf;
+      return true;
+    });
   }
 }
 

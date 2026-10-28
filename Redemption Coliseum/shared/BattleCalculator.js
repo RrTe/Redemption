@@ -158,6 +158,7 @@ class BattleCalculator {
     defenderPlayerId,
     lastBattleCardPlayerId = "",
     currentPhase = PHASES.BATTLE,
+    blockOccurred = false,
   }) {
     const emptyResult = (reason, description) => ({
       rescuer: { strength: 0, toughness: 0, characters: [], enhancements: [], totalCards: 0 },
@@ -181,6 +182,15 @@ class BattleCalculator {
 
     // 2. Rescuer has characters, Blocker has none (unblocked attack or blocker was removed)
     if (rescuer.characters.length > 0 && blocker.characters.length === 0) {
+      if (blockOccurred) {
+        return {
+          rescuer,
+          blocker,
+          initiativePlayerId: "",
+          stateReason: BATTLE_STATE_REASON.RESCUER_UNOPPOSED,
+          description: "Blocker Removed (Rescue Successful)",
+        };
+      }
       return {
         rescuer,
         blocker,

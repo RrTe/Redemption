@@ -53,6 +53,16 @@ class BattleService {
     }
 
     const playerId = player?.sessionId || card?.controllerId;
+    const defenderId = this.getDefenderSessionId(room.state);
+    if (playerId === defenderId && (card?.IsCharacter || (card?.inGameType || card?.Type || "").toLowerCase().includes("character"))) {
+      if (room.state.battle) {
+        room.state.battle.blockOccurred = true;
+        logger.info(
+          `[BattleService] Blocker '${card?.Name}' entered battle for defender '${defenderId}'. Set blockOccurred = true.`
+        );
+      }
+    }
+
     if (playerId) {
       room.state.lastBattleCardPlayerId = playerId;
       logger.info(
@@ -83,12 +93,19 @@ class BattleService {
     const activePlayerId = state.activePlayer || "";
     const defenderPlayerId = this.getDefenderSessionId(state);
 
+    const battlefieldList = state.battlefield ? Array.from(state.battlefield) : [];
+    const blockerSide = BattleCalculator.calculateSide(battlefieldList, defenderPlayerId);
+    if (blockerSide.characters.length > 0 && state.battle) {
+      state.battle.blockOccurred = true;
+    }
+
     const result = BattleCalculator.evaluateBattle({
-      battlefield: state.battlefield ? Array.from(state.battlefield) : [],
+      battlefield: battlefieldList,
       activePlayerId,
       defenderPlayerId,
       lastBattleCardPlayerId: state.lastBattleCardPlayerId || "",
       currentPhase: state.currentPhase || PHASES.BATTLE,
+      blockOccurred: Boolean(state.battle?.blockOccurred),
     });
 
     state.battle.rescuerStrength = result.rescuer.strength;
@@ -124,6 +141,7 @@ class BattleService {
     state.battle.blockerToughness = 0;
     state.battle.initiativePlayerId = "";
     state.battle.specialInitiativePlayerId = "";
+    state.battle.blockOccurred = false;
     state.battle.stateReason = BATTLE_STATE_REASON.NO_BATTLE;
     state.battle.lastCardPlayedPlayerId = "";
 

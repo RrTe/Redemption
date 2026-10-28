@@ -63,6 +63,7 @@ export const UI_STRINGS = Object.freeze({
     YOU_SUFFIX: "(YOU)",
     AWAITING_ATTACKER: "Battle Phase: Awaiting Attacker",
     AWAITING_BLOCKER: "Rescue Attempt (Awaiting Blocker)",
+    BLOCKER_REMOVED: "Blocker Defeated (Rescue Successful)",
     HERO_REMOVED: "Hero Removed (Rescue Failed)",
     INITIATIVE_NUMBERS: (isMine: boolean) =>
       isMine

@@ -4,7 +4,8 @@ const { EffectChronicleService } = require("../services/EffectChronicleService")
 const { ChronicleHistoryService } = require("../services/ChronicleHistoryService");
 const { ChronicleItem } = require("../state/EffectChronicleState");
 const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants");
-const { AST_MESSAGES } = require("../../../shared/astConstants");
+const { AST_MESSAGES, AST_ACTIONS } = require("../../../shared/astConstants");
+const { ActionTelegraphService } = require("../services/ActionTelegraphService");
 const { moveCard } = require("../services/cardService");
 const { formatChronicleUndoLog } = require("../utils/gameLogFormatter");
 const logger = require("../utils/logger");
@@ -79,11 +80,7 @@ class RespondOptionalAbilityCommand extends BaseCommand {
         const psi = item.pendingSpecialInitiative;
         item.pendingSpecialInitiative = null;
 
-        if (typeof this.room.broadcast === "function") {
-          this.room.broadcast(AST_MESSAGES.CLEAR_ACTION_TELEGRAPH, {
-            sourceCardId: item.cardId,
-          });
-        }
+        ActionTelegraphService.clear(this.room, { sourceCardId: item?.cardId });
 
         // Restore priority back to original ability owner
         chronicle.priorityPlayerId = psi.initiatorId;
@@ -98,6 +95,13 @@ class RespondOptionalAbilityCommand extends BaseCommand {
           );
 
           const targetIds = psi.targetCardIds || [psi.targetCardId];
+          ActionTelegraphService.send(this.room, {
+            sourceCardId: item?.cardId,
+            targetCardIds: targetIds,
+            action: AST_ACTIONS.DISCARD,
+            durationMs: 500,
+          });
+
           const resumeResult = this.room.abilityResolver.resolve(item, {
             ...psi.options,
             specialInitiativeDeclined: true,
@@ -148,11 +152,7 @@ class RespondOptionalAbilityCommand extends BaseCommand {
       }
 
       // Clear persistent preview telegraph arrow from optional ability prompt
-      if (typeof this.room.broadcast === "function" && item?.cardId) {
-        this.room.broadcast(AST_MESSAGES.CLEAR_ACTION_TELEGRAPH, {
-          sourceCardId: item.cardId,
-        });
-      }
+      ActionTelegraphService.clear(this.room, { sourceCardId: item?.cardId });
 
       if (!accepted) {
         const declineResult = this.room.abilityResolver.resolve(item, { accepted: false });

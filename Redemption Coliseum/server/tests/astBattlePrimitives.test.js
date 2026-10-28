@@ -4,13 +4,16 @@ const { PlayerState } = require("../src/state/PlayerState");
 const { Card } = require("../src/state/Card");
 const { BattleCalculator } = require("../../shared/BattleCalculator");
 const { BattleService } = require("../src/services/BattleService");
+const { BattleTriggerService } = require("../src/services/BattleTriggerService");
 const { ModifyNumbersHandler } = require("../src/ast/handlers/ModifyNumbersHandler");
 const { BandHandler } = require("../src/ast/handlers/BandHandler");
 const { ImmunityHandler } = require("../src/ast/handlers/ImmunityHandler");
+const { DiscardHandler } = require("../src/ast/handlers/DiscardHandler");
 const { ProtectionService } = require("../../shared/rules/ProtectionService");
 const { TargetSelectionService } = require("../src/ast/TargetSelectionService");
 const { CombatRules, BandingRule } = require("../../shared/rules/CombatRules");
 const { AST_ACTIONS, AST_MESSAGES } = require("../../shared/astConstants");
+const { ActionType } = require("../../shared/actions");
 const { PHASES } = require("../../shared/phases");
 const { ZONES } = require("../../shared/zones");
 const { BATTLE_STATE_REASON } = require("../../shared/battleConstants");
@@ -505,6 +508,205 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       // Blocker is losing by numbers! Blocker receives initiative.
       expect(evaluation.stateReason).toBe(BATTLE_STATE_REASON.LOSING_NUMBERS);
       expect(evaluation.initiativePlayerId).toBe("p2");
+    });
+
+    test("Job protects from discard ability in battle and avoids Special Initiative prompt", () => {
+      // 1. Create Job with templateId: "199100320" on battlefield
+      const job = createCard({
+        id: "c_job",
+        templateId: "199100320",
+        Name: "Job",
+        Alignment: "Good",
+        IsCharacter: true,
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+
+      room.cardLookup.set(job.id, job);
+      state.battlefield.push(job);
+
+      // Verify battle entry trigger finds and returns Job's static protect ability
+      const entryAbility = BattleTriggerService.findBattleEntryAstAbility(
+        room,
+        p1,
+        job,
+        ActionType.RESCUE_ATTEMPT
+      );
+      expect(entryAbility).toBeDefined();
+      expect(entryAbility.ability_id).toBe("ab_1_protect");
+
+      // Execute Job's protect ability
+      const execResult = ImmunityHandler.execute({
+        room,
+        player: p1,
+        effect: entryAbility.effects[0],
+        item: { cardId: job.id },
+      });
+      expect(execResult.success).toBe(true);
+      expect(job.isProtected).toBe(true);
+      expect(job._protection.actions).toContain("discard");
+      expect(job._protection.actions).toContain("capture");
+
+      // 2. Opponent plays Evil Enhancement that attempts to discard all heroes in battle
+      const evilEnh = createCard({
+        id: "ee_discard_all",
+        Name: "Dark Wrath",
+        Alignment: "Evil",
+        IsEnhancement: true,
+        controllerId: "p2",
+        originalOwnerId: "p2",
+        zone: ZONES.BATTLEFIELD,
+      });
+      room.cardLookup.set(evilEnh.id, evilEnh);
+      state.battlefield.push(evilEnh);
+
+      const discardEffect = {
+        action: "discard",
+        target: {
+          selection_mode: "automatic_all",
+          zone_owner: "opponent",
+          scope: "battle",
+          target_type: "hero",
+        },
+      };
+
+      const discardResult = DiscardHandler.execute({
+        room,
+        player: p2,
+        effect: discardEffect,
+        item: { cardId: evilEnh.id },
+      });
+
+      // Job must be protected: not discarded, and no Special Initiative triggered
+      expect(discardResult.success).toBe(true);
+      expect(discardResult.awaitingSpecialInitiative).toBeFalsy();
+      expect(discardResult.snapshot.discardedCards.length).toBe(0);
+      expect(state.battlefield.some((c) => c.id === job.id)).toBe(true);
+      expect(p1.discard.length).toBe(0);
+    });
+
+    test("Decrease reducing all opponent blockers to <= 0 toughness triggers Special Initiative", () => {
+      // Setup hero rescuer
+      const hero = createCard({
+        id: "hero_rescuer",
+        Name: "Faithful Hero",
+        Strength: "10",
+        Toughness: "10",
+        Alignment: "Good",
+        IsCharacter: true,
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+
+      // Setup 2 blockers for opponent p2 with toughness <= 6
+      const ec1 = createCard({
+        id: "ec_hyrax",
+        Name: "Unclean Animals [Rock Hyrax]",
+        Strength: "4",
+        Toughness: "4",
+        Alignment: "Evil",
+        IsCharacter: true,
+        controllerId: "p2",
+        originalOwnerId: "p2",
+        zone: ZONES.BATTLEFIELD,
+      });
+
+      const ec2 = createCard({
+        id: "ec_lion",
+        Name: "Coliseum Lion",
+        Strength: "6",
+        Toughness: "6",
+        Alignment: "Evil",
+        IsCharacter: true,
+        controllerId: "p2",
+        originalOwnerId: "p2",
+        zone: ZONES.BATTLEFIELD,
+      });
+
+      room.cardLookup.set(hero.id, hero);
+      room.cardLookup.set(ec1.id, ec1);
+      room.cardLookup.set(ec2.id, ec2);
+      state.battlefield.push(hero);
+      state.battlefield.push(ec1);
+      state.battlefield.push(ec2);
+
+      const goodEnh = createCard({
+        id: "ge_bowl",
+        Name: "First Bowl of Wrath (RoJ)",
+        Alignment: "Good",
+        IsEnhancement: true,
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      room.cardLookup.set(goodEnh.id, goodEnh);
+      state.battlefield.push(goodEnh);
+
+      const decreaseEffect = {
+        action: "decrease",
+        strength_mod: -6,
+        toughness_mod: -6,
+        target: {
+          selection_mode: "automatic_all",
+          zone_owner: "opponent",
+          scope: "battle",
+          target_type: "evil_character",
+        },
+      };
+
+      const result = ModifyNumbersHandler.execute({
+        room,
+        player: p1,
+        effect: decreaseEffect,
+        item: { id: "item_bowl", cardId: goodEnh.id },
+      });
+
+      // Special Initiative MUST trigger because all opponent characters in battle are reduced to <= 0 toughness
+      expect(result.success).toBe(true);
+      expect(result.awaitingSpecialInitiative).toBe(true);
+      expect(result.targetCards.length).toBe(2);
+      expect(result.targetOwner.sessionId).toBe("p2");
+
+      // Verify prompt was sent to p2
+      const p2Client = room.clients.find((c) => c.sessionId === "p2");
+      expect(p2Client.send).toHaveBeenCalledWith(
+        AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
+        expect.objectContaining({
+          abilityId: "special_initiative",
+          action: "special_initiative",
+          promptText: expect.stringContaining("defeated due to zero toughness"),
+        })
+      );
+
+      // Defending cards must NOT be discarded yet (they stay in battle awaiting Special Initiative decision)
+      expect(state.battlefield.some((c) => c.id === ec1.id)).toBe(true);
+      expect(state.battlefield.some((c) => c.id === ec2.id)).toBe(true);
+      expect(p2.discard.length).toBe(0);
+
+      // Now simulate defending player declining Special Initiative:
+      room.broadcast.mockClear();
+      const declineResult = ModifyNumbersHandler.execute({
+        room,
+        player: p1,
+        effect: decreaseEffect,
+        item: { id: "item_bowl", cardId: goodEnh.id },
+        options: { specialInitiativeDeclined: true },
+      });
+
+      expect(declineResult.success).toBe(true);
+      expect(room.broadcast).toHaveBeenCalledWith(
+        AST_MESSAGES.ACTION_TELEGRAPH,
+        expect.objectContaining({
+          sourceCardId: goodEnh.id,
+          targetCardIds: expect.arrayContaining([ec1.id, ec2.id]),
+          action: AST_ACTIONS.DISCARD,
+        })
+      );
+      expect(p2.discard.length).toBe(2);
+      expect(state.battlefield.some((c) => c.id === ec1.id)).toBe(false);
+      expect(state.battlefield.some((c) => c.id === ec2.id)).toBe(false);
     });
   });
 });

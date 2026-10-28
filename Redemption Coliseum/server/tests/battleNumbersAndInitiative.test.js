@@ -57,7 +57,7 @@ describe("Battle Numbers & Regular Initiative Tracker (REG v11.0.0)", () => {
     expect(state.battle.initiativePlayerId).toBe("");
   });
 
-  test("2. Blocker Removed: Blocker is discarded/withdrawn -> transitions cleanly back to UNBLOCKED", () => {
+  test("2. Blocker Removed: Blocker is discarded/withdrawn -> transitions to RESCUER_UNOPPOSED", () => {
     const hero = createCard({
       id: "hero1",
       Name: "Peter",
@@ -80,12 +80,13 @@ describe("Battle Numbers & Regular Initiative Tracker (REG v11.0.0)", () => {
     BattleService.onCardEnteredBattle(room, p2, blocker, ZONES.BATTLEFIELD);
 
     expect(state.battle.stateReason).toBe(BATTLE_STATE_REASON.LOSING_NUMBERS);
+    expect(state.battle.blockOccurred).toBe(true);
 
     // Blocker removed from battlefield
     state.battlefield.pop(); // remove blocker
     BattleService.recalculate(room);
 
-    expect(state.battle.stateReason).toBe(BATTLE_STATE_REASON.UNBLOCKED);
+    expect(state.battle.stateReason).toBe(BATTLE_STATE_REASON.RESCUER_UNOPPOSED);
     expect(state.battle.blockerStrength).toBe(0);
     expect(state.battle.blockerToughness).toBe(0);
     expect(state.battle.initiativePlayerId).toBe("");

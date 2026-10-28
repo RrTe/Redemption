@@ -64,6 +64,17 @@ class ProtectionService {
     const prot = targetCard._protection || {};
     const harm = this.isHarmful(targetCard, sourceCard);
 
+    // If specific actions are defined (e.g. discard, capture), check actionType
+    const hasSpecificActions = Array.isArray(prot.actions) && prot.actions.length > 0;
+    if (hasSpecificActions) {
+      if (actionType && prot.actions.includes(actionType)) {
+        return true;
+      }
+      if (!prot.harm && (!prot.alignments || prot.alignments.length === 0) && (!prot.brigades || prot.brigades.length === 0) && !prot.opponent) {
+        return false;
+      }
+    }
+
     // 1. Protection from "harm" or "negative effect" (REG line 3889ff)
     const protectsFromHarm =
       prot.harm === true ||
@@ -98,13 +109,8 @@ class ProtectionService {
       return true;
     }
 
-    // 5. Protection from specific actions (e.g. "band", "discard", "conversion")
-    if (Array.isArray(prot.actions) && actionType && prot.actions.includes(actionType)) {
-      return true;
-    }
-
-    // 6. Generic immunity / protection defaults to protecting against opponent's harm
-    if ((isImmune || isProtected) && harm) {
+    // 5. Generic immunity / protection defaults to protecting against opponent's harm
+    if (!hasSpecificActions && (isImmune || isProtected) && harm) {
       return true;
     }
 
