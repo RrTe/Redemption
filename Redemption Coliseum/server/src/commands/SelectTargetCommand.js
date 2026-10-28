@@ -70,8 +70,14 @@ class SelectTargetCommand extends BaseCommand {
       return;
     }
 
-    const targetDef = targetAbility.effects[0].target || {};
-    const eligible = TargetSelectionService.resolveEligibleTargets(this.room, player, targetDef);
+    const targetEffect = targetAbility.effects[0];
+    const targetDef = targetEffect?.target || {};
+    const eligible = TargetSelectionService.resolveEligibleTargets(
+      this.room,
+      player,
+      targetDef,
+      { sourceCard: card, actionType: targetEffect?.action }
+    );
     const validation = TargetSelectionService.validateSelection(
       { selectedCardIds, selectedPileId },
       eligible

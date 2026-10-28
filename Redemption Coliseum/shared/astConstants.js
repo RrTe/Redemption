@@ -9,6 +9,15 @@ export const AST_ACTIONS = /** @type {const} */ ({
   SEARCH: "search",
   NEGATE: "negate",
   PLAY: "play",
+  MODIFY_NUMBERS: "modify_numbers",
+  MODIFY_STATS: "modify_stats",
+  INCREASE: "increase",
+  DECREASE: "decrease",
+  BAND: "band",
+  ADD_TO_BATTLE: "add to battle",
+  IMMUNE: "immune",
+  PROTECT: "protect",
+  SET_IMMUNITY: "set_immunity",
 });
 
 /**

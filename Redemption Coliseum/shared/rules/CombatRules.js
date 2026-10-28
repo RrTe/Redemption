@@ -155,7 +155,10 @@ export class CombatRules {
       const isAttacker = ctx.targetPlayerId === ctx.state?.activePlayer;
       const isSpecialInit = Boolean(ctx.state?.battle?.specialInitiativePlayerId === ctx.targetPlayerId);
       const hasActiveEffect = Boolean(
-        ctx.options?.isAbilityAction || (ctx.state?.effectChronicle?.isResolving && ctx.state.effectChronicle.priorityPlayerId === ctx.targetPlayerId)
+        ctx.options?.isAbilityAction ||
+        card.isBanded ||
+        ctx.options?.isBanded ||
+        (ctx.state?.effectChronicle?.isResolving && ctx.state.effectChronicle.priorityPlayerId === ctx.targetPlayerId)
       );
       const hasRegInit = ctx.state?.battle?.initiativePlayerId === ctx.targetPlayerId;
 
@@ -170,6 +173,33 @@ export class CombatRules {
         const isInitialBlocker = CombatClassifier.isEvilCharacter(card) && ecs.length === 0;
         if (!isInitialBlocker && !hasRegInit && !isSpecialInit && !hasActiveEffect) {
           return { valid: false, error: "You do not have initiative!" };
+        }
+      }
+    }
+    return { valid: true };
+  }
+
+  static bandingRule(ctx) {
+    const isArena = Boolean(ctx.isArena ?? (ctx.state?.isArenaMode ?? ctx.state?.isSandboxMode));
+    if (ctx.toZone === ZONES.BATTLEFIELD && !isArena && ctx.fromZone !== ZONES.BATTLEFIELD) {
+      const card = ctx.effectiveCard || ctx.card;
+      const isChar = CombatClassifier.isHero(card) || CombatClassifier.isEvilCharacter(card);
+
+      if (isChar) {
+        const isAttacker = ctx.targetPlayerId === ctx.state?.activePlayer;
+        const currentBattleChars = (ctx.state?.battlefield || []).filter((c) =>
+          isAttacker
+            ? c.controllerId === ctx.state?.activePlayer && CombatClassifier.isHero(c)
+            : c.controllerId !== ctx.state?.activePlayer && CombatClassifier.isEvilCharacter(c)
+        );
+
+        if (currentBattleChars.length > 0) {
+          const isBandedMove = Boolean(
+            card.isBanded || ctx.options?.isBanded || ctx.options?.isAbilityAction
+          );
+          if (!isBandedMove) {
+            return { valid: false, error: "Additional characters in battle must be banded!" };
+          }
         }
       }
     }
@@ -195,6 +225,8 @@ export class CombatRules {
   }
 }
 
+export const BandingRule = CombatRules.bandingRule.bind(CombatRules);
+
 export const PhaseLockRule = CombatRules.phaseLockRule.bind(CombatRules);
 export const SpecialInitiativeRule = CombatRules.specialInitiativeRule.bind(CombatRules);
 export const ChronicleLockRule = CombatRules.chronicleLockRule.bind(CombatRules);
@@ -207,6 +239,7 @@ export const InitiativeRule = CombatRules.initiativeRule.bind(CombatRules);
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     CombatRules,
+    BandingRule,
     PhaseLockRule,
     SpecialInitiativeRule,
     ChronicleLockRule,

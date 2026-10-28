@@ -5,8 +5,10 @@ const {
   AST_SCOPES,
   AST_ZONE_OWNERS,
   AST_ALIGNMENTS,
+  AST_ACTIONS,
 } = require("../../../shared/astConstants");
 const { BattleCharacterClassifier } = require("../services/BattleCharacterClassifier");
+const { ProtectionService } = require("../../../shared/rules/ProtectionService");
 
 /**
  * Service for querying and evaluating valid targets according to card AST rules.
@@ -18,7 +20,7 @@ class TargetSelectionService {
    *
    * @param {import('../rooms/GameRoom').GameRoom} room Active game room instance.
    * @param {object} actingPlayer Player executing the ability.
-   * @param {object} targetDef AST target definition node.
+   * @param {object} [context={}] Additional context (e.g. sourceCard).
    * @returns {{
    *   targetType: "card" | "pile",
    *   eligibleCardIds: string[],
@@ -30,7 +32,7 @@ class TargetSelectionService {
    *   promptText: string
    * }} Evaluated target resolution details.
    */
-  static resolveEligibleTargets(room, actingPlayer, targetDef = {}) {
+  static resolveEligibleTargets(room, actingPlayer, targetDef = {}, context = {}) {
     const scope = targetDef.scope || AST_SCOPES.IN_PLAY;
     const targetType = targetDef.target_type || "";
     const playersToScan = this._getPlayersToScan(room, actingPlayer, targetDef.zone_owner);
@@ -69,16 +71,34 @@ class TargetSelectionService {
     }
 
     // 2. Evaluate Card-Targeting effects
-    const zoneNames = this._resolveTargetZones(scope);
+    const action = context.actionType || context.action || targetDef.action;
+    const isBand = action === AST_ACTIONS.BAND || action === AST_ACTIONS.ADD_TO_BATTLE;
+    const defaultZoneNames = this._resolveTargetZones(scope);
     const eligibleCardIds = [];
 
     for (const p of playersToScan) {
+      const isSelf = p.sessionId === actingPlayer.sessionId;
+      const zoneNames = isBand
+        ? (isSelf ? [ZONES.TERRITORY, ZONES.HAND] : [ZONES.TERRITORY])
+        : defaultZoneNames;
+
       for (const zName of zoneNames) {
         const zoneCards = zName === ZONES.BATTLEFIELD
           ? (room?.state?.battlefield || []).filter(c => (c.controllerId || c.ownerId) === p.sessionId)
           : (p[zName] || []);
         for (const card of zoneCards) {
-          if (this.matchesFilter(card, targetDef)) {
+          if (isBand) {
+            const isChar = BattleCharacterClassifier.isHero(card) || BattleCharacterClassifier.isEvilCharacter(card);
+            if (!isChar) continue;
+            if (context.sourceCard) {
+              const isHeroLeader = BattleCharacterClassifier.isHero(context.sourceCard);
+              const isEvilLeader = BattleCharacterClassifier.isEvilCharacter(context.sourceCard);
+              const cardAlign = (card.inGameAlignment || card.Alignment || "").toString().toLowerCase();
+              if (isHeroLeader && !cardAlign.includes("good") && !BattleCharacterClassifier.isHero(card)) continue;
+              if (isEvilLeader && !cardAlign.includes("evil") && !BattleCharacterClassifier.isEvilCharacter(card)) continue;
+            }
+          }
+          if (this.matchesFilter(card, targetDef, context)) {
             eligibleCardIds.push(card.id);
           }
         }
@@ -148,7 +168,7 @@ class TargetSelectionService {
    * @param {object} targetDef AST filter definition.
    * @returns {boolean} True if card qualifies.
    */
-  static matchesFilter(card, targetDef = {}) {
+  static matchesFilter(card, targetDef = {}, context = {}) {
     if (!card) return false;
 
     // Check alignment filter
@@ -196,6 +216,40 @@ class TargetSelectionService {
       const cardBrigades = Array.isArray(card.Brigades) ? card.Brigades.map((b) => b.toLowerCase()) : [];
       const hasMatch = targetDef.brigades.some((b) => cardBrigades.includes(b.toLowerCase()));
       if (!hasMatch) return false;
+    }
+
+    // Check card titles filter
+    if (Array.isArray(targetDef.card_titles) && targetDef.card_titles.length > 0) {
+      const cardName = String(card.Name || card.card_name || "").toLowerCase();
+      if (!targetDef.card_titles.some((t) => cardName.includes(String(t).toLowerCase()))) {
+        return false;
+      }
+    }
+
+    // Check identifiers filter (matches Identifier box and ORDIR descriptors)
+    if (Array.isArray(targetDef.identifiers) && targetDef.identifiers.length > 0) {
+      const cardIdent = String(card.Identifier || "").toLowerCase();
+      const ordir = Array.isArray(card.ORDIR) ? card.ORDIR.join(" ").toLowerCase() : "";
+      const hasIdentMatch = targetDef.identifiers.some((id) => {
+        const needle = String(id).toLowerCase();
+        return cardIdent.includes(needle) || ordir.includes(needle);
+      });
+      if (!hasIdentMatch) return false;
+    }
+
+    // Check explicit card IDs filter
+    if (Array.isArray(targetDef.target_card_ids) && targetDef.target_card_ids.length > 0) {
+      const cardId = String(card.templateId || card.id || "");
+      if (!targetDef.target_card_ids.some((id) => String(id) === cardId)) {
+        return false;
+      }
+    }
+
+    // Protection check: protected or immune cards cannot be targeted by harm
+    if (context && context.sourceCard) {
+      if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action)) {
+        return false;
+      }
     }
 
     return true;

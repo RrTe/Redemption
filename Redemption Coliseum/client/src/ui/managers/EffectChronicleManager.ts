@@ -129,6 +129,10 @@ export class EffectChronicleManager {
     if (!msg || !msg.sourceCardId) {
       return;
     }
+    // Suppress persistent preview arrows if in-game support is disabled
+    if (msg.persistent && !this.settingsManager.isInGameSupportEnabled()) {
+      return;
+    }
     const hasCardTargets = Array.isArray(msg.targetCardIds) && msg.targetCardIds.length > 0;
     const hasPileTarget = Boolean(msg.targetPileId);
     if (!hasCardTargets && !hasPileTarget) {

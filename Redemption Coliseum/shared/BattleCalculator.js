@@ -6,6 +6,7 @@
 
 const { BATTLE_STATE_REASON } = require("./battleConstants");
 const { PHASES } = require("./phases");
+const { ProtectionService } = require("./rules/ProtectionService");
 
 class BattleCalculator {
   /**
@@ -121,6 +122,26 @@ class BattleCalculator {
   }
 
   /**
+   * Calculates effective offensive strength considering immunity/protect (REG line 1733).
+   *
+   * @param {object} attackSide Side attacking.
+   * @param {object} defendSide Side defending.
+   * @returns {number} Effective offensive strength.
+   */
+  static getEffectiveStrength(attackSide, defendSide) {
+    let effective = 0;
+    const allCards = [...attackSide.characters, ...attackSide.enhancements];
+    for (const card of allCards) {
+      const isBlocked = defendSide.characters.length > 0 &&
+        defendSide.characters.every((def) => ProtectionService.isProtected(def, card));
+      if (!isBlocked) {
+        effective += this.getCardStats(card).strength;
+      }
+    }
+    return effective;
+  }
+
+  /**
    * Evaluates the complete battle state, cumulative numbers, and regular initiative.
    *
    * @param {object} params Evaluation parameters.
@@ -182,8 +203,11 @@ class BattleCalculator {
 
     // 4. Opposed battle: Both sides have characters! Evaluate numbers comparison
     if (rescuer.characters.length > 0 && blocker.characters.length > 0) {
-      const rescuerDefeatsBlocker = rescuer.strength >= blocker.toughness;
-      const blockerDefeatsRescuer = blocker.strength >= rescuer.toughness;
+      const rescuerOffensiveStrength = this.getEffectiveStrength(rescuer, blocker);
+      const blockerOffensiveStrength = this.getEffectiveStrength(blocker, rescuer);
+
+      const rescuerDefeatsBlocker = rescuerOffensiveStrength >= blocker.toughness;
+      const blockerDefeatsRescuer = blockerOffensiveStrength >= rescuer.toughness;
 
       // 4a. Mutual Destruction (Both reach opposing toughness)
       if (rescuerDefeatsBlocker && blockerDefeatsRescuer) {

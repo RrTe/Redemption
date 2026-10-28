@@ -13,6 +13,8 @@ const { PlayerState } = require("../state/PlayerState");
 const { ActionType } = require("../../../shared/actions");
 const { CardAction } = require("../../../shared/actionSchema");
 const { ACTION_DESCRIPTIONS } = require("../../../shared/actionStrings");
+const { BattleCharacterClassifier } = require("./BattleCharacterClassifier");
+const { AbilityLookup } = require("../ast/AbilityLookup");
 const util = require("util");
 
 const CHANGES_SYMBOL = $changes || "~changes";
@@ -151,7 +153,7 @@ function _validateMove(
   toZone,
   options = {},
 ) {
-  return MoveValidator.validate({
+  const result = MoveValidator.validate({
     card,
     state,
     cardControllerId,
@@ -160,6 +162,42 @@ function _validateMove(
     toZone,
     options,
   });
+  if (!result.valid) return result;
+
+  // Authoritative Banding validation when moving characters into battle
+  const isArena = Boolean(state?.isArenaMode ?? state?.isSandboxMode);
+  if (toZone === ZONES.BATTLEFIELD && !isArena && fromZone !== ZONES.BATTLEFIELD) {
+    const isHero = BattleCharacterClassifier.isHero(card);
+    const isEvilChar = BattleCharacterClassifier.isEvilCharacter(card);
+
+    if (isHero || isEvilChar) {
+      const isAttacker = targetPlayerId === state?.activePlayer;
+      const currentBattleChars = (state?.battlefield || []).filter((c) =>
+        isAttacker
+          ? c.controllerId === state?.activePlayer && BattleCharacterClassifier.isHero(c)
+          : c.controllerId !== state?.activePlayer && BattleCharacterClassifier.isEvilCharacter(c)
+      );
+
+      if (currentBattleChars.length > 0) {
+        const isBanded = Boolean(card.isBanded || options.isBanded || options.isAbilityAction);
+        if (!isBanded) {
+          const templateId = card.templateId;
+          const hasAstBand = templateId && AbilityLookup.hasLogic(templateId) &&
+            AbilityLookup.resolveAbilities(templateId).some((a) =>
+              (a.effects || []).some((e) => e.action === "band" || e.action === "add to battle")
+            );
+          const hasTextBand = (card.SpecialAbility || "").toLowerCase().includes("band");
+          const isTabletopCard = templateId && !AbilityLookup.hasLogic(templateId) && Boolean(card.SpecialAbility);
+
+          if (!hasAstBand && !hasTextBand && !isTabletopCard) {
+            return { valid: false, error: "Additional characters in battle must be banded!" };
+          }
+        }
+      }
+    }
+  }
+
+  return { valid: true };
 }
 
 /**

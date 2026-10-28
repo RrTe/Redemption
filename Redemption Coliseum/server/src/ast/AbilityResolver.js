@@ -3,8 +3,9 @@ const { AbilityLookup } = require("./AbilityLookup");
 const { ConditionEvaluator } = require("./ConditionEvaluator");
 const { AstEffectRunner } = require("./AstEffectRunner");
 const { TargetSelectionService } = require("./TargetSelectionService");
-const { AST_MESSAGES } = require("../../../shared/astConstants");
+const { AST_MESSAGES, AST_ACTIONS } = require("../../../shared/astConstants");
 const { ActionType } = require("../../../shared/actions");
+const { ZONES } = require("../../../shared/zones");
 const logger = require("../utils/logger");
 
 /**
@@ -108,6 +109,28 @@ class AbilityResolver {
         ? this._getOptionalPromptText(firstEffect, card, item)
         : `Activate the special ability of ${card.Name || item.title}?`;
 
+      // Preview telegraph: sent exclusively to the acting player as a private decision aid.
+      // Opponents never receive preview arrows while a player is deciding.
+      if (firstEffect?.target && card?.id) {
+        const eligiblePreview = TargetSelectionService.resolveEligibleTargets(
+          this.room,
+          player,
+          firstEffect.target,
+          { sourceCard: card, actionType: firstEffect.action }
+        );
+        if (eligiblePreview.eligibleCardIds?.length > 0) {
+          const actingClient = this.room.clients?.find((c) => c.sessionId === player.sessionId);
+          if (actingClient && typeof actingClient.send === "function") {
+            actingClient.send(AST_MESSAGES.ACTION_TELEGRAPH, {
+              sourceCardId: card.id,
+              targetCardIds: eligiblePreview.eligibleCardIds,
+              action: firstEffect.action,
+              persistent: true,
+            });
+          }
+        }
+      }
+
       const client = this.room.clients.find((c) => c.sessionId === player.sessionId);
       if (client && typeof client.send === "function") {
         client.send(AST_MESSAGES.REQUEST_OPTIONAL_ABILITY, {
@@ -140,8 +163,21 @@ class AbilityResolver {
     const isSupportedAction = Boolean(firstEffect && AstEffectRunner._handlers[firstEffect.action]);
 
     if (isSupportedAction && firstEffect.target && !hasExplicitTargets) {
-      const eligible = TargetSelectionService.resolveEligibleTargets(this.room, player, firstEffect.target);
-      if (eligible.requiresSelection) {
+      const eligible = TargetSelectionService.resolveEligibleTargets(
+        this.room,
+        player,
+        firstEffect.target,
+        { sourceCard: card, actionType: firstEffect.action }
+      );
+      const isBandAction =
+        firstEffect.action === AST_ACTIONS.BAND ||
+        firstEffect.action === AST_ACTIONS.ADD_TO_BATTLE;
+      const isAutoBandSingleChoice =
+        isBandAction &&
+        eligible.maxTargets === 1 &&
+        eligible.eligibleCardIds.length === 1;
+
+      if (eligible.requiresSelection && !isAutoBandSingleChoice) {
         const client = this.room.clients.find((c) => c.sessionId === player.sessionId);
         if (client && typeof client.send === "function") {
           client.send(AST_MESSAGES.REQUEST_TARGET_SELECTION, {
@@ -163,6 +199,10 @@ class AbilityResolver {
           eligible,
         };
       }
+
+      if (isAutoBandSingleChoice) {
+        options.targetCardIds = [eligible.eligibleCardIds[0]];
+      }
     }
 
     // 6. Run effects through execution engine
@@ -178,6 +218,14 @@ class AbilityResolver {
       return {
         handled: true,
         awaitingSpecialInitiative: true,
+      };
+    }
+
+    if (runnerResult?.awaitingTargetSelection) {
+      return {
+        handled: true,
+        awaitingTargetSelection: true,
+        eligible: runnerResult.eligible,
       };
     }
 
@@ -214,12 +262,24 @@ class AbilityResolver {
       count = count.fixed_value ?? 1;
     }
     switch (effect.action) {
-      case "draw":
+      case AST_ACTIONS.DRAW:
         return `Draw ${count} card${count > 1 ? "s" : ""}?`;
-      case "discard":
+      case AST_ACTIONS.DISCARD:
         return `Discard ${count} card${count > 1 ? "s" : ""}?`;
       case "look_and_choose":
         return `Search and choose from cards?`;
+      case AST_ACTIONS.BAND:
+      case AST_ACTIONS.ADD_TO_BATTLE: {
+        const titles = effect.target?.card_titles;
+        if (Array.isArray(titles) && titles.length > 0) {
+          return `Band with ${titles.join(" or ")}?`;
+        }
+        const idents = effect.target?.identifiers;
+        if (Array.isArray(idents) && idents.length > 0) {
+          return `Band with ${idents.join(" or ")}?`;
+        }
+        return `Band a character into battle?`;
+      }
       default:
         return `Activate ${cardName}'s optional ability?`;
     }

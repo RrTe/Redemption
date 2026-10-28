@@ -127,6 +127,30 @@ class BattleService {
     state.battle.stateReason = BATTLE_STATE_REASON.NO_BATTLE;
     state.battle.lastCardPlayedPlayerId = "";
 
+    // Clean up banded cards, temporary control, and phase immunities on battlefield
+    if (state.battlefield) {
+      for (const card of state.battlefield) {
+        if (card.isBanded) {
+          card.isBanded = false;
+          card.bandedTo = "";
+          if (card.originalOwnerId && card.controllerId !== card.originalOwnerId) {
+            logger.info(
+              `[BattleService] Reverting temporary control of banded card '${card.Name}' (${card.id}) to original owner '${card.originalOwnerId}'.`
+            );
+            card.controllerId = card.originalOwnerId;
+          }
+        }
+        if (card.isImmune || card.isProtected) {
+          if (!card._protection || card._protection.duration !== "permanent") {
+            card.isImmune = false;
+            card.isProtected = false;
+            card.protectionReason = "";
+            card._protection = null;
+          }
+        }
+      }
+    }
+
     logger.debug("[BattleService] Battle state reset to default NO_BATTLE.");
   }
 }

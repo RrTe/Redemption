@@ -47,6 +47,11 @@ class Card extends Schema {
     this.inGameType = ""; // ✨ NEU: Typ für den aktuellen "Im Spiel"-Zustand
     this.inGameAlignment = ""; // ✨ NEU: Alignment für den aktuellen "Im Spiel"-Zustand
     this.availableActions = new ArraySchema(); // ✨ NEU: Liste der erlaubten Aktionen für diese Karte
+    this.isBanded = false; // Boolean: true if card is banded in battle
+    this.bandedTo = ""; // String: ID of the character this card is banded to
+    this.isImmune = false; // Boolean: true if card has active immunity
+    this.isProtected = false; // Boolean: true if card has active protection
+    this.protectionReason = ""; // String: Description or category of protection
   }
 }
 
@@ -91,5 +96,10 @@ type("string")(Card.prototype, "inGameType"); // ✨ NEU: Typ für den aktuellen
 type("string")(Card.prototype, "inGameAlignment"); // ✨ NEU: Alignment für den aktuellen "Im Spiel"-Zustand
 type([CardAction])(Card.prototype, "availableActions"); // ✨ NEU: Schema-Definition für verfügbare Aktionen
 view()(Card.prototype, "availableActions"); // ✨ FIX: Filter aktivieren!
+type("boolean")(Card.prototype, "isBanded");
+type("string")(Card.prototype, "bandedTo");
+type("boolean")(Card.prototype, "isImmune");
+type("boolean")(Card.prototype, "isProtected");
+type("string")(Card.prototype, "protectionReason");
 
 module.exports = { Card };

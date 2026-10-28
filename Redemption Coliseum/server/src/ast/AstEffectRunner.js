@@ -2,6 +2,9 @@
 const { AST_ACTIONS } = require("../../../shared/astConstants");
 const { DrawHandler } = require("./handlers/DrawHandler");
 const { DiscardHandler } = require("./handlers/DiscardHandler");
+const { ModifyNumbersHandler } = require("./handlers/ModifyNumbersHandler");
+const { BandHandler } = require("./handlers/BandHandler");
+const { ImmunityHandler } = require("./handlers/ImmunityHandler");
 const logger = require("../utils/logger");
 
 /**
@@ -15,6 +18,15 @@ class AstEffectRunner {
   static _handlers = {
     [AST_ACTIONS.DRAW]: DrawHandler,
     [AST_ACTIONS.DISCARD]: DiscardHandler,
+    [AST_ACTIONS.MODIFY_NUMBERS]: ModifyNumbersHandler,
+    [AST_ACTIONS.MODIFY_STATS]: ModifyNumbersHandler,
+    [AST_ACTIONS.INCREASE]: ModifyNumbersHandler,
+    [AST_ACTIONS.DECREASE]: ModifyNumbersHandler,
+    [AST_ACTIONS.BAND]: BandHandler,
+    [AST_ACTIONS.ADD_TO_BATTLE]: BandHandler,
+    [AST_ACTIONS.IMMUNE]: ImmunityHandler,
+    [AST_ACTIONS.PROTECT]: ImmunityHandler,
+    [AST_ACTIONS.SET_IMMUNITY]: ImmunityHandler,
   };
 
   /**
@@ -68,6 +80,14 @@ class AstEffectRunner {
           awaitingSpecialInitiative: true,
           targetCard: result.targetCard,
           targetOwner: result.targetOwner,
+        };
+      }
+
+      if (result?.awaitingTargetSelection) {
+        return {
+          handled: true,
+          awaitingTargetSelection: true,
+          eligible: result.eligible,
         };
       }
 

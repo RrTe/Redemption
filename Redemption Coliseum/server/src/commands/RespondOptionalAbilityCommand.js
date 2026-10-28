@@ -147,6 +147,13 @@ class RespondOptionalAbilityCommand extends BaseCommand {
         return;
       }
 
+      // Clear persistent preview telegraph arrow from optional ability prompt
+      if (typeof this.room.broadcast === "function" && item?.cardId) {
+        this.room.broadcast(AST_MESSAGES.CLEAR_ACTION_TELEGRAPH, {
+          sourceCardId: item.cardId,
+        });
+      }
+
       if (!accepted) {
         const declineResult = this.room.abilityResolver.resolve(item, { accepted: false });
         if (declineResult?.logEntries?.length) {

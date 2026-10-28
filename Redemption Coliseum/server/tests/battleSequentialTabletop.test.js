@@ -205,7 +205,7 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
       expect.objectContaining({
         cardId: eli.id,
         cardTitle: "Eli the Priest (RoA)",
-        promptText: expect.stringContaining("Eli the Priest (RoA)"),
+        promptText: "Band with Samuel?",
       })
     );
     expect(state.effectChronicle.items.length).toBe(1);
@@ -217,7 +217,7 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
 
     expect(state.effectChronicle.items.length).toBe(0);
     expect(room.broadcastGameLog).toHaveBeenCalledWith(
-      expect.stringContaining("Hero Player activates Eli the Priest (RoA)")
+      expect.stringMatching(/Hero Player (activates Eli the Priest|attempts to band)/)
     );
   });
 });
