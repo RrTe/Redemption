@@ -17,6 +17,8 @@ const { ActionType } = require("../../shared/actions");
 const { PHASES } = require("../../shared/phases");
 const { ZONES } = require("../../shared/zones");
 const { BATTLE_STATE_REASON } = require("../../shared/battleConstants");
+const { ChronicleItem } = require("../src/state/EffectChronicleState");
+const { CHRONICLE_STATUS } = require("../../shared/effectChronicleConstants");
 
 describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () => {
   let room;
@@ -45,6 +47,7 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       clients: [{ sessionId: "p1", send: jest.fn() }, { sessionId: "p2", send: jest.fn() }],
       cardLookup: lookupMap,
       broadcast: jest.fn(),
+      chatHistory: [],
     };
   });
 
@@ -222,6 +225,63 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       expect(inBattleCard.controllerId).toBe("p2"); // Restored to permanent owner
       expect(inBattleCard.isBanded).toBe(false);
       expect(inBattleCard.bandedTo).toBe("");
+    });
+
+    test("Banded character triggers battle entrance special ability into EffectChronicle", () => {
+      const leader = createCard({
+        id: "leader1",
+        Name: "Captain",
+        IsCharacter: true,
+        Alignment: "Good",
+        zone: ZONES.BATTLEFIELD,
+        controllerId: "p1",
+      });
+      const bandedHero = createCard({
+        id: "banded1",
+        Name: "Hero with Ability",
+        IsCharacter: true,
+        Alignment: "Good",
+        SpecialAbility: "Draw 2 cards.",
+        zone: ZONES.HAND,
+        controllerId: "p1",
+        originalOwnerId: "p1",
+      });
+      room.cardLookup.set(leader.id, leader);
+      room.cardLookup.set(bandedHero.id, bandedHero);
+      state.battlefield.push(leader);
+      p1[ZONES.HAND].push(bandedHero);
+
+      // Simulate active chronicle (leader's band ability is currently resolving)
+      const leaderItem = new ChronicleItem({
+        id: "item_leader",
+        cardId: leader.id,
+        controllerId: "p1",
+        actionType: "RESCUE_ATTEMPT",
+        title: leader.Name,
+        status: CHRONICLE_STATUS.RESOLVING,
+      });
+      state.effectChronicle.items.push(leaderItem);
+      state.effectChronicle.isResolving = true;
+      state.effectChronicle.priorityPlayerId = "p1";
+
+      const result = BandHandler.execute({
+        room,
+        player: p1,
+        effect: { action: AST_ACTIONS.BAND, target: { selection_mode: "manual_controller" } },
+        item: { cardId: leader.id },
+        options: { targetCardIds: [bandedHero.id] },
+      });
+
+      expect(result.success).toBe(true);
+      const inBattleBanded = room.cardLookup.get(bandedHero.id);
+      expect(inBattleBanded.zone).toBe(ZONES.BATTLEFIELD);
+      expect(inBattleBanded.isBanded).toBe(true);
+      expect(inBattleBanded.bandedTo).toBe(leader.id);
+
+      // Verify that bandedHero's battle entry ability was enqueued into EffectChronicle
+      expect(state.effectChronicle.items.length).toBe(2);
+      expect(state.effectChronicle.items[1].cardId).toBe(bandedHero.id);
+      expect(state.effectChronicle.items[1].title).toBe("Hero with Ability");
     });
 
     test("Resolves eligible targets matching character by card_titles (Samuel) and identifiers (Prophet)", () => {

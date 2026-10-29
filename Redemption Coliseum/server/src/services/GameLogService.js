@@ -8,8 +8,12 @@ class GameLogService {
    */
   static broadcastGameLog(room, text) {
     const msg = { type: "gameLog", text: text };
-    room.chatHistory.push(msg);
-    room.broadcast("gameLog", msg);
+    if (Array.isArray(room?.chatHistory)) {
+      room.chatHistory.push(msg);
+    }
+    if (typeof room?.broadcast === "function") {
+      room.broadcast("gameLog", msg);
+    }
   }
 
   static addChatMessage(room, text) {

@@ -125,6 +125,15 @@ class BandHandler {
       actualCard.controllerId = player.sessionId;
     }
 
+    // Trigger battle entrance triggers (REG Ability Activation Order Step 5 -> banded character abilities)
+    const { BattleTriggerService } = require("../../services/BattleTriggerService");
+    BattleTriggerService.onCardEnteredBattlefield(
+      room,
+      player,
+      [actualCard],
+      { from: fromZone, to: ZONES.BATTLEFIELD }
+    );
+
     // Trigger battle entrance & recalculation
     BattleService.onCardEnteredBattle(room, player, actualCard, ZONES.BATTLEFIELD);
 
