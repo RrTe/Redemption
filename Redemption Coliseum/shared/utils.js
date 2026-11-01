@@ -46,7 +46,9 @@ export function normalizeCard(card) {
     Class: top.Classes || shared.Classes || [],
     Strength: String(top.Strength !== undefined && top.Strength !== null ? top.Strength : (shared.Strength !== undefined && shared.Strength !== null ? shared.Strength : (card.Strength || ""))),
     Toughness: String(top.Toughness !== undefined && top.Toughness !== null ? top.Toughness : (shared.Toughness !== undefined && shared.Toughness !== null ? shared.Toughness : (card.Toughness || ""))),
-    SpecialAbility: top.SpecialAbility || shared.SpecialAbility || card.SpecialAbility || ""
+    SpecialAbility: top.SpecialAbility || shared.SpecialAbility || card.SpecialAbility || "",
+    Identifier: top.Identifier || shared.Identifier || card.Identifier || "",
+    ORDIR: top.ORDIR || card.ORDIR || []
   };
   sides.push(topSide);
 
@@ -60,7 +62,9 @@ export function normalizeCard(card) {
       Class: bottom.Classes || shared.Classes || [],
       Strength: String(bottom.Strength !== undefined && bottom.Strength !== null ? bottom.Strength : (shared.Strength !== undefined && shared.Strength !== null ? shared.Strength : (card.Strength || ""))),
       Toughness: String(bottom.Toughness !== undefined && bottom.Toughness !== null ? bottom.Toughness : (shared.Toughness !== undefined && shared.Toughness !== null ? shared.Toughness : (card.Toughness || ""))),
-      SpecialAbility: bottom.SpecialAbility || shared.SpecialAbility || card.SpecialAbility || ""
+      SpecialAbility: bottom.SpecialAbility || shared.SpecialAbility || card.SpecialAbility || "",
+      Identifier: bottom.Identifier || shared.Identifier || card.Identifier || "",
+      ORDIR: bottom.ORDIR || card.ORDIR || []
     };
     sides.push(bottomSide);
   }
@@ -91,6 +95,7 @@ export function normalizeCard(card) {
     IsEnhancement: !!card.IsEnhancement,
     IsGospel: !!card.IsGospel,
     IsStarCard: !!card.IsStarCard,
+    StarAbility: card.StarAbility || "",
     Name: name,
     SpecialAbility: topSide.SpecialAbility,
     Alignment: allAlignments,

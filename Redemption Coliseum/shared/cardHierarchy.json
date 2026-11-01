@@ -1,0 +1,60 @@
+{
+  "card_types": [
+    "Hero",
+    "Evil Character",
+    "GE",
+    "EE",
+    "Artifact",
+    "Site",
+    "Fortress",
+    "Dominant",
+    "Lost Soul",
+    "Covenant",
+    "Curse",
+    "City",
+    "Character",
+    "Enhancement",
+    "Hero Token",
+    "Evil Character Token",
+    "Lost Soul Token"
+  ],
+  "type_groups": {
+    "Enhancement": [
+      "GE",
+      "EE"
+    ],
+    "Character": [
+      "Hero",
+      "Evil Character",
+      "Hero Token",
+      "Evil Character Token"
+    ],
+    "City": [
+      "Fortress",
+      "Site"
+    ]
+  },
+  "type_is_a": {
+    "Covenant": [
+      "Artifact",
+      "GE"
+    ],
+    "Curse": [
+      "Artifact",
+      "EE"
+    ],
+    "City": [
+      "Site",
+      "Fortress"
+    ],
+    "Hero Token": [
+      "Hero"
+    ],
+    "Evil Character Token": [
+      "Evil Character"
+    ],
+    "Lost Soul Token": [
+      "Lost Soul"
+    ]
+  }
+}

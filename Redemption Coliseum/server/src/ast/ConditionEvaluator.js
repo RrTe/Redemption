@@ -68,9 +68,15 @@ class ConditionEvaluator {
       case "zone_check": {
         const currentZone = card?.zone;
         const rawRequired = condition.zone || condition.value || condition.selector?.scope;
-        const requiredZone = rawRequired ? String(rawRequired).toLowerCase() : "";
+        const requiredZones = Array.isArray(rawRequired)
+          ? rawRequired.map((r) => String(r || "").toLowerCase().trim())
+          : (rawRequired ? [String(rawRequired).toLowerCase().trim()] : []);
 
-        if (requiredZone === "in_play") {
+        if (requiredZones.length === 0) {
+          return { valid: true };
+        }
+
+        if (requiredZones.includes("in_play")) {
           const inPlayZones = [ZONES.TERRITORY, ZONES.BATTLEFIELD];
           if (!inPlayZones.includes(currentZone)) {
             return {
@@ -82,9 +88,7 @@ class ConditionEvaluator {
         }
 
         if (
-          requiredZone === ZONES.BATTLEFIELD ||
-          requiredZone === "field_of_battle" ||
-          requiredZone === "battle"
+          requiredZones.some((z) => [ZONES.BATTLEFIELD, "field_of_battle", "battle"].includes(z))
         ) {
           if (currentZone !== ZONES.BATTLEFIELD) {
             return {
@@ -95,10 +99,11 @@ class ConditionEvaluator {
           return { valid: true };
         }
 
-        if (rawRequired && currentZone !== rawRequired) {
+        const normCurrent = String(currentZone || "").toLowerCase();
+        if (!requiredZones.some((z) => z === normCurrent || z.replace(/_pile$/, "") === normCurrent.replace(/_pile$/, ""))) {
           return {
             valid: false,
-            reason: `Zone mismatch. Current: ${currentZone}, Required: ${rawRequired}`,
+            reason: `Zone mismatch. Current: ${currentZone}, Required: ${requiredZones.join(", ")}`,
           };
         }
         return { valid: true };

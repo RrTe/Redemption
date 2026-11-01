@@ -11,15 +11,25 @@ export declare const AST_ACTIONS: {
 export declare const AST_SELECTION_MODES: {
   readonly AUTOMATIC_NEXT: "automatic_next";
   readonly AUTOMATIC_ALL: "automatic_all";
+  readonly AUTOMATIC_SELF: "automatic_self";
   readonly MANUAL_CONTROLLER: "manual_controller";
+  readonly MANUAL_OPPONENT: "manual_opponent";
 };
 
 export declare const AST_SCOPES: {
-  readonly DECK: "deck";
+  readonly BATTLE: "battle";
+  readonly TERRITORY: "territory";
   readonly IN_PLAY: "in_play";
   readonly HAND: "hand";
+  readonly DECK: "deck";
   readonly DISCARD_PILE: "discard_pile";
-  readonly BATTLE: "battle";
+  readonly BANISH_PILE: "banish_pile";
+  readonly RESERVE_PILE: "reserve_pile";
+  readonly SET_ASIDE: "set_aside";
+  readonly LAND_OF_BONDAGE: "land_of_bondage";
+  readonly LAND_OF_REDEMPTION: "land_of_redemption";
+  readonly ARTIFACT_PILE: "artifact_pile";
+  readonly ANY: "any";
 };
 
 export declare const AST_ZONE_OWNERS: {

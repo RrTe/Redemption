@@ -101,34 +101,38 @@ export class CardDetailOverlay {
    * into clean paragraphs with empty lines in between, while normalizing artifact tags to "ART:".
    */
   private static formatAbilityText(card: any): string {
+    const starText = card.StarAbility ? `STAR: ${this.cleanAbilityString(card.StarAbility)}` : "";
+
     // 1. Check if separate side abilities exist (Extended data structure)
     const topAbility = card.CardSides?.top?.SpecialAbility;
     const bottomAbility = card.CardSides?.bottom?.SpecialAbility;
+    let regularText = "";
+
     if (topAbility && bottomAbility) {
-      return [this.cleanAbilityString(topAbility), this.cleanAbilityString(bottomAbility)]
+      regularText = [this.cleanAbilityString(topAbility), this.cleanAbilityString(bottomAbility)]
         .filter(Boolean)
         .join("\n\n");
-    }
-
-    if (Array.isArray(card.sides) && card.sides.length > 1) {
+    } else if (Array.isArray(card.sides) && card.sides.length > 1) {
       const sideAbilities = card.sides.map((s: any) => s?.SpecialAbility).filter(Boolean);
       if (sideAbilities.length > 1) {
-        return sideAbilities.map((ab: string) => this.cleanAbilityString(ab)).join("\n\n");
+        regularText = sideAbilities.map((ab: string) => this.cleanAbilityString(ab)).join("\n\n");
       }
     }
 
-    // 2. Extract shared or legacy string
-    const rawAbility =
-      card.SpecialAbility ||
-      card.CardSides?.shared?.SpecialAbility ||
-      card.sides?.[0]?.SpecialAbility ||
-      "";
-
-    if (!rawAbility) {
-      return "No special ability.";
+    if (!regularText) {
+      // 2. Extract shared or legacy string
+      const rawAbility =
+        card.SpecialAbility ||
+        card.CardSides?.shared?.SpecialAbility ||
+        card.sides?.[0]?.SpecialAbility ||
+        "";
+      if (rawAbility) {
+        regularText = this.cleanAbilityString(rawAbility);
+      }
     }
 
-    return this.cleanAbilityString(rawAbility);
+    const combined = [starText, regularText].filter(Boolean).join("\n\n");
+    return combined || "No special ability.";
   }
 
   /**

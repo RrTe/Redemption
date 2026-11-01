@@ -183,13 +183,7 @@ class DiscardHandler {
     }
 
     // Determine target zones based on scope
-    const scope = (targetDef.scope || "in_play").toLowerCase();
-    let zoneNames = [ZONES.TERRITORY, ZONES.BATTLEFIELD];
-    if (scope === "hand") zoneNames = [ZONES.HAND];
-    else if (scope === "deck") zoneNames = [ZONES.DECK];
-    else if (scope === "battle" || scope === "battlefield" || scope === AST_SCOPES.BATTLE) zoneNames = [ZONES.BATTLEFIELD];
-    else if (scope === "territory") zoneNames = [ZONES.TERRITORY];
-    else if (scope === "in_play") zoneNames = [ZONES.TERRITORY, ZONES.BATTLEFIELD];
+    const zoneNames = TargetSelectionService._resolveTargetZones(targetDef.scope);
 
     for (const p of playersToScan) {
       for (const zName of zoneNames) {

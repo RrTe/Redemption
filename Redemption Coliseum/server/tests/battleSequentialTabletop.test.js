@@ -98,7 +98,7 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
     // 2. Player 2 blocks with Pharaoh (no AST logic, but has tabletop Special Ability)
     client2.send.mockClear();
     state.battle.initiativePlayerId = "p2";
-    const pharaoh = createCard("c_pharaoh", "-1946607650", "Pharaoh Ramses II", ZONES.HAND, "p2", {
+    const pharaoh = createCard("c_pharaoh", "tabletop_pharaoh_no_ast", "Pharaoh Ramses II", ZONES.HAND, "p2", {
       Type: "Evil Character",
       Alignment: "Evil",
       IsCharacter: true,

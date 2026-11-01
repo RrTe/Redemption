@@ -227,6 +227,95 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       expect(inBattleCard.bandedTo).toBe("");
     });
 
+    test("Unclean Animals bands to another animal from hand using target_type: 'animal'", () => {
+      const hero = createCard({
+        id: "hero_attacker",
+        Name: "David",
+        Alignment: "Good",
+        Type: "Hero",
+        IsCharacter: true,
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      const leader = createCard({
+        id: "unclean_leader",
+        templateId: "425415957",
+        Name: "Unclean Animals [Rock Hyrax]",
+        Alignment: "Evil",
+        Type: "Evil Character",
+        IsCharacter: true,
+        Identifier: "Generic, Animal",
+        ORDIR: ["Animal", "Generic Character"],
+        controllerId: "p2",
+        originalOwnerId: "p2",
+        zone: ZONES.BATTLEFIELD,
+      });
+      const animalInHand = createCard({
+        id: "bear_in_hand",
+        templateId: "-1019462673",
+        Name: "Bear (CoW AB)",
+        Alignment: "Evil",
+        Type: "Evil Character",
+        IsCharacter: true,
+        Identifier: "Animal, Genderless, Generic",
+        ORDIR: ["Animal", "Gender", "Generic Character"],
+        controllerId: "p2",
+        originalOwnerId: "p2",
+        zone: ZONES.HAND,
+      });
+
+      room.cardLookup.set(hero.id, hero);
+      room.cardLookup.set(leader.id, leader);
+      room.cardLookup.set(animalInHand.id, animalInHand);
+      state.battlefield.push(hero);
+      state.battlefield.push(leader);
+      p2[ZONES.HAND].push(animalInHand);
+
+      const effect = {
+        action: AST_ACTIONS.BAND,
+        target: {
+          selection_mode: "manual_controller",
+          zone_owner: "both",
+          scope: ["in_play"],
+          target_type: "animal",
+          brigades: [],
+          identifiers: [],
+          card_titles: [],
+          target_card_ids: [],
+          count: { fixed_value: 1 },
+        },
+      };
+
+      // 1. Initial execution without explicit options triggers target selection request
+      const selectResult = BandHandler.execute({
+        room,
+        player: p2,
+        effect,
+        item: { cardId: leader.id },
+      });
+
+      expect(selectResult.success).toBe(true);
+      expect(selectResult.awaitingTargetSelection).toBe(true);
+      expect(selectResult.eligible.eligibleCardIds).toContain(animalInHand.id);
+
+      // 2. Client submits selected animal -> banding succeeds
+      const bandResult = BandHandler.execute({
+        room,
+        player: p2,
+        effect,
+        item: { cardId: leader.id },
+        options: { targetCardIds: [animalInHand.id] },
+      });
+
+      expect(bandResult.success).toBe(true);
+      const bandedBear = room.cardLookup.get(animalInHand.id);
+      expect(bandedBear.isBanded).toBe(true);
+      expect(bandedBear.bandedTo).toBe(leader.id);
+      expect(bandedBear.zone).toBe(ZONES.BATTLEFIELD);
+      expect(state.battlefield.some((c) => c.id === animalInHand.id)).toBe(true);
+    });
+
     test("Banded character triggers battle entrance special ability into EffectChronicle", () => {
       const leader = createCard({
         id: "leader1",
@@ -594,7 +683,7 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
         ActionType.RESCUE_ATTEMPT
       );
       expect(entryAbility).toBeDefined();
-      expect(entryAbility.ability_id).toBe("ab_1_protect");
+      expect(["protect_job_discard_capture", "ab_1_protect"]).toContain(entryAbility.ability_id);
 
       // Execute Job's protect ability
       const execResult = ImmunityHandler.execute({

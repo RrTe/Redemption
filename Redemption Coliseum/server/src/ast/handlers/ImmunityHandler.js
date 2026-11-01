@@ -31,12 +31,24 @@ class ImmunityHandler {
 
     const sourceCard = item?.cardId ? room.cardLookup?.get(item.cardId) : null;
     const targetDef = effect?.target || {};
+    const protectionDef = this._buildProtectionDef(effect);
 
     // 1. Resolve targets
     const targets = this._resolveTargets(room, player, targetDef, sourceCard, options);
 
+    // Handle zone/pile protection on source card if scopes cover piles or discrete zones
+    const scopes = Array.isArray(targetDef.scope) ? targetDef.scope : (targetDef.scope ? [targetDef.scope] : []);
+    const hasPileOrZoneScope = scopes.some((s) => ["deck", "hand", "reserve_pile", "discard_pile", "banish_pile"].includes(s));
+    if (sourceCard && hasPileOrZoneScope) {
+      sourceCard._zoneProtection = {
+        ...protectionDef,
+        sourceCardId: item?.cardId || "",
+        scope: scopes,
+      };
+    }
+
     if (targets.length === 0) {
-      logger.info("[ImmunityHandler] No eligible targets found to grant immunity/protect.");
+      logger.info("[ImmunityHandler] No eligible targets found to grant individual immunity/protect.");
       return {
         success: true,
         snapshot: {
@@ -45,13 +57,11 @@ class ImmunityHandler {
           playerId: player.sessionId,
           cardId: item?.cardId || "",
           protectedCardIds: [],
+          protectionDef,
         },
-        logEntry: `${player.name} activates protection, but no eligible targets were found.`,
+        logEntry: `${player.name} activates protection.`,
       };
     }
-
-    // 2. Extract protection parameters
-    const protectionDef = this._buildProtectionDef(effect);
 
     // Broadcast action telegraph
     ActionTelegraphService.send(room, {
@@ -110,21 +120,24 @@ class ImmunityHandler {
    * @returns {object} Structured protection definition.
    */
   static _buildProtectionDef(effect) {
+    const filter = effect?.protection_filter || {};
     const rawProtectedFrom = effect?.protected_from || {};
     const targetDef = effect?.target || {};
 
-    const brigades = [
-      ...(Array.isArray(rawProtectedFrom.brigades) ? rawProtectedFrom.brigades : []),
-      ...(Array.isArray(targetDef.identifiers) ? targetDef.identifiers.filter((id) => id.includes("Brigade")) : []),
-    ];
+    const actions = Array.isArray(filter.actions)
+      ? [...filter.actions]
+      : (Array.isArray(rawProtectedFrom.actions) ? [...rawProtectedFrom.actions] : []);
 
-    const alignments = [
-      ...(Array.isArray(rawProtectedFrom.alignments) ? rawProtectedFrom.alignments : []),
-      ...(targetDef.alignment ? [targetDef.alignment] : []),
-    ];
+    const exceptActions = Array.isArray(filter.except_actions)
+      ? [...filter.except_actions]
+      : [];
 
-    const actions = Array.isArray(rawProtectedFrom.actions) ? [...rawProtectedFrom.actions] : [];
-    if (Array.isArray(targetDef.identifiers)) {
+    const cardSources = Array.isArray(filter.card_sources)
+      ? [...filter.card_sources]
+      : [];
+
+    // Fallbacks from legacy target identifiers
+    if (actions.length === 0 && Array.isArray(targetDef.identifiers)) {
       for (const id of targetDef.identifiers) {
         const lower = String(id).toLowerCase();
         if (lower.includes("discard") && !actions.includes("discard")) actions.push("discard");
@@ -137,7 +150,18 @@ class ImmunityHandler {
       }
     }
 
-    const harm = Boolean(
+    const brigades = [
+      ...(Array.isArray(rawProtectedFrom.brigades) ? rawProtectedFrom.brigades : []),
+      ...(Array.isArray(targetDef.identifiers) ? targetDef.identifiers.filter((id) => id.includes("Brigade")) : []),
+    ];
+
+    const alignments = [
+      ...(Array.isArray(rawProtectedFrom.alignments) ? rawProtectedFrom.alignments : []),
+      ...(targetDef.alignment ? [targetDef.alignment] : []),
+    ];
+
+    const fromHarm = Boolean(
+      filter.from_harm ||
       rawProtectedFrom.harm ||
       (effect.action || "").includes("harm") ||
       (targetDef.target_type || "").includes("harm") ||
@@ -146,16 +170,22 @@ class ImmunityHandler {
 
     const opponent = Boolean(
       rawProtectedFrom.opponent === true ||
-      (Array.isArray(targetDef.identifiers) && targetDef.identifiers.some((id) => String(id).toLowerCase().includes("opponent")))
+      (Array.isArray(targetDef.identifiers) && targetDef.identifiers.some((id) => String(id).toLowerCase().includes("opponent"))) ||
+      cardSources.some((cs) => cs.zone_owner === "opponent")
     );
 
     return {
       brigades,
       alignments,
       actions,
-      harm,
+      except_actions: exceptActions,
+      card_sources: cardSources,
+      harm: fromHarm,
+      from_harm: fromHarm,
       opponent,
-      duration: effect?.duration || "phase",
+      qualifiers: filter.qualifiers || [],
+      scope: targetDef.scope,
+      duration: effect?.duration || "permanent",
     };
   }
 

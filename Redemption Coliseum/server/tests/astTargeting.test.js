@@ -237,4 +237,50 @@ describe("AST Interactive Targeting - Phase 2", () => {
       expect(state.effectChronicle.items.length).toBe(1);
     });
   });
+
+  describe("4. Checkpoint 1: Fast-Path vs Fallback (target_card_ids & uncompiled titles)", () => {
+    test("Fast-Path: matches directly via target_card_ids in O(1)", () => {
+      const card = createTestCard("c_samuel", "-1028904492", "Samuel, the Anointer [K]", ZONES.TERRITORY, "p1", {
+        Alignment: "Good",
+        IsCharacter: true,
+      });
+
+      const targetDef = {
+        target_card_ids: ["-1028904492"],
+        card_titles: ["Different Title"], // Bypassed by fast-path
+      };
+
+      expect(TargetSelectionService.matchesFilter(card, targetDef)).toBe(true);
+
+      const targetDefOther = {
+        target_card_ids: ["999999"],
+      };
+      expect(TargetSelectionService.matchesFilter(card, targetDefOther)).toBe(false);
+    });
+
+    test("Fallback: uncompiled category title matches card via ORDIR and Identifier", () => {
+      const card = createTestCard("c_phicol", "12345", "Commander Phicol (LoC)", ZONES.TERRITORY, "p2", {
+        Alignment: "Evil",
+        IsCharacter: true,
+        ORDIR: ["Genesis Card", "Philistine"],
+        Identifier: "Philistine",
+      });
+
+      const targetDef = {
+        target_card_ids: [],
+        card_titles: ["Genesis Philistine"],
+      };
+
+      expect(TargetSelectionService.matchesFilter(card, targetDef)).toBe(true);
+
+      const nonGenesisPhilistine = createTestCard("c_goliath", "54321", "Goliath", ZONES.TERRITORY, "p2", {
+        Alignment: "Evil",
+        IsCharacter: true,
+        ORDIR: ["I Samuel Card", "Philistine"],
+        Identifier: "Philistine Giant",
+      });
+
+      expect(TargetSelectionService.matchesFilter(nonGenesisPhilistine, targetDef)).toBe(false);
+    });
+  });
 });

@@ -10,6 +10,8 @@ export interface CardSide {
   Strength: string;
   Toughness: string;
   SpecialAbility: string;
+  Identifier?: string;
+  ORDIR?: string[];
 }
 
 export interface NormalizedCard {
@@ -27,6 +29,7 @@ export interface NormalizedCard {
   IsEnhancement: boolean;
   IsGospel: boolean;
   IsStarCard: boolean;
+  StarAbility?: string;
   Name: string;
   SpecialAbility: string;
   Alignment: string[];
@@ -40,4 +43,3 @@ export interface NormalizedCard {
 }
 
 export declare function normalizeCard(card: any): NormalizedCard;
-

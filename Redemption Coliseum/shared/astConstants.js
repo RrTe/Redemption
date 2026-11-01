@@ -26,18 +26,28 @@ export const AST_ACTIONS = /** @type {const} */ ({
 export const AST_SELECTION_MODES = /** @type {const} */ ({
   AUTOMATIC_NEXT: "automatic_next",
   AUTOMATIC_ALL: "automatic_all",
+  AUTOMATIC_SELF: "automatic_self",
   MANUAL_CONTROLLER: "manual_controller",
+  MANUAL_OPPONENT: "manual_opponent",
 });
 
 /**
  * AST targeting scopes (source / destination zone scopes).
  */
 export const AST_SCOPES = /** @type {const} */ ({
-  DECK: "deck",
+  BATTLE: "battle",
+  TERRITORY: "territory",
   IN_PLAY: "in_play",
   HAND: "hand",
+  DECK: "deck",
   DISCARD_PILE: "discard_pile",
-  BATTLE: "battle",
+  BANISH_PILE: "banish_pile",
+  RESERVE_PILE: "reserve_pile",
+  SET_ASIDE: "set_aside",
+  LAND_OF_BONDAGE: "land_of_bondage",
+  LAND_OF_REDEMPTION: "land_of_redemption",
+  ARTIFACT_PILE: "artifact_pile",
+  ANY: "any",
 });
 
 /**
