@@ -53,17 +53,30 @@ class SelectTargetCommand extends BaseCommand {
 
     // Inspect card ability for targeting rules
     const card = this.room.cardLookup.get(item.cardId);
-    if (!card || !card.templateId) {
+    if (!card) {
       logger.warn(`[SelectTargetCommand] Card '${item.cardId}' missing.`);
       return;
     }
 
-    const abilities = AbilityLookup.resolveAbilities(card.templateId, {
-      actionType: item.actionType,
-      inGameType: card.inGameType,
-      inGameAlignment: card.inGameAlignment,
-    });
-    const targetAbility = (abilityId && abilities.find((a) => a.ability_id === abilityId)) || abilities[0];
+    const abilities = card.templateId
+      ? AbilityLookup.resolveAbilities(card.templateId, {
+        actionType: item.actionType,
+        inGameType: card.inGameType,
+        inGameAlignment: card.inGameAlignment,
+      })
+      : [];
+    let targetAbility = (abilityId && abilities.find((a) => a.ability_id === abilityId)) || abilities[0];
+
+    if (
+      (!targetAbility || !targetAbility.effects || targetAbility.effects.length === 0 || abilityId === "fallback_band") &&
+      card
+    ) {
+      const { AbilityResolver } = require("../ast/AbilityResolver");
+      const fallbackBand = AbilityResolver.getFallbackBandAbility(card);
+      if (fallbackBand) {
+        targetAbility = fallbackBand;
+      }
+    }
 
     if (!targetAbility || !targetAbility.effects || targetAbility.effects.length === 0) {
       logger.warn(`[SelectTargetCommand] Ability not found for card '${card.Name}'.`);

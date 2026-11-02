@@ -47,12 +47,12 @@ class BandHandler {
           abilityId: item.abilityId || "band",
           itemId: item.id,
           sourceCardId: leaderCard?.id || item?.cardId,
-          promptText: targetDef.prompt_text || "Select a character to band into battle",
+          promptText: targetDef.prompt_text || "Select character(s) to band into battle",
           targetType: "card",
           eligibleCardIds: eligible.eligibleCardIds,
           eligiblePiles: [],
-          minTargets: 1,
-          maxTargets: 1,
+          minTargets: eligible.minTargets || 1,
+          maxTargets: eligible.maxTargets || 1,
           canCancel: Boolean(targetDef.can_cancel),
         });
       }
@@ -64,10 +64,18 @@ class BandHandler {
       };
     }
 
-    const selectedTargetId = explicitIds[0] || eligible.eligibleCardIds[0];
-    const targetCard = selectedTargetId ? room.cardLookup?.get(selectedTargetId) : null;
+    const isAll =
+      targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_ALL ||
+      targetDef.all === true;
+    const targetIds = explicitIds.length > 0
+      ? explicitIds
+      : (isAll ? eligible.eligibleCardIds : (eligible.eligibleCardIds[0] ? [eligible.eligibleCardIds[0]] : []));
 
-    if (!targetCard) {
+    const targetCards = targetIds
+      .map((id) => room.cardLookup?.get(id))
+      .filter(Boolean);
+
+    if (targetCards.length === 0) {
       logger.info("[BandHandler] No valid target character found to band.");
       return {
         success: true,
@@ -82,79 +90,106 @@ class BandHandler {
       };
     }
 
-    const fromZone = targetCard.zone;
-    const previousControllerId = targetCard.controllerId;
-    const isAllyFromOpponent = previousControllerId !== player.sessionId;
+    const movedBandedCards = [];
+    const bandedRecords = [];
+    const movedCardEntries = [];
+    const logNames = [];
 
-    logger.info(
-      `[BandHandler] Banding '${targetCard.Name}' (${targetCard.id}) with leader '${leaderCard?.Name || "leader"}' ` +
-      `by player '${player.name}' (isAllyFromOpponent=${isAllyFromOpponent}).`
-    );
+    for (const targetCard of targetCards) {
+      const fromZone = targetCard.zone;
+      const previousControllerId = targetCard.controllerId;
+      const isAllyFromOpponent = previousControllerId !== player.sessionId;
 
-    // Broadcast action telegraph
+      logger.info(
+        `[BandHandler] Banding '${targetCard.Name}' (${targetCard.id}) with leader '${leaderCard?.Name || "leader"}' ` +
+        `by player '${player.name}' (isAllyFromOpponent=${isAllyFromOpponent}).`
+      );
+
+      const moveResult = moveCard(
+        player,
+        room.state,
+        room.cardLookup,
+        fromZone,
+        ZONES.BATTLEFIELD,
+        targetCard.id,
+        1,
+        {},
+        "",
+        "",
+        { isAbilityAction: true, isBanded: true }
+      );
+
+      const actualCard = (moveResult?.movedCards && moveResult.movedCards[0]) || targetCard;
+
+      // Set Banding flags
+      actualCard.isBanded = true;
+      actualCard.bandedTo = leaderCard?.id || "";
+
+      // REG lines 958-960: Temporary control if banding allied character of another player
+      if (isAllyFromOpponent) {
+        actualCard.controllerId = player.sessionId;
+      }
+
+      movedBandedCards.push(actualCard);
+      bandedRecords.push({
+        bandedCardId: actualCard.id,
+        fromZone,
+        previousControllerId,
+        originalOwnerId: actualCard.originalOwnerId,
+        isTemporaryControl: isAllyFromOpponent,
+      });
+      movedCardEntries.push({
+        cardId: actualCard.id,
+        fromZone,
+        toZone: ZONES.BATTLEFIELD,
+      });
+
+      const allyText = isAllyFromOpponent ? " (allied character from opponent)" : "";
+      logNames.push(`${actualCard.Name}${allyText}`);
+    }
+
+    // Broadcast action telegraph for all banded characters
     ActionTelegraphService.send(room, {
       sourceCardId: leaderCard?.id,
-      targetCardIds: [targetCard.id],
+      targetCardIds: movedBandedCards.map((c) => c.id),
       action: AST_ACTIONS.BAND,
       durationMs: 500,
     });
 
-    // Move character to battlefield
-    const moveResult = moveCard(
-      player,
-      room.state,
-      room.cardLookup,
-      fromZone,
-      ZONES.BATTLEFIELD,
-      targetCard.id,
-      1,
-      {},
-      "",
-      "",
-      { isAbilityAction: true, isBanded: true }
-    );
-
-    const actualCard = (moveResult?.movedCards && moveResult.movedCards[0]) || targetCard;
-
-    // Set Banding flags
-    actualCard.isBanded = true;
-    actualCard.bandedTo = leaderCard?.id || "";
-
-    // REG lines 958-960: Temporary control if banding allied character of another player
-    if (isAllyFromOpponent) {
-      actualCard.controllerId = player.sessionId;
-    }
-
-    // Trigger battle entrance triggers (REG Ability Activation Order Step 5 -> banded character abilities)
+    // Trigger battle entrance triggers in exact selected order (REG Ability Activation Order Step 5)
     const { BattleTriggerService } = require("../../services/BattleTriggerService");
     BattleTriggerService.onCardEnteredBattlefield(
       room,
       player,
-      [actualCard],
-      { from: fromZone, to: ZONES.BATTLEFIELD }
+      movedBandedCards,
+      { from: bandedRecords[0].fromZone, to: ZONES.BATTLEFIELD }
     );
 
-    // Trigger battle entrance & recalculation
-    BattleService.onCardEnteredBattle(room, player, actualCard, ZONES.BATTLEFIELD);
+    // Trigger battle entrance & recalculation for each banded character
+    for (const actualCard of movedBandedCards) {
+      BattleService.onCardEnteredBattle(room, player, actualCard, ZONES.BATTLEFIELD);
+    }
 
+    const firstRecord = bandedRecords[0];
     const snapshot = {
       action: AST_ACTIONS.BAND,
       timestamp: Date.now(),
       playerId: player.sessionId,
       cardId: item?.cardId || "",
       leaderCardId: leaderCard?.id || "",
-      bandedCardId: targetCard.id,
-      fromZone,
-      previousControllerId,
-      originalOwnerId: targetCard.originalOwnerId,
-      isTemporaryControl: isAllyFromOpponent,
+      bandedCardId: firstRecord.bandedCardId,
+      fromZone: firstRecord.fromZone,
+      previousControllerId: firstRecord.previousControllerId,
+      originalOwnerId: firstRecord.originalOwnerId,
+      isTemporaryControl: firstRecord.isTemporaryControl,
+      bandedCards: bandedRecords,
+      movedCards: movedCardEntries,
     };
 
-    const allyText = isAllyFromOpponent ? " (allied character from opponent)" : "";
     return {
       success: true,
       snapshot,
-      logEntry: moveResult?.logEntry || `${player.name} bands ${targetCard.Name}${allyText} into battle!`,
+      logEntry: `${player.name} bands ${logNames.join(", ")} into battle!`,
     };
   }
 
@@ -166,7 +201,7 @@ class BandHandler {
    * @param {object} actingPlayer Acting player.
    * @param {object} targetDef AST target definition.
    * @param {object} [leaderCard] Character leading the band.
-   * @returns {{ eligibleCardIds: string[], requiresSelection: boolean }}
+   * @returns {{ eligibleCardIds: string[], minTargets: number, maxTargets: number, requiresSelection: boolean }}
    */
   static _resolveEligibleCandidates(room, actingPlayer, targetDef, leaderCard) {
     const leaderAlignment = (leaderCard?.inGameAlignment || leaderCard?.Alignment || "").toString().toLowerCase();
@@ -208,9 +243,27 @@ class BandHandler {
     }
 
     const isManual = targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_CONTROLLER;
+    const isAll =
+      targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_ALL ||
+      targetDef.all === true;
+    const hasCustomMin = targetDef.count && typeof targetDef.count.min_value === "number";
+    const hasCustomMax = targetDef.count && typeof targetDef.count.max_value === "number";
+    const count = typeof targetDef.count === "number"
+      ? targetDef.count
+      : (targetDef.count?.fixed_value || 1);
+
+    const minTargets = isAll
+      ? eligibleCardIds.length
+      : (hasCustomMin ? Math.min(targetDef.count.min_value, Math.max(1, eligibleCardIds.length)) : Math.min(count, Math.max(1, eligibleCardIds.length)));
+    const maxTargets = isAll
+      ? Math.max(1, eligibleCardIds.length)
+      : (hasCustomMax ? Math.max(1, Math.min(targetDef.count.max_value, eligibleCardIds.length || 1)) : Math.max(1, count));
+
     return {
       eligibleCardIds,
-      requiresSelection: isManual && eligibleCardIds.length > 0,
+      minTargets,
+      maxTargets,
+      requiresSelection: (isManual && eligibleCardIds.length > 0) || (isAll && eligibleCardIds.length > 1),
     };
   }
 }

@@ -39,12 +39,23 @@ This document tracks modularization targets, line-count audits, and architectura
 
 ### 3. Suite-Wide UI String Centralization & i18n Architecture
 - **Status**: Audit Planned (Architectural Technical Debt)
-- **Scope**: Entire Redemption Coliseum suite (Game Scenes, Dialogs, Overlays, and Deck Catacombs).
-- **Issue**: Hardcoded UI strings, dialog texts, button labels, and system messages are scattered throughout views and scenes (violating the "No Magic Strings" rule).
+- **Scope**: Entire Redemption Coliseum suite (Client Scenes, Dialogs, Overlays, Deck Catacombs, Server Commands, and Shared Rule Engines).
+- **Issue**:
+  - Hardcoded UI strings, dialog texts, and button labels are scattered across client views and scenes (e.g. `DeckMetricsDialogScene.ts`, `StaticElementFactory.ts`).
+  - Rule validation errors and toast messages are hardcoded as raw string literals across `shared/rules/` (`CombatRules.js`, `MovementRules.js`) and `server/src/commands/` / `services/` (`cardService.js`).
+  - String duplication and drift across shared rules, server, and tests (e.g. `"Additional characters in battle must be banded!"` in `CombatRules.js`, `cardService.js`, and `astBattlePrimitives.test.js`).
+  - Layering mismatch: `client/src/constants/uiStrings.ts` contains duplicate/dead toast strings that `server/` cannot import, while client handlers simply render raw string payloads from network events.
 - **Target Architecture**:
-  - Migrate all user-facing strings into a unified dictionary structure (e.g. `client/src/constants/uiStrings.ts` or scoped i18n JSON bundles).
-  - Prepare for multi-language localization (English standard, expandable to German/other languages) without touching game or scene logic.
-  - Eliminate all hardcoded action descriptions in Colyseus schema via `shared/actionStrings.js`.
+  1. **Rule Engine & Server Error Codes (`shared/ruleErrors.js` / Error Codes)**:
+     - Strict layer separation: `server/` and `shared/rules/` must NEVER import from `client/src/constants/uiStrings.ts`.
+     - Rule validation failures and server toasts must emit standardized machine-readable error codes (e.g. `RULE_ERROR_CODES.BANDING_REQUIRED`) or shared constants from `shared/ruleErrors.js` (analogous to `shared/actionStrings.js`).
+     - Client maps error codes to localized toast messages via `uiStrings.ts` instead of directly rendering arbitrary server strings.
+  2. **Client UI Strings (`client/src/constants/uiStrings.ts`)**:
+     - Migrate all remaining hardcoded client view/scene texts to `uiStrings.ts`.
+     - Remove obsolete, dead toast constants from `uiStrings.ts`.
+     - Prepare for multi-language localization (English standard, expandable to German/other languages) without touching game or scene logic.
+  3. **Action Descriptions**:
+     - Centralize Colyseus action schema descriptions via `shared/actionStrings.js`.
 
 ### 4. Action Type Harmonization (`ACTIVATE_STAR_ABILITY` -> Generic `ACTIVATE_ABILITY`)
 - **Status**: Audit Planned (Code Hygiene & Consistency)

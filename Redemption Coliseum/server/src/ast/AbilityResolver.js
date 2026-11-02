@@ -32,7 +32,8 @@ class AbilityResolver {
     }
 
     const card = this.room?.cardLookup?.get(item.cardId);
-    if (!card || !card.templateId) {
+    const fallbackBand = card ? AbilityResolver.getFallbackBandAbility(card) : null;
+    if (!card || (!card.templateId && !fallbackBand)) {
       logger.info(
         `[AbilityResolver] Card not found or templateId missing for cardId '${item.cardId}'. Triggering fallback.`
       );
@@ -54,7 +55,7 @@ class AbilityResolver {
     }
 
     const templateId = card.templateId;
-    const hasLogic = templateId && AbilityLookup.hasLogic(templateId);
+    const hasLogic = Boolean(templateId && AbilityLookup.hasLogic(templateId));
 
     // 2. Resolve side-specific abilities if AST logic exists
     let targetAbility = null;
@@ -88,6 +89,22 @@ class AbilityResolver {
       }
     }
 
+    const isBattleContext =
+      card.zone === ZONES.BATTLEFIELD ||
+      item.actionType === ActionType.RESCUE_ATTEMPT ||
+      item.actionType === ActionType.BLOCK_RESCUE;
+
+    if (
+      (!targetAbility || !firstEffect || !AstEffectRunner._handlers[firstEffect.action]) &&
+      isBattleContext &&
+      fallbackBand
+    ) {
+      targetAbility = fallbackBand;
+      firstEffect = fallbackBand.effects[0];
+    }
+
+    const isFallbackBand = targetAbility?.ability_id === "fallback_band";
+
     // 3. Optional ability confirmation check (both AST and Tabletop)
     const isStarActivation =
       item.actionType === "ACTIVATE_STAR_ABILITY" ||
@@ -105,13 +122,13 @@ class AbilityResolver {
     const isOptional = Boolean(targetAbility?.is_optional || item.isOptional) && !isAlreadyAccepted;
 
     if (isOptional && options.accepted === undefined && !isStarActivation) {
-      const promptText = firstEffect
+      const promptText = firstEffect && !isFallbackBand
         ? this._getOptionalPromptText(firstEffect, card, item)
         : `Activate the special ability of ${card.Name || item.title}?`;
 
       // Preview telegraph: sent exclusively to the acting player as a private decision aid.
       // Opponents never receive preview arrows while a player is deciding.
-      if (firstEffect?.target && card?.id) {
+      if (firstEffect?.target && card?.id && !isFallbackBand) {
         const eligiblePreview = TargetSelectionService.resolveEligibleTargets(
           this.room,
           player,
@@ -150,8 +167,8 @@ class AbilityResolver {
       };
     }
 
-    // 4. If no AST logic or no targetAbility, trigger tabletop fallback
-    if (!hasLogic || !targetAbility) {
+    // 4. If no targetAbility, trigger tabletop fallback
+    if (!targetAbility) {
       logger.info(
         `[AbilityResolver] No AST logic found for '${card.Name}' (${templateId}). Tabletop resolution.`
       );
@@ -174,6 +191,7 @@ class AbilityResolver {
         firstEffect.action === AST_ACTIONS.ADD_TO_BATTLE;
       const isAutoBandSingleChoice =
         isBandAction &&
+        !isFallbackBand &&
         eligible.maxTargets === 1 &&
         eligible.eligibleCardIds.length === 1;
 
@@ -283,6 +301,68 @@ class AbilityResolver {
       default:
         return `Activate ${cardName}'s optional ability?`;
     }
+  }
+
+  /**
+   * Builds a synthetic AST Banding ability for cards whose special ability text
+   * includes a band or add-to-battle effect that is not yet modeled in cards_logic.json.
+   *
+   * @param {object} card Card instance.
+   * @returns {object | null} Synthetic AST ability object or null.
+   */
+  static getFallbackBandAbility(card) {
+    const rawText = (card?.SpecialAbility || card?.specialAbility || "").toString();
+    if (!rawText) return null;
+
+    const lower = rawText.toLowerCase();
+    const hasBandPhrase =
+      /\b(bands?\s+to|bands?\s+with|may\s+band|band\s+all|band\s+a\b|band\s+up\s+to|band\s+\d+|add\s+to\s+battle)\b/i.test(rawText) ||
+      (lower.includes("band") &&
+        !/^(?:[^\n.]*\b(?:except\s+band|cannot\s+band|prevent\s+band|negate\s+band)\b)/i.test(rawText));
+
+    if (!hasBandPhrase) return null;
+
+    // Isolate only the band/add-to-battle clause so numbers in subsequent clauses (e.g. ", or you may draw 2") do not trigger multi-target
+    const bandClauseMatch = rawText.match(
+      /\b(?:bands?\s+(?:to|with)|may\s+band(?:\s+(?:to|with))?|band\s+(?:all|each|up\s+to|\d+|two|three|four|five|a\b|an\b)|add\s+(?:[^.,;]+?\s+)?to\s+battle)\b([^.,;]*)/i
+    );
+    const bandClause = bandClauseMatch ? bandClauseMatch[0] : rawText;
+
+    const isSingularArticleBand =
+      /\bbands?\s+(?:to|with)\s+an?\s+/i.test(bandClause) &&
+      !/\bbands?\s+(?:to|with)\s+an?\s+[^.,;]*?\band\s+an?\s+/i.test(bandClause);
+
+    const isMultiTargetBand =
+      !isSingularArticleBand &&
+      (/\b(?:all|each|any\s+number|two|three|four|five|[2-9])\b/i.test(bandClause) ||
+        /\bbands?\s+(?:to|with)\s+(?!an?\b)[^.,;]*?\s+and\s+/i.test(bandClause) ||
+        /\b(?:characters|heroes|evil\s+characters|animals|demons|priests|prophets|royals|kings|judges|disciples|apostles|patriarchs|ancients|warriors|soldiers|musicians|elders|captains|princes|brothers|sons|women|men|giants|romans|greeks|egyptians|philistines|assyrians|babylonians|persians|syrians|canaanites|amalekites|midianites|moabites|edomites|ammonites|samaritans|herodians|pharisees|sadducees|zealots|magicians)\b/i.test(
+          bandClause
+        ));
+
+    return {
+      ability_id: "fallback_band",
+      is_optional: true,
+      conditions: [],
+      effects: [
+        {
+          action: AST_ACTIONS.BAND,
+          target: {
+            selection_mode: "manual_controller",
+            zone_owner: "both",
+            scope: ["in_play", "hand"],
+            target_type: "character",
+            prompt_text: isMultiTargetBand
+              ? "Select character(s) to band into battle (Click in activation order)"
+              : "Select a character to band into battle",
+            count: isMultiTargetBand
+              ? { min_value: 1, max_value: 99 }
+              : { fixed_value: 1 },
+            can_cancel: true,
+          },
+        },
+      ],
+    };
   }
 }
 

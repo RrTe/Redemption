@@ -10,6 +10,7 @@ class MoveCardCommand extends BaseCommand {
   constructor(room, client) {
     super(room, client);
     this.preMoveSnapshot = null;
+    this.preBattleFlags = null;
     this.divertedSnapshots = [];
   }
 
@@ -24,6 +25,13 @@ class MoveCardCommand extends BaseCommand {
 
     try {
       // 1. Capture snapshot before execution for undo support
+      this.preBattleFlags = this.state.battle
+        ? {
+            rescueAttemptOccurred: Boolean(this.state.battle.rescueAttemptOccurred),
+            blockOccurred: Boolean(this.state.battle.blockOccurred),
+            lastBattleCardPlayerId: this.state.lastBattleCardPlayerId || "",
+          }
+        : null;
       const targetCardId =
         message.cardId ??
         (typeof message.index === "string" ? message.index : null);
@@ -189,6 +197,11 @@ class MoveCardCommand extends BaseCommand {
     }
 
     if (this.preMoveSnapshot?.fromZone === ZONES.BATTLEFIELD || this.preMoveSnapshot?.toZone === ZONES.BATTLEFIELD) {
+      if (this.preBattleFlags && this.state.battle) {
+        this.state.battle.rescueAttemptOccurred = this.preBattleFlags.rescueAttemptOccurred;
+        this.state.battle.blockOccurred = this.preBattleFlags.blockOccurred;
+        this.state.lastBattleCardPlayerId = this.preBattleFlags.lastBattleCardPlayerId;
+      }
       BattleService.recalculate(this.room);
     }
   }

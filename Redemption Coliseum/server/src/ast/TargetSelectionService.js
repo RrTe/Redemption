@@ -38,9 +38,13 @@ class TargetSelectionService {
     const targetType = targetDef.target_type || "";
     const playersToScan = this._getPlayersToScan(room, actingPlayer, targetDef.zone_owner);
     const isAll = targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_ALL || targetDef.all === true;
+    const hasCustomMin = typeof targetDef.count?.min_value === "number";
+    const hasCustomMax = typeof targetDef.count?.max_value === "number";
     const count = isAll
       ? Infinity
-      : (typeof targetDef.count?.fixed_value === "number" ? targetDef.count.fixed_value : 1);
+      : (typeof targetDef.count?.fixed_value === "number"
+        ? targetDef.count.fixed_value
+        : (hasCustomMax ? targetDef.count.max_value : 1));
     const isManual = targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_CONTROLLER;
 
     // 1. Evaluate Pile-Targeting effects (e.g. deck/discard/reserve targeting)
@@ -132,9 +136,13 @@ class TargetSelectionService {
       }
     }
 
-    const minTargets = isAll ? eligibleCardIds.length : Math.min(count, eligibleCardIds.length);
-    const maxTargets = isAll ? eligibleCardIds.length : count;
-    const requiresSelection = isManual && eligibleCardIds.length > 0;
+    const minTargets = hasCustomMin
+      ? Math.min(targetDef.count.min_value, eligibleCardIds.length)
+      : (isAll ? eligibleCardIds.length : Math.min(count, eligibleCardIds.length));
+    const maxTargets = hasCustomMax
+      ? Math.min(targetDef.count.max_value, eligibleCardIds.length)
+      : (isAll ? eligibleCardIds.length : count);
+    const requiresSelection = (isManual && eligibleCardIds.length > 0) || (isBand && isAll && eligibleCardIds.length > 1);
 
     return {
       targetType: "card",
@@ -226,7 +234,7 @@ class TargetSelectionService {
           try {
             const { CardRepository } = require("../../../shared/CardRepository");
             activeType = CardRepository.getById(card.templateId)?.Type || "";
-          } catch (_e) {}
+          } catch (_e) { }
         }
 
         if (!activeType) {
@@ -270,7 +278,7 @@ class TargetSelectionService {
               if (!ordirList || ordirList.length === 0) ordirList = dbCard.ORDIR;
               if (!cardIdent) cardIdent = dbCard.Identifier;
             }
-          } catch (_e) {}
+          } catch (_e) { }
         }
         const ordirStr = (Array.isArray(ordirList) ? ordirList.join(" ") : "").toLowerCase();
         const identStr = String(cardIdent || "").toLowerCase();
@@ -293,8 +301,8 @@ class TargetSelectionService {
         idents = idents.filter((id) => {
           const l = String(id).toLowerCase();
           return !l.includes("discard") && !l.includes("capture") && !l.includes("harm") &&
-                 !l.includes("convert") && !l.includes("banish") && !l.includes("remove") &&
-                 !l.includes("ability") && !l.includes("evil card") && !l.includes("opponent");
+            !l.includes("convert") && !l.includes("banish") && !l.includes("remove") &&
+            !l.includes("ability") && !l.includes("evil card") && !l.includes("opponent");
         });
       }
       if (idents.length > 0) {
@@ -303,7 +311,7 @@ class TargetSelectionService {
           try {
             const { CardRepository } = require("../../../shared/CardRepository");
             ordirList = CardRepository.getById(card.templateId)?.ORDIR;
-          } catch (_e) {}
+          } catch (_e) { }
         }
         // Dual card in play: use active side ORDIR if available
         const isInPlay = card.zone === ZONES.BATTLEFIELD || card.zone === ZONES.TERRITORY;

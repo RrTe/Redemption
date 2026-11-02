@@ -89,7 +89,7 @@ export class TargetingHUD {
     this.container = this.scene.add.container(cx, -60);
     this.container.setDepth(1500);
 
-    const bannerW = Math.min(680, this.scene.scale.width - 40);
+    const bannerW = Math.min(780, this.scene.scale.width - 40);
     const bannerH = 54;
 
     // 1. Dark glassmorphism background panel
@@ -102,7 +102,7 @@ export class TargetingHUD {
     // 2. Prompt instruction text
     this.promptTextObj = this.scene.add
       .text(-bannerW / 2 + 20, -7, "", {
-        fontSize: "17px",
+        fontSize: "15px",
         color: "#ffffff",
         fontStyle: "bold",
       })
@@ -110,15 +110,15 @@ export class TargetingHUD {
 
     // 3. Selection count badge
     this.counterTextObj = this.scene.add
-      .text(0, -7, "", {
-        fontSize: "15px",
+      .text(bannerW / 2 - 210, -7, "", {
+        fontSize: "14px",
         color: "#ffd700",
         fontStyle: "bold",
       })
-      .setOrigin(0, 0.5);
+      .setOrigin(1, 0.5);
 
     // 4. Action buttons
-    const btnContainer = this.scene.add.container(bannerW / 2 - 120, -7);
+    const btnContainer = this.scene.add.container(bannerW / 2 - 110, -7);
 
     // Cancel Button
     this.cancelBtn = this.createButton("Cancel", 0xe74c3c, () => {
@@ -128,7 +128,13 @@ export class TargetingHUD {
 
     // Confirm Button
     this.confirmBtn = this.createButton("Confirm", 0x2ecc71, () => {
-      if (this.currentConfig?.onConfirm) this.currentConfig.onConfirm();
+      if (
+        this.currentConfig &&
+        this.currentSelectedCount >= this.currentConfig.minTargets &&
+        this.currentConfig.onConfirm
+      ) {
+        this.currentConfig.onConfirm();
+      }
     });
     this.confirmBtn.setX(-45);
 
@@ -142,9 +148,7 @@ export class TargetingHUD {
     this.promptTextObj.setText(this.currentConfig.promptText);
 
     if (this.currentConfig.maxTargets > 1) {
-      this.counterTextObj.setText(
-        `(${this.currentSelectedCount}/${this.currentConfig.maxTargets})`,
-      );
+      this.counterTextObj.setText(`Selected: ${this.currentSelectedCount}`);
       this.counterTextObj.setVisible(true);
     } else {
       this.counterTextObj.setVisible(false);
@@ -157,7 +161,7 @@ export class TargetingHUD {
     if (this.confirmBtn) {
       const canConfirm = this.currentSelectedCount >= this.currentConfig.minTargets;
       this.confirmBtn.setAlpha(canConfirm ? 1 : 0.4);
-      this.confirmBtn.setVisible(this.currentConfig.maxTargets > 1);
+      this.confirmBtn.setVisible(true);
     }
   }
 

@@ -1,6 +1,7 @@
 // client/src/ui/managers/TargetingManager.ts
 import Phaser from "phaser";
 import { GameEvents } from "../../constants/EventNames";
+import { ZONES } from "../../../../shared/zones";
 import type { RequestTargetSelectionMessage } from "../../../../shared/messages";
 import type { GameNetworkManager } from "../../network/GameNetworkManager";
 import { TargetingHUD } from "./TargetingHUD";
@@ -95,7 +96,21 @@ export class TargetingManager {
     this.selectedCardIds.clear();
     this.selectedPileId = null;
 
+    const maxTargets = request.maxTargets ?? 1;
+    const isMultiTarget = maxTargets > 1;
+
     this.scene.input.keyboard?.on("keydown-ESC", this.handleEscKey, this);
+    if (isMultiTarget) {
+      this.scene.input.keyboard?.on("keydown-ENTER", this.handleEnterKey, this);
+      this.hud.show({
+        promptText: request.promptText || "Select target(s)",
+        minTargets: request.minTargets ?? 1,
+        maxTargets,
+        canCancel: Boolean(request.canCancel),
+        onConfirm: () => this.confirmSelection(),
+        onCancel: () => this.cancelTargeting(),
+      });
+    }
 
     // 1. Resolve source card and elevate depth by +10
     let sourceCardId = request.sourceCardId;
@@ -114,10 +129,11 @@ export class TargetingManager {
       this.arrowEffect = new TargetingArrowEffect(this.scene, sourceCard, alignment);
     }
 
-    // 2. Track pointer for interactive arrow guidance
-    this.scene.input.on("pointermove", this.handlePointerMove, this);
+    // 2. Activate focus spotlight (single-target & pile modes use live pointer arrow; multi-target draws arrows upon click)
+    if (!isMultiTarget || request.targetType === "pile") {
+      this.scene.input.on("pointermove", this.handlePointerMove, this);
+    }
 
-    // 3. Activate focus spotlight
     if (request.targetType === "pile") {
       const allowedIds = new Set((request.eligiblePiles || []).map((p) => p.id));
       this.focusManager.activate("pile", undefined, allowedIds, sourceCardId);
@@ -173,6 +189,12 @@ export class TargetingManager {
     }
   }
 
+  private handleEnterKey(): void {
+    if (this.activeRequest && this.selectedCardIds.size >= (this.activeRequest.minTargets ?? 1)) {
+      this.confirmSelection();
+    }
+  }
+
   public handlePileClicked(pileId: string): void {
     if (!this.activeRequest || this.activeRequest.targetType !== "pile") return;
 
@@ -205,21 +227,40 @@ export class TargetingManager {
     const cardId = card.cardData?.id;
     if (!cardId || !(this.activeRequest.eligibleCardIds || []).includes(cardId)) return;
 
+    const maxTargets = this.activeRequest.maxTargets ?? 1;
+    if (maxTargets === 1) {
+      this.selectedCardIds.add(cardId);
+      this.arrowEffect?.removeTarget(POINTER_TARGET_ID);
+      this.arrowEffect?.setTarget(cardId, card, true);
+      this.confirmSelection();
+      return;
+    }
+
     if (this.selectedCardIds.has(cardId)) {
       this.selectedCardIds.delete(cardId);
       card.badge.hide();
       this.arrowEffect?.removeTarget(cardId);
+      this.refreshSelectionBadges();
     } else {
-      if (this.selectedCardIds.size < this.activeRequest.maxTargets) {
+      if (this.selectedCardIds.size < maxTargets) {
         this.selectedCardIds.add(cardId);
-        card.badge.show("✓", "top-right");
+        this.refreshSelectionBadges();
         this.arrowEffect?.setTarget(cardId, card, true);
       }
     }
 
-    if (this.selectedCardIds.size === this.activeRequest.maxTargets) {
-      this.arrowEffect?.removeTarget(POINTER_TARGET_ID);
-      this.confirmSelection();
+    this.hud.updateSelectedCount(this.selectedCardIds.size);
+  }
+
+  private refreshSelectionBadges(): void {
+    let order = 1;
+    for (const selectedId of this.selectedCardIds) {
+      const selectedCard = this.cardRenderer.getCardUI(selectedId);
+      if (selectedCard) {
+        const isHand = selectedCard.currentZone === ZONES.HAND;
+        selectedCard.badge.show(String(order), isHand ? "top-left" : "center");
+      }
+      order++;
     }
   }
 
@@ -259,7 +300,15 @@ export class TargetingManager {
   public stopTargeting(animate: boolean = true): void {
     if (animate) this.hud.hide();
     this.scene.input.keyboard?.off("keydown-ESC", this.handleEscKey, this);
+    this.scene.input.keyboard?.off("keydown-ENTER", this.handleEnterKey, this);
     this.scene.input.off("pointermove", this.handlePointerMove, this);
+
+    for (const selectedId of this.selectedCardIds) {
+      const selectedCard = this.cardRenderer.getCardUI(selectedId);
+      if (selectedCard) {
+        selectedCard.badge.hide();
+      }
+    }
 
     if (this.elevatedSourceCard) {
       this.elevatedSourceCard.setDepth(this.originalSourceDepth);

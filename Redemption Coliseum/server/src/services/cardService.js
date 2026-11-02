@@ -13,8 +13,6 @@ const { PlayerState } = require("../state/PlayerState");
 const { ActionType } = require("../../../shared/actions");
 const { CardAction } = require("../../../shared/actionSchema");
 const { ACTION_DESCRIPTIONS } = require("../../../shared/actionStrings");
-const { BattleCharacterClassifier } = require("./BattleCharacterClassifier");
-const { AbilityLookup } = require("../ast/AbilityLookup");
 const util = require("util");
 
 const CHANGES_SYMBOL = $changes || "~changes";
@@ -72,7 +70,7 @@ function _unshiftToZone(zoneArr, card) {
  */
 function getZoneDisplayName(zone, isOpponent = false) {
   const prefix = isOpponent ? "opponent's " : "their ";
-  
+
   switch (zone) {
     case ZONES.DECK: return prefix + "Deck";
     case ZONES.HAND: return prefix + "Hand";
@@ -153,7 +151,7 @@ function _validateMove(
   toZone,
   options = {},
 ) {
-  const result = MoveValidator.validate({
+  return MoveValidator.validate({
     card,
     state,
     cardControllerId,
@@ -162,42 +160,6 @@ function _validateMove(
     toZone,
     options,
   });
-  if (!result.valid) return result;
-
-  // Authoritative Banding validation when moving characters into battle
-  const isArena = Boolean(state?.isArenaMode ?? state?.isSandboxMode);
-  if (toZone === ZONES.BATTLEFIELD && !isArena && fromZone !== ZONES.BATTLEFIELD) {
-    const isHero = BattleCharacterClassifier.isHero(card);
-    const isEvilChar = BattleCharacterClassifier.isEvilCharacter(card);
-
-    if (isHero || isEvilChar) {
-      const isAttacker = targetPlayerId === state?.activePlayer;
-      const currentBattleChars = (state?.battlefield || []).filter((c) =>
-        isAttacker
-          ? c.controllerId === state?.activePlayer && BattleCharacterClassifier.isHero(c)
-          : c.controllerId !== state?.activePlayer && BattleCharacterClassifier.isEvilCharacter(c)
-      );
-
-      if (currentBattleChars.length > 0) {
-        const isBanded = Boolean(card.isBanded || options.isBanded || options.isAbilityAction);
-        if (!isBanded) {
-          const templateId = card.templateId;
-          const hasAstBand = templateId && AbilityLookup.hasLogic(templateId) &&
-            AbilityLookup.resolveAbilities(templateId).some((a) =>
-              (a.effects || []).some((e) => e.action === "band" || e.action === "add to battle")
-            );
-          const hasTextBand = (card.SpecialAbility || "").toLowerCase().includes("band");
-          const isTabletopCard = templateId && !AbilityLookup.hasLogic(templateId) && Boolean(card.SpecialAbility);
-
-          if (!hasAstBand && !hasTextBand && !isTabletopCard) {
-            return { valid: false, error: "Additional characters in battle must be banded!" };
-          }
-        }
-      }
-    }
-  }
-
-  return { valid: true };
 }
 
 /**
@@ -301,7 +263,7 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup, allowRepla
   while (drawnCount < count && deck.length > 0) {
     const shiftedCard = deck.shift();
     const card = shiftedCard.clone();
-    
+
     // Update cardLookup with cloned instance
     if (cardLookup) cardLookup.set(card.id, card);
 
@@ -331,7 +293,7 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup, allowRepla
         if (oldView) {
           oldView.remove(shiftedCard);
         }
-        
+
         const newView = state._clientViews.get(card.controllerId);
         if (newView) {
           newView.add(card);
@@ -477,8 +439,12 @@ function _moveCardById(
   if (effectiveTo === ZONES.HAND || effectiveTo === ZONES.TERRITORY || effectiveTo === ZONES.LAND_OF_BONDAGE) {
     card.isFaceUp = true;
   }
+  if (effectiveFromZone === ZONES.BATTLEFIELD && effectiveTo !== ZONES.BATTLEFIELD) {
+    card.isBanded = false;
+    card.bandedTo = "";
+  }
   card.counters.clear();
-  
+
   // Apply or clear inGame properties
   const isLeavingField = [ZONES.DECK, ZONES.DISCARD, ZONES.HAND, ZONES.BANISH, ZONES.RESERVE].includes(effectiveTo);
   if (isLeavingField) {
@@ -501,7 +467,7 @@ function _moveCardById(
   // (onAdd fires before property sync).
   const movedCard = splicedCard.clone();
   cardLookup.set(cardId, movedCard); // Update lookup map to new instance
-  
+
   logger.debug(
     `[MOVE_BY_ID] SPLICED & CLONED: Array '${effectiveFromZone}' length AFTER: ${actualFromArr.length}`,
   );
@@ -570,25 +536,25 @@ function _moveCardById(
 
   let logEntry = "";
   const templateId = movedCard.templateId || movedCard.ImageFile;
-  
+
   // Special logging for Lost Souls being moved to Land of Bondage
   if (isDiverted || (movedCard && isLostSoul && effectiveTo === ZONES.LAND_OF_BONDAGE)) {
-      const isToOpponent = targetPlayer.sessionId !== actingPlayer.sessionId;
-      logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} to ${getZoneDisplayName(effectiveTo, isToOpponent)}. (Lost Soul rule)`;
+    const isToOpponent = targetPlayer.sessionId !== actingPlayer.sessionId;
+    logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} to ${getZoneDisplayName(effectiveTo, isToOpponent)}. (Lost Soul rule)`;
   } else {
-      const isFromOpponent = controllerId !== actingPlayer.sessionId;
-      const isToOpponent = targetPlayer.sessionId !== actingPlayer.sessionId;
-      
-      let toDisplay = getZoneDisplayName(effectiveTo, isToOpponent);
-      if (effectiveTo === ZONES.DECK) {
-          toDisplay = position === "bottom" ? `the bottom of ${toDisplay}` : `the top of ${toDisplay}`;
-      }
+    const isFromOpponent = controllerId !== actingPlayer.sessionId;
+    const isToOpponent = targetPlayer.sessionId !== actingPlayer.sessionId;
 
-      if (effectiveFromZone === ZONES.HAND && effectiveTo === ZONES.DECK) {
-          logEntry = `${actingPlayer.name} moves a card from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${toDisplay}.`;
-      } else {
-          logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${toDisplay}.`;
-      }
+    let toDisplay = getZoneDisplayName(effectiveTo, isToOpponent);
+    if (effectiveTo === ZONES.DECK) {
+      toDisplay = position === "bottom" ? `the bottom of ${toDisplay}` : `the top of ${toDisplay}`;
+    }
+
+    if (effectiveFromZone === ZONES.HAND && effectiveTo === ZONES.DECK) {
+      logEntry = `${actingPlayer.name} moves a card from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${toDisplay}.`;
+    } else {
+      logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${toDisplay}.`;
+    }
   }
 
   // Format inspect string for debug logging
@@ -616,7 +582,7 @@ function _moveCardById(
         logger.debug(`[MOVE_BY_ID] oldView.remove skipped: ${e.message}`);
       }
     }
-    
+
     const newView = state._clientViews.get(movedCard.controllerId);
     if (newView) {
       try {
@@ -708,7 +674,7 @@ function _drawCardsFromDeck(
       // Controller remains the same as the player drawing
     }
     toArr.push(...validCards);
-    
+
     // StateView update for all drawn cards
     if (state._clientViews) {
       for (const card of validCards) {
@@ -834,7 +800,7 @@ function shuffle(arr) {
 function addAvailableAction(state, card, action) {
   if (!card || !action) return;
   card.availableActions.push(action);
-  
+
   if (state && state._clientViews) {
     const clientView = state._clientViews.get(card.controllerId);
     if (clientView) {

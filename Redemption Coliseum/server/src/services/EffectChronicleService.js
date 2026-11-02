@@ -27,7 +27,11 @@ class EffectChronicleService {
     }
 
     const chronicle = room.state.effectChronicle;
-    room._chronicleOnComplete = typeof options.onComplete === "function" ? options.onComplete : null;
+    if (typeof options.onComplete === "function") {
+      room._chronicleOnComplete = options.onComplete;
+    } else if (!chronicle.isResolving && chronicle.items.length === 0) {
+      room._chronicleOnComplete = null;
+    }
 
     if (Array.isArray(cards)) {
       cards.forEach((card, index) => {

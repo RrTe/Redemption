@@ -578,6 +578,213 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       });
       expect(bandedMove.valid).toBe(true);
     });
+
+    test("Multi-character sequential banding preserves player-chosen activation order in EffectChronicle", () => {
+      const leader = createCard({
+        id: "leader_multi",
+        Name: "Band All Leader",
+        Alignment: "Good",
+        IsCharacter: true,
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      const heroA = createCard({
+        id: "hero_a",
+        Name: "First Hero",
+        Alignment: "Good",
+        IsCharacter: true,
+        SpecialAbility: "Draw 1 card.",
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.TERRITORY,
+      });
+      const heroB = createCard({
+        id: "hero_b",
+        Name: "Second Hero",
+        Alignment: "Good",
+        IsCharacter: true,
+        SpecialAbility: "Draw 2 cards.",
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.HAND,
+      });
+
+      room.cardLookup.set(leader.id, leader);
+      room.cardLookup.set(heroA.id, heroA);
+      room.cardLookup.set(heroB.id, heroB);
+      state.battlefield.push(leader);
+      p1[ZONES.TERRITORY].push(heroA);
+      p1[ZONES.HAND].push(heroB);
+
+      const leaderItem = new ChronicleItem({
+        id: "item_leader_multi",
+        cardId: leader.id,
+        controllerId: "p1",
+        actionType: "RESCUE_ATTEMPT",
+        title: leader.Name,
+        status: CHRONICLE_STATUS.RESOLVING,
+      });
+      state.effectChronicle.items.push(leaderItem);
+      state.effectChronicle.isResolving = true;
+      state.effectChronicle.priorityPlayerId = "p1";
+
+      // Player selects heroB as #1 and heroA as #2
+      const result = BandHandler.execute({
+        room,
+        player: p1,
+        effect: {
+          action: AST_ACTIONS.BAND,
+          target: {
+            selection_mode: "manual_controller",
+            count: { min_value: 1, max_value: 99 },
+          },
+        },
+        item: { cardId: leader.id },
+        options: { targetCardIds: [heroB.id, heroA.id] },
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.snapshot.bandedCards.map((r) => r.bandedCardId)).toEqual([heroB.id, heroA.id]);
+      expect(state.effectChronicle.items.length).toBe(3);
+      expect(state.effectChronicle.items[1].cardId).toBe(heroB.id);
+      expect(state.effectChronicle.items[2].cardId).toBe(heroA.id);
+    });
+
+    test("Fallback banding for non-AST cards requests interactive target selection and bands selected characters in order", () => {
+      const { AbilityResolver } = require("../src/ast/AbilityResolver");
+      const { SelectTargetCommand } = require("../src/commands/SelectTargetCommand");
+      const { EffectChronicleService } = require("../src/services/EffectChronicleService");
+
+      room.abilityResolver = new AbilityResolver(room);
+      room.broadcastGameLog = jest.fn();
+
+      const nonAstLeader = createCard({
+        id: "non_ast_leader",
+        templateId: "unmodeled_template_999999",
+        Name: "Unmodeled Banding Hero",
+        Alignment: "Good",
+        Type: "Hero",
+        IsCharacter: true,
+        SpecialAbility: "May band to up to 2 Heroes in play or hand.",
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      const target1 = createCard({
+        id: "target_hero_1",
+        Name: "Target Hero 1",
+        Alignment: "Good",
+        Type: "Hero",
+        IsCharacter: true,
+        SpecialAbility: "May draw 1 card.",
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.TERRITORY,
+      });
+      const target2 = createCard({
+        id: "target_hero_2",
+        Name: "Target Hero 2",
+        Alignment: "Good",
+        Type: "Hero",
+        IsCharacter: true,
+        SpecialAbility: "May draw 2 cards.",
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.HAND,
+      });
+
+      room.cardLookup.set(nonAstLeader.id, nonAstLeader);
+      room.cardLookup.set(target1.id, target1);
+      room.cardLookup.set(target2.id, target2);
+      state.battlefield.push(nonAstLeader);
+      p1[ZONES.TERRITORY].push(target1);
+      p1[ZONES.HAND].push(target2);
+
+      EffectChronicleService.enqueueCards(room, [nonAstLeader], "p1", ActionType.RESCUE_ATTEMPT, {
+        isOptional: true,
+      });
+      const item = state.effectChronicle.items[0];
+
+      // 1. Player clicks "Activate" in optional ability prompt (accepted: true)
+      const resolveAfterAccept = room.abilityResolver.resolve(item, { accepted: true });
+      expect(resolveAfterAccept.handled).toBe(true);
+      expect(resolveAfterAccept.awaitingTargetSelection).toBe(true);
+      expect(resolveAfterAccept.eligible.eligibleCardIds).toEqual(
+        expect.arrayContaining([target1.id, target2.id])
+      );
+
+      // 2. Player clicks target2 (badge 1) then target1 (badge 2) and confirms
+      const cmd = new SelectTargetCommand(room, room.clients[0]);
+      cmd.execute({
+        itemId: item.id,
+        abilityId: "fallback_band",
+        selectedCardIds: [target2.id, target1.id],
+      });
+
+      expect(room.cardLookup.get(target2.id).zone).toBe(ZONES.BATTLEFIELD);
+      expect(room.cardLookup.get(target2.id).isBanded).toBe(true);
+      expect(room.cardLookup.get(target1.id).zone).toBe(ZONES.BATTLEFIELD);
+      expect(room.cardLookup.get(target1.id).isBanded).toBe(true);
+
+      // Both banded heroes have their entrance abilities queued in exact order [target2, target1]
+      expect(state.effectChronicle.items.map((i) => i.cardId)).toEqual([target2.id, target1.id]);
+    });
+
+    test("Fallback banding treats singular 'May band to a ... or you may draw 2' (The Tribal Elders) as fixed_value: 1", () => {
+      const { AbilityResolver } = require("../src/ast/AbilityResolver");
+      const tribalElders = createCard({
+        id: "tribal_elders_1",
+        templateId: "-696815277",
+        Name: "The Tribal Elders [L]",
+        Alignment: "Good",
+        Type: "Hero",
+        IsCharacter: true,
+        SpecialAbility: "May band to a white Exodus Hero, or you may draw 2.",
+      });
+
+      const fallback = AbilityResolver.getFallbackBandAbility(tribalElders);
+      expect(fallback).not.toBeNull();
+      expect(fallback.effects[0].target.count).toEqual({ fixed_value: 1 });
+    });
+
+    test("Returning a character from battlefield to territory clears isBanded and blocks re-entering battle manually", () => {
+      const { moveCard } = require("../src/services/cardService");
+
+      const hero = createCard({
+        id: "hero_return_test",
+        Name: "Returning Hero",
+        Alignment: "Good",
+        Type: "Hero",
+        IsCharacter: true,
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.TERRITORY,
+      });
+      room.cardLookup.set(hero.id, hero);
+      p1[ZONES.TERRITORY].push(hero);
+
+      // 1. Initial rescue attempt succeeds and sets rescueAttemptOccurred = true
+      const enterRes = moveCard(p1, state, room.cardLookup, ZONES.TERRITORY, ZONES.BATTLEFIELD, hero.id);
+      expect(enterRes.error).toBeUndefined();
+      const inBattleHero = room.cardLookup.get(hero.id);
+      inBattleHero.isBanded = true;
+      BattleService.onCardEnteredBattle(room, p1, inBattleHero, ZONES.BATTLEFIELD);
+      expect(state.battle.rescueAttemptOccurred).toBe(true);
+
+      // 2. Move hero back to territory -> clears isBanded, keeps rescueAttemptOccurred = true
+      const returnRes = moveCard(p1, state, room.cardLookup, ZONES.BATTLEFIELD, ZONES.TERRITORY, inBattleHero.id);
+      expect(returnRes.error).toBeUndefined();
+      const returnedHero = room.cardLookup.get(hero.id);
+      expect(returnedHero.isBanded).toBe(false);
+      BattleService.recalculate(room);
+      expect(state.battle.rescueAttemptOccurred).toBe(true);
+
+      // 3. Attempting to manually drag the hero back into battle without a band effect is rejected
+      state.battle.initiativePlayerId = "p1";
+      const reEnterRes = moveCard(p1, state, room.cardLookup, ZONES.TERRITORY, ZONES.BATTLEFIELD, returnedHero.id);
+      expect(reEnterRes.error).toBe("Additional characters in battle must be banded!");
+    });
   });
 
   describe("Ziel 3: Immunity, Protect & REG Harm Logic", () => {

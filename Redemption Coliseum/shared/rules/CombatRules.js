@@ -156,7 +156,6 @@ export class CombatRules {
       const isSpecialInit = Boolean(ctx.state?.battle?.specialInitiativePlayerId === ctx.targetPlayerId);
       const hasActiveEffect = Boolean(
         ctx.options?.isAbilityAction ||
-        card.isBanded ||
         ctx.options?.isBanded ||
         (ctx.state?.effectChronicle?.isResolving && ctx.state.effectChronicle.priorityPlayerId === ctx.targetPlayerId)
       );
@@ -164,13 +163,15 @@ export class CombatRules {
 
       if (isAttacker) {
         const heroes = (ctx.state?.battlefield || []).filter((c) => c.controllerId === ctx.state?.activePlayer && CombatClassifier.isHero(c));
-        const isInitialHero = CombatClassifier.isHero(card) && heroes.length === 0;
+        const rescueAttemptOccurred = Boolean(ctx.state?.battle?.rescueAttemptOccurred);
+        const isInitialHero = CombatClassifier.isHero(card) && heroes.length === 0 && !rescueAttemptOccurred;
         if (!isInitialHero && !hasRegInit && !isSpecialInit && !hasActiveEffect) {
           return { valid: false, error: "You do not have initiative!" };
         }
       } else {
         const ecs = (ctx.state?.battlefield || []).filter((c) => c.controllerId !== ctx.state?.activePlayer && CombatClassifier.isEvilCharacter(c));
-        const isInitialBlocker = CombatClassifier.isEvilCharacter(card) && ecs.length === 0;
+        const blockOccurred = Boolean(ctx.state?.battle?.blockOccurred);
+        const isInitialBlocker = CombatClassifier.isEvilCharacter(card) && ecs.length === 0 && !blockOccurred;
         if (!isInitialBlocker && !hasRegInit && !isSpecialInit && !hasActiveEffect) {
           return { valid: false, error: "You do not have initiative!" };
         }
@@ -192,10 +193,13 @@ export class CombatRules {
             ? c.controllerId === ctx.state?.activePlayer && CombatClassifier.isHero(c)
             : c.controllerId !== ctx.state?.activePlayer && CombatClassifier.isEvilCharacter(c)
         );
+        const alreadyEnteredThisBattle = isAttacker
+          ? Boolean(ctx.state?.battle?.rescueAttemptOccurred)
+          : Boolean(ctx.state?.battle?.blockOccurred);
 
-        if (currentBattleChars.length > 0) {
+        if (currentBattleChars.length > 0 || alreadyEnteredThisBattle) {
           const isBandedMove = Boolean(
-            card.isBanded || ctx.options?.isBanded || ctx.options?.isAbilityAction
+            ctx.options?.isBanded || ctx.options?.isAbilityAction
           );
           if (!isBandedMove) {
             return { valid: false, error: "Additional characters in battle must be banded!" };
@@ -216,6 +220,7 @@ export class CombatRules {
       this.blockerGateRule,
       this.brigadeMatchRule,
       this.initiativeRule,
+      this.bandingRule,
     ];
     for (const rule of rules) {
       const res = rule.call(this, ctx);
