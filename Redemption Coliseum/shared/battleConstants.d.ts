@@ -22,6 +22,8 @@ export declare const BATTLE_HUD_CONFIG: {
   readonly BADGE_HEIGHT: number;
   readonly INITIATIVE_WIDTH: number;
   readonly INITIATIVE_HEIGHT: number;
+  readonly PASS_BTN_WIDTH: number;
+  readonly PASS_BTN_HEIGHT: number;
   readonly SLOT_GAP: number;
   readonly PANEL_PADDING: number;
   readonly BORDER_RADIUS: number;
@@ -30,6 +32,8 @@ export declare const BATTLE_HUD_CONFIG: {
   readonly GOLD_HEX: string;
   readonly BLOCKER_HEX: string;
   readonly INITIATIVE_GLOW_COLOR: number;
+  readonly SPECIAL_INITIATIVE_COLOR: number;
+  readonly SPECIAL_INITIATIVE_BG_COLOR: number;
   readonly STALEMATE_COLOR: number;
   readonly MUTUAL_COLOR: number;
   readonly BACKGROUND_COLOR: number;

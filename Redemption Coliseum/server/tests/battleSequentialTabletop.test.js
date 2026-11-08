@@ -95,8 +95,12 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
     expect(state.effectChronicle.items.length).toBe(0);
     expect(state.effectChronicle.isResolving).toBe(false);
 
-    // 2. Player 2 blocks with Pharaoh (no AST logic, but has tabletop Special Ability)
+    // 2. Player 2 blocks with Pharaoh in subsequent defense (no AST logic, but has tabletop Special Ability)
     client2.send.mockClear();
+    const attackingHero = room.cardLookup.get("c_hero_test1");
+    state.battlefield.splice(0, state.battlefield.length);
+    if (attackingHero) state.battlefield.push(attackingHero);
+    state.battle.blockOccurred = false;
     state.battle.initiativePlayerId = "p2";
     const pharaoh = createCard("c_pharaoh", "tabletop_pharaoh_no_ast", "Pharaoh Ramses II", ZONES.HAND, "p2", {
       Type: "Evil Character",
@@ -130,8 +134,10 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
       expect.stringContaining("Defending Player activates Pharaoh Ramses II")
     );
 
-    // 4. Opponent plays a character with a Special Ability (e.g. Miriam)
+    // 4. Opponent plays a character with a Special Ability (e.g. Miriam) in fresh battle test
     client1.send.mockClear();
+    state.battlefield.splice(0, state.battlefield.length);
+    state.battle.rescueAttemptOccurred = false;
     state.battle.initiativePlayerId = "p1";
     const miriam = createCard("c_miriam", "3001", "Miriam", ZONES.HAND, "p1", {
       Type: "Hero",
@@ -186,8 +192,10 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
     expect(player1.hand.length).toBe(1);
     expect(state.effectChronicle.items.length).toBe(0);
 
-    // 2. Play Eli the Priest (RoA)
+    // 2. Play Eli the Priest (RoA) in fresh battle test
     client1.send.mockClear();
+    state.battlefield.splice(0, state.battlefield.length);
+    state.battle.rescueAttemptOccurred = false;
     state.battle.initiativePlayerId = "p1";
     const eli = createCard("c_eli", "-175529066", "Eli the Priest (RoA)", ZONES.HAND, "p1", {
       Type: "Hero",

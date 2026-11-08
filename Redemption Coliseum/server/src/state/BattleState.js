@@ -16,6 +16,7 @@ class BattleState extends Schema {
     this.stateReason = BATTLE_STATE_REASON.NO_BATTLE;
     this.lastCardPlayedPlayerId = "";
     this.specialInitiativePlayerId = "";
+    this.initiativeOverridePlayerId = "";
     this.rescueAttemptOccurred = false;
     this.blockOccurred = false;
   }
@@ -29,6 +30,7 @@ type("string")(BattleState.prototype, "initiativePlayerId");
 type("string")(BattleState.prototype, "stateReason");
 type("string")(BattleState.prototype, "lastCardPlayedPlayerId");
 type("string")(BattleState.prototype, "specialInitiativePlayerId");
+type("string")(BattleState.prototype, "initiativeOverridePlayerId");
 type("boolean")(BattleState.prototype, "rescueAttemptOccurred");
 type("boolean")(BattleState.prototype, "blockOccurred");
 

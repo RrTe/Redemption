@@ -175,6 +175,8 @@ class ImmunityHandler {
     );
 
     return {
+      all_cards: Boolean(filter.all_cards),
+      all_abilities: Boolean(filter.all_abilities),
       brigades,
       alignments,
       actions,

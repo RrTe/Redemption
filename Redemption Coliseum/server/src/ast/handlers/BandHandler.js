@@ -33,10 +33,16 @@ class BandHandler {
     }
 
     const leaderCard = item?.cardId ? room.cardLookup?.get(item.cardId) : null;
+    let effectiveLeader = leaderCard;
+    if (!effectiveLeader || (!BattleCharacterClassifier.isHero(effectiveLeader) && !BattleCharacterClassifier.isEvilCharacter(effectiveLeader))) {
+      effectiveLeader = (room.state?.battlefield || []).find(
+        (c) => c.controllerId === player.sessionId && (BattleCharacterClassifier.isHero(c) || BattleCharacterClassifier.isEvilCharacter(c))
+      ) || leaderCard;
+    }
     const targetDef = effect?.target || {};
 
     // 1. Resolve eligible target candidates
-    const eligible = this._resolveEligibleCandidates(room, player, targetDef, leaderCard);
+    const eligible = this._resolveEligibleCandidates(room, player, targetDef, effectiveLeader);
 
     // If selection is manual and no explicit targets submitted, request client selection
     const explicitIds = options.targetCardIds || [];
@@ -101,7 +107,7 @@ class BandHandler {
       const isAllyFromOpponent = previousControllerId !== player.sessionId;
 
       logger.info(
-        `[BandHandler] Banding '${targetCard.Name}' (${targetCard.id}) with leader '${leaderCard?.Name || "leader"}' ` +
+        `[BandHandler] Banding '${targetCard.Name}' (${targetCard.id}) with leader '${effectiveLeader?.Name || "leader"}' ` +
         `by player '${player.name}' (isAllyFromOpponent=${isAllyFromOpponent}).`
       );
 
@@ -123,7 +129,7 @@ class BandHandler {
 
       // Set Banding flags
       actualCard.isBanded = true;
-      actualCard.bandedTo = leaderCard?.id || "";
+      actualCard.bandedTo = effectiveLeader?.id || "";
 
       // REG lines 958-960: Temporary control if banding allied character of another player
       if (isAllyFromOpponent) {
@@ -254,16 +260,22 @@ class BandHandler {
 
     const minTargets = isAll
       ? eligibleCardIds.length
-      : (hasCustomMin ? Math.min(targetDef.count.min_value, Math.max(1, eligibleCardIds.length)) : Math.min(count, Math.max(1, eligibleCardIds.length)));
+      : (hasCustomMin ? Math.min(targetDef.count.min_value, eligibleCardIds.length) : Math.min(count, Math.max(1, eligibleCardIds.length)));
     const maxTargets = isAll
       ? Math.max(1, eligibleCardIds.length)
       : (hasCustomMax ? Math.max(1, Math.min(targetDef.count.max_value, eligibleCardIds.length || 1)) : Math.max(1, count));
+
+    const isOptional = hasCustomMin && targetDef.count.min_value === 0 && eligibleCardIds.length > 0;
+    const requiresSelection =
+      (isManual && eligibleCardIds.length > 0) ||
+      (isAll && eligibleCardIds.length > 1) ||
+      isOptional;
 
     return {
       eligibleCardIds,
       minTargets,
       maxTargets,
-      requiresSelection: (isManual && eligibleCardIds.length > 0) || (isAll && eligibleCardIds.length > 1),
+      requiresSelection,
     };
   }
 }

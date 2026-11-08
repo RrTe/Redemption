@@ -50,7 +50,9 @@ export class ElementManager {
   public createAllElements() {
     this.staticElements = this.staticFactory.create();
     this.zoneElements = this.zoneFactory.create(this.layout);
-    this.battleHUD = new BattleHUD(this.scene, this.layout);
+    this.battleHUD = new BattleHUD(this.scene, this.layout, () =>
+      this.networkManager.sendPassInitiative()
+    );
   }
 
   /** Positioniert alle UI-Elemente neu, z.B. bei einer Fenstergrößen-Änderung. */

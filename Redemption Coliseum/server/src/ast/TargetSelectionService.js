@@ -8,6 +8,7 @@ const {
 } = require("../../../shared/astConstants");
 const { BattleCharacterClassifier } = require("../services/BattleCharacterClassifier");
 const { ProtectionService } = require("../../../shared/rules/ProtectionService");
+const { StatFilterEvaluator } = require("../../../shared/rules/StatFilterEvaluator");
 const { matchesCardType, matchesTargetType } = require("../../../shared/cardHierarchy");
 
 /**
@@ -102,13 +103,16 @@ class TargetSelectionService {
     // 2. Evaluate Card-Targeting effects
     const action = context.actionType || context.action || targetDef.action;
     const isBand = action === AST_ACTIONS.BAND || action === AST_ACTIONS.ADD_TO_BATTLE;
-    const defaultZoneNames = this._resolveTargetZones(scope);
+    const effectiveScope = isBand && (!targetDef.scope || (Array.isArray(targetDef.scope) && targetDef.scope.length === 0))
+      ? [AST_SCOPES.IN_PLAY, AST_SCOPES.HAND]
+      : scope;
+    const defaultZoneNames = this._resolveTargetZones(effectiveScope);
     const eligibleCardIds = [];
 
     for (const p of playersToScan) {
       const isSelf = p.sessionId === actingPlayer.sessionId;
       const zoneNames = isBand
-        ? (isSelf ? [ZONES.TERRITORY, ZONES.HAND] : [ZONES.TERRITORY])
+        ? defaultZoneNames.filter((z) => z !== ZONES.BATTLEFIELD && (isSelf || z !== ZONES.HAND))
         : defaultZoneNames;
 
       for (const zName of zoneNames) {
@@ -118,12 +122,22 @@ class TargetSelectionService {
 
         for (const card of zoneCards) {
           if (isBand) {
+            // Characters already in the battle cannot be banded into battle
+            if (card.zone === ZONES.BATTLEFIELD || zName === ZONES.BATTLEFIELD) continue;
+            if (room?.state?.battlefield?.some((bc) => bc.id === card.id)) continue;
+
             if (context.sourceCard && card.id === context.sourceCard.id) continue;
             const isChar = BattleCharacterClassifier.isHero(card) || BattleCharacterClassifier.isEvilCharacter(card);
             if (!isChar) continue;
             if (context.sourceCard) {
-              const isHeroLeader = BattleCharacterClassifier.isHero(context.sourceCard);
-              const isEvilLeader = BattleCharacterClassifier.isEvilCharacter(context.sourceCard);
+              let effectiveLeader = context.sourceCard;
+              if (!BattleCharacterClassifier.isHero(effectiveLeader) && !BattleCharacterClassifier.isEvilCharacter(effectiveLeader)) {
+                effectiveLeader = (room?.state?.battlefield || []).find(
+                  (bc) => bc.controllerId === actingPlayer.sessionId && (BattleCharacterClassifier.isHero(bc) || BattleCharacterClassifier.isEvilCharacter(bc))
+                ) || context.sourceCard;
+              }
+              const isHeroLeader = BattleCharacterClassifier.isHero(effectiveLeader);
+              const isEvilLeader = BattleCharacterClassifier.isEvilCharacter(effectiveLeader);
               const cardAlign = (card.inGameAlignment || card.Alignment || "").toString().toLowerCase();
               if (isHeroLeader && !cardAlign.includes("good") && !BattleCharacterClassifier.isHero(card)) continue;
               if (isEvilLeader && !cardAlign.includes("evil") && !BattleCharacterClassifier.isEvilCharacter(card)) continue;
@@ -136,13 +150,18 @@ class TargetSelectionService {
       }
     }
 
+    const isOptionalUpTo = hasCustomMin && targetDef.count.min_value === 0;
     const minTargets = hasCustomMin
       ? Math.min(targetDef.count.min_value, eligibleCardIds.length)
       : (isAll ? eligibleCardIds.length : Math.min(count, eligibleCardIds.length));
     const maxTargets = hasCustomMax
       ? Math.min(targetDef.count.max_value, eligibleCardIds.length)
       : (isAll ? eligibleCardIds.length : count);
-    const requiresSelection = (isManual && eligibleCardIds.length > 0) || (isBand && isAll && eligibleCardIds.length > 1);
+    const requiresSelection = (isManual && (eligibleCardIds.length > 0 || isOptionalUpTo)) || (isBand && isAll && eligibleCardIds.length > 1);
+
+    const defaultPrompt = isOptionalUpTo
+      ? `Select up to ${targetDef.count.max_value} card(s) to target`
+      : `Select ${count} card(s) to target`;
 
     return {
       targetType: "card",
@@ -151,8 +170,8 @@ class TargetSelectionService {
       requiresSelection,
       minTargets,
       maxTargets,
-      canCancel: Boolean(targetDef.can_cancel),
-      promptText: targetDef.prompt_text || `Select ${count} card(s) to target`,
+      canCancel: Boolean(targetDef.can_cancel || isOptionalUpTo),
+      promptText: targetDef.prompt_text || defaultPrompt,
     };
   }
 
@@ -220,7 +239,65 @@ class TargetSelectionService {
       }
     }
 
-    // 3. Check card type filter using taxonomy and subtype resolution
+    // 3. Check testament filter (Bucket 3: "OT" or "NT")
+    if (targetDef.testament) {
+      const reqTestament = String(targetDef.testament).trim().toUpperCase();
+      let cardTestament = card.Testament || "";
+      let ordirList = card.ORDIR;
+      if (!cardTestament && card.templateId) {
+        try {
+          const { CardRepository } = require("../../../shared/CardRepository");
+          const dbCard = CardRepository.getById(card.templateId) || CardRepository.get(card.templateId);
+          if (dbCard) {
+            cardTestament = dbCard.Testament || "";
+            if (!ordirList || ordirList.length === 0) ordirList = dbCard.ORDIR;
+          }
+        } catch (_e) { }
+      }
+      const cardTestStr = String(cardTestament).toUpperCase();
+      const matchesDirect = cardTestStr !== "UNKNOWN" && cardTestStr.includes(reqTestament);
+      const ordirStr = Array.isArray(ordirList) ? ordirList.join(" ").toUpperCase() : "";
+      const matchesOrdir = ordirStr.includes(`${reqTestament} CARD`) ||
+        ordirStr.includes(`${reqTestament} CHARACTER`) ||
+        ordirStr.includes(`${reqTestament} HERO`) ||
+        ordirStr.includes(`${reqTestament} EVIL CHARACTER`) ||
+        ordirStr.includes(`${reqTestament} ENHANCEMENT`) ||
+        new RegExp(`(^|[^a-zA-Z0-9])${reqTestament}([^a-zA-Z0-9]|$)`, "i").test(ordirStr);
+      if (!matchesDirect && !matchesOrdir) {
+        return false;
+      }
+    }
+
+    // 4. Check references filter (Bucket 4: Biblical Book Citations)
+    if (Array.isArray(targetDef.references) && targetDef.references.length > 0) {
+      let cardRef = card.Reference || "";
+      let ordirList = card.ORDIR;
+      if (!cardRef && card.templateId) {
+        try {
+          const { CardRepository } = require("../../../shared/CardRepository");
+          const dbCard = CardRepository.getById(card.templateId) || CardRepository.get(card.templateId);
+          if (dbCard) {
+            cardRef = dbCard.Reference || "";
+            if (!ordirList || ordirList.length === 0) ordirList = dbCard.ORDIR;
+          }
+        } catch (_e) { }
+      }
+      const cardRefStr = String(cardRef || "").toLowerCase();
+      const ordirStr = Array.isArray(ordirList) ? ordirList.join(" ").toLowerCase() : "";
+      const hasRefMatch = targetDef.references.some((ref) => {
+        const needle = String(ref || "").trim().toLowerCase();
+        if (!needle) return false;
+        if (ordirStr.includes(needle)) return true;
+        const esc = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`(^|[^a-zA-Z0-9])${esc}([^a-zA-Z0-9]|$)`, "i");
+        return regex.test(cardRefStr) || cardRefStr.startsWith(needle);
+      });
+      if (!hasRefMatch) {
+        return false;
+      }
+    }
+
+    // 5. Check card type filter using taxonomy and subtype resolution (Bucket 1: Canonical base types)
     const rawType = (targetDef.target_type || "").toLowerCase().trim();
     if (rawType) {
       if (rawType === "self" || rawType === "this card") {
@@ -251,7 +328,7 @@ class TargetSelectionService {
       }
     }
 
-    // 4. Check brigades filter
+    // 6. Check brigades filter (Bucket 5: Specific Brigade Colors)
     if (Array.isArray(targetDef.brigades) && targetDef.brigades.length > 0) {
       const cardBrigades = Array.isArray(card.Brigades)
         ? card.Brigades.map((b) => b.toLowerCase())
@@ -259,7 +336,7 @@ class TargetSelectionService {
       if (!targetDef.brigades.some((b) => cardBrigades.includes(b.toLowerCase()))) return false;
     }
 
-    // 5. Check card titles filter (with fallback for uncompiled category titles)
+    // 7. Check card titles filter (Bucket 6: Specifically named titles & IDs)
     if (Array.isArray(targetDef.card_titles) && targetDef.card_titles.length > 0) {
       const cardName = String(card.Name || card.card_name || "").toLowerCase();
       const hasTitleMatch = targetDef.card_titles.some((t) => {
@@ -293,7 +370,7 @@ class TargetSelectionService {
       if (!hasTitleMatch) return false;
     }
 
-    // 6. Check identifiers & ORDIR filter
+    // 8. Check identifiers & ORDIR filter (Bucket 2: Subtypes, Nationalities, Roles & Composites)
     if (Array.isArray(targetDef.identifiers) && targetDef.identifiers.length > 0) {
       let idents = targetDef.identifiers;
       const act = context.actionType || targetDef.action || "";
@@ -307,33 +384,65 @@ class TargetSelectionService {
       }
       if (idents.length > 0) {
         let ordirList = card.ORDIR;
+        let cardIdent = card.Identifier;
+        let cardClass = card.Class;
         if ((!ordirList || ordirList.length === 0) && card.templateId) {
           try {
             const { CardRepository } = require("../../../shared/CardRepository");
-            ordirList = CardRepository.getById(card.templateId)?.ORDIR;
+            const dbCard = CardRepository.getById(card.templateId) || CardRepository.get(card.templateId);
+            if (dbCard) {
+              if (!ordirList || ordirList.length === 0) ordirList = dbCard.ORDIR;
+              if (!cardIdent) cardIdent = dbCard.Identifier;
+              if (!cardClass) cardClass = dbCard.Class;
+            }
           } catch (_e) { }
         }
         // Dual card in play: use active side ORDIR if available
         const isInPlay = card.zone === ZONES.BATTLEFIELD || card.zone === ZONES.TERRITORY;
         if (isInPlay && Array.isArray(card.sides) && card.sides.length > 1) {
           const activeSideIndex = (card.inGameAlignment || "").toLowerCase().includes("evil") ? 1 : 0;
-          const sideOrdir = card.sides[activeSideIndex]?.ORDIR;
-          if (Array.isArray(sideOrdir) && sideOrdir.length > 0) {
-            ordirList = sideOrdir;
+          const side = card.sides[activeSideIndex];
+          if (side) {
+            if (Array.isArray(side.ORDIR) && side.ORDIR.length > 0) ordirList = side.ORDIR;
+            if (side.Identifier) cardIdent = side.Identifier;
+            if (side.Class) cardClass = side.Class;
           }
         }
-        const cardIdent = String(card.Identifier || "").toLowerCase();
-        const ordir = Array.isArray(ordirList) ? ordirList.join(" ").toLowerCase() : "";
-        const cardClass = String(card.Class || "").toLowerCase();
+        const cardIdentStr = String(cardIdent || "").toLowerCase();
+        const ordirStr = Array.isArray(ordirList) ? ordirList.join(" ").toLowerCase() : "";
+        const cardClassStr = String(cardClass || "").toLowerCase();
         const hasIdentMatch = idents.some((id) => {
-          const needle = String(id).toLowerCase();
-          return cardIdent.includes(needle) || ordir.includes(needle) || cardClass.includes(needle);
+          const needle = String(id).trim().toLowerCase();
+          if (!needle) return false;
+
+          // Official REG Rule: All Characters are Human unless identified as an Angel, Demon, or Animal
+          if (needle === "human") {
+            const isChar = BattleCharacterClassifier.isHero(card) || BattleCharacterClassifier.isEvilCharacter(card);
+            if (!isChar) return false;
+            const nonHuman = ["angel", "demon", "animal"];
+            const isNonHuman = nonHuman.some((nh) =>
+              cardIdentStr.includes(nh) || cardClassStr.includes(nh) || ordirStr.includes(nh)
+            );
+            return !isNonHuman;
+          }
+
+          const esc = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const regex = new RegExp(`(^|[^a-zA-Z0-9])${esc}([^a-zA-Z0-9]|$)`, "i");
+          return regex.test(cardIdentStr) || regex.test(cardClassStr) || regex.test(ordirStr) ||
+            (Array.isArray(ordirList) && ordirList.some((item) => String(item).trim().toLowerCase() === needle));
         });
         if (!hasIdentMatch) return false;
       }
     }
 
-    // 7. Protection check: protected or immune cards cannot be targeted by harm
+    // 9. Check structured stat_filters (strength, toughness, both, either)
+    if (Array.isArray(targetDef.stat_filters) && targetDef.stat_filters.length > 0) {
+      if (!StatFilterEvaluator.matchesStatFilters(card, targetDef.stat_filters, context)) {
+        return false;
+      }
+    }
+
+    // 10. Protection check: protected or immune cards cannot be targeted by harm
     if (context && context.sourceCard) {
       if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action)) {
         return false;

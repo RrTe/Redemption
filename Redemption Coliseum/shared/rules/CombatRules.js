@@ -35,10 +35,12 @@ export class CombatRules {
       ctx.state?.battle?.specialInitiativePlayerId && ctx.state.battle.specialInitiativePlayerId === targetPlayerId
     );
     if (isSpecialInitiativeActive && !isArena) {
+      if (ctx.options?.isAbilityAction) return { valid: true };
       const card = ctx.effectiveCard || ctx.card;
       const isEnhancement = CombatClassifier.isGoodEnhancement(card) || CombatClassifier.isEvilEnhancement(card);
       const isDom = CombatClassifier.isDominant(card);
-      if (!isEnhancement || isDom || ctx.toZone !== ZONES.BATTLEFIELD) {
+      if (isDom) return { valid: true };
+      if (!isEnhancement || ctx.toZone !== ZONES.BATTLEFIELD) {
         return { valid: false, error: "Only Enhancements in Special Initiative!" };
       }
     }

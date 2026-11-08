@@ -125,4 +125,5 @@ export interface GameRoomMessages {
   respondOptionalAbility: RespondOptionalAbilityMessage;
   requestNextPhase: RequestNextPhaseMessage;
   respondPhaseTransition: RespondPhaseTransitionMessage;
+  passInitiative: Record<string, never>;
 }

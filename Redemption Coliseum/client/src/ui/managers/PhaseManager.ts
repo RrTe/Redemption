@@ -2,7 +2,7 @@ import type { TypedRoom, GameUI } from "../gameUI";
 import type { ElementManager } from "./ElementManager";
 import type { GameNetworkManager } from "../../network/GameNetworkManager";
 import type { RoomState } from "../../../../shared/types";
-import { DRAW_STEPS } from "../../../../shared/phases";
+import { DRAW_STEPS, PHASES } from "../../../../shared/phases";
 import { calculateLayout } from "../layout";
 import { PhaseHandshakeToggle } from "../components/PhaseHandshakeToggle";
 
@@ -64,7 +64,7 @@ export class PhaseManager {
   private onNextPhaseClicked() {
     const state = this.room.state;
     const isDrawStepActive =
-      state?.currentPhase === "draw" &&
+      state?.currentPhase === PHASES.DRAW &&
       !!state?.drawStep &&
       state.drawStep !== DRAW_STEPS.NONE &&
       state.drawStep !== DRAW_STEPS.COMPLETED;
@@ -76,22 +76,27 @@ export class PhaseManager {
     const isChronicleActive = isHelpEnabled
       ? Boolean(state?.effectChronicle?.items?.length)
       : hasMandatoryChronicleItems;
+    const isSpecialInitiativeActive =
+      state?.currentPhase === PHASES.BATTLE &&
+      Boolean(state?.battle?.specialInitiativePlayerId);
 
     const isArena = Boolean(state?.isArenaMode);
-    if (!isArena && (isDrawStepActive || isChronicleActive)) {
+    if (!isArena && (isDrawStepActive || isChronicleActive || isSpecialInitiativeActive)) {
       log(
-        `[NEXT_PHASE] Blocked nextPhase click: draw step '${state?.drawStep}' or chronicle active (${state?.effectChronicle?.items?.length} items).`,
+        `[NEXT_PHASE] Blocked nextPhase click: draw step '${state?.drawStep}', chronicle active (${state?.effectChronicle?.items?.length} items), or special initiative (${state?.battle?.specialInitiativePlayerId}).`,
       );
       return;
     }
-
 
     // Auto-pass any pending optional ability prompt if help is off
     if (!isHelpEnabled) {
       this.scene.events.emit("ui:autoPassOptionalPrompt");
     }
 
-    const requireHandshake = Boolean(this.handshakeToggle?.isEnabled());
+    const isEndingBattlePhase = !isArena && state?.currentPhase === PHASES.BATTLE;
+    const requireHandshake = Boolean(
+      isEndingBattlePhase || this.handshakeToggle?.isEnabled(),
+    );
 
     log(
       `[NEXT_PHASE] 'nextPhaseButtonClicked' event received. Sending 'nextPhase' message (requireHandshake=${requireHandshake}).`,
@@ -139,12 +144,8 @@ export class PhaseManager {
     const isActive = state.activePlayer === this.room.sessionId;
     let isButtonEnabled = isActive;
 
-    if (state.currentPhase === "battle" && state.battlefield.length > 0) {
-      isButtonEnabled = false;
-    }
-
     const isDrawStepActive =
-      state.currentPhase === "draw" &&
+      state.currentPhase === PHASES.DRAW &&
       !!state.drawStep &&
       state.drawStep !== DRAW_STEPS.NONE &&
       state.drawStep !== DRAW_STEPS.COMPLETED;
@@ -156,12 +157,14 @@ export class PhaseManager {
     const isChronicleActive = isHelpEnabled
       ? Boolean(state?.effectChronicle?.items?.length)
       : hasMandatoryChronicleItems;
+    const isSpecialInitiativeActive =
+      state.currentPhase === PHASES.BATTLE &&
+      Boolean(state?.battle?.specialInitiativePlayerId);
 
     const isArena = Boolean(state.isArenaMode);
-    if (!isArena && (isDrawStepActive || isChronicleActive)) {
+    if (!isArena && (isDrawStepActive || isChronicleActive || isSpecialInitiativeActive)) {
       isButtonEnabled = false;
     }
-
 
     nextPhaseButton.setVisible(isActive);
 

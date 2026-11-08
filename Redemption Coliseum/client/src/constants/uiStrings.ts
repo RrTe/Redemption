@@ -77,6 +77,11 @@ export const UI_STRINGS = Object.freeze({
       isMine
         ? "You Have Initiative (Mutual Destruction)"
         : "Opponent Initiative (Mutual Destruction)",
+    SPECIAL_INITIATIVE: (isMine: boolean) =>
+      isMine
+        ? "⚡ SPECIAL INITIATIVE (Play Enhancement)"
+        : "⚡ OPPONENT SPECIAL INITIATIVE",
+    BTN_PASS: "PASS",
   },
 });
 

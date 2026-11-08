@@ -16,8 +16,10 @@ export const BATTLE_STATE_REASON = /** @type {const} */ ({
 export const BATTLE_HUD_CONFIG = /** @type {const} */ ({
   BADGE_WIDTH: 115,
   BADGE_HEIGHT: 36,
-  INITIATIVE_WIDTH: 350,
+  INITIATIVE_WIDTH: 390,
   INITIATIVE_HEIGHT: 34,
+  PASS_BTN_WIDTH: 56,
+  PASS_BTN_HEIGHT: 22,
   SLOT_GAP: 8,
   PANEL_PADDING: 6,
   BORDER_RADIUS: 8,
@@ -26,6 +28,8 @@ export const BATTLE_HUD_CONFIG = /** @type {const} */ ({
   GOLD_HEX: "#ffd700",
   BLOCKER_HEX: "#c084fc",
   INITIATIVE_GLOW_COLOR: 0x00ffff, // Cyan glow for player holding initiative
+  SPECIAL_INITIATIVE_COLOR: 0xd946ef, // Vibrant Magenta/Fuchsia border for Special Initiative
+  SPECIAL_INITIATIVE_BG_COLOR: 0x3b0764, // Deep royal purple-magenta fill for Special Initiative pill
   STALEMATE_COLOR: 0xe67e22, // Amber / Orange for Stalemate
   MUTUAL_COLOR: 0xe74c3c, // Ruby red for Mutual Destruction
   BACKGROUND_COLOR: 0x0a0e17,

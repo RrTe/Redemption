@@ -12,6 +12,7 @@ const { ZONES } = require("../../shared/zones");
 const { ActionType } = require("../../shared/actions");
 const { AST_MESSAGES } = require("../../shared/astConstants");
 const { CHRONICLE_STATUS } = require("../../shared/effectChronicleConstants");
+const { AbilityLookup } = require("../src/ast/AbilityLookup");
 
 describe("Amminadab Star Ability Fast-Track & Board Targeting", () => {
   let room;
@@ -56,6 +57,38 @@ describe("Amminadab Star Ability Fast-Track & Board Targeting", () => {
       broadcast: jest.fn(),
     };
     room.abilityResolver = new AbilityResolver(room);
+    AbilityLookup._cardsLogic = {
+      "-622696180": {
+        card_id: "-622696180",
+        card_name: "Amminadab, the Generous (LoC)",
+        sides: {
+          top: {
+            abilities: [
+              {
+                ability_id: "star_discard_top_deck",
+                is_star: true,
+                activation_mode: "triggered",
+                trigger_event: "star_phase",
+                effects: [
+                  {
+                    action: "discard",
+                    target: {
+                      selection_mode: "manual_controller",
+                      scope: "deck",
+                      zone_owner: "either",
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    };
+  });
+
+  afterAll(() => {
+    AbilityLookup._cardsLogic = null;
   });
 
   function createCard(id, templateId, name, zone, ownerId) {

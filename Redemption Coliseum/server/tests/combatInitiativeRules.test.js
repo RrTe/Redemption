@@ -281,7 +281,7 @@ describe("Combat Rules Expansion (Blocker Gates, Ability Lock & Initiative Enfor
 
       const res = moveCard(defender, state, cardLookup, ZONES.HAND, ZONES.BATTLEFIELD, dominant.id);
       expect(res.movedCards.length).toBe(0);
-      expect(res.error).toBe("Only Enhancements in Special Initiative!");
+      expect(res.error).toBe("Invalid card for battle!");
       expect(dominant.zone).toBe(ZONES.HAND);
     });
 

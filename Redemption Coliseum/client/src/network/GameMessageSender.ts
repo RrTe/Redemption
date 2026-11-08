@@ -148,4 +148,9 @@ export class GameMessageSender {
     log("Network", `Sending 'respondPhaseTransition' accept=${accept}`);
     this.room.send("respondPhaseTransition", { accept });
   }
+
+  public sendPassInitiative(): void {
+    log("Network", "Sending 'passInitiative' message.");
+    this.room.send("passInitiative", {});
+  }
 }

@@ -81,49 +81,59 @@ class AbilityLookup {
       (options.card && options.card.IsStarCard) ||
       this.isStarCardTemplate(templateId)
     );
-    const isDual = Boolean(sides.top || sides.bottom);
-    const isDualShared = isStarCard && isDual;
+    const isDual = Boolean(sides.top && sides.bottom);
 
     // Dedicated Star Phase resolution: only execute shared / star abilities
     if (actionType === ActionType.ACTIVATE_STAR_ABILITY) {
       const starAbilities = [];
-      if (sides.shared && Array.isArray(sides.shared.abilities)) {
+      if (isDual && sides.shared && Array.isArray(sides.shared.abilities)) {
         starAbilities.push(
           ...sides.shared.abilities.filter((a) =>
-            this.isStarAbility(a, { isStarCard, isDualShared })
+            this.isStarAbility(a, { isStarCard })
           )
         );
       }
-      if (sides.top && Array.isArray(sides.top.abilities)) {
+      const targetSide = isDual ? this._determineActiveSide(sides, options) : AST_CARD_SIDES.TOP;
+      if (sides[targetSide] && Array.isArray(sides[targetSide].abilities)) {
         starAbilities.push(
-          ...sides.top.abilities.filter((a) =>
-            this.isStarAbility(a, { isStarCard, isDualShared: false })
+          ...sides[targetSide].abilities.filter((a) =>
+            this.isStarAbility(a, { isStarCard })
           )
         );
       }
       if (starAbilities.length > 0) {
         return starAbilities;
       }
-      return sides.shared?.abilities || [];
+      // Fallback for un-migrated single-sided or shared cards
+      return (!isDual && sides.top?.abilities)
+        ? sides.top.abilities.filter((a) => this.isStarAbility(a))
+        : (sides.shared?.abilities || []);
     }
 
     const abilities = [];
 
-    // Add universally shared abilities (excluding star abilities)
-    if (sides.shared && Array.isArray(sides.shared.abilities)) {
+    // Add universally shared abilities for dual cards (excluding star abilities)
+    if (isDual && sides.shared && Array.isArray(sides.shared.abilities)) {
       abilities.push(
         ...sides.shared.abilities.filter(
-          (a) => !this.isStarAbility(a, { isStarCard, isDualShared })
+          (a) => !this.isStarAbility(a, { isStarCard })
         )
       );
     }
 
-    // Determine active side: explicit side or matching inGame alignment/type
-    const targetSide = this._determineActiveSide(sides, options);
+    // Determine active side: single-sided cards strictly use sides.top
+    const targetSide = isDual ? this._determineActiveSide(sides, options) : AST_CARD_SIDES.TOP;
     if (sides[targetSide] && Array.isArray(sides[targetSide].abilities)) {
       abilities.push(
         ...sides[targetSide].abilities.filter(
-          (a) => !this.isStarAbility(a, { isStarCard, isDualShared: false })
+          (a) => !this.isStarAbility(a, { isStarCard })
+        )
+      );
+    } else if (!isDual && !sides.top && sides.shared && Array.isArray(sides.shared.abilities)) {
+      // Graceful fallback for unmigrated single-sided cards possessing only sides.shared
+      abilities.push(
+        ...sides.shared.abilities.filter(
+          (a) => !this.isStarAbility(a, { isStarCard })
         )
       );
     }
@@ -136,19 +146,16 @@ class AbilityLookup {
    * Star abilities are designated to trigger exclusively during the Star Phase (or starting draw).
    *
    * @param {object} ability AST ability node.
-   * @param {object} [context] Context options (e.g. isStarCard, isDualShared).
+   * @param {object} [context] Context options (e.g. isStarCard).
    * @returns {boolean} True if the ability is a Star ability.
    */
-  static isStarAbility(ability, context = {}) {
+  static isStarAbility(ability, _context = {}) {
     if (!ability) return false;
     if (ability.is_star === true || ability.isStar === true) return true;
+    const event = (ability.trigger_event || "").toLowerCase();
+    if (event === "star_phase" || event.includes("star")) return true;
     const id = (ability.ability_id || "").toLowerCase();
     if (id.includes("star")) return true;
-    const event = (ability.trigger_event || "").toLowerCase();
-    if (event.includes("star")) return true;
-    if (context.isDualShared) {
-      return true;
-    }
     return false;
   }
 

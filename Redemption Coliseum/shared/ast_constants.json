@@ -107,6 +107,25 @@
     "reserve_pile",
     "context_scope"
   ],
+  "target_types": [
+    "artifact",
+    "card",
+    "character",
+    "city",
+    "covenant",
+    "curse",
+    "dominant",
+    "enhancement",
+    "evil_character",
+    "fortress",
+    "hero",
+    "lost_soul",
+    "site"
+  ],
+  "testaments": [
+    "OT",
+    "NT"
+  ],
   "modifier_types": [
     "cannot_be_negated",
     "cannot_be_interrupted",
@@ -146,5 +165,25 @@
     "bottom",
     "random",
     "as_is"
+  ],
+  "dynamic_value_fields": [
+    "fixed_value",
+    "min_value",
+    "max_value",
+    "dynamic"
+  ],
+  "stat_filter_stats": [
+    "strength",
+    "toughness",
+    "both",
+    "either"
+  ],
+  "stat_filter_operators": [
+    ">=",
+    "<=",
+    "==",
+    ">",
+    "<",
+    "!="
   ]
 }

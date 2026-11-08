@@ -98,15 +98,17 @@ export class TargetingManager {
 
     const maxTargets = request.maxTargets ?? 1;
     const isMultiTarget = maxTargets > 1;
+    const isOptionalUpTo = request.minTargets === 0;
+    const shouldShowHUD = isMultiTarget || isOptionalUpTo || Boolean(request.canCancel);
 
     this.scene.input.keyboard?.on("keydown-ESC", this.handleEscKey, this);
-    if (isMultiTarget) {
+    if (shouldShowHUD) {
       this.scene.input.keyboard?.on("keydown-ENTER", this.handleEnterKey, this);
       this.hud.show({
         promptText: request.promptText || "Select target(s)",
-        minTargets: request.minTargets ?? 1,
+        minTargets: request.minTargets ?? (isOptionalUpTo ? 0 : 1),
         maxTargets,
-        canCancel: Boolean(request.canCancel),
+        canCancel: Boolean(request.canCancel || isOptionalUpTo),
         onConfirm: () => this.confirmSelection(),
         onCancel: () => this.cancelTargeting(),
       });
@@ -129,9 +131,11 @@ export class TargetingManager {
       this.arrowEffect = new TargetingArrowEffect(this.scene, sourceCard, alignment);
     }
 
-    // 2. Activate focus spotlight (single-target & pile modes use live pointer arrow; multi-target draws arrows upon click)
-    if (!isMultiTarget || request.targetType === "pile") {
-      this.scene.input.on("pointermove", this.handlePointerMove, this);
+    // 2. Activate focus spotlight (live pointer arrow follows pointer & snaps to cards across all target modes)
+    this.scene.input.on("pointermove", this.handlePointerMove, this);
+    const activePointer = this.scene.input.activePointer;
+    if (activePointer && this.arrowEffect) {
+      this.handlePointerMove(activePointer);
     }
 
     if (request.targetType === "pile") {

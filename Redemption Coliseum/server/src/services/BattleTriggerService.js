@@ -213,6 +213,87 @@ class BattleTriggerService {
     return Boolean(action && AstEffectRunner._handlers[action]);
   }
 
+  static isDominant(card) {
+    return BattleCharacterClassifier.isDominant(card);
+  }
+
+  /**
+   * Handles ability triggering when a Dominant card is played from hand.
+   *
+   * @param {import('../rooms/GameRoom').GameRoom} room Game room instance.
+   * @param {object} player Acting player.
+   * @param {object} card In-game Dominant card.
+   * @param {object} message Original move message.
+   * @returns {object | null} Execution summary or null if skipped.
+   */
+  static onDominantPlayed(room, player, card, message) {
+    const isArena = Boolean(room?.state?.isArenaMode ?? room?.state?.isSandboxMode);
+    if (isArena) return null;
+    if (!card || !BattleCharacterClassifier.isDominant(card)) return null;
+
+    const actionType = ActionType.ACTIVATE_ABILITY;
+    const controllerId = card.controllerId || player?.sessionId;
+
+    // 1. Try finding an automated AST ability for the Dominant
+    const astAbility = this.findBattleEntryAstAbility(room, player, card, actionType);
+    if (astAbility) {
+      logger.info(
+        `[BattleTriggerService] Enqueueing AST Dominant '${card.Name}' (${astAbility.ability_id}) for '${actionType}'.`
+      );
+
+      const hasMayKeyword = /\bmay\b/i.test(card.SpecialAbility || card.specialAbility || "");
+      const isSupported = this._isSupportedAstAbility(astAbility);
+      const isOptional = Boolean(astAbility.is_optional || hasMayKeyword || !isSupported);
+
+      EffectChronicleService.enqueueCards(
+        room,
+        [card],
+        controllerId,
+        actionType,
+        {
+          autoExecute: true,
+          autoExecuteSupported: true,
+          abilityId: astAbility.ability_id,
+          isOptional,
+        }
+      );
+      return {
+        triggered: true,
+        actionType,
+        cardId: card.id,
+        abilityId: astAbility.ability_id,
+      };
+    }
+
+    // 2. Tabletop fallback for Dominants with abilities
+    const specialAbility = (card.SpecialAbility || card.specialAbility || "").trim();
+    if (specialAbility) {
+      logger.info(
+        `[BattleTriggerService] Enqueueing tabletop special ability for Dominant '${card.Name}' (${card.id}) for '${actionType}'.`
+      );
+      EffectChronicleService.enqueueCards(
+        room,
+        [card],
+        controllerId,
+        actionType,
+        {
+          autoExecute: true,
+          autoExecuteSupported: false,
+          abilityId: "",
+          isOptional: true,
+        }
+      );
+      return {
+        triggered: true,
+        actionType,
+        cardId: card.id,
+        tabletopFallback: true,
+      };
+    }
+
+    return null;
+  }
+
   static isHero(card) {
     return BattleCharacterClassifier.isHero(card);
   }

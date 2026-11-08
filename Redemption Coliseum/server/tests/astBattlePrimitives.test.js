@@ -467,11 +467,11 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       const targetDef = {
         selection_mode: "manual_controller",
         zone_owner: "controller",
-        scope: "territory",
+        scope: ["in_play", "hand"],
         card_titles: ["Samuel"],
       };
 
-      // TargetSelectionService scans Hand because actionType is BAND
+      // TargetSelectionService scans Hand and In Play according to normalized banding scope
       const eligible = TargetSelectionService.resolveEligibleTargets(
         room,
         p1,
@@ -785,6 +785,132 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       const reEnterRes = moveCard(p1, state, room.cardLookup, ZONES.TERRITORY, ZONES.BATTLEFIELD, returnedHero.id);
       expect(reEnterRes.error).toBe("Additional characters in battle must be banded!");
     });
+
+    test("Orphaned enhancements in battle are immediately discarded when no character with matching brigade remains", () => {
+      const { moveCard } = require("../src/services/cardService");
+
+      const redHero = createCard({
+        id: "red_hero",
+        Name: "David",
+        Alignment: "Good",
+        Type: "Hero",
+        IsCharacter: true,
+        Brigades: ["Red"],
+        Strength: "5",
+        Toughness: "5",
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      const whiteHero = createCard({
+        id: "white_hero",
+        Name: "Samuel",
+        Alignment: "Good",
+        Type: "Hero",
+        IsCharacter: true,
+        Brigades: ["White"],
+        Strength: "4",
+        Toughness: "4",
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      const redEnh = createCard({
+        id: "red_enh",
+        Name: "Bravery of David",
+        Alignment: "Good",
+        Type: "GE",
+        IsEnhancement: true,
+        Brigades: ["Red"],
+        Strength: "3",
+        Toughness: "3",
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      const whiteEnh = createCard({
+        id: "white_enh",
+        Name: "Prayer",
+        Alignment: "Good",
+        Type: "GE",
+        IsEnhancement: true,
+        Brigades: ["White"],
+        Strength: "2",
+        Toughness: "2",
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+
+      room.cardLookup.set(redHero.id, redHero);
+      room.cardLookup.set(whiteHero.id, whiteHero);
+      room.cardLookup.set(redEnh.id, redEnh);
+      room.cardLookup.set(whiteEnh.id, whiteEnh);
+      state.battlefield.push(redHero, whiteHero, redEnh, whiteEnh);
+
+      BattleService.recalculate(room);
+      expect(state.battle.rescuerStrength).toBe(14); // 5 + 4 + 3 + 2
+
+      // Discard Red Hero -> Red Enhancement becomes orphaned and is automatically discarded, White Enhancement stays
+      moveCard(p1, state, room.cardLookup, ZONES.BATTLEFIELD, ZONES.DISCARD, redHero.id);
+      BattleService.recalculate(room);
+
+      expect(room.cardLookup.get(redEnh.id).zone).toBe(ZONES.DISCARD);
+      expect(p1[ZONES.DISCARD].some((c) => c.id === redEnh.id)).toBe(true);
+      expect(room.cardLookup.get(whiteEnh.id).zone).toBe(ZONES.BATTLEFIELD);
+      expect(state.battle.rescuerStrength).toBe(6); // 4 (whiteHero) + 2 (whiteEnh)
+    });
+
+    test("BattleService.reset discards non-weapon enhancements and returns surviving characters with attached weapons to territory", () => {
+      const hero = createCard({
+        id: "surviving_hero",
+        Name: "Uriah",
+        Alignment: "Good",
+        Type: "Hero",
+        IsCharacter: true,
+        Brigades: ["Red"],
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      const weaponEnh = createCard({
+        id: "attached_sword",
+        Name: "Sword of the Spirit",
+        Alignment: "Good",
+        Type: "GE",
+        IsEnhancement: true,
+        Class: "Weapon",
+        Brigades: ["Red"],
+        attachedTo: "surviving_hero",
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      const normalEnh = createCard({
+        id: "normal_ge",
+        Name: "Zeal",
+        Alignment: "Good",
+        Type: "GE",
+        IsEnhancement: true,
+        Brigades: ["Red"],
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+
+      room.cardLookup.set(hero.id, hero);
+      room.cardLookup.set(weaponEnh.id, weaponEnh);
+      room.cardLookup.set(normalEnh.id, normalEnh);
+      state.battlefield.push(hero, weaponEnh, normalEnh);
+
+      BattleService.reset(room);
+
+      expect(state.battlefield.length).toBe(0);
+      expect(room.cardLookup.get(hero.id).zone).toBe(ZONES.TERRITORY);
+      expect(room.cardLookup.get(weaponEnh.id).zone).toBe(ZONES.TERRITORY);
+      expect(room.cardLookup.get(weaponEnh.id).attachedTo).toBe(hero.id);
+      expect(room.cardLookup.get(normalEnh.id).zone).toBe(ZONES.DISCARD);
+    });
   });
 
   describe("Ziel 3: Immunity, Protect & REG Harm Logic", () => {
@@ -1024,16 +1150,13 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       expect(result.awaitingSpecialInitiative).toBe(true);
       expect(result.targetCards.length).toBe(2);
       expect(result.targetOwner.sessionId).toBe("p2");
+      expect(state.battle.specialInitiativePlayerId).toBe("p2");
 
-      // Verify prompt was sent to p2
+      // Non-modal Special Initiative: no modal REQUEST_OPTIONAL_ABILITY popup is sent
       const p2Client = room.clients.find((c) => c.sessionId === "p2");
-      expect(p2Client.send).toHaveBeenCalledWith(
+      expect(p2Client.send).not.toHaveBeenCalledWith(
         AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
-        expect.objectContaining({
-          abilityId: "special_initiative",
-          action: "special_initiative",
-          promptText: expect.stringContaining("defeated due to zero toughness"),
-        })
+        expect.anything()
       );
 
       // Defending cards must NOT be discarded yet (they stay in battle awaiting Special Initiative decision)
@@ -1041,7 +1164,7 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       expect(state.battlefield.some((c) => c.id === ec2.id)).toBe(true);
       expect(p2.discard.length).toBe(0);
 
-      // Now simulate defending player declining Special Initiative:
+      // Now simulate defending player passing Special Initiative:
       room.broadcast.mockClear();
       const declineResult = ModifyNumbersHandler.execute({
         room,
@@ -1063,6 +1186,71 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       expect(p2.discard.length).toBe(2);
       expect(state.battlefield.some((c) => c.id === ec1.id)).toBe(false);
       expect(state.battlefield.some((c) => c.id === ec2.id)).toBe(false);
+    });
+
+    test("PassInitiativeCommand passes normal initiative to opponent and resets when a card enters battle", () => {
+      const { PassInitiativeCommand } = require("../src/commands/PassInitiativeCommand");
+
+      const hero = createCard({
+        id: "hero_pass_test",
+        Name: "Strong Hero",
+        Strength: "10",
+        Toughness: "10",
+        Alignment: "Good",
+        Type: "Hero",
+        IsCharacter: true,
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      const ec = createCard({
+        id: "ec_pass_test",
+        Name: "Weak Blocker",
+        Strength: "4",
+        Toughness: "4",
+        Alignment: "Evil",
+        Type: "Evil Character",
+        IsCharacter: true,
+        controllerId: "p2",
+        originalOwnerId: "p2",
+        zone: ZONES.BATTLEFIELD,
+      });
+
+      room.cardLookup.set(hero.id, hero);
+      room.cardLookup.set(ec.id, ec);
+      state.battlefield.push(hero, ec);
+      BattleService.recalculate(room);
+
+      // p2 is losing by numbers (10/10 vs 4/4) -> p2 holds initiative
+      expect(state.battle.initiativePlayerId).toBe("p2");
+
+      // p2 clicks Pass on BattleHUD -> initiative transfers to p1
+      const p2Client = room.clients.find((c) => c.sessionId === "p2");
+      const passCmd = new PassInitiativeCommand(room, p2Client);
+      passCmd.execute();
+      expect(state.battle.initiativePlayerId).toBe("p1");
+
+      // When p1 plays a card in battle, override resets and initiative recalculates by numbers back to p2
+      const enh = createCard({
+        id: "enh_pass_test",
+        Name: "Heroic Boost",
+        Strength: "2",
+        Toughness: "2",
+        Alignment: "Good",
+        Type: "GE",
+        Brigade: "White",
+        IsEnhancement: true,
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      hero.Brigade = "White";
+      room.cardLookup.set(enh.id, enh);
+      state.battlefield.push(enh);
+      BattleService.onCardEnteredBattle(room, p1, enh, ZONES.BATTLEFIELD);
+
+      expect(state.battle.initiativeOverridePlayerId).toBe("");
+      expect(state.battle.initiativePlayerId).toBe("p2");
     });
   });
 });

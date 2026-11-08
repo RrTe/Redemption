@@ -52,6 +52,9 @@ class ModifyNumbersHandler {
     const targets = this._resolveTargets(room, player, targetDef, sourceCard, options);
 
     if (options.specialInitiativeDeclined) {
+      if (room.state?.battle) {
+        room.state.battle.specialInitiativePlayerId = "";
+      }
       const discardedSnapshots = [];
       const logEntries = [];
       let battlefieldAffected = false;
@@ -72,7 +75,19 @@ class ModifyNumbersHandler {
       });
 
       for (const { card, owner } of defeatedTargets) {
-        moveCard(owner, room.state, room.cardLookup, card.zone, ZONES.DISCARD, card.id);
+        moveCard(
+          owner,
+          room.state,
+          room.cardLookup,
+          card.zone,
+          ZONES.DISCARD,
+          card.id,
+          1,
+          {},
+          "",
+          "",
+          { isAbilityAction: true }
+        );
         discardedSnapshots.push({ cardId: card.id, name: card.Name });
         logEntries.push(`${card.Name} was defeated due to zero toughness and discarded.`);
         battlefieldAffected = true;

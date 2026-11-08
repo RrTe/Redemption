@@ -18,11 +18,11 @@ export const TARGETING_ARROW_CONFIG = {
       CORE_ALPHA: 0.95,
     },
     EVIL: {
-      AURA: 0x0f1419, // Deep obsidian / shadow smoke
-      BEAM: 0x242b35, // Smoky graphite
-      CORE: 0x5a6578, // Metallic obsidian sheen
-      AURA_ALPHA: 0.35,
-      BEAM_ALPHA: 0.65,
+      AURA: 0x881337, // Deep crimson ruby aura
+      BEAM: 0xe11d48, // Radiant crimson energy beam
+      CORE: 0xffe4e6, // Incandescent white-rose highlight
+      AURA_ALPHA: 0.40,
+      BEAM_ALPHA: 0.80,
       CORE_ALPHA: 0.95,
     },
     NEUTRAL: {

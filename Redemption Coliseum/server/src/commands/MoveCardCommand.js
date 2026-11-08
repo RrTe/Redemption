@@ -3,6 +3,7 @@ const { moveCard } = require("../services/cardService");
 const { MoveCardSnapshotHelper } = require("./MoveCardSnapshotHelper");
 const { BattleTriggerService } = require("../services/BattleTriggerService");
 const { BattleService } = require("../services/BattleService");
+const { SpecialInitiativeService } = require("../services/SpecialInitiativeService");
 const { ZONES } = require("../../../shared/zones");
 const logger = require("../utils/logger");
 
@@ -40,6 +41,13 @@ class MoveCardCommand extends BaseCommand {
         if (targetCard) {
           const zoneName = targetCard.zone || message.from;
           this.preMoveSnapshot = MoveCardSnapshotHelper.createSnapshot(targetCard, zoneName, player);
+        }
+      }
+
+      if (message.to === ZONES.BATTLEFIELD) {
+        const movedCard = targetCardId ? this.room.cardLookup.get(targetCardId) : null;
+        if (movedCard && BattleTriggerService.isDominant(movedCard)) {
+          message.to = ZONES.TERRITORY;
         }
       }
 
@@ -159,6 +167,9 @@ class MoveCardCommand extends BaseCommand {
 
       // ✨ Phase 3: Battlefield & Battle Entry Triggers
       if (!result.error) {
+        if (this.state.battle?.specialInitiativePlayerId === player.sessionId && movedCards.length > 0) {
+          SpecialInitiativeService.consumeSpecialInitiativeOnPlay(this.room, player, movedCards[0]);
+        }
         if (message.to === ZONES.BATTLEFIELD && message.from !== ZONES.BATTLEFIELD) {
           BattleTriggerService.onCardEnteredBattlefield(this.room, player, movedCards, message);
           for (const card of movedCards) {
@@ -166,6 +177,15 @@ class MoveCardCommand extends BaseCommand {
           }
         } else if (message.from === ZONES.BATTLEFIELD || message.to === ZONES.BATTLEFIELD) {
           BattleService.recalculate(this.room);
+        }
+
+        // Dominant play trigger from HAND to any zone (Territory, Discard, etc.)
+        if (message.from === ZONES.HAND && movedCards.length > 0) {
+          for (const card of movedCards) {
+            if (BattleTriggerService.isDominant(card)) {
+              BattleTriggerService.onDominantPlayed(this.room, player, card, message);
+            }
+          }
         }
       }
     } catch (err) {

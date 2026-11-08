@@ -4,6 +4,7 @@ const { PlayerState } = require("../src/state/PlayerState");
 const { Card } = require("../src/state/Card");
 const { MoveCardCommand } = require("../src/commands/MoveCardCommand");
 const { SelectTargetCommand } = require("../src/commands/SelectTargetCommand");
+const { PassInitiativeCommand } = require("../src/commands/PassInitiativeCommand");
 const { RespondOptionalAbilityCommand } = require("../src/commands/RespondOptionalAbilityCommand");
 const { AbilityResolver } = require("../src/ast/AbilityResolver");
 const { AbilityLookup } = require("../src/ast/AbilityLookup");
@@ -155,15 +156,8 @@ describe("Special Initiative (Transition Scaffolding)", () => {
     expect(item.pendingSpecialInitiative).toBeDefined();
     expect(item.pendingSpecialInitiative.targetCardId).toBe(ec.id);
 
-    // Defending player received Special Initiative prompt
-    expect(client2.send).toHaveBeenCalledWith(
-      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
-      expect.objectContaining({
-        abilityId: "special_initiative",
-        cardId: ec.id,
-        promptText: expect.stringContaining("Declare Special Initiative?"),
-      })
-    );
+    // Defending player received non-modal Special Initiative state
+    expect(state.battle.specialInitiativePlayerId).toBe("p2");
   });
 
   test("3. Defending player declining Special Initiative executes the pending discard", () => {
@@ -509,13 +503,7 @@ describe("Special Initiative (Transition Scaffolding)", () => {
     selectCmd.execute({ itemId: item.id, abilityId: "ab_opt_discard", selectedCardIds: [hero.id] });
 
     // 4. Special Initiative MUST trigger for Player 1 (the targeted hero's controller)!
-    expect(client1.send).toHaveBeenCalledWith(
-      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
-      expect.objectContaining({
-        action: "special_initiative",
-        cardId: hero.id,
-      })
-    );
+    expect(state.battle.specialInitiativePlayerId).toBe("p1");
 
     // 5. Player 2 must NOT receive a duplicate confirmation prompt
     const p2OptCalls = sentMessages2.filter((m) => m.msgType === AST_MESSAGES.REQUEST_OPTIONAL_ABILITY);
@@ -589,18 +577,11 @@ describe("Special Initiative (Transition Scaffolding)", () => {
     expect(item.pendingSpecialInitiative).toBeDefined();
     expect(item.pendingSpecialInitiative.targetCardIds).toEqual([hero1.id, hero2.id]);
 
-    expect(client1.send).toHaveBeenCalledWith(
-      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
-      expect.objectContaining({
-        action: "special_initiative",
-        cardId: hero1.id,
-        promptText: expect.stringContaining("All characters (2) in battle targeted for discard!"),
-      })
-    );
+    expect(state.battle.specialInitiativePlayerId).toBe("p1");
 
-    // Player 1 declines Special Initiative -> BOTH heroes must be discarded!
-    const respondCmd = new RespondOptionalAbilityCommand(room, client1);
-    respondCmd.execute({ itemId: item.id, abilityId: "special_initiative", accepted: false });
+    // Player 1 passes Special Initiative -> BOTH heroes must be discarded!
+    const passCmd = new PassInitiativeCommand(room, client1);
+    passCmd.execute();
 
     expect(hero1.zone).toBe(ZONES.DISCARD);
     expect(hero2.zone).toBe(ZONES.DISCARD);
@@ -726,6 +707,75 @@ describe("Special Initiative (Transition Scaffolding)", () => {
       (m) => m.msgType === AST_MESSAGES.REQUEST_OPTIONAL_ABILITY && m.payload?.action === "special_initiative"
     );
     expect(siCalls.length).toBe(0);
+  });
+
+  test("11. Defending player passing Special Initiative via PassInitiativeCommand discards target and clears EffectChronicle queue", () => {
+    AbilityLookup._loadData()["hero_discard_test_pass"] = {
+      card_id: "hero_discard_test_pass",
+      card_name: "Hero Discarder Pass",
+      sides: {
+        top: {
+          abilities: [
+            {
+              ability_id: "ab_hero_discard_pass",
+              activation_mode: "immediate",
+              is_optional: false,
+              effects: [
+                {
+                  action: "discard",
+                  target: {
+                    selection_mode: "manual_controller",
+                    zone_owner: "opponent",
+                    scope: "battlefield",
+                    target_type: "character",
+                    count: { fixed_value: 1 },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+    };
+
+    const hero = createCard("c_hero_pass", "hero_discard_test_pass", "Hero Discarder Pass", ZONES.BATTLEFIELD, "p1", {
+      Type: "Hero", Alignment: "Good", IsCharacter: true, Brigade: "Red",
+    });
+    const ec = createCard("c_ec_pass", "t_ec_only_pass", "Only Blocker Pass", ZONES.BATTLEFIELD, "p2", {
+      Type: "Evil Character", Alignment: "Evil", IsCharacter: true, Brigade: "Black",
+    });
+
+    EffectChronicleService.enqueueCards(room, [hero], "p1", ActionType.RESCUE_ATTEMPT, {
+      abilityId: "ab_hero_discard_pass",
+      autoExecute: true,
+      autoExecuteSupported: true,
+    });
+
+    const item = state.effectChronicle.items[0];
+    expect(item).toBeDefined();
+
+    const selectCmd = new SelectTargetCommand(room, client1);
+    selectCmd.execute({ itemId: item.id, abilityId: "ab_hero_discard_pass", selectedCardIds: [ec.id] });
+
+    // ec is awaiting Special Initiative in battlefield
+    expect(ec.zone).toBe(ZONES.BATTLEFIELD);
+    expect(state.battle.specialInitiativePlayerId).toBe("p2");
+    expect(state.effectChronicle.items.length).toBe(1);
+
+    // Defending player passes Special Initiative via PassInitiativeCommand
+    const passCmd = new PassInitiativeCommand(room, client2);
+    passCmd.execute();
+
+    // Target is now discarded to discard pile
+    expect(ec.zone).toBe(ZONES.DISCARD);
+    expect(player2[ZONES.DISCARD].some(c => c.id === ec.id)).toBe(true);
+
+    // Special initiative cleared
+    expect(state.battle.specialInitiativePlayerId).toBe("");
+
+    // Effect Chronicle queue must be completely cleared!
+    expect(state.effectChronicle.items.length).toBe(0);
+    expect(state.effectChronicle.isResolving).toBe(false);
   });
 });
 

@@ -238,6 +238,16 @@ class BattleCharacterClassifier {
       );
     }
 
+    if (actionType === ActionType.ACTIVATE_ABILITY) {
+      return (
+        mode === "immediate" ||
+        mode === "triggered" ||
+        event.includes("play") ||
+        event.includes("use") ||
+        event.includes("battle")
+      );
+    }
+
     return false;
   }
 

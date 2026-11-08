@@ -9,6 +9,8 @@ import { PileUI } from "../PileUI.js";
 import { StackedPileUI } from "../StackedPileUI.js";
 import { CardUI } from "../CardUI.js";
 import { log } from "../../utils/logger.js";
+import { ToastManager } from "../managers/ToastManager";
+import { UI_STRINGS } from "../../constants/uiStrings";
 
 /**
  * Handles interactions specific to card piles (Deck, Discard, Reserve, Banish, Opponent Hand).
@@ -86,7 +88,19 @@ export class PileInteractionHandler {
     targetId: string,
     onClose: () => void,
   ): RadialMenu | null {
-    // 1. Validation: Don't open if pile is busy
+    // 1. Validation: Block manual pile access during Special Initiative
+    const state = this.room.state;
+    const isArena = Boolean(state?.isArenaMode ?? (state as any)?.isSandboxMode);
+    if (
+      !isArena &&
+      state?.currentPhase === "battle" &&
+      state?.battle?.specialInitiativePlayerId === this.room.sessionId
+    ) {
+      ToastManager.show(UI_STRINGS.TOASTS.ONLY_ENHANCEMENTS_IN_SI, "warning");
+      return null;
+    }
+
+    // 2. Validation: Don't open if pile is busy
     if (this.isPileBusy(zone, targetId)) {
       this.overlayManager.showErrorDialog(
         `The ${zone} of ${targetId === this.room.sessionId ? "you" : "the opponent"} is currently in use by another player.`,

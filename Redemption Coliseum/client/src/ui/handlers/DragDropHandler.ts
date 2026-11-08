@@ -495,15 +495,22 @@ export class DragDropHandler {
         }
       }
 
+      let destinationZone = toZone;
+      const cardTypeStr = (gameObject.cardData.inGameType || gameObject.cardData.Type || "").toString().toUpperCase();
+      if (toZone === ZONES.BATTLEFIELD && cardTypeStr.includes("DOMINANT")) {
+        destinationZone = ZONES.TERRITORY;
+        log("Input", `[MOVE] Dominant dropped on Battlefield; redirecting destination to Territory.`);
+      }
+
       const message: MoveCardMessage = {
         from: fromZone,
-        to: toZone,
+        to: destinationZone,
         cardId: gameObject.cardData.id,
         coords,
       };
 
       // Intercept if it's a Dual Card being played to the field
-      const isFieldMove = [ZONES.BATTLEFIELD, ZONES.TERRITORY, ZONES.LAND_OF_BONDAGE, ZONES.SET_ASIDE].includes(toZone);
+      const isFieldMove = [ZONES.BATTLEFIELD, ZONES.TERRITORY, ZONES.LAND_OF_BONDAGE, ZONES.SET_ASIDE].includes(destinationZone);
       
       const staticData = staticCardData.cards.find((c: any) => 
         (gameObject.cardData.templateId && c.id === gameObject.cardData.templateId) ||

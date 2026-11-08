@@ -1,19 +1,24 @@
 // server/src/services/SpecialInitiativeService.js
 const { ZONES } = require("../../../shared/zones");
 const { PHASES } = require("../../../shared/phases");
-const { AST_MESSAGES } = require("../../../shared/astConstants");
+const { AST_ACTIONS } = require("../../../shared/astConstants");
+const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants");
 const { ActionTelegraphService } = require("./ActionTelegraphService");
 const { BattleCharacterClassifier } = require("./BattleCharacterClassifier");
+const { ChronicleHistoryService } = require("./ChronicleHistoryService");
+const { EffectChronicleService } = require("./EffectChronicleService");
+const { BattleService } = require("./BattleService");
 const logger = require("../utils/logger");
 
 /**
- * Service orchestrating Special Initiative checks and prompts per official REG guidelines.
+ * Service orchestrating Special Initiative checks and non-modal BattleHUD state per official REG guidelines.
  * Triggers whenever an opponent's card ability would remove the only/all characters a player controls in battle.
  */
 class SpecialInitiativeService {
   /**
    * Checks whether removing cards triggers Special Initiative for an opponent in battle.
-   * If triggered, pauses execution, stores pendingSpecialInitiative, sends prompt, and returns result object.
+   * If triggered, pauses execution, stores pendingSpecialInitiative, activates BattleState.specialInitiativePlayerId,
+   * and returns result object without opening a modal dialog.
    *
    * @param {import('../rooms/GameRoom').GameRoom} room Active room.
    * @param {object} actingPlayer Player executing the effect.
@@ -76,33 +81,32 @@ class SpecialInitiativeService {
       `[SpecialInitiativeService] Special Initiative triggered: Opponent '${actingPlayer.name}' ${reasonText} on ${promptTargetText} of '${targetController?.name}'.`
     );
 
+    const resolvedControllerId = targetController?.sessionId || siControllerId;
     const chronicle = room.state.effectChronicle;
-    if (chronicle && targetController) {
-      chronicle.priorityPlayerId = targetController.sessionId;
+    if (chronicle && resolvedControllerId) {
+      chronicle.priorityPlayerId = resolvedControllerId;
     }
 
-    if (item && targetController) {
+    if (room.state.battle && resolvedControllerId) {
+      room.state.battle.specialInitiativePlayerId = resolvedControllerId;
+    }
+
+    if (item && resolvedControllerId) {
       item.pendingSpecialInitiative = {
         targetCardId: primaryTarget.id,
         targetCardIds: siTargetCards.map((c) => c.id),
-        targetOwnerId: targetController.sessionId,
+        targetOwnerId: resolvedControllerId,
         initiatorId: actingPlayer.sessionId,
         options,
+        reasonText,
       };
+      room._pendingSpecialInitiativeItem = item;
     }
 
-    const targetClient = room.clients?.find((c) => c.sessionId === targetController?.sessionId);
-    if (targetClient && typeof targetClient.send === "function") {
-      targetClient.send(AST_MESSAGES.REQUEST_OPTIONAL_ABILITY, {
-        abilityId: "special_initiative",
-        itemId: item?.id || "",
-        cardId: primaryTarget.id,
-        cardTitle: primaryTarget.Name,
-        promptText: `${promptTargetText} in battle ${reasonText}! Declare Special Initiative?`,
-        action: "special_initiative",
-        cardImageFile: primaryTarget.ImageFile || "",
-        templateId: primaryTarget.templateId || "",
-      });
+    if (typeof room.broadcastGameLog === "function") {
+      room.broadcastGameLog(
+        `⚡ Special Initiative: ${promptTargetText} in battle ${reasonText}! ${targetController?.name || "Defender"} may play an Enhancement or Pass.`
+      );
     }
 
     ActionTelegraphService.send(room, {
@@ -120,6 +124,146 @@ class SpecialInitiativeService {
       targetCards: siTargetCards,
       targetOwner: targetController,
     };
+  }
+
+  /**
+   * Resolves passing Special Initiative: clears specialInitiativePlayerId, resumes the paused
+   * removal/discard ability, and advances the Effect Chronicle.
+   *
+   * @param {import('../rooms/GameRoom').GameRoom} room Active room.
+   * @param {object} player Defending player passing Special Initiative.
+   */
+  static resolveSpecialInitiativePass(room, player) {
+    if (!room || !room.state) return;
+    if (room.state.battle) {
+      room.state.battle.specialInitiativePlayerId = "";
+    }
+
+    const chronicle = room.state.effectChronicle;
+    let index = -1;
+    let item = null;
+
+    if (chronicle && chronicle.items?.length > 0) {
+      index = chronicle.items.findIndex((i) => Boolean(i.pendingSpecialInitiative));
+      if (index !== -1) {
+        item = chronicle.items[index];
+      }
+    }
+    if (!item && room._pendingSpecialInitiativeItem?.pendingSpecialInitiative) {
+      item = room._pendingSpecialInitiativeItem;
+    }
+    room._pendingSpecialInitiativeItem = null;
+
+    if (item && chronicle && index === -1 && chronicle.items?.length > 0) {
+      index = chronicle.items.findIndex((i) => i.id === item.id);
+    }
+
+    if (item && item.pendingSpecialInitiative) {
+      const psi = item.pendingSpecialInitiative;
+      item.pendingSpecialInitiative = null;
+
+      ActionTelegraphService.clear(room, { sourceCardId: item?.cardId });
+
+      if (chronicle) {
+        chronicle.priorityPlayerId = psi.initiatorId;
+      }
+
+      const isMultiple = Array.isArray(psi.targetCardIds) && psi.targetCardIds.length > 1;
+      const targetCard = room.cardLookup?.get(psi.targetCardId);
+      const cardName = isMultiple
+        ? `all ${psi.targetCardIds.length} characters`
+        : (targetCard?.Name || "character");
+
+      if (typeof room.broadcastGameLog === "function") {
+        room.broadcastGameLog(`${player?.name || "Player"} passes Special Initiative on ${cardName}.`);
+      }
+
+      const targetIds = psi.targetCardIds || [psi.targetCardId];
+      ActionTelegraphService.send(room, {
+        sourceCardId: item?.cardId,
+        targetCardIds: targetIds,
+        action: AST_ACTIONS.DISCARD,
+        durationMs: 500,
+      });
+
+      if (room.abilityResolver && typeof room.abilityResolver.resolve === "function") {
+        const resumeResult = room.abilityResolver.resolve(item, {
+          ...psi.options,
+          specialInitiativeDeclined: true,
+          targetCardIds: targetIds,
+        });
+        if (resumeResult?.logEntries?.length && typeof room.broadcastGameLog === "function") {
+          resumeResult.logEntries.forEach((msg) => room.broadcastGameLog(msg));
+        }
+      }
+
+      if (chronicle && index !== -1) {
+        ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
+        chronicle.items.splice(index, 1);
+        EffectChronicleService._reindexOrders(chronicle);
+        if (chronicle.items.length === 0) {
+          EffectChronicleService.finishChronicle(room);
+        } else {
+          const nextItem = chronicle.items[0];
+          chronicle.priorityPlayerId = nextItem.controllerId;
+          const nextClient = room.clients?.find((c) => c.sessionId === nextItem.controllerId) || {
+            sessionId: nextItem.controllerId,
+          };
+          EffectChronicleService.executeItem(room, nextClient, nextItem.id, { autoExecuteSupported: true });
+        }
+      }
+    }
+
+    BattleService.recalculate(room);
+  }
+
+  /**
+   * Consumes active Special Initiative when the defending player plays an Enhancement or Dominant,
+   * cleaning up the paused Chronicle item before the newly played card's ability is enqueued.
+   *
+   * @param {import('../rooms/GameRoom').GameRoom} room Active room.
+   * @param {object} player Defending player playing a card.
+   * @param {object} [playedCard] The card being played in Special Initiative.
+   */
+  static consumeSpecialInitiativeOnPlay(room, player, playedCard) {
+    if (!room || !room.state?.battle) return;
+    if (room.state.battle.specialInitiativePlayerId !== player?.sessionId) return;
+
+    room.state.battle.specialInitiativePlayerId = "";
+    const chronicle = room.state.effectChronicle;
+    let index = -1;
+    let item = null;
+
+    if (chronicle && chronicle.items?.length > 0) {
+      index = chronicle.items.findIndex((i) => Boolean(i.pendingSpecialInitiative));
+      if (index !== -1) {
+        item = chronicle.items[index];
+      }
+    }
+    if (!item && room._pendingSpecialInitiativeItem?.pendingSpecialInitiative) {
+      item = room._pendingSpecialInitiativeItem;
+    }
+    room._pendingSpecialInitiativeItem = null;
+
+    if (item) {
+      item.pendingSpecialInitiative = null;
+      ActionTelegraphService.clear(room, { sourceCardId: item?.cardId });
+
+      if (chronicle && index !== -1) {
+        ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
+        chronicle.items.splice(index, 1);
+        EffectChronicleService._reindexOrders(chronicle);
+        if (chronicle.items.length === 0) {
+          EffectChronicleService.finishChronicle(room);
+        }
+      }
+    }
+
+    if (typeof room.broadcastGameLog === "function") {
+      room.broadcastGameLog(
+        `✨ ${player?.name || "Player"} plays ${playedCard?.Name || "a card"} in Special Initiative!`
+      );
+    }
   }
 }
 

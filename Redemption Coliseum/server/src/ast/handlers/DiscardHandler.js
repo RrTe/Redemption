@@ -91,6 +91,10 @@ class DiscardHandler {
       durationMs: 500,
     });
 
+    if (options.specialInitiativeDeclined && room.state?.battle) {
+      room.state.battle.specialInitiativePlayerId = "";
+    }
+
     // Execute discard moves for each resolved target
     for (const { card, owner } of targets) {
       const fromZone = card.zone;
@@ -102,7 +106,12 @@ class DiscardHandler {
         room.cardLookup,
         fromZone,
         ZONES.DISCARD,
-        card.id
+        card.id,
+        1,
+        {},
+        "",
+        "",
+        { isAbilityAction: true }
       );
 
       const movedOrDiverted =

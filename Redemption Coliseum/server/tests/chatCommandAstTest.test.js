@@ -104,6 +104,10 @@ describe("ChatCommand DEV Fast-Track for AST abilities", () => {
       Alignment: "Evil",
       IsCharacter: true,
     });
+    const evil2 = createCard("e_archer", "2041723114", "Egyptian Archer", ZONES.BATTLEFIELD, "p2", {
+      Alignment: "Evil",
+      IsCharacter: true,
+    });
 
     const chatCmd = new ChatCommand(room, client1);
     chatCmd.execute({ text: "/test Samuel's Edict" });
@@ -114,7 +118,7 @@ describe("ChatCommand DEV Fast-Track for AST abilities", () => {
       AST_MESSAGES.REQUEST_TARGET_SELECTION,
       expect.objectContaining({
         targetType: "card",
-        eligibleCardIds: [evil.id],
+        eligibleCardIds: expect.arrayContaining([evil.id, evil2.id]),
       })
     );
 
@@ -125,7 +129,7 @@ describe("ChatCommand DEV Fast-Track for AST abilities", () => {
       selectedCardIds: [evil.id],
     });
 
-    expect(state.battlefield.length).toBe(0);
+    expect(state.battlefield.length).toBe(1);
     expect(player2.discard.length).toBe(1);
     expect(player2.discard[0].id).toBe(evil.id);
     expect(state.effectChronicle.items.length).toBe(0);

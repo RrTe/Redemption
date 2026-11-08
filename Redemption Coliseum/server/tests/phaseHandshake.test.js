@@ -3,7 +3,9 @@ const { TogglePhaseHandshakeCommand } = require("../src/commands/TogglePhaseHand
 const { RespondPhaseTransitionCommand } = require("../src/commands/RespondPhaseTransitionCommand");
 const { RoomState } = require("../src/state/RoomState");
 const { PlayerState } = require("../src/state/PlayerState");
+const { Card } = require("../src/state/Card");
 const { PHASES } = require("../../shared/phases");
+const { ZONES } = require("../../shared/zones");
 
 describe("Bilateral Phase Transition Handshake", () => {
   let room;
@@ -189,5 +191,86 @@ describe("Bilateral Phase Transition Handshake", () => {
       fromPhase: PHASES.PREP,
       toPhase: PHASES.BATTLE,
     });
+  });
+
+  test("Battle Phase End: always enforces handshake even when requireHandshake and preferences are false", () => {
+    room.clients = [client1, client2];
+    room.state.currentPhase = PHASES.BATTLE;
+
+    const nextCmd = new NextPhaseCommand(room, client1);
+    nextCmd.execute({ requireHandshake: false });
+
+    expect(room.phaseService.advancePhase).not.toHaveBeenCalled();
+    expect(room.state.currentPhase).toBe(PHASES.BATTLE);
+    expect(client1.send).toHaveBeenCalledWith("phaseTransitionWaiting", {
+      fromPhase: PHASES.BATTLE,
+      toPhase: PHASES.DISCARD,
+    });
+    expect(client2.send).toHaveBeenCalledWith(
+      "phaseTransitionPrompt",
+      expect.objectContaining({
+        requestingPlayerId: "p1",
+        fromPhase: PHASES.BATTLE,
+        toPhase: PHASES.DISCARD,
+      }),
+    );
+  });
+
+  test("Battle Phase End: blocks nextPhase when Special Initiative is active", () => {
+    room.clients = [client1, client2];
+    room.state.currentPhase = PHASES.BATTLE;
+    room.state.battle.specialInitiativePlayerId = "p1";
+
+    const nextCmd = new NextPhaseCommand(room, client1);
+    nextCmd.execute();
+
+    expect(room.phaseService.advancePhase).not.toHaveBeenCalled();
+    expect(room.pendingPhaseTransition).toBeNull();
+  });
+
+  test("Battle Phase End: accepting handshake cleans up surviving characters and enhancements via BattleService.reset", () => {
+    room.clients = [client1, client2];
+    room.state.currentPhase = PHASES.BATTLE;
+
+    const hero = Object.assign(new Card(), {
+      id: "hero-1",
+      Name: "Hero",
+      Type: "Hero",
+      Brigade: "White",
+      Strength: "5",
+      Toughness: "5",
+      controllerId: "p1",
+      originalOwnerId: "p1",
+      zone: ZONES.BATTLEFIELD,
+    });
+
+    const enh = Object.assign(new Card(), {
+      id: "enh-1",
+      Name: "Enhancement",
+      Type: "GE",
+      Brigade: "White",
+      Strength: "2",
+      Toughness: "2",
+      controllerId: "p1",
+      originalOwnerId: "p1",
+      zone: ZONES.BATTLEFIELD,
+    });
+
+    room.state.battlefield.push(hero, enh);
+    room.cardLookup.set(hero.id, hero);
+    room.cardLookup.set(enh.id, enh);
+
+    const nextCmd = new NextPhaseCommand(room, client1);
+    nextCmd.execute();
+
+    expect(room.state.battlefield.length).toBe(2);
+
+    const respondCmd = new RespondPhaseTransitionCommand(room, client2);
+    respondCmd.execute({ accept: true });
+
+    expect(room.state.currentPhase).toBe(PHASES.DISCARD);
+    expect(room.state.battlefield.length).toBe(0);
+    expect(player1.territory.map((c) => c.id)).toContain("hero-1");
+    expect(player1.discard.map((c) => c.id)).toContain("enh-1");
   });
 });

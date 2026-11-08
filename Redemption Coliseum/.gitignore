@@ -11,6 +11,7 @@ node_modules/
 
 # Build Outputs (Client & Server)
 dist/
+update_drag.js
 build/
 out/
 

@@ -1,5 +1,5 @@
 const { BaseCommand } = require("./BaseCommand");
-const { DRAW_STEPS } = require("../../../shared/phases");
+const { DRAW_STEPS, PHASES } = require("../../../shared/phases");
 const { PhaseTransitionService } = require("../services/PhaseTransitionService");
 const logger = require("../utils/logger");
 
@@ -34,8 +34,17 @@ class NextPhaseCommand extends BaseCommand {
         );
         return;
       }
-    }
 
+      if (
+        this.state.currentPhase === PHASES.BATTLE &&
+        this.state.battle?.specialInitiativePlayerId
+      ) {
+        logger.warn(
+          "[NextPhaseCommand] Blocked nextPhase: Special Initiative is active.",
+        );
+        return;
+      }
+    }
 
     const opponentClient = this.room.clients.find(
       (c) => c.sessionId !== this.client.sessionId,
@@ -45,7 +54,10 @@ class NextPhaseCommand extends BaseCommand {
     const opponentPref = opponentClient
       ? (this.room.handshakePreferences?.get(opponentClient.sessionId) ?? false)
       : false;
-    const requireHandshake = Boolean(message?.requireHandshake || activePref || opponentPref);
+    const isEndingBattlePhase = !isArena && this.state.currentPhase === PHASES.BATTLE;
+    const requireHandshake = Boolean(
+      isEndingBattlePhase || message?.requireHandshake || activePref || opponentPref,
+    );
 
     // If handshake is disabled by both players (default) or solo / testing mode, advance immediately
     if (!requireHandshake || !opponentClient) {

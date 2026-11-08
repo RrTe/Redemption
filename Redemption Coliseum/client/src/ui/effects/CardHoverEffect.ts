@@ -39,10 +39,14 @@ export class CardHoverEffect {
       card.setData("originalScaleY", card.scaleY);
     }
 
+    const hoverAngle = card.cardData?.isFlipped
+      ? (card.targetAngle < 0 ? -180 : 180)
+      : 0;
+
     const hoverTween = this.scene.tweens.add({
       targets: card,
       y: card.targetY - 80,
-      angle: 0,
+      angle: hoverAngle,
       scale: card.getData("originalScaleX") * 1.35,
       duration: 350,
       ease: "Cubic.easeOut",

@@ -50,6 +50,14 @@ class ProtectionService {
   static matchesSource(sourceCard, sourceDef = {}, targetCard = null) {
     if (!sourceCard || !sourceDef) return false;
 
+    // Fast-Path: target_card_ids check
+    if (Array.isArray(sourceDef.target_card_ids) && sourceDef.target_card_ids.length > 0) {
+      const srcId = String(sourceCard.templateId || sourceCard.id || "");
+      if (!sourceDef.target_card_ids.some((id) => String(id) === srcId)) {
+        return false;
+      }
+    }
+
     // 1. Controller check: opponent or controller
     const targetController = targetCard?.controllerId || targetCard?.ownerId;
     const sourceController = sourceCard?.controllerId || sourceCard?.ownerId;
@@ -71,7 +79,36 @@ class ProtectionService {
       }
     }
 
-    // 3. Target type check (e.g. evil_character, giant, beast, etc.)
+    // 3. Testament check (Bucket 3)
+    if (sourceDef.testament) {
+      const reqTest = String(sourceDef.testament).trim().toUpperCase();
+      const srcTest = String(sourceCard.Testament || "").toUpperCase();
+      const srcOrdir = Array.isArray(sourceCard.ORDIR) ? sourceCard.ORDIR.join(" ").toUpperCase() : "";
+      const matchesDirect = srcTest !== "UNKNOWN" && srcTest.includes(reqTest);
+      const matchesOrdir = srcOrdir.includes(`${reqTest} CARD`) || srcOrdir.includes(`${reqTest} CHARACTER`) || srcOrdir.includes(reqTest);
+      if (!matchesDirect && !matchesOrdir) {
+        return false;
+      }
+    }
+
+    // 4. References check (Bucket 4)
+    if (Array.isArray(sourceDef.references) && sourceDef.references.length > 0) {
+      const srcRef = String(sourceCard.Reference || "").toLowerCase();
+      const srcOrdir = Array.isArray(sourceCard.ORDIR) ? sourceCard.ORDIR.join(" ").toLowerCase() : "";
+      const hasRefMatch = sourceDef.references.some((ref) => {
+        const needle = String(ref || "").trim().toLowerCase();
+        if (!needle) return false;
+        if (srcOrdir.includes(needle)) return true;
+        const esc = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`(^|[^a-zA-Z0-9])${esc}([^a-zA-Z0-9]|$)`, "i");
+        return regex.test(srcRef) || srcRef.startsWith(needle);
+      });
+      if (!hasRefMatch) {
+        return false;
+      }
+    }
+
+    // 5. Target type check (Bucket 1: canonical base card types)
     if (sourceDef.target_type) {
       const srcType = sourceCard.inGameType || sourceCard.Type || "";
       if (!matchesTargetType(sourceCard, sourceDef.target_type, srcType)) {
@@ -79,7 +116,7 @@ class ProtectionService {
       }
     }
 
-    // 4. Brigades check
+    // 6. Brigades check (Bucket 5)
     if (Array.isArray(sourceDef.brigades) && sourceDef.brigades.length > 0) {
       const srcBrigades = Array.isArray(sourceCard.Brigades)
         ? sourceCard.Brigades.map((b) => b.toLowerCase())
@@ -89,16 +126,50 @@ class ProtectionService {
       }
     }
 
-    // 5. Identifiers & ORDIR descriptors check
+    // 7. Card titles check (Bucket 6)
+    if (Array.isArray(sourceDef.card_titles) && sourceDef.card_titles.length > 0) {
+      const cardName = String(sourceCard.Name || sourceCard.card_name || "").toLowerCase();
+      const hasTitleMatch = sourceDef.card_titles.some((t) => {
+        const titleLower = String(t).toLowerCase().trim();
+        return cardName.includes(titleLower) || titleLower.includes(cardName);
+      });
+      if (!hasTitleMatch) return false;
+    }
+
+    // 8. Identifiers & ORDIR descriptors check (Bucket 2: Subtypes, Nationalities, Roles)
     if (Array.isArray(sourceDef.identifiers) && sourceDef.identifiers.length > 0) {
       const srcIdent = String(sourceCard.Identifier || "").toLowerCase();
-      const srcOrdir = Array.isArray(sourceCard.ORDIR) ? sourceCard.ORDIR.join(" ").toLowerCase() : "";
+      const srcOrdirList = Array.isArray(sourceCard.ORDIR) ? sourceCard.ORDIR : [];
+      const srcOrdir = srcOrdirList.join(" ").toLowerCase();
       const srcClass = String(sourceCard.Class || "").toLowerCase();
       const hasMatch = sourceDef.identifiers.some((id) => {
-        const needle = String(id).toLowerCase();
-        return srcIdent.includes(needle) || srcOrdir.includes(needle) || srcClass.includes(needle);
+        const needle = String(id).trim().toLowerCase();
+        if (!needle) return false;
+
+        // Official REG Rule: All Characters are Human unless identified as an Angel, Demon, or Animal
+        if (needle === "human") {
+          const srcType = String(sourceCard.Type || sourceCard.inGameType || "").toLowerCase();
+          const isChar = srcType.includes("hero") || srcType.includes("character") || srcType.includes("ec") ||
+            Boolean(sourceCard.IsCharacter) || Boolean(sourceCard.IsHero);
+          if (!isChar) return false;
+          const nonHuman = ["angel", "demon", "animal"];
+          return !nonHuman.some((nh) => srcIdent.includes(nh) || srcOrdir.includes(nh) || srcClass.includes(nh));
+        }
+
+        const esc = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`(^|[^a-zA-Z0-9])${esc}([^a-zA-Z0-9]|$)`, "i");
+        return regex.test(srcIdent) || regex.test(srcOrdir) || regex.test(srcClass) ||
+          srcOrdirList.some((item) => String(item).trim().toLowerCase() === needle);
       });
       if (!hasMatch) return false;
+    }
+
+    // 9. Stat filters check on source card
+    if (Array.isArray(sourceDef.stat_filters) && sourceDef.stat_filters.length > 0) {
+      const { StatFilterEvaluator } = require("./StatFilterEvaluator");
+      if (!StatFilterEvaluator.matchesStatFilters(sourceCard, sourceDef.stat_filters, { targetCard })) {
+        return false;
+      }
     }
 
     return true;
@@ -135,8 +206,21 @@ class ProtectionService {
     }
 
     const harm = this.isHarmful(targetCard, sourceCard);
+    const targetController = targetCard.controllerId || targetCard.ownerId;
+    const sourceController = sourceCard.controllerId || sourceCard.ownerId;
+    const isOpponent = Boolean(targetController && sourceController && targetController !== sourceController);
 
-    // 2. Card sources matching (structured TargetSelector[] filter)
+    // 2. Complete card immunity (all_cards: true)
+    if (prot.all_cards === true && (isOpponent || harm)) {
+      return true;
+    }
+
+    // 3. Complete ability immunity (all_abilities: true)
+    if (prot.all_abilities === true && (isOpponent || harm)) {
+      return true;
+    }
+
+    // 4. Card sources matching (structured TargetSelector[] filter)
     if (Array.isArray(prot.card_sources) && prot.card_sources.length > 0) {
       const matchesAnySource = prot.card_sources.some((cs) => this.matchesSource(sourceCard, cs, targetCard));
       if (!matchesAnySource) {
@@ -144,23 +228,30 @@ class ProtectionService {
       }
       // If specific actions are defined alongside card_sources, also verify action
       if (Array.isArray(prot.actions) && prot.actions.length > 0 && actionType) {
-        return prot.actions.includes(actionType);
+        return prot.actions.includes(actionType) || (prot.actions.includes("harm") && harm);
       }
       return true;
     }
 
-    // 3. Action-specific protection (e.g. protect from discard or capture)
+    // 5. Action-specific protection (e.g. protect from discard, capture, negate, harm)
     const hasSpecificActions = Array.isArray(prot.actions) && prot.actions.length > 0;
     if (hasSpecificActions) {
-      if (actionType && prot.actions.includes(actionType)) {
-        return true;
+      const actionMatches = Boolean(
+        actionType && (prot.actions.includes(actionType) || (prot.actions.includes("harm") && harm))
+      );
+      if (actionMatches) {
+        if (prot.opponent || prot.from_harm || prot.harm) {
+          if (isOpponent || harm) return true;
+        } else {
+          return true;
+        }
       }
       if (!prot.harm && !prot.from_harm && (!prot.alignments || prot.alignments.length === 0) && (!prot.brigades || prot.brigades.length === 0) && !prot.opponent) {
         return false;
       }
     }
 
-    // 4. Protection from "harm" or "negative effect" (REG line 3889ff)
+    // 6. Protection from "harm" or "negative effect" (REG line 3889ff)
     const protectsFromHarm =
       prot.from_harm === true ||
       prot.harm === true ||
@@ -170,7 +261,7 @@ class ProtectionService {
       return true;
     }
 
-    // 5. Protection from specific alignments
+    // 7. Protection from specific alignments
     if (Array.isArray(prot.alignments) && prot.alignments.length > 0) {
       const srcAlign = (sourceCard.inGameAlignment || sourceCard.Alignment || "").toString().toLowerCase();
       if (prot.alignments.some((a) => srcAlign.includes(String(a).toLowerCase()))) {
@@ -178,7 +269,7 @@ class ProtectionService {
       }
     }
 
-    // 6. Protection from specific brigades
+    // 8. Protection from specific brigades
     if (Array.isArray(prot.brigades) && prot.brigades.length > 0) {
       const srcBrigades = Array.isArray(sourceCard.Brigades)
         ? sourceCard.Brigades.map((b) => b.toLowerCase())
@@ -188,14 +279,12 @@ class ProtectionService {
       }
     }
 
-    // 7. Protection from opponent's cards in general
-    const targetController = targetCard.controllerId || targetCard.ownerId;
-    const sourceController = sourceCard.controllerId || sourceCard.ownerId;
-    if (prot.opponent === true && targetController && sourceController && targetController !== sourceController) {
+    // 9. Protection from opponent's cards in general
+    if (prot.opponent === true && isOpponent) {
       return true;
     }
 
-    // 8. Generic immunity / protection defaults to protecting against opponent's harm
+    // 10. Generic immunity / protection defaults to protecting against opponent's harm
     if (!hasSpecificActions && (isImmune || isProtected) && harm) {
       return true;
     }

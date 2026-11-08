@@ -2,6 +2,7 @@
 const { TargetSelectionService } = require("../src/ast/TargetSelectionService");
 const { SelectTargetCommand } = require("../src/commands/SelectTargetCommand");
 const { ResolveChronicleCommand } = require("../src/commands/ResolveChronicleCommand");
+const { AbilityLookup } = require("../src/ast/AbilityLookup");
 const { AbilityResolver } = require("../src/ast/AbilityResolver");
 const { EffectChronicleService } = require("../src/services/EffectChronicleService");
 const { RoomState } = require("../src/state/RoomState");
@@ -204,6 +205,10 @@ describe("AST Interactive Targeting - Phase 2", () => {
         Alignment: "Evil",
         IsCharacter: true,
       });
+      createTestCard("e3", "202", "Evil Character 2", ZONES.TERRITORY, "p2", {
+        Alignment: "Evil",
+        IsCharacter: true,
+      });
       const edict = createTestCard("c_src2", "-2097085070", "Source Ability", ZONES.TERRITORY, "p1");
       EffectChronicleService.enqueueCards(room, [edict], "p1", "ACTIVATE_ABILITY");
 
@@ -281,6 +286,331 @@ describe("AST Interactive Targeting - Phase 2", () => {
       });
 
       expect(TargetSelectionService.matchesFilter(nonGenesisPhilistine, targetDef)).toBe(false);
+    });
+  });
+
+  describe("5. Mandatory Effect Auto-Targeting Architecture", () => {
+    test("Mandatory discard ability with exactly 1 eligible target automatically resolves without client targeting prompt", () => {
+      AbilityLookup._loadData()["mandatory_single_discard"] = {
+        card_id: "mandatory_single_discard",
+        card_name: "Slain by Levites Prototype",
+        sides: {
+          top: {
+            abilities: [
+              {
+                ability_id: "ab_discard_single",
+                activation_mode: "immediate",
+                is_optional: false,
+                effects: [
+                  {
+                    action: "discard",
+                    target: {
+                      selection_mode: "manual_controller",
+                      zone_owner: "either",
+                      scope: ["in_play"],
+                      target_type: "card",
+                      alignment: "evil",
+                      count: { fixed_value: 1 },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      };
+
+      const sourceCard = createTestCard("c_source_enh", "mandatory_single_discard", "Slain by Levites Prototype", ZONES.TERRITORY, "p1", {
+        Alignment: "Good",
+        IsEnhancement: true,
+      });
+
+      // Exactly ONE evil card in play
+      const evilTarget = createTestCard("c_evil_single", "t_ec_1", "Single Evil Character", ZONES.TERRITORY, "p2", {
+        Alignment: "Evil",
+        IsCharacter: true,
+      });
+
+      const item = {
+        id: "item_test_auto",
+        cardId: sourceCard.id,
+        controllerId: "p1",
+        title: sourceCard.Name,
+        actionType: "activate",
+        abilityId: "ab_discard_single",
+      };
+
+      const res = room.abilityResolver.resolve(item, {});
+
+      // Must be handled automatically without sending REQUEST_TARGET_SELECTION!
+      expect(client1.send).not.toHaveBeenCalledWith(
+        "requestTargetSelection",
+        expect.anything()
+      );
+      expect(res.handled).toBe(true);
+      expect(res.awaitingTargetSelection).toBeFalsy();
+      expect(evilTarget.zone).toBe(ZONES.DISCARD);
+    });
+
+    test("Mandatory discard ability with multiple eligible targets prompts for manual selection", () => {
+      AbilityLookup._loadData()["mandatory_multi_discard"] = {
+        card_id: "mandatory_multi_discard",
+        card_name: "Multi Target Discard",
+        sides: {
+          top: {
+            abilities: [
+              {
+                ability_id: "ab_discard_multi",
+                activation_mode: "immediate",
+                is_optional: false,
+                effects: [
+                  {
+                    action: "discard",
+                    target: {
+                      selection_mode: "manual_controller",
+                      zone_owner: "either",
+                      scope: ["in_play"],
+                      target_type: "card",
+                      alignment: "evil",
+                      count: { fixed_value: 1 },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      };
+
+      const sourceCard = createTestCard("c_source_multi", "mandatory_multi_discard", "Multi Target Discard", ZONES.TERRITORY, "p1", {
+        Alignment: "Good",
+        IsEnhancement: true,
+      });
+
+      // TWO evil cards in play
+      createTestCard("c_evil_1", "t_ec_1", "Evil 1", ZONES.TERRITORY, "p2", { Alignment: "Evil", IsCharacter: true });
+      createTestCard("c_evil_2", "t_ec_2", "Evil 2", ZONES.TERRITORY, "p2", { Alignment: "Evil", IsCharacter: true });
+
+      const item = {
+        id: "item_test_multi",
+        cardId: sourceCard.id,
+        controllerId: "p1",
+        title: sourceCard.Name,
+        actionType: "activate",
+        abilityId: "ab_discard_multi",
+      };
+
+      const res = room.abilityResolver.resolve(item, {});
+
+      // Must pause and send REQUEST_TARGET_SELECTION to the client!
+      expect(client1.send).toHaveBeenCalledWith(
+        "requestTargetSelection",
+        expect.objectContaining({
+          abilityId: "ab_discard_multi",
+          eligibleCardIds: expect.arrayContaining(["c_evil_1", "c_evil_2"]),
+          minTargets: 1,
+          maxTargets: 1,
+        })
+      );
+      expect(res.awaitingTargetSelection).toBe(true);
+    });
+
+    test("Optional ability or 'up to 1' count with 1 eligible target prompts for client decision", () => {
+      AbilityLookup._loadData()["optional_up_to_discard"] = {
+        card_id: "optional_up_to_discard",
+        card_name: "Up To Discard",
+        sides: {
+          top: {
+            abilities: [
+              {
+                ability_id: "ab_discard_up_to",
+                activation_mode: "immediate",
+                is_optional: false,
+                effects: [
+                  {
+                    action: "discard",
+                    target: {
+                      selection_mode: "manual_controller",
+                      zone_owner: "either",
+                      scope: ["in_play"],
+                      target_type: "card",
+                      alignment: "evil",
+                      count: { min_value: 0, max_value: 1, fixed_value: null },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      };
+
+      const sourceCard = createTestCard("c_source_upto", "optional_up_to_discard", "Up To Discard", ZONES.TERRITORY, "p1", {
+        Alignment: "Good",
+        IsEnhancement: true,
+      });
+
+      // Exactly 1 evil card in play
+      createTestCard("c_evil_upto_1", "t_ec_1", "Evil 1", ZONES.TERRITORY, "p2", { Alignment: "Evil", IsCharacter: true });
+
+      const item = {
+        id: "item_test_upto",
+        cardId: sourceCard.id,
+        controllerId: "p1",
+        title: sourceCard.Name,
+        actionType: "activate",
+        abilityId: "ab_discard_up_to",
+      };
+
+      const res = room.abilityResolver.resolve(item, {});
+
+      // Because count allows 0 (up to 1, canCancel: true), client MUST be asked!
+      expect(client1.send).toHaveBeenCalledWith(
+        "requestTargetSelection",
+        expect.objectContaining({
+          abilityId: "ab_discard_up_to",
+          canCancel: true,
+          minTargets: 0,
+          maxTargets: 1,
+        })
+      );
+      expect(res.awaitingTargetSelection).toBe(true);
+    });
+
+    test("Up-to-N banding ability with 1 eligible candidate requests client targeting and does not auto-band", () => {
+      AbilityLookup._loadData()["pillar_of_fire_upto_test"] = {
+        card_id: "pillar_of_fire_upto_test",
+        card_name: "Pillar of Fire Prototype",
+        sides: {
+          top: {
+            abilities: [
+              {
+                ability_id: "ab_pillar_band",
+                activation_mode: "immediate",
+                is_optional: true,
+                effects: [
+                  {
+                    action: "band",
+                    target: {
+                      selection_mode: "manual_controller",
+                      zone_owner: "controller",
+                      scope: ["in_play", "hand"],
+                      target_type: "hero",
+                      alignment: "good",
+                      references: ["Exodus"],
+                      count: { min_value: 0, max_value: 3 },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      };
+
+      const pillarCard = createTestCard("c_pillar", "pillar_of_fire_upto_test", "Pillar of Fire", ZONES.BATTLEFIELD, "p1", {
+        Alignment: "Good",
+        IsEnhancement: true,
+      });
+
+      // Exactly 1 Exodus Hero in hand
+      const exoHero = createTestCard("c_exo_1", "t_exo_1", "Moses", ZONES.HAND, "p1", {
+        Alignment: "Good",
+        IsCharacter: true,
+        Reference: "Exodus",
+      });
+
+      const item = {
+        id: "item_pillar_upto",
+        cardId: pillarCard.id,
+        controllerId: "p1",
+        title: pillarCard.Name,
+        actionType: "activate",
+        abilityId: "ab_pillar_band",
+        isOptional: true,
+      };
+
+      // Player accepted the optional ability prompt
+      const res = room.abilityResolver.resolve(item, { accepted: true });
+
+      // Because it's "up to 3" (canCancel: true, minTargets: 0), it MUST request target selection from player!
+      expect(client1.send).toHaveBeenCalledWith(
+        "requestTargetSelection",
+        expect.objectContaining({
+          abilityId: "ab_pillar_band",
+          canCancel: true,
+          minTargets: 0,
+          maxTargets: 1, // Clamped to available eligible targets
+          eligibleCardIds: [exoHero.id],
+        })
+      );
+      expect(res.awaitingTargetSelection).toBe(true);
+      expect(exoHero.zone).toBe(ZONES.HAND); // Still in hand, not automatically banded!
+    });
+
+    test("Fixed 1-target banding ability automatically bands the single eligible candidate once accepted", () => {
+      AbilityLookup._loadData()["fixed_band_test"] = {
+        card_id: "fixed_band_test",
+        card_name: "Fixed Band Hero",
+        sides: {
+          top: {
+            abilities: [
+              {
+                ability_id: "ab_fixed_band",
+                activation_mode: "immediate",
+                is_optional: true,
+                effects: [
+                  {
+                    action: "band",
+                    target: {
+                      selection_mode: "manual_controller",
+                      zone_owner: "controller",
+                      scope: ["territory"],
+                      target_type: "hero",
+                      alignment: "good",
+                      identifiers: ["Priest"],
+                      count: { fixed_value: 1 },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      };
+
+      const leader = createTestCard("c_leader", "fixed_band_test", "Fixed Band Leader", ZONES.BATTLEFIELD, "p1", {
+        Alignment: "Good",
+        IsCharacter: true,
+      });
+
+      state.currentPhase = "battle";
+      state.activePlayer = "p1";
+
+      // Exactly 1 Priest in territory
+      const priest = createTestCard("c_priest", "t_priest", "Aaron", ZONES.TERRITORY, "p1", {
+        Alignment: "Good",
+        IsCharacter: true,
+        Identifier: "Priest",
+      });
+
+      const item = {
+        id: "item_fixed_band",
+        cardId: leader.id,
+        controllerId: "p1",
+        title: leader.Name,
+        actionType: "activate",
+        abilityId: "ab_fixed_band",
+        isOptional: true,
+      };
+
+      // Player accepted the optional prompt
+      const res = room.abilityResolver.resolve(item, { accepted: true });
+
+      // Fixed 1-target band automatically targets and brings Aaron into battle!
+      expect(client1.send).not.toHaveBeenCalledWith("requestTargetSelection", expect.anything());
+      expect(res.handled).toBe(true);
+      expect(priest.zone).toBe(ZONES.BATTLEFIELD);
     });
   });
 });

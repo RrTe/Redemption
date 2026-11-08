@@ -99,6 +99,28 @@ export const AST_MESSAGES = /** @type {const} */ ({
   CLEAR_ACTION_TELEGRAPH: "clearActionTelegraph",
 });
 
+/**
+ * AST stat filter attribute identifiers.
+ */
+export const AST_STAT_FILTER_STATS = /** @type {const} */ ({
+  STRENGTH: "strength",
+  TOUGHNESS: "toughness",
+  BOTH: "both",
+  EITHER: "either",
+});
+
+/**
+ * AST stat filter relational comparison operators.
+ */
+export const AST_STAT_FILTER_OPERATORS = /** @type {const} */ ({
+  GTE: ">=",
+  LTE: "<=",
+  EQ: "==",
+  GT: ">",
+  LT: "<",
+  NEQ: "!=",
+});
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     AST_ACTIONS,
@@ -109,5 +131,7 @@ if (typeof module !== "undefined" && module.exports) {
     AST_ACTIVATION_MODES,
     AST_ALIGNMENTS,
     AST_MESSAGES,
+    AST_STAT_FILTER_STATS,
+    AST_STAT_FILTER_OPERATORS,
   };
 }

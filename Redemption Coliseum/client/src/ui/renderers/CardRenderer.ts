@@ -241,8 +241,8 @@ export class CardRenderer {
       isFaceDown = true;
     } else if (cardData.zone === ZONES.HAND) {
       if (cardData.controllerId === this.room.sessionId) {
-        // Own hand cards are strictly visible face-up to the player at all times
-        isFaceDown = false;
+        // Own hand cards respect the player's toggle (e.g. face-down action)
+        isFaceDown = Boolean(cardData.isFaceDown);
       } else {
         // Opponent hand cards are concealed unless revealed as active Star sequence, chronicle execution, or active telegraph
         const isRevealedStarCard = this.isCardRevealed(cardData.id);
@@ -412,7 +412,7 @@ export class CardRenderer {
         (oldZone === ZONES.LAND_OF_BONDAGE ||
           oldZone === ZONES.TERRITORY ||
           oldZone === ZONES.BATTLEFIELD ||
-          (oldZone === ZONES.HAND && cardData.controllerId !== this.room.sessionId))
+          oldZone === ZONES.HAND)
       ) {
         this.scene.tweens.killTweensOf(cardUI);
         this.scene.tweens.add({
@@ -424,6 +424,7 @@ export class CardRenderer {
           ease: "Power2",
         });
       } else {
+        this.scene.tweens.killTweensOf(cardUI);
         cardUI.x = targetX;
         cardUI.y = targetY;
         cardUI.setAngle(normalizedTargetAngle);
@@ -565,4 +566,3 @@ export class CardRenderer {
     return this.cardUIs;
   }
 }
-

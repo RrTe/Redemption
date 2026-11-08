@@ -66,8 +66,8 @@ This document tracks modularization targets, line-count audits, and architectura
   - Maintain backward-compatibility alias during transitional phases to prevent regression.
 
 ### 5. Card Type Hierarchy & Dynamic Type System Migration
-- **Status**: Audit Planned (Architectural Technical Debt & Type Safety)
-- **Scope**: `shared/card-constants.js`, `shared/cardHierarchy.json`, `server/src/ast/TargetSelectionService.js`, `server/src/services/BattleCharacterClassifier.js`, `client/src/ui/renderers/FieldRenderer.ts`.
+- **Status**: Completed (`shared/cardHierarchy.json` & `shared/cardHierarchy.js`)
+- **Scope**: `shared/card-constants.js`, `shared/cardHierarchy.json`, `shared/cardHierarchy.js`, `server/src/ast/TargetSelectionService.js`, `server/src/services/BattleCharacterClassifier.js`, `client/src/ui/renderers/FieldRenderer.ts`.
 - **Issue**:
   - The codebase currently relies on a flat `CARD_TYPES` enum without ontological type hierarchy (`TYPE_GROUPS`, `TYPE_IS_A`).
   - Fragile, manual string inspections (e.g. `rawType.includes("character")`, `card.inGameType === "ge"`, manual alignment checking) are scattered across services.

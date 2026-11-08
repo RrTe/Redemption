@@ -2,6 +2,7 @@ import { type ArraySchema, type MapSchema } from "@colyseus/schema";
 import type { CardData } from "./card";
 import type { Zone } from "./zones";
 import type { CardAction } from "./actionSchema";
+export type { AstStatFilterStat, AstStatFilterOperator, StatFilter } from "./astConstants";
 
 export interface CardState extends CardData {
   id: string;
@@ -84,6 +85,7 @@ export interface BattleStateData {
   stateReason: string;
   lastCardPlayedPlayerId: string;
   specialInitiativePlayerId: string;
+  initiativeOverridePlayerId?: string;
 }
 
 export interface RoomState {

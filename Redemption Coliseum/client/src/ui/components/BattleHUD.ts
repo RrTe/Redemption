@@ -9,7 +9,8 @@ import type { RoomState } from "../../../../shared/types";
 /**
  * Central Clash-Bar Battle HUD (Solution 1 / Studio Standard).
  * Fixed-slot grid layout centered horizontally and vertically in the Field of Battle.
- * Features Toast-style 14px gold typography, 3D golden initiative chevron, and zero-jitter slots.
+ * Features Toast-style 14px gold typography, 3D golden initiative chevron, Special Initiative highlight,
+ * and an integrated Pass button for normal and Special Initiative.
  */
 export class BattleHUD extends Phaser.GameObjects.Container {
   private panelBg: Phaser.GameObjects.Graphics;
@@ -27,15 +28,21 @@ export class BattleHUD extends Phaser.GameObjects.Container {
   private initiativeBg: Phaser.GameObjects.Graphics;
   private initiativeChevron: Phaser.GameObjects.Image;
   private initiativeLabel: Phaser.GameObjects.Text;
+  private passBtnContainer: Phaser.GameObjects.Container;
+  private passBtnBg: Phaser.GameObjects.Graphics;
+  private passBtnLabel: Phaser.GameObjects.Text;
   private initiativeGlowTween: Phaser.Tweens.Tween | null = null;
 
   private currentLayout: GameLayout;
   private isBattlePhaseActive = false;
   private currentAccentColor = 0x888888;
+  private currentPillBgColor: number = BATTLE_HUD_CONFIG.BACKGROUND_COLOR;
+  private onPassInitiative?: () => void;
 
-  constructor(scene: Phaser.Scene, layout: GameLayout) {
+  constructor(scene: Phaser.Scene, layout: GameLayout, onPassInitiative?: () => void) {
     super(scene, 0, 0);
     this.currentLayout = layout;
+    this.onPassInitiative = onPassInitiative;
     this.setDepth(60);
     const fontCommon = { fontFamily: 'Arial, "Arial Black", sans-serif', fontStyle: "bold" };
 
@@ -53,14 +60,28 @@ export class BattleHUD extends Phaser.GameObjects.Container {
     }).setOrigin(0.5).setStroke("#000000", 2).setShadow(0, 1, "rgba(0,0,0,0.8)", 3, true, true);
     this.rescuerContainer.add([this.rescuerBg, this.rescuerLabel, this.rescuerNumbersText]);
 
-    // 2. Dynamic Initiative Pill (Gold Toast typography & 3D golden chevron icon)
+    // 2. Dynamic Initiative Pill (Gold Toast typography, 3D golden chevron icon, & Pass button)
     this.initiativeContainer = scene.add.container(0, 0);
     this.initiativeBg = scene.add.graphics();
     this.initiativeChevron = scene.add.image(0, 0, "icon_initiative_chevron").setOrigin(0.5).setVisible(false);
     this.initiativeLabel = scene.add.text(0, 0, UI_STRINGS.BATTLE_HUD.AWAITING_ATTACKER, {
       ...fontCommon, fontSize: "14px", color: BATTLE_HUD_CONFIG.GOLD_HEX, letterSpacing: 1,
     }).setOrigin(0.5).setShadow(0, 1, "rgba(0,0,0,0.85)", 2, false, true);
-    this.initiativeContainer.add([this.initiativeBg, this.initiativeChevron, this.initiativeLabel]);
+
+    this.passBtnContainer = scene.add.container(0, 0).setVisible(false);
+    this.passBtnBg = scene.add.graphics();
+    this.passBtnLabel = scene.add.text(0, 0, UI_STRINGS.BATTLE_HUD.BTN_PASS, {
+      ...fontCommon, fontSize: "11px", color: "#ffffff", letterSpacing: 1,
+    }).setOrigin(0.5).setStroke("#000000", 1.5);
+    this.passBtnContainer.add([this.passBtnBg, this.passBtnLabel]);
+    this.setupPassButtonInteractivity();
+
+    this.initiativeContainer.add([
+      this.initiativeBg,
+      this.initiativeChevron,
+      this.initiativeLabel,
+      this.passBtnContainer,
+    ]);
 
     // 3. Blocker Badge (Defender)
     this.blockerContainer = scene.add.container(0, 0);
@@ -78,6 +99,43 @@ export class BattleHUD extends Phaser.GameObjects.Container {
     this.setVisible(false);
     this.setAlpha(0);
     this.reposition(layout);
+  }
+
+  private setupPassButtonInteractivity(): void {
+    const passW = BATTLE_HUD_CONFIG.PASS_BTN_WIDTH || 56;
+    const passH = BATTLE_HUD_CONFIG.PASS_BTN_HEIGHT || 22;
+    const hitArea = new Phaser.Geom.Rectangle(-passW / 2, -passH / 2, passW, passH);
+    this.passBtnContainer
+      .setInteractive(hitArea, Phaser.Geom.Rectangle.Contains)
+      .on("pointerdown", () => {
+        this.scene.game.events.emit("playSound", "UI_CLICK");
+        this.scene.tweens.add({
+          targets: this.passBtnContainer,
+          scale: 0.92,
+          duration: 60,
+          yoyo: true,
+        });
+        this.onPassInitiative?.();
+      })
+      .on("pointerover", () => {
+        this.scene.tweens.add({
+          targets: this.passBtnContainer,
+          scale: 1.07,
+          duration: 100,
+        });
+        this.passBtnLabel.setColor(BATTLE_HUD_CONFIG.GOLD_HEX);
+      })
+      .on("pointerout", () => {
+        this.scene.tweens.add({
+          targets: this.passBtnContainer,
+          scale: 1.0,
+          duration: 100,
+        });
+        this.passBtnLabel.setColor("#ffffff");
+      });
+    if (this.passBtnContainer.input) {
+      this.passBtnContainer.input.cursor = "pointer";
+    }
   }
 
   /**
@@ -124,15 +182,16 @@ export class BattleHUD extends Phaser.GameObjects.Container {
 
     const valFontSize = `${Math.round(16 * scale)}px`;
     const labelFontSize = `${Math.round(11 * scale)}px`;
-    const initFontSize = `${Math.round(14 * scale)}px`;
+    const initFontSize = `${Math.round(13 * scale)}px`;
 
     this.rescuerNumbersText.setFontSize(valFontSize);
     this.blockerNumbersText.setFontSize(valFontSize);
     this.rescuerLabel.setFontSize(labelFontSize);
     this.blockerLabel.setFontSize(labelFontSize);
     this.initiativeLabel.setFontSize(initFontSize);
+    this.passBtnLabel.setFontSize(`${Math.round(10 * scale)}px`);
 
-    this.drawInitiativePill(initW, initH, this.currentAccentColor);
+    this.drawInitiativePill(initW, initH, this.currentAccentColor, this.currentPillBgColor);
   }
 
   /**
@@ -176,20 +235,44 @@ export class BattleHUD extends Phaser.GameObjects.Container {
 
     const reason = battle?.stateReason || BATTLE_STATE_REASON.NO_BATTLE;
     const initPlayerId = battle?.initiativePlayerId || "";
-    this.updateInitiativeDisplay(reason, initPlayerId, mySessionId);
+    const specialInitPlayerId = battle?.specialInitiativePlayerId || "";
+    const isChronicleBusy = !specialInitPlayerId && Boolean(state.effectChronicle?.items?.length);
+    this.updateInitiativeDisplay(reason, initPlayerId, specialInitPlayerId, mySessionId, isChronicleBusy);
   }
 
-  private updateInitiativeDisplay(reason: string, initPlayerId: string, mySessionId: string): void {
-    const hasInitiative = initPlayerId === mySessionId;
-    const oppHasInitiative = Boolean(initPlayerId && initPlayerId !== mySessionId);
-    const { text, accentColor } = this.getInitiativeText(reason, hasInitiative);
+  private updateInitiativeDisplay(
+    reason: string,
+    initPlayerId: string,
+    specialInitPlayerId: string,
+    mySessionId: string,
+    isChronicleBusy: boolean,
+  ): void {
+    const isSpecialInit = Boolean(specialInitPlayerId);
+    const isMySpecialInit = isSpecialInit && specialInitPlayerId === mySessionId;
+    const hasInitiative = !isSpecialInit && initPlayerId === mySessionId;
+    const oppHasInitiative = !isSpecialInit && Boolean(initPlayerId && initPlayerId !== mySessionId);
+
+    const { text, accentColor, bgColor } = isSpecialInit
+      ? {
+          text: UI_STRINGS.BATTLE_HUD.SPECIAL_INITIATIVE(isMySpecialInit),
+          accentColor: BATTLE_HUD_CONFIG.SPECIAL_INITIATIVE_COLOR || 0xd946ef,
+          bgColor: BATTLE_HUD_CONFIG.SPECIAL_INITIATIVE_BG_COLOR || 0x3b0764,
+        }
+      : {
+          ...this.getInitiativeText(reason, hasInitiative),
+          bgColor: BATTLE_HUD_CONFIG.BACKGROUND_COLOR,
+        };
+
+    const canPass = isMySpecialInit || (hasInitiative && !isChronicleBusy);
+    this.passBtnContainer.setVisible(canPass);
 
     this.currentAccentColor = accentColor;
+    this.currentPillBgColor = bgColor;
     this.initiativeLabel.setText(text);
 
-    if (hasInitiative) {
+    if (isMySpecialInit || hasInitiative) {
       this.initiativeChevron.setVisible(true).setAngle(0);
-    } else if (oppHasInitiative) {
+    } else if ((isSpecialInit && !isMySpecialInit) || oppHasInitiative) {
       this.initiativeChevron.setVisible(true).setAngle(180);
     } else {
       this.initiativeChevron.setVisible(false);
@@ -205,23 +288,45 @@ export class BattleHUD extends Phaser.GameObjects.Container {
     const initW = Math.round(BATTLE_HUD_CONFIG.INITIATIVE_WIDTH * scale);
     const initH = Math.round(BATTLE_HUD_CONFIG.INITIATIVE_HEIGHT * scale);
 
-    this.drawInitiativePill(initW, initH, accentColor);
-    this.updateInitiativePulse(hasInitiative || oppHasInitiative);
+    this.drawInitiativePill(initW, initH, accentColor, bgColor);
+    this.updateInitiativePulse(isSpecialInit || hasInitiative || oppHasInitiative);
   }
 
   private alignInitiativeContent(scale: number): void {
+    const initW = Math.round(BATTLE_HUD_CONFIG.INITIATIVE_WIDTH * scale);
+    const passVisible = this.passBtnContainer.visible;
+    const passW = Math.round((BATTLE_HUD_CONFIG.PASS_BTN_WIDTH || 56) * scale);
+    const passH = Math.round((BATTLE_HUD_CONFIG.PASS_BTN_HEIGHT || 22) * scale);
+
+    if (passVisible) {
+      this.passBtnContainer.setPosition(Math.round(initW / 2 - passW / 2 - 7 * scale), 0);
+      this.drawPassButton(passW, passH, this.currentAccentColor);
+      if (this.passBtnContainer.input?.hitArea instanceof Phaser.Geom.Rectangle) {
+        this.passBtnContainer.input.hitArea.setTo(-passW / 2, -passH / 2, passW, passH);
+      }
+    }
+
+    const centerOffset = passVisible ? -Math.round((passW + 8 * scale) / 2) : 0;
     const chevronVisible = this.initiativeChevron.visible;
     const chevronW = Math.round(15 * scale);
-    const spacing = chevronVisible ? Math.round(8 * scale) : 0;
+    const spacing = chevronVisible ? Math.round(6 * scale) : 0;
     const labelW = this.initiativeLabel.width;
     const contentW = (chevronVisible ? chevronW + spacing : 0) + labelW;
 
     if (chevronVisible) {
-      this.initiativeChevron.setPosition(-contentW / 2 + chevronW / 2, 0);
-      this.initiativeLabel.setPosition(-contentW / 2 + chevronW + spacing + labelW / 2, 0);
+      this.initiativeChevron.setPosition(centerOffset - contentW / 2 + chevronW / 2, 0);
+      this.initiativeLabel.setPosition(centerOffset - contentW / 2 + chevronW + spacing + labelW / 2, 0);
     } else {
-      this.initiativeLabel.setPosition(0, 0);
+      this.initiativeLabel.setPosition(centerOffset, 0);
     }
+  }
+
+  private drawPassButton(w: number, h: number, accentColor: number): void {
+    this.passBtnBg.clear();
+    this.passBtnBg.fillStyle(0x1e293b, 0.95);
+    this.passBtnBg.fillRoundedRect(-w / 2, -h / 2, w, h, h / 2);
+    this.passBtnBg.lineStyle(1.5, accentColor, 1);
+    this.passBtnBg.strokeRoundedRect(-w / 2, -h / 2, w, h, h / 2);
   }
 
   private getInitiativeText(reason: string, hasInitiative: boolean): { text: string; accentColor: number } {
@@ -255,9 +360,14 @@ export class BattleHUD extends Phaser.GameObjects.Container {
     g.strokeRoundedRect(-w / 2, -h / 2, w, h, BATTLE_HUD_CONFIG.BORDER_RADIUS);
   }
 
-  private drawInitiativePill(w: number, h: number, accentColor: number): void {
+  private drawInitiativePill(
+    w: number,
+    h: number,
+    accentColor: number,
+    bgColor: number = BATTLE_HUD_CONFIG.BACKGROUND_COLOR,
+  ): void {
     this.initiativeBg.clear();
-    this.initiativeBg.fillStyle(BATTLE_HUD_CONFIG.BACKGROUND_COLOR, 0.94);
+    this.initiativeBg.fillStyle(bgColor, 0.94);
     this.initiativeBg.fillRoundedRect(-w / 2, -h / 2, w, h, h / 2);
     this.initiativeBg.lineStyle(4, accentColor, 0.25);
     this.initiativeBg.strokeRoundedRect(-w / 2 - 1, -h / 2 - 1, w + 2, h + 2, (h + 2) / 2);

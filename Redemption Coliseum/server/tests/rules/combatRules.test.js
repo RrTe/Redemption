@@ -35,7 +35,7 @@ describe("CombatRules (Isolated Pure Function Unit Tests)", () => {
     const hero = { Name: "David", Type: CARD_TYPES.HERO };
 
     expect(SpecialInitiativeRule({ card: dominant, toZone: ZONES.BATTLEFIELD, targetPlayerId: p2, state }))
-      .toEqual({ valid: false, error: "Only Enhancements in Special Initiative!" });
+      .toEqual({ valid: true });
     expect(SpecialInitiativeRule({ card: hero, toZone: ZONES.BATTLEFIELD, targetPlayerId: p2, state }))
       .toEqual({ valid: false, error: "Only Enhancements in Special Initiative!" });
     expect(SpecialInitiativeRule({ card: goodEnh, toZone: ZONES.BATTLEFIELD, targetPlayerId: p2, state }))

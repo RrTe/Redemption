@@ -186,6 +186,7 @@ export class GameNetworkManager {
   public sendSelectTarget(payload: SelectTargetMessage) { this.sender.sendSelectTarget(payload); }
   public sendRespondOptionalAbility(payload: RespondOptionalAbilityMessage) { this.sender.sendRespondOptionalAbility(payload); }
   public sendRespondPhaseTransition(accept: boolean) { this.sender.sendRespondPhaseTransition(accept); }
+  public sendPassInitiative() { this.sender.sendPassInitiative(); }
 
   public destroy(): void {
     log("Network", `[NetworkManager ${this.instanceId}] Destroying...`);

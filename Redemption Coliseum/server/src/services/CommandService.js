@@ -49,6 +49,7 @@ const {
 const {
   RespondPhaseTransitionCommand,
 } = require("../commands/RespondPhaseTransitionCommand");
+const { PassInitiativeCommand } = require("../commands/PassInitiativeCommand");
 const {
   CHRONICLE_MESSAGES,
 } = require("../../../shared/effectChronicleConstants");
@@ -67,6 +68,7 @@ class CommandService {
     room.dispatcher.register("nextPhase", NextPhaseCommand);
     room.dispatcher.register("togglePhaseHandshake", TogglePhaseHandshakeCommand);
     room.dispatcher.register("respondPhaseTransition", RespondPhaseTransitionCommand);
+    room.dispatcher.register("passInitiative", PassInitiativeCommand);
     room.dispatcher.register("changeRedeemedSouls", ChangeRedeemedSoulsCommand);
     room.dispatcher.register("updateCardState", UpdateCardStateCommand);
     room.dispatcher.register("requestSearchPile", RequestSearchPileCommand);

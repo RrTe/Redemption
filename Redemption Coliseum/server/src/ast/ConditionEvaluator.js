@@ -1,5 +1,6 @@
 // server/src/ast/ConditionEvaluator.js
 const { ZONES } = require("../../../shared/zones");
+const { TargetSelectionService } = require("./TargetSelectionService");
 const logger = require("../utils/logger");
 
 /**
@@ -66,8 +67,59 @@ class ConditionEvaluator {
       }
 
       case "zone_check": {
+        const { selector, operator, value } = condition;
+        // If condition specifies a card selector, evaluate matching cards against game state
+        if (selector && typeof selector === "object") {
+          const actingPlayer =
+            context.player ||
+            (card?.controllerId ? room?.state?.players?.get?.(card.controllerId) : null);
+          const eligible = TargetSelectionService.resolveEligibleTargets(
+            room,
+            actingPlayer,
+            selector,
+            { actionType: "condition_check", card }
+          );
+          const matchCount = eligible?.eligibleCardIds ? eligible.eligibleCardIds.length : 0;
+          const targetValue =
+            typeof value === "number"
+              ? value
+              : (selector.count?.fixed_value ?? 1);
+
+          let valid = false;
+          switch (operator) {
+            case ">=":
+              valid = matchCount >= targetValue;
+              break;
+            case "<=":
+              valid = matchCount <= targetValue;
+              break;
+            case ">":
+              valid = matchCount > targetValue;
+              break;
+            case "<":
+              valid = matchCount < targetValue;
+              break;
+            case "!=":
+              valid = matchCount !== (value ?? 0);
+              break;
+            case "==":
+            default:
+              valid = typeof value === "number" ? matchCount === value : matchCount >= 1;
+              break;
+          }
+
+          if (!valid) {
+            return {
+              valid: false,
+              reason: `Zone check selector condition failed (found ${matchCount}, required ${operator || "=="} ${targetValue})`,
+            };
+          }
+          return { valid: true };
+        }
+
+        // Fallback: simple card zone check when no selector is specified
         const currentZone = card?.zone;
-        const rawRequired = condition.zone || condition.value || condition.selector?.scope;
+        const rawRequired = condition.zone || condition.value;
         const requiredZones = Array.isArray(rawRequired)
           ? rawRequired.map((r) => String(r || "").toLowerCase().trim())
           : (rawRequired ? [String(rawRequired).toLowerCase().trim()] : []);

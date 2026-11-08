@@ -189,13 +189,38 @@ class AbilityResolver {
       const isBandAction =
         firstEffect.action === AST_ACTIONS.BAND ||
         firstEffect.action === AST_ACTIONS.ADD_TO_BATTLE;
+      const targetCountDef = firstEffect.target?.count;
+      const isOriginalSingleTarget =
+        !targetCountDef ||
+        targetCountDef.fixed_value === 1 ||
+        (targetCountDef.max_value === 1 && targetCountDef.min_value !== 0) ||
+        (typeof targetCountDef === "number" && targetCountDef === 1);
+
       const isAutoBandSingleChoice =
         isBandAction &&
         !isFallbackBand &&
+        !eligible.canCancel &&
+        eligible.minTargets === 1 &&
         eligible.maxTargets === 1 &&
-        eligible.eligibleCardIds.length === 1;
+        eligible.eligibleCardIds.length === 1 &&
+        isOriginalSingleTarget;
 
-      if (eligible.requiresSelection && !isAutoBandSingleChoice) {
+      // Mandatory effect auto-targeting: If the effect is non-optional, cannot be skipped/cancelled,
+      // and the available legal targets exactly equal the required target count, automatically select them.
+      const isMandatory =
+        !targetAbility.is_optional &&
+        !item.isOptional &&
+        !eligible.canCancel;
+      const isExactMandatoryChoice =
+        isMandatory &&
+        !isFallbackBand &&
+        eligible.minTargets > 0 &&
+        eligible.minTargets === eligible.maxTargets &&
+        eligible.eligibleCardIds.length === eligible.maxTargets;
+
+      const isAutoTarget = isAutoBandSingleChoice || isExactMandatoryChoice;
+
+      if (eligible.requiresSelection && !isAutoTarget) {
         const client = this.room.clients.find((c) => c.sessionId === player.sessionId);
         if (client && typeof client.send === "function") {
           client.send(AST_MESSAGES.REQUEST_TARGET_SELECTION, {
@@ -218,8 +243,8 @@ class AbilityResolver {
         };
       }
 
-      if (isAutoBandSingleChoice) {
-        options.targetCardIds = [eligible.eligibleCardIds[0]];
+      if (isAutoTarget) {
+        options.targetCardIds = [...eligible.eligibleCardIds];
       }
     }
 
@@ -295,6 +320,10 @@ class AbilityResolver {
         const idents = effect.target?.identifiers;
         if (Array.isArray(idents) && idents.length > 0) {
           return `Band with ${idents.join(" or ")}?`;
+        }
+        const refs = effect.target?.references;
+        if (Array.isArray(refs) && refs.length > 0) {
+          return `Band with ${refs.join(" / ")} ${effect.target?.target_type || "character"}(s)?`;
         }
         return `Band a character into battle?`;
       }
