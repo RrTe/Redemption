@@ -49,7 +49,10 @@ export interface RequestTargetSelectionMessage {
   sourceCardId?: string;
   promptText: string;
   targetType: "card" | "pile";
+  targetZone?: Zone | string;
+  isPileTarget?: boolean;
   eligibleCardIds?: string[];
+  searchedPiles?: string[];
   eligiblePiles?: Array<{ id: string; label: string; ownerId: string; zone: Zone }>;
   minTargets: number;
   maxTargets: number;
@@ -78,6 +81,13 @@ export interface SelectTargetMessage {
   cancelled?: boolean;
 }
 
+export interface AbilityChoiceOption {
+  abilityId: string;
+  label: string;
+  action: string;
+  disabled?: boolean;
+}
+
 export interface RequestOptionalAbilityMessage {
   abilityId: string;
   itemId: string;
@@ -87,11 +97,13 @@ export interface RequestOptionalAbilityMessage {
   action: string;
   cardImageFile?: string;
   templateId?: string;
+  choices?: AbilityChoiceOption[];
 }
 
 export interface RespondOptionalAbilityMessage {
   itemId: string;
   accepted: boolean;
+  chosenAbilityId?: string;
 }
 
 export interface RequestNextPhaseMessage {

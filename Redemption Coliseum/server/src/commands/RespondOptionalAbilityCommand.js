@@ -107,6 +107,14 @@ class RespondOptionalAbilityCommand extends BaseCommand {
             specialInitiativeDeclined: true,
             targetCardIds: targetIds,
           });
+          if (
+            resumeResult &&
+            (resumeResult.awaitingTargetSelection ||
+              resumeResult.awaitingSpecialInitiative ||
+              resumeResult.awaitingConfirmation)
+          ) {
+            return;
+          }
           if (resumeResult?.logEntries?.length) {
             resumeResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
           }
@@ -180,7 +188,13 @@ class RespondOptionalAbilityCommand extends BaseCommand {
       }
 
       item.isConfirmed = true;
-      const astResult = this.room.abilityResolver.resolve(item, { accepted: true });
+      if (message && message.chosenAbilityId) {
+        item.abilityId = message.chosenAbilityId;
+      }
+      const astResult = this.room.abilityResolver.resolve(item, {
+        accepted: true,
+        chosenAbilityId: message?.chosenAbilityId,
+      });
 
       if (
         astResult &&

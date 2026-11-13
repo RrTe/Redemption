@@ -89,7 +89,8 @@ class BattleTriggerService {
 
       const hasMayKeyword = /\bmay\b/i.test(card.SpecialAbility || card.specialAbility || "");
       const isSupported = this._isSupportedAstAbility(astAbility);
-      const isOptional = Boolean(astAbility.is_optional || hasMayKeyword || !isSupported);
+      const isChoice = Boolean(astAbility.choice_group);
+      const isOptional = Boolean(astAbility.is_optional || hasMayKeyword || isChoice || !isSupported);
 
       EffectChronicleService.enqueueCards(
         room,
@@ -99,7 +100,7 @@ class BattleTriggerService {
         {
           autoExecute: true,
           autoExecuteSupported: true,
-          abilityId: astAbility.ability_id,
+          abilityId: isChoice ? "" : astAbility.ability_id,
           isOptional,
         }
       );
@@ -243,7 +244,8 @@ class BattleTriggerService {
 
       const hasMayKeyword = /\bmay\b/i.test(card.SpecialAbility || card.specialAbility || "");
       const isSupported = this._isSupportedAstAbility(astAbility);
-      const isOptional = Boolean(astAbility.is_optional || hasMayKeyword || !isSupported);
+      const isChoice = Boolean(astAbility.choice_group);
+      const isOptional = Boolean(astAbility.is_optional || hasMayKeyword || isChoice || !isSupported);
 
       EffectChronicleService.enqueueCards(
         room,
@@ -253,7 +255,7 @@ class BattleTriggerService {
         {
           autoExecute: true,
           autoExecuteSupported: true,
-          abilityId: astAbility.ability_id,
+          abilityId: isChoice ? "" : astAbility.ability_id,
           isOptional,
         }
       );

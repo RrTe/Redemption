@@ -102,12 +102,13 @@ class AbilityLookup {
         );
       }
       if (starAbilities.length > 0) {
-        return starAbilities;
+        return this._expandMultiPileAbilities(starAbilities);
       }
       // Fallback for un-migrated single-sided or shared cards
-      return (!isDual && sides.top?.abilities)
+      const fallbackStars = (!isDual && sides.top?.abilities)
         ? sides.top.abilities.filter((a) => this.isStarAbility(a))
         : (sides.shared?.abilities || []);
+      return this._expandMultiPileAbilities(fallbackStars);
     }
 
     const abilities = [];
@@ -138,7 +139,69 @@ class AbilityLookup {
       );
     }
 
-    return abilities;
+    return this._expandMultiPileAbilities(abilities);
+  }
+
+  /**
+   * Expands any single-effect ability whose target scope consists exclusively of
+   * multiple pile zones (e.g. ["discard_pile", "reserve_pile"] or ["deck", "reserve_pile"])
+   * into distinct per-pile choice abilities sharing a choice_group, so that multi-pile
+   * abilities (such as Samuel, the Anointer) present clean per-pile choice buttons
+   * with individual viability pre-validation.
+   *
+   * @param {Array<object>} abilities Raw resolved AST abilities.
+   * @returns {Array<object>} Expanded AST abilities.
+   * @private
+   */
+  static _expandMultiPileAbilities(abilities) {
+    if (!Array.isArray(abilities) || abilities.length === 0) return [];
+    const PILE_SCOPES = new Set([
+      "deck",
+      "discard_pile",
+      "discard",
+      "reserve_pile",
+      "reserve",
+      "banish_pile",
+      "banish",
+      "artifact_pile",
+      "artifact",
+    ]);
+
+    const expanded = [];
+    for (const ability of abilities) {
+      const effects = ability?.effects;
+      const firstEffect = Array.isArray(effects) && effects.length === 1 ? effects[0] : null;
+      const scopes = firstEffect?.target?.scope;
+
+      if (
+        firstEffect &&
+        Array.isArray(scopes) &&
+        scopes.length > 1 &&
+        scopes.every((s) => PILE_SCOPES.has(String(s).toLowerCase()))
+      ) {
+        const choiceGroupId = ability.choice_group || `${ability.ability_id}_pile_choice`;
+        for (const singleScope of scopes) {
+          expanded.push({
+            ...ability,
+            ability_id: `${ability.ability_id}__scope_${singleScope}`,
+            parent_ability_id: ability.ability_id,
+            choice_group: choiceGroupId,
+            effects: [
+              {
+                ...firstEffect,
+                target: {
+                  ...firstEffect.target,
+                  scope: [singleScope],
+                },
+              },
+            ],
+          });
+        }
+      } else {
+        expanded.push(ability);
+      }
+    }
+    return expanded;
   }
 
   /**

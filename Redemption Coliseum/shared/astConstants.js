@@ -18,6 +18,14 @@ export const AST_ACTIONS = /** @type {const} */ ({
   IMMUNE: "immune",
   PROTECT: "protect",
   SET_IMMUNITY: "set_immunity",
+  BOUNCE: "bounce",
+  RETURN_TO_HAND: "return to hand",
+  TOPDECK: "topdeck",
+  UNDERDECK: "underdeck",
+  BANISH: "banish",
+  REMOVE_FROM_THE_GAME: "remove from the game",
+  PLACE: "place",
+  TAKE: "take",
 });
 
 /**

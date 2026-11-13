@@ -104,6 +104,10 @@ class SpecialInitiativeService {
     }
 
     if (typeof room.broadcastGameLog === "function") {
+      if (item && Array.isArray(item._accumulatedLogs) && item._accumulatedLogs.length > 0) {
+        item._accumulatedLogs.forEach((msg) => room.broadcastGameLog(msg));
+        item._accumulatedLogs = [];
+      }
       room.broadcastGameLog(
         `⚡ Special Initiative: ${promptTargetText} in battle ${reasonText}! ${targetController?.name || "Defender"} may play an Enhancement or Pass.`
       );
@@ -192,6 +196,15 @@ class SpecialInitiativeService {
           specialInitiativeDeclined: true,
           targetCardIds: targetIds,
         });
+        if (
+          resumeResult &&
+          (resumeResult.awaitingTargetSelection ||
+            resumeResult.awaitingSpecialInitiative ||
+            resumeResult.awaitingConfirmation)
+        ) {
+          BattleService.recalculate(room);
+          return;
+        }
         if (resumeResult?.logEntries?.length && typeof room.broadcastGameLog === "function") {
           resumeResult.logEntries.forEach((msg) => room.broadcastGameLog(msg));
         }

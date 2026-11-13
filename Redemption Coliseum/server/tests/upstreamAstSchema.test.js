@@ -713,11 +713,22 @@ describe("Upstream Card Ability AST & Schema Updates", () => {
         controllerId: "p1",
       };
 
+      const aaronInTerritory = {
+        id: "hero_aaron",
+        Name: "Aaron",
+        inGameType: "Hero",
+        Alignment: "Good",
+        Testament: "OT",
+        ORDIR: ["Human", "Exodus Card"],
+        zone: ZONES.TERRITORY,
+        controllerId: "p1",
+      };
+
       const mockRoom = {
         state: {
           isArenaMode: false,
           players: new Map([
-            ["p1", { sessionId: "p1", name: "Player 1", territory: [dominantCard], hand: [] }],
+            ["p1", { sessionId: "p1", name: "Player 1", territory: [dominantCard, aaronInTerritory], hand: [] }],
           ]),
           battlefield: [mosesInBattle],
           effectChronicle: {
@@ -728,6 +739,7 @@ describe("Upstream Card Ability AST & Schema Updates", () => {
         cardLookup: new Map([
           ["dom_pof", dominantCard],
           ["hero_moses", mosesInBattle],
+          ["hero_aaron", aaronInTerritory],
         ]),
         clients: [{ sessionId: "p1", send: jest.fn() }],
         broadcastGameLog: jest.fn(),

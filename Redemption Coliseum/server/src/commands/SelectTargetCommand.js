@@ -47,6 +47,10 @@ class SelectTargetCommand extends BaseCommand {
     if (!player) return;
 
     if (cancelled) {
+      if (Array.isArray(item._accumulatedLogs) && item._accumulatedLogs.length > 0) {
+        item._accumulatedLogs.forEach((msg) => this.room.broadcastGameLog(msg));
+        item._accumulatedLogs = [];
+      }
       EffectChronicleService.passItem(this.room, this.client, item.id);
       return;
     }
@@ -83,11 +87,14 @@ class SelectTargetCommand extends BaseCommand {
       return;
     }
 
-    const targetEffect = targetAbility.effects[0];
+    const controllerPlayer = this.state.players.get(item.controllerId) || player;
+    const sortedEffects = [...targetAbility.effects].sort((a, b) => (a.step || 1) - (b.step || 1));
+    const stepIdx = typeof item._currentStepIndex === "number" ? item._currentStepIndex : 0;
+    const targetEffect = sortedEffects[stepIdx] || sortedEffects[0];
     const targetDef = targetEffect?.target || {};
     const eligible = TargetSelectionService.resolveEligibleTargets(
       this.room,
-      player,
+      controllerPlayer,
       targetDef,
       { sourceCard: card, actionType: targetEffect?.action }
     );
@@ -100,6 +107,9 @@ class SelectTargetCommand extends BaseCommand {
       logger.warn(`[SelectTargetCommand] Invalid target submitted: ${validation.reason}`);
       return;
     }
+
+    // Restore priority to the item's controller before resolving (in case manual_opponent assigned priority to opponent)
+    chronicle.priorityPlayerId = item.controllerId;
 
     // Execute effect via AbilityResolver with validated target options
     const astResult = this.room.abilityResolver.resolve(item, {
@@ -122,7 +132,7 @@ class SelectTargetCommand extends BaseCommand {
       if (astResult.logEntries && astResult.logEntries.length > 0) {
         astResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
       } else {
-        this.room.broadcastGameLog(`${player.name} resolves ${item.title}.`);
+        this.room.broadcastGameLog(`${controllerPlayer.name} resolves ${item.title}.`);
       }
 
       ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);

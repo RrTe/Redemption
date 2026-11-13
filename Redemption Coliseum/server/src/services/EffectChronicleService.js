@@ -171,6 +171,9 @@ class EffectChronicleService {
 
     if (chronicle.items.length === 0) {
       this.finishChronicle(room);
+    } else {
+      const nextItem = chronicle.items[0];
+      chronicle.priorityPlayerId = nextItem.controllerId;
     }
   }
 

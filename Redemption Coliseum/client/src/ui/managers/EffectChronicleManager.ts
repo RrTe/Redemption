@@ -186,13 +186,25 @@ export class EffectChronicleManager {
               const inDeck = p.deck && (p.deck as any).some((c: any) => c.id === tId);
               if (inDeck) {
                 const pos = resolvePilePosition(`${pId}:${ZONES.DECK}`);
-                if (pos) arrowEffect.setTarget(`pile_${tId}`, pos, true);
+                if (pos) arrowEffect.setTarget(`pile_${pId}_${ZONES.DECK}`, pos, true);
                 break;
               }
               const inDiscard = p.discard && (p.discard as any).some((c: any) => c.id === tId);
               if (inDiscard) {
                 const pos = resolvePilePosition(`${pId}:${ZONES.DISCARD}`);
-                if (pos) arrowEffect.setTarget(`pile_${tId}`, pos, true);
+                if (pos) arrowEffect.setTarget(`pile_${pId}_${ZONES.DISCARD}`, pos, true);
+                break;
+              }
+              const inReserve = (p as any).reserve && ((p as any).reserve as any).some((c: any) => c.id === tId);
+              if (inReserve) {
+                const pos = resolvePilePosition(`${pId}:${ZONES.RESERVE}`);
+                if (pos) arrowEffect.setTarget(`pile_${pId}_${ZONES.RESERVE}`, pos, true);
+                break;
+              }
+              const inBanish = (p as any).banish && ((p as any).banish as any).some((c: any) => c.id === tId);
+              if (inBanish) {
+                const pos = resolvePilePosition(`${pId}:${ZONES.BANISH}`);
+                if (pos) arrowEffect.setTarget(`pile_${pId}_${ZONES.BANISH}`, pos, true);
                 break;
               }
             }

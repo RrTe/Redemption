@@ -32,6 +32,7 @@ export interface SelectedCardInfo {
 export interface SelectionDialogData {
   title: string;
   cards: CardState[];
+  eligibleCardIds?: string[];
   room?: TypedRoom;
   showCloseButton: boolean;
   isInteractive: boolean;
@@ -342,6 +343,7 @@ export class SelectionDialogScene extends Phaser.Scene {
       this.transitionHandler,
       (card) => this.onCardClicked(card),
       this.selectedCards,
+      this.dialogData.eligibleCardIds,
     );
 
     const baseDelay = animate ? 300 : 0;
@@ -382,6 +384,9 @@ export class SelectionDialogScene extends Phaser.Scene {
 
   private onCardClicked(card: CardUI) {
     const id = card.cardData.id;
+    if (this.dialogData.eligibleCardIds && !this.dialogData.eligibleCardIds.includes(id)) {
+      return;
+    }
     const rules = this.dialogData.selectionRules || { min: 0, max: Infinity };
     if (this.selectedCards.has(id)) {
       this.selectedCards.delete(id);
@@ -397,14 +402,20 @@ export class SelectionDialogScene extends Phaser.Scene {
 
     this.uiManager.cardUIs.forEach((cUI) => {
       const cId = cUI.cardData.id;
+      const isEligible = !this.dialogData.eligibleCardIds || this.dialogData.eligibleCardIds.includes(cId);
       if (this.selectedCards.has(cId)) {
         cUI.setTint(0x00ff00);
+        cUI.setAlpha(1);
+      } else if (!isEligible) {
+        cUI.setTint(0x666666);
+        cUI.setAlpha(0.65);
       } else {
         cUI.clearTint();
+        cUI.setAlpha(1);
       }
       this.uiManager.setToggleInteractivity(
         cId,
-        !this.selectedCards.has(cId),
+        !this.selectedCards.has(cId) && isEligible,
         this.uiManager.cardUIs,
       );
     });
@@ -424,7 +435,7 @@ export class SelectionDialogScene extends Phaser.Scene {
       (c: any) => !this.isLostSoul(c),
     ).length;
 
-    if (this.selectedCards.has(id)) {
+    if (this.selectedCards.has(id) && !this.dialogData.confirmButtonLabel) {
       const card = selectedStates.find((c: any) => c.id === id);
       if (!this.isLostSoul(card) && nonLostSoulHandCount === handLimits.myFreeSlots && handLimits.myFreeSlots > 0) {
         ToastManager.show(
@@ -503,10 +514,16 @@ export class SelectionDialogScene extends Phaser.Scene {
 
     this.uiManager.cardUIs.forEach((cUI) => {
       const cId = cUI.cardData.id;
+      const isEligible = !this.dialogData.eligibleCardIds || this.dialogData.eligibleCardIds.includes(cId);
       if (this.selectedCards.has(cId)) {
         cUI.setTint(0x00ff00);
+        cUI.setAlpha(1);
+      } else if (!isEligible) {
+        cUI.setTint(0x666666);
+        cUI.setAlpha(0.65);
       } else {
         cUI.clearTint();
+        cUI.setAlpha(1);
       }
     });
 

@@ -100,6 +100,16 @@ export class AbilityPromptManager {
       });
     };
 
+    const onSelectChoiceAction = (choice: { abilityId: string; label: string }) => {
+      this.activePromptMsg = null;
+      this.cleanupHighlight();
+      this.networkManager.sendRespondOptionalAbility({
+        itemId: msg.itemId,
+        accepted: true,
+        chosenAbilityId: choice.abilityId,
+      });
+    };
+
     const onDeclineAction = () => {
       this.activePromptMsg = null;
       this.cleanupHighlight();
@@ -112,18 +122,25 @@ export class AbilityPromptManager {
     const isHelpEnabled = this.settingsManager?.isInGameSupportEnabled() ?? true;
 
     // 2. Branch according to In-Game Help setting
-    if (isHelpEnabled) {
+    if (isHelpEnabled || (msg.choices && msg.choices.length > 1)) {
       const cardData = cardUI?.cardData || {
         cardId: msg.cardId,
         ImageFile: msg.cardImageFile,
         Name: msg.cardTitle,
       };
 
+      const hasSingleChoice = Boolean(msg.choices && msg.choices.length === 1);
+      const dialogMessage = hasSingleChoice
+        ? `Choose an effect for ${msg.cardTitle || "this card"}:`
+        : msg.promptText || `Activate the optional ability of ${msg.cardTitle}?`;
+
       const dialogData: ConfirmationDialogData = {
         title: msg.cardTitle || "Optional Ability",
-        message: msg.promptText || `Activate the optional ability of ${msg.cardTitle}?`,
+        message: dialogMessage,
         confirmLabel: "Activate",
         declineLabel: "Pass",
+        choices: msg.choices,
+        onSelectChoice: onSelectChoiceAction,
         cardImageFile: msg.cardImageFile,
         templateId: msg.templateId,
         cardData,

@@ -96,10 +96,120 @@ export class TargetingManager {
     this.selectedCardIds.clear();
     this.selectedPileId = null;
 
+    // Intercept pile zone targeting: cards in Deck, Reserve, Discard, Banish, or Artifact pile
+    // open the interactive SelectionDialogScene instead of world-space Bézier board arrows.
+    const isPileTarget = Boolean(
+      request.isPileTarget ||
+      (request.targetZone && [ZONES.RESERVE, ZONES.DECK, ZONES.DISCARD, ZONES.BANISH, ZONES.ARTIFACT].includes(request.targetZone as any))
+    );
+
+    if (isPileTarget && request.targetType !== "pile") {
+      const primaryZone = (request.targetZone as any) || ZONES.RESERVE;
+      const eligibleSet = new Set(request.eligibleCardIds || []);
+      const cardsToPresent: any[] = [];
+      const pileZonesToCheck = [
+        ZONES.RESERVE,
+        ZONES.DECK,
+        ZONES.DISCARD,
+        ZONES.BANISH,
+        ZONES.ARTIFACT,
+      ];
+
+      if (this.room.state?.players) {
+        if (request.searchedPiles && request.searchedPiles.length > 0) {
+          for (const pileSpec of request.searchedPiles) {
+            const [ownerId, zoneName] = pileSpec.split(":");
+            const p = this.room.state.players.get(ownerId);
+            if (!p) continue;
+            const pile = (p as any)[zoneName] || [];
+            for (const card of pile) {
+              if (!cardsToPresent.some((c) => c.id === card.id)) {
+                cardsToPresent.push(card);
+              }
+            }
+          }
+        } else {
+          for (const player of this.room.state.players.values()) {
+            for (const zone of pileZonesToCheck) {
+              const pile = (player as any)[zone] || [];
+              for (const card of pile) {
+                if (eligibleSet.has(card.id) && !cardsToPresent.some((c) => c.id === card.id)) {
+                  cardsToPresent.push(card);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (cardsToPresent.length > 18 && eligibleSet.size > 0) {
+        cardsToPresent.sort((a, b) => {
+          const aEl = eligibleSet.has(a.id) ? 0 : 1;
+          const bEl = eligibleSet.has(b.id) ? 0 : 1;
+          return aEl - bEl;
+        });
+      }
+
+      if (cardsToPresent.length === 0 && request.eligibleCardIds) {
+        for (const id of request.eligibleCardIds) {
+          cardsToPresent.push({ id, Name: "Card", zone: primaryZone });
+        }
+      }
+
+      const isReadOnlyInspection =
+        (request.eligibleCardIds || []).length === 0 && (request.maxTargets ?? 1) === 0;
+
+      if (this.scene.scene.isActive("SelectionDialogScene")) {
+        this.scene.scene.stop("SelectionDialogScene");
+      }
+
+      const maxSelectionTargets = request.maxTargets ?? 1;
+      this.scene.scene.pause("CardGame");
+      this.scene.scene.launch("SelectionDialogScene", {
+        title: request.promptText || `Select card from ${primaryZone}`,
+        cards: cardsToPresent,
+        eligibleCardIds: request.eligibleCardIds,
+        room: this.room,
+        showCloseButton: Boolean(request.canCancel || isReadOnlyInspection),
+        confirmButtonLabel: isReadOnlyInspection ? undefined : "Confirm",
+        hidePlayerLabels: true,
+        isInteractive: !isReadOnlyInspection,
+        isMyAction: true,
+        fromZone: primaryZone,
+        autoReplaceOnMax: maxSelectionTargets === 1,
+        selectionRules: {
+          min: request.minTargets ?? 1,
+          max: maxSelectionTargets,
+        },
+        onComplete: (result: any) => {
+          const selectedIds = (result?.selectedCards || []).map((c: any) => c.id);
+          this.networkManager.sendSelectTarget({
+            abilityId: request.abilityId,
+            itemId: request.itemId,
+            selectedCardIds: selectedIds,
+          });
+          this.stopTargeting(true);
+        },
+        onCancel: () => {
+          this.networkManager.sendSelectTarget({
+            abilityId: request.abilityId,
+            itemId: request.itemId,
+            cancelled: true,
+          });
+          this.stopTargeting(true);
+        },
+      });
+      return;
+    }
+
     const maxTargets = request.maxTargets ?? 1;
     const isMultiTarget = maxTargets > 1;
     const isOptionalUpTo = request.minTargets === 0;
-    const shouldShowHUD = isMultiTarget || isOptionalUpTo || Boolean(request.canCancel);
+    const shouldShowHUD =
+      isMultiTarget ||
+      isOptionalUpTo ||
+      Boolean(request.canCancel) ||
+      request.targetZone === ZONES.HAND;
 
     this.scene.input.keyboard?.on("keydown-ESC", this.handleEscKey, this);
     if (shouldShowHUD) {

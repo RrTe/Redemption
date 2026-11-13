@@ -22,6 +22,7 @@ export class CardVisuals {
   // Core Visuals
   private cardFrontImage: Phaser.GameObjects.Image | null = null;
   private cardBackImage: Phaser.GameObjects.Image | null = null;
+  private currentTint: number | undefined = undefined;
   private background: Phaser.GameObjects.Rectangle;
   private shadow: Phaser.GameObjects.NineSlice;
   private brightnessOverlay: Phaser.GameObjects.Rectangle;
@@ -230,6 +231,9 @@ export class CardVisuals {
     if (this.cardFrontImage) this.cardFrontImage.destroy();
     this.cardFrontImage = this.scene.add.image(0, 0, key);
     this.cardFrontImage.setDisplaySize(this.cardUI.width, this.cardUI.height);
+    if (this.currentTint !== undefined) {
+      this.cardFrontImage.setTint(this.currentTint);
+    }
     this.cardUI.add(this.cardFrontImage);
   }
 
@@ -238,6 +242,9 @@ export class CardVisuals {
     if (this.cardBackImage) this.cardBackImage.destroy();
     this.cardBackImage = this.scene.add.image(0, 0, key);
     this.cardBackImage.setDisplaySize(this.cardUI.width, this.cardUI.height);
+    if (this.currentTint !== undefined) {
+      this.cardBackImage.setTint(this.currentTint);
+    }
     this.cardUI.add(this.cardBackImage);
   }
 
@@ -298,6 +305,7 @@ export class CardVisuals {
 
   /** Wendet Tint auf die Bilder an. */
   public setTint(color: number | undefined) {
+    this.currentTint = color;
     if (color === undefined) {
       this.cardFrontImage?.clearTint();
       this.cardBackImage?.clearTint();

@@ -15,6 +15,14 @@ export declare const AST_ACTIONS: {
   readonly IMMUNE: "immune";
   readonly PROTECT: "protect";
   readonly SET_IMMUNITY: "set_immunity";
+  readonly BOUNCE: "bounce";
+  readonly RETURN_TO_HAND: "return to hand";
+  readonly TOPDECK: "topdeck";
+  readonly UNDERDECK: "underdeck";
+  readonly BANISH: "banish";
+  readonly REMOVE_FROM_THE_GAME: "remove from the game";
+  readonly PLACE: "place";
+  readonly TAKE: "take";
 };
 
 export declare const AST_SELECTION_MODES: {

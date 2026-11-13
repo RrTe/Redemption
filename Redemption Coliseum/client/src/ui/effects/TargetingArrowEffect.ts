@@ -104,7 +104,11 @@ export class TargetingArrowEffect {
   }
 
   private getSourcePos(): { x: number; y: number } {
-    if ("getWorldTransformMatrix" in this.source && typeof (this.source as any).getWorldTransformMatrix === "function") {
+    if (
+      "getWorldTransformMatrix" in this.source &&
+      typeof (this.source as any).getWorldTransformMatrix === "function" &&
+      (this.source as any).scene
+    ) {
       const mat = (this.source as any).getWorldTransformMatrix();
       return { x: mat.tx, y: mat.ty };
     }
@@ -113,7 +117,11 @@ export class TargetingArrowEffect {
   }
 
   private getTargetPos(target: ArrowTarget["target"]): { x: number; y: number } {
-    if ("getWorldTransformMatrix" in target && typeof (target as any).getWorldTransformMatrix === "function") {
+    if (
+      "getWorldTransformMatrix" in target &&
+      typeof (target as any).getWorldTransformMatrix === "function" &&
+      (target as any).scene
+    ) {
       const mat = (target as any).getWorldTransformMatrix();
       return { x: mat.tx, y: mat.ty };
     }

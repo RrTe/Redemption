@@ -4,6 +4,13 @@ import { SoundManager } from "../managers/SoundManager";
 import { PreviewManager } from "../ui/managers/PreviewManager";
 import { UI_STRINGS } from "../constants/uiStrings";
 
+export interface ConfirmationDialogChoice {
+  abilityId: string;
+  label: string;
+  action?: string;
+  disabled?: boolean;
+}
+
 export interface ConfirmationDialogData {
   title?: string;
   message: string;
@@ -11,6 +18,8 @@ export interface ConfirmationDialogData {
   declineLabel?: string;
   onConfirm: () => void;
   onDecline: () => void;
+  choices?: ConfirmationDialogChoice[];
+  onSelectChoice?: (choice: ConfirmationDialogChoice) => void;
   cardImageFile?: string;
   templateId?: string;
   cardData?: any;
@@ -48,9 +57,10 @@ export class ConfirmationDialogScene extends Phaser.Scene {
     this.game.events.on("viewport-changed", this.onResize, this);
 
     const hasCard = Boolean(this.dialogData.cardImageFile);
-    const baseW = hasCard ? 500 : 460;
-    const baseH = hasCard ? 320 : 240;
-    const totalVisualH = hasCard ? 410 : baseH;
+    const hasChoices = Boolean(this.dialogData.choices && this.dialogData.choices.length > 0);
+    const baseW = hasCard ? 520 : 480;
+    const baseH = hasChoices ? (hasCard ? 410 : 330) : (hasCard ? 320 : 240);
+    const totalVisualH = hasCard ? (baseH + 90) : baseH;
 
     // Responsive scaling factor based on current viewport
     const scaleFactor = Math.min(
@@ -120,6 +130,46 @@ export class ConfirmationDialogScene extends Phaser.Scene {
     const btnOffset = Math.max(btnW / 2 + 8, Math.round(90 * scaleFactor));
     const confirmLabel = this.dialogData.confirmLabel || UI_STRINGS.DIALOGS.CONFIRM_DEFAULT_ACCEPT;
     const declineLabel = this.dialogData.declineLabel || UI_STRINGS.DIALOGS.CONFIRM_DEFAULT_DECLINE;
+
+    if (hasChoices && this.dialogData.choices && this.dialogData.choices.length > 0) {
+      const choices = this.dialogData.choices;
+      const choiceBtnH = Math.max(30, Math.round(36 * scaleFactor));
+      const choiceBtnW = Math.min(width - 30, Math.round(430 * scaleFactor));
+      const totalButtonsH = choices.length * (choiceBtnH + 6) + choiceBtnH;
+      const startY = buttonY - totalButtonsH / 2 + choiceBtnH / 2;
+
+      choices.forEach((choice, idx) => {
+        const bY = startY + idx * (choiceBtnH + 6);
+        const isDisabled = Boolean(choice.disabled);
+        this.createHudButton(
+          cx,
+          bY,
+          choiceBtnW,
+          choiceBtnH,
+          choice.label,
+          isDisabled ? 0x1e293b : 0x1e3a8a,
+          isDisabled ? 0x1e293b : 0x3b82f6,
+          scaleFactor,
+          () => {
+            if (isDisabled) return;
+            this.soundManager?.playSound("UI_CLICK");
+            this.previewManager?.hide();
+            this.dialogData.onSelectChoice?.(choice);
+            this.scene.stop();
+          },
+          isDisabled
+        );
+      });
+
+      const declineY = startY + choices.length * (choiceBtnH + 6);
+      this.createHudButton(cx, declineY, Math.round(140 * scaleFactor), choiceBtnH - 4, declineLabel, 0x334155, 0x475569, scaleFactor, () => {
+        this.soundManager?.playSound("UI_CLICK");
+        this.previewManager?.hide();
+        this.dialogData.onDecline();
+        this.scene.stop();
+      });
+      return;
+    }
 
     // Accept Button (emerald green with gold border)
     this.createHudButton(cx - btnOffset, buttonY, btnW, btnH, confirmLabel, 0x166534, 0x22c55e, scaleFactor, () => {
@@ -203,46 +253,50 @@ export class ConfirmationDialogScene extends Phaser.Scene {
     color: number,
     hoverColor: number,
     scaleFactor: number,
-    callback: () => void
+    callback: () => void,
+    disabled: boolean = false
   ): Phaser.GameObjects.Container {
     const container = this.add.container(x, y);
 
     const bg = this.add.graphics();
-    bg.fillStyle(color, 1);
+    bg.fillStyle(color, disabled ? 0.55 : 1);
     bg.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-    bg.lineStyle(1.5, 0xd4af37, 0.9);
+    bg.lineStyle(1.5, disabled ? 0x475569 : 0xd4af37, disabled ? 0.5 : 0.9);
     bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
 
+    const baseFontPx = label.length > 36 ? 13 : 15;
     const text = this.add
       .text(0, 0, label, {
-        fontSize: `${Math.max(11, Math.round(15 * scaleFactor))}px`,
+        fontSize: `${Math.max(10, Math.round(baseFontPx * scaleFactor))}px`,
         fontFamily: "'Segoe UI', 'Trebuchet MS', Arial, sans-serif",
         fontStyle: "bold",
-        color: "#ffffff",
+        color: disabled ? "#64748b" : "#ffffff",
       })
       .setOrigin(0.5);
 
     container.add([bg, text]);
     container.setSize(w, h);
-    container.setInteractive({ useHandCursor: true });
+    if (!disabled) {
+      container.setInteractive({ useHandCursor: true });
 
-    container.on("pointerover", () => {
-      bg.clear();
-      bg.fillStyle(hoverColor, 1);
-      bg.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-      bg.lineStyle(1.5, 0xffe066, 1);
-      bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
-    });
+      container.on("pointerover", () => {
+        bg.clear();
+        bg.fillStyle(hoverColor, 1);
+        bg.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
+        bg.lineStyle(1.5, 0xffe066, 1);
+        bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+      });
 
-    container.on("pointerout", () => {
-      bg.clear();
-      bg.fillStyle(color, 1);
-      bg.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-      bg.lineStyle(1.5, 0xd4af37, 0.9);
-      bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
-    });
+      container.on("pointerout", () => {
+        bg.clear();
+        bg.fillStyle(color, 1);
+        bg.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
+        bg.lineStyle(1.5, 0xd4af37, 0.9);
+        bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+      });
 
-    container.on("pointerdown", callback);
+      container.on("pointerdown", callback);
+    }
     return container;
   }
 }

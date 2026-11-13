@@ -136,7 +136,7 @@ export class SelectionDialogUIManager {
         .add([bg, txt])
         .setSize(bWidth, bHeight)
         .setInteractive({ useHandCursor: true })
-        .setData("zone", "hand")
+        .setData("zone", "confirm")
         .setData("target", "me");
       btn.on("pointerdown", () => {
         if (btn.alpha < 1) return;
@@ -281,7 +281,8 @@ export class SelectionDialogUIManager {
     previewManager: any,
     transitionHandler: any,
     onCardClicked: (card: CardUI) => void,
-    selectedCards: Set<string>
+    selectedCards: Set<string>,
+    eligibleCardIds?: string[]
   ): { xCoords: number[]; targets: (Phaser.GameObjects.GameObject | Phaser.GameObjects.GameObject[])[] } {
     const isShort = ViewportManager.isLowHeightProfile();
     const isRevealMode = !isInteractive;
@@ -320,9 +321,21 @@ export class SelectionDialogUIManager {
 
       // ✨ FIX: Disable standard drag-and-drop for cards inside the Selection Dialog
       const sessionId = (this.scene as any).room?.sessionId || "";
-      this.setupCardInteractivity(card, isInteractive, previewManager, sessionId, transitionHandler, () => onCardClicked(card));
+      const isCardEligible = !eligibleCardIds || eligibleCardIds.includes(data.id);
+      this.setupCardInteractivity(
+        card,
+        isInteractive && isCardEligible,
+        previewManager,
+        sessionId,
+        transitionHandler,
+        () => onCardClicked(card)
+      );
       if (selectedCards.has(data.id)) {
         card.setTint(0x00ff00);
+        card.setAlpha(1);
+      } else if (!isCardEligible) {
+        card.setTint(0x666666);
+        card.setAlpha(0.65);
       }
       if (!isInteractive && fromZone === "hand") {
         card.badge.show(String(i + 1), "top-left");
@@ -343,7 +356,7 @@ export class SelectionDialogUIManager {
 
       xCoords.push(tx);
       targets.push([card, toggle]);
-      this.setToggleInteractivity(data.id, !selectedCards.has(data.id), this.cardUIs);
+      this.setToggleInteractivity(data.id, !selectedCards.has(data.id) && isCardEligible, this.cardUIs);
     });
 
     return { xCoords, targets };
@@ -453,7 +466,9 @@ export class SelectionDialogUIManager {
     card.on("pointerover", () => {
       if (transitionHandler.isTransitioning) return;
       this.scene.children.bringToTop(card);
-      card.startGlow(true);
+      if (isInteractive) {
+        card.startGlow(true);
+      }
       this.soundManager.playSound("CARD_HOVER_FIELD");
       this.scene.tweens.add({
         targets: card,

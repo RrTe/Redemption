@@ -141,7 +141,7 @@ export class CardRenderer {
     this.elementManager.staticElements.boardText.setText(
       `Territory: ${totalTerritoryCount} Karten`,
     );
-    this.cleanupUnusedCardUIs(renderedCardIds);
+    this.cleanupUnusedCardUIs(renderedCardIds, player, opponent);
     this.scene.events.emit("cardsRendered");
   }
 
@@ -549,11 +549,82 @@ export class CardRenderer {
     this.cardUIs.clear();
   }
 
-  private cleanupUnusedCardUIs(renderedCardIds: Set<string>) {
+  private resolveConcealedPileTarget(
+    cardId: string,
+    player: PlayerState,
+    opponent: PlayerState | undefined,
+  ): { x: number; y: number } | undefined {
+    const hasCard = (list: any): boolean =>
+      Boolean(
+        list &&
+          (typeof list.some === "function"
+            ? list.some((c: any) => c.id === cardId)
+            : Array.from(list).some((c: any) => c?.id === cardId)),
+      );
+
+    if (hasCard(player?.deck) && this.layout?.playerDeckPile) {
+      return {
+        x: this.layout.playerDeckPile.centerX,
+        y: this.layout.playerDeckPile.centerY,
+      };
+    }
+    if (opponent && hasCard(opponent.deck) && this.layout?.opponentDeckPile) {
+      return {
+        x: this.layout.opponentDeckPile.centerX,
+        y: this.layout.opponentDeckPile.centerY,
+      };
+    }
+    if (hasCard(player?.reserve) && this.layout?.playerReservePile) {
+      return {
+        x: this.layout.playerReservePile.centerX,
+        y: this.layout.playerReservePile.centerY,
+      };
+    }
+    if (opponent && hasCard(opponent.reserve) && this.layout?.opponentReservePile) {
+      return {
+        x: this.layout.opponentReservePile.centerX,
+        y: this.layout.opponentReservePile.centerY,
+      };
+    }
+    return undefined;
+  }
+
+  private cleanupUnusedCardUIs(
+    renderedCardIds: Set<string>,
+    player?: PlayerState,
+    opponent?: PlayerState,
+  ) {
     for (const cardId of this.cardUIs.keys()) {
       if (!renderedCardIds.has(cardId)) {
-        this.cardUIs.get(cardId)?.destroy();
+        const cardUI = this.cardUIs.get(cardId);
         this.cardUIs.delete(cardId);
+        if (!cardUI) continue;
+
+        const pileTarget = player
+          ? this.resolveConcealedPileTarget(cardId, player, opponent)
+          : undefined;
+
+        if (pileTarget && cardUI.scene) {
+          this.animationManager.stopActiveTween(cardId);
+          cardUI.disableInteractive();
+          this.scene.children.bringToTop(cardUI);
+          this.scene.tweens.add({
+            targets: cardUI,
+            x: pileTarget.x,
+            y: pileTarget.y,
+            angle: 0,
+            alpha: 0.85,
+            duration: 380,
+            ease: "Cubic.easeInOut",
+            onComplete: () => {
+              if (cardUI.scene) {
+                cardUI.destroy();
+              }
+            },
+          });
+        } else {
+          cardUI.destroy();
+        }
       }
     }
   }

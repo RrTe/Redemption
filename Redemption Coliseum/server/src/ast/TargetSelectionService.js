@@ -8,8 +8,23 @@ const {
 } = require("../../../shared/astConstants");
 const { BattleCharacterClassifier } = require("../services/BattleCharacterClassifier");
 const { ProtectionService } = require("../../../shared/rules/ProtectionService");
+const { MovementRules } = require("../../../shared/rules/MovementRules");
 const { StatFilterEvaluator } = require("../../../shared/rules/StatFilterEvaluator");
 const { matchesCardType, matchesTargetType } = require("../../../shared/cardHierarchy");
+
+const RESERVE_REMOVAL_ACTIONS = [
+  AST_ACTIONS.TAKE,
+  AST_ACTIONS.TOPDECK,
+  AST_ACTIONS.UNDERDECK,
+  AST_ACTIONS.BOUNCE,
+  AST_ACTIONS.RETURN_TO_HAND,
+  AST_ACTIONS.DISCARD,
+  AST_ACTIONS.BANISH,
+  AST_ACTIONS.REMOVE_FROM_THE_GAME,
+  AST_ACTIONS.PLACE,
+  AST_ACTIONS.BAND,
+  AST_ACTIONS.ADD_TO_BATTLE,
+];
 
 /**
  * Service for querying and evaluating valid targets according to card AST rules.
@@ -46,10 +61,22 @@ class TargetSelectionService {
       : (typeof targetDef.count?.fixed_value === "number"
         ? targetDef.count.fixed_value
         : (hasCustomMax ? targetDef.count.max_value : 1));
-    const isManual = targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_CONTROLLER;
+    const isManualOpponent = targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_OPPONENT;
+    const isManual =
+      targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_CONTROLLER || isManualOpponent;
+
+    let selectingPlayerId = actingPlayer?.sessionId || "";
+    if (isManualOpponent && room?.state?.players) {
+      const opponent = Array.from(room.state.players.values()).find(
+        (p) => p.sessionId !== actingPlayer?.sessionId
+      );
+      if (opponent) {
+        selectingPlayerId = opponent.sessionId;
+      }
+    }
 
     // 1. Evaluate Pile-Targeting effects (e.g. deck/discard/reserve targeting)
-    if (this._isPileTargeting(scope, targetType)) {
+    if (this._isPileTargeting(scope, targetType, targetDef, context)) {
       const eligiblePiles = [];
       const scopes = this._normalizeScopes(scope);
       let pileZone = ZONES.DECK;
@@ -90,6 +117,7 @@ class TargetSelectionService {
 
       return {
         targetType: "pile",
+        selectingPlayerId,
         eligibleCardIds: [],
         eligiblePiles,
         requiresSelection,
@@ -108,6 +136,9 @@ class TargetSelectionService {
       : scope;
     const defaultZoneNames = this._resolveTargetZones(effectiveScope);
     const eligibleCardIds = [];
+    const searchedPiles = [];
+    let blockedByRound1Reserve = false;
+    let canInspectOpponentReserve = false;
 
     for (const p of playersToScan) {
       const isSelf = p.sessionId === actingPlayer.sessionId;
@@ -116,9 +147,48 @@ class TargetSelectionService {
         : defaultZoneNames;
 
       for (const zName of zoneNames) {
+        // Concealed opponent draw deck is never scanned unless explicitly targeted via zone_owner: "opponent"
+        if (zName === ZONES.DECK && !isSelf && targetDef.zone_owner !== AST_ZONE_OWNERS.OPPONENT) {
+          continue;
+        }
+
         const zoneCards = zName === ZONES.BATTLEFIELD
           ? (room?.state?.battlefield || []).filter((c) => (c.controllerId || c.ownerId) === p.sessionId)
           : (p[zName] || []);
+
+        // Enforce Official REG Round 1 Reserve Rule during target pre-validation
+        if (
+          zName === ZONES.RESERVE &&
+          action &&
+          RESERVE_REMOVAL_ACTIONS.includes(action) &&
+          typeof room?.state?.round === "number"
+        ) {
+          const reserveRule = MovementRules.reserveFirstRoundRule({
+            fromZone: ZONES.RESERVE,
+            toZone: ZONES.HAND,
+            state: room?.state,
+          });
+          if (!reserveRule.valid) {
+            blockedByRound1Reserve = true;
+            if (!isSelf && zoneCards.length > 0) {
+              canInspectOpponentReserve = true;
+              const oppPileKey = `${p.sessionId}:${zName}`;
+              if (!searchedPiles.includes(oppPileKey)) {
+                searchedPiles.push(oppPileKey);
+              }
+            }
+            continue;
+          }
+        }
+
+        if (
+          [ZONES.RESERVE, ZONES.DISCARD, ZONES.BANISH, ZONES.DECK, ZONES.ARTIFACT].includes(zName)
+        ) {
+          const pileKey = `${p.sessionId}:${zName}`;
+          if (!searchedPiles.includes(pileKey)) {
+            searchedPiles.push(pileKey);
+          }
+        }
 
         for (const card of zoneCards) {
           if (isBand) {
@@ -163,14 +233,49 @@ class TargetSelectionService {
       ? `Select up to ${targetDef.count.max_value} card(s) to target`
       : `Select ${count} card(s) to target`;
 
+    const normScopes = this._normalizeScopes(effectiveScope);
+    const PILE_SCOPES = [
+      "deck",
+      "discard_pile",
+      "discard",
+      "reserve_pile",
+      "reserve",
+      "banish_pile",
+      "banish",
+      "artifact_pile",
+      "artifact",
+    ];
+    const isPileTarget =
+      normScopes.length > 0 &&
+      normScopes.every((s) => PILE_SCOPES.includes(s));
+    let targetZone = undefined;
+    if (isPileTarget) {
+      if (defaultZoneNames.length === 1) {
+        targetZone = defaultZoneNames[0];
+      } else if (eligibleCardIds.length > 0) {
+        const firstCard = room?.cardLookup?.get(eligibleCardIds[0]);
+        targetZone = firstCard?.zone || defaultZoneNames[0];
+      } else {
+        targetZone = defaultZoneNames[0];
+      }
+    } else if (defaultZoneNames.length === 1) {
+      targetZone = defaultZoneNames[0];
+    }
+
     return {
       targetType: "card",
+      targetZone,
+      isPileTarget,
+      selectingPlayerId,
+      searchedPiles: isPileTarget ? searchedPiles : [],
+      blockedByRound1Reserve,
+      canInspectOpponentReserve,
       eligibleCardIds,
       eligiblePiles: [],
       requiresSelection,
       minTargets,
       maxTargets,
-      canCancel: Boolean(targetDef.can_cancel || isOptionalUpTo),
+      canCancel: Boolean(targetDef.can_cancel || isOptionalUpTo || context.isOptional),
       promptText: targetDef.prompt_text || defaultPrompt,
     };
   }
@@ -477,14 +582,48 @@ class TargetSelectionService {
    * @param {string} targetType Target type.
    * @returns {boolean} True if effect targets a pile.
    */
-  static _isPileTargeting(scope, targetType) {
+  static _isPileTargeting(scope, targetType, targetDef = {}, context = {}) {
     const scopes = this._normalizeScopes(scope);
     const t = (targetType || "").toLowerCase().replace(/[\s_-]+/g, "_").trim();
     const pileScopes = ["deck", "discard_pile", "discard", "reserve_pile", "reserve", "banish_pile", "banish"];
     const hasPileScope = scopes.some((s) => pileScopes.includes(s));
     if (!hasPileScope) return false;
 
-    if (scopes.includes("deck")) return true;
+    // Card-level types or card filters always target cards inside piles, not the pile container itself
+    const CARD_TYPES = [
+      "card", "cards", "enhancement", "hero", "evil_character", "character",
+      "artifact", "dominant", "lost_soul", "site", "fortress", "curse", "covenant",
+      "good_enhancement", "evil_enhancement", "good_character"
+    ];
+    const hasCardFilters = Boolean(
+      (targetDef.alignment && targetDef.alignment !== "either") ||
+      (Array.isArray(targetDef.brigades) && targetDef.brigades.length > 0) ||
+      (Array.isArray(targetDef.references) && targetDef.references.length > 0) ||
+      (Array.isArray(targetDef.identifiers) && targetDef.identifiers.length > 0) ||
+      (Array.isArray(targetDef.card_titles) && targetDef.card_titles.length > 0) ||
+      (Array.isArray(targetDef.stat_filters) && targetDef.stat_filters.length > 0) ||
+      targetDef.testament
+    );
+    if (CARD_TYPES.includes(t) || hasCardFilters) {
+      const action = context.actionType || context.action || targetDef.action;
+      const isCardTransfer = [
+        AST_ACTIONS.UNDERDECK,
+        AST_ACTIONS.TOPDECK,
+        AST_ACTIONS.TAKE,
+        AST_ACTIONS.BOUNCE,
+        AST_ACTIONS.RETURN_TO_HAND,
+        AST_ACTIONS.PLACE,
+        AST_ACTIONS.SEARCH,
+        AST_ACTIONS.BAND,
+      ].includes(action);
+      if (isCardTransfer || hasCardFilters || (t && t !== "card" && CARD_TYPES.includes(t))) {
+        return false;
+      }
+    }
+
+    if (scopes.includes("deck")) {
+      return !t || ["deck", "pile", "top_card"].includes(t);
+    }
     if (scopes.some((s) => ["discard_pile", "discard", "reserve_pile", "reserve", "banish_pile", "banish"].includes(s))) {
       return !t || ["discard_pile", "pile", "top_card", "deck", "reserve_pile", "banish_pile"].includes(t);
     }
