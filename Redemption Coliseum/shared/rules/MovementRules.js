@@ -34,13 +34,16 @@ export class MovementRules {
     const canMoveToAnyBondage = toZone === ZONES.LAND_OF_BONDAGE;
     const canMoveToOwnDeck = toZone === ZONES.DECK && targetPlayerId === card.originalOwnerId;
     const canMoveToOwnDiscard = toZone === ZONES.DISCARD && targetPlayerId === card.originalOwnerId;
-    const canMoveToOpponentRedemption =
+    // Allow rescuing from another player's Land of Bondage regardless of originalOwnerId
+    // (covers own Lost Souls placed into an opponent's LoB, e.g. Hopper).
+    const canMoveToOtherRedemption =
       toZone === ZONES.LAND_OF_REDEMPTION &&
-      targetPlayerId !== card.originalOwnerId &&
       fromZone === ZONES.LAND_OF_BONDAGE &&
-      cardControllerId === card.originalOwnerId;
+      Boolean(targetPlayerId) &&
+      Boolean(cardControllerId) &&
+      targetPlayerId !== cardControllerId;
 
-    if (canMoveToAnyBondage || canMoveToOwnDeck || canMoveToOwnDiscard || canMoveToOpponentRedemption) {
+    if (canMoveToAnyBondage || canMoveToOwnDeck || canMoveToOwnDiscard || canMoveToOtherRedemption) {
       return { valid: true };
     }
 

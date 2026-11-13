@@ -41,6 +41,26 @@ describe("MovementRules (Isolated Pure Function Unit Tests)", () => {
       };
       expect(LostSoulMovementRule(validRescue)).toEqual({ valid: true });
 
+      // Own Lost Soul previously placed in opponent's Land of Bondage (e.g. Hopper)
+      // can be rescued back into original owner's Land of Redemption.
+      const hopperRescue = {
+        card: { ...lostSoul, originalOwnerId: p1, controllerId: p2 },
+        toZone: ZONES.LAND_OF_REDEMPTION,
+        fromZone: ZONES.LAND_OF_BONDAGE,
+        targetPlayerId: p1,
+        cardControllerId: p2,
+      };
+      expect(LostSoulMovementRule(hopperRescue)).toEqual({ valid: true });
+
+      const selfRedeemFromOwnLoB = {
+        card: lostSoul,
+        toZone: ZONES.LAND_OF_REDEMPTION,
+        fromZone: ZONES.LAND_OF_BONDAGE,
+        targetPlayerId: p1,
+        cardControllerId: p1,
+      };
+      expect(LostSoulMovementRule(selfRedeemFromOwnLoB)).toEqual({ valid: false, error: "Invalid move for Lost Soul!" });
+
       const invalidRescue = { ...validRescue, fromZone: ZONES.HAND };
       expect(LostSoulMovementRule(invalidRescue)).toEqual({ valid: false, error: "Invalid move for Lost Soul!" });
     });
