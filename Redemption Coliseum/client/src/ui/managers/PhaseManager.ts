@@ -112,6 +112,7 @@ export class PhaseManager {
         `[PHASE_CHANGE] Detected phase change. New phase: ${state.currentPhase}`,
       );
       this.currentPhase = state.currentPhase;
+      this.scene.events.emit("ui:clear-hover");
       this.scene.game.events.emit("playSound", "PHASE_CHANGE");
       const newLayout = calculateLayout(
         this.scene.scale.width,

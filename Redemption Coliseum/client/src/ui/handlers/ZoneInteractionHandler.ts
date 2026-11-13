@@ -5,6 +5,8 @@ import { type DragDropHandler } from "./DragDropHandler.js";
 import { type SettingsManager } from "../../managers/SettingsManager.js";
 import { ZONE_HIGHLIGHT_STYLE } from "../config/visualConfig.js";
 import { ViewportManager } from "../managers/ViewportManager.js";
+import { PHASES } from "../../../../shared/phases.js";
+import { ZONES } from "../../../../shared/zones.js";
 import {
   hasCardOrPile,
   findTargetZone,
@@ -112,7 +114,12 @@ export class ZoneInteractionHandler {
       return;
     }
 
-    const targetZone = findTargetZone(hitObjects, pointer, this.elementManager);
+    const targetZone = findTargetZone(
+      hitObjects,
+      pointer,
+      this.elementManager,
+      this.room.state?.currentPhase,
+    );
     if (!targetZone) {
       this.clearHoverHighlight();
       return;
@@ -131,7 +138,9 @@ export class ZoneInteractionHandler {
         if (
           this.pendingHoverZone === targetZone &&
           !this.dragDropHandler.isDragging &&
-          this.isSupportEnabled()
+          this.isSupportEnabled() &&
+          (targetZone.name !== ZONES.BATTLEFIELD ||
+            this.room.state?.currentPhase === PHASES.BATTLE)
         ) {
           this.currentHoveredZone = targetZone;
           const label = getZoneLabel(
@@ -191,7 +200,12 @@ export class ZoneInteractionHandler {
       return;
     }
 
-    const targetZone = findTargetZone(hitObjects, pointer, this.elementManager);
+    const targetZone = findTargetZone(
+      hitObjects,
+      pointer,
+      this.elementManager,
+      this.room.state?.currentPhase,
+    );
     if (targetZone) {
       if (this.activeTapZone === targetZone) {
         this.clearTapHighlight();
