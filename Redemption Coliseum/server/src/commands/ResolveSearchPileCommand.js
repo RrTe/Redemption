@@ -7,6 +7,7 @@ const {
   shuffle,
 } = require("../services/cardService");
 const SearchHelper = require("../utils/SearchHelper");
+const { formatCardLink } = require("../utils/gameLogFormatter");
 const logger = require("../utils/logger");
 
 class ResolveSearchPileCommand extends BaseCommand {
@@ -117,7 +118,7 @@ class ResolveSearchPileCommand extends BaseCommand {
       if (successfullyMovedCards.length > 0) {
         const cardNames = successfullyMovedCards.map((s) => {
           const c = this.room.cardLookup.get(s.id);
-          return c ? c.Name : "Unknown";
+          return c ? formatCardLink(c) : "Unknown";
         });
         this.room.broadcastGameLog(
           `${this.client.userData.playerName} selected ${cardNames.join(", ")} from ${fromZone} and moved to ${toZone}.`,

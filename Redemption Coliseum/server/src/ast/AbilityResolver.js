@@ -6,6 +6,7 @@ const { TargetSelectionService } = require("./TargetSelectionService");
 const { AST_MESSAGES, AST_ACTIONS } = require("../../../shared/astConstants");
 const { ActionType } = require("../../../shared/actions");
 const { ZONES } = require("../../../shared/zones");
+const { formatCardLink } = require("../utils/gameLogFormatter");
 const logger = require("../utils/logger");
 
 /**
@@ -50,7 +51,7 @@ class AbilityResolver {
       return {
         handled: true,
         snapshots: [],
-        logEntries: [`${player.name} chooses not to activate ${card.Name || item.title}.`],
+        logEntries: [`${player.name} chooses not to activate ${formatCardLink(card)}.`],
       };
     }
 
@@ -551,6 +552,7 @@ class AbilityResolver {
    */
   _handleNoValidTargets(player, card, item) {
     const cardTitle = card?.Name || item?.title || "Card";
+    const logTarget = card ? formatCardLink(card) : cardTitle;
     const client = this.room?.clients?.find((c) => c.sessionId === player.sessionId);
     if (client && typeof client.send === "function") {
       client.send("gameToast", {
@@ -562,7 +564,7 @@ class AbilityResolver {
       handled: true,
       noValidTargets: true,
       snapshots: [],
-      logEntries: [`${player.name}'s ${cardTitle} has no valid targets.`],
+      logEntries: [`${player.name}'s ${logTarget} has no valid targets.`],
     };
   }
 

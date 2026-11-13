@@ -7,7 +7,10 @@ const { ChronicleHistoryService } = require("../services/ChronicleHistoryService
 const { ChronicleItem } = require("../state/EffectChronicleState");
 const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants");
 const { moveCard } = require("../services/cardService");
-const { formatChronicleUndoLog } = require("../utils/gameLogFormatter");
+const {
+  formatCardLink,
+  formatChronicleUndoLog,
+} = require("../utils/gameLogFormatter");
 const logger = require("../utils/logger");
 
 /**
@@ -132,7 +135,7 @@ class SelectTargetCommand extends BaseCommand {
       if (astResult.logEntries && astResult.logEntries.length > 0) {
         astResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
       } else {
-        this.room.broadcastGameLog(`${controllerPlayer.name} resolves ${item.title}.`);
+        this.room.broadcastGameLog(`${controllerPlayer.name} resolves ${formatCardLink(card)}.`);
       }
 
       ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);

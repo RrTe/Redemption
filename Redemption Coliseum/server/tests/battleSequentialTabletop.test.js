@@ -131,7 +131,7 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
     expect(state.effectChronicle.items.length).toBe(0);
     expect(state.effectChronicle.isResolving).toBe(false);
     expect(room.broadcastGameLog).toHaveBeenCalledWith(
-      expect.stringContaining("Defending Player activates Pharaoh Ramses II")
+      expect.stringContaining("Defending Player activates {{tabletop_pharaoh_no_ast|Pharaoh Ramses II}}")
     );
 
     // 4. Opponent plays a character with a Special Ability (e.g. Miriam) in fresh battle test
@@ -225,7 +225,7 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
 
     expect(state.effectChronicle.items.length).toBe(0);
     expect(room.broadcastGameLog).toHaveBeenCalledWith(
-      expect.stringMatching(/Hero Player (activates Eli the Priest|attempts to band)/)
+      expect.stringMatching(/Hero Player (activates (\{\{[^|]+\|)?Eli the Priest(\}\})?|attempts to band)/)
     );
   });
 });

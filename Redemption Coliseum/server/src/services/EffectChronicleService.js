@@ -4,6 +4,7 @@ const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants")
 const { ActionType } = require("../../../shared/actions");
 const { ChronicleHistoryService } = require("./ChronicleHistoryService");
 const GameLogService = require("./GameLogService");
+const { formatCardLink } = require("../utils/gameLogFormatter");
 const logger = require("../utils/logger");
 
 /**
@@ -92,6 +93,8 @@ class EffectChronicleService {
     const player = room.state.players.get(client.sessionId);
     const playerName = player ? player.name : "Player";
     const abilityText = item.description ? `: "${item.description}"` : "";
+    const sourceCard = item?.cardId ? room.cardLookup?.get(item.cardId) : null;
+    const sourceTitle = sourceCard ? formatCardLink(sourceCard) : item.title;
 
     // ✨ AST Special Abilities Engine Execution Hook
     let astResult = null;
@@ -119,11 +122,11 @@ class EffectChronicleService {
       if (astResult.logEntries && astResult.logEntries.length > 0) {
         astResult.logEntries.forEach(msg => this._log(room, msg));
       } else {
-        this._log(room, `${playerName} executes ${item.title}${abilityText}.`);
+        this._log(room, `${playerName} executes ${sourceTitle}${abilityText}.`);
       }
     } else {
       // Graceful Fallback: transparent chronicle log
-      this._log(room, `${playerName} executes ${item.title}${abilityText}.`);
+      this._log(room, `${playerName} executes ${sourceTitle}${abilityText}.`);
     }
 
     ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
@@ -163,8 +166,10 @@ class EffectChronicleService {
     const item = chronicle.items[index];
     const player = room.state.players.get(client.sessionId);
     const playerName = player ? player.name : "Player";
+    const sourceCard = item?.cardId ? room.cardLookup?.get(item.cardId) : null;
+    const sourceTitle = sourceCard ? formatCardLink(sourceCard) : item.title;
 
-    this._log(room, `${playerName} passes on ${item.title}.`);
+    this._log(room, `${playerName} passes on ${sourceTitle}.`);
     ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.PASSED);
     chronicle.items.splice(index, 1);
     this._reindexOrders(chronicle);

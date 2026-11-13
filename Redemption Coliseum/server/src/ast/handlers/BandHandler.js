@@ -7,6 +7,7 @@ const { BattleCharacterClassifier } = require("../../services/BattleCharacterCla
 const { BattleService } = require("../../services/BattleService");
 const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
 const { ProtectionService } = require("../../../../shared/rules/ProtectionService");
+const { formatCardLink } = require("../../utils/gameLogFormatter");
 const logger = require("../../utils/logger");
 
 /**
@@ -151,7 +152,7 @@ class BandHandler {
       });
 
       const allyText = isAllyFromOpponent ? " (allied character from opponent)" : "";
-      logNames.push(`${actualCard.Name}${allyText}`);
+      logNames.push(`${formatCardLink(actualCard)}${allyText}`);
     }
 
     // Broadcast action telegraph for all banded characters

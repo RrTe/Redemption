@@ -8,6 +8,7 @@ const { BattleCharacterClassifier } = require("./BattleCharacterClassifier");
 const { ChronicleHistoryService } = require("./ChronicleHistoryService");
 const { EffectChronicleService } = require("./EffectChronicleService");
 const { BattleService } = require("./BattleService");
+const { formatCardLink } = require("../utils/gameLogFormatter");
 const logger = require("../utils/logger");
 
 /**
@@ -76,6 +77,9 @@ class SpecialInitiativeService {
     const promptTargetText = isMultiple
       ? `All characters (${siTargetCards.length})`
       : primaryTarget.Name;
+    const logTargetText = isMultiple
+      ? promptTargetText
+      : formatCardLink(primaryTarget);
 
     logger.info(
       `[SpecialInitiativeService] Special Initiative triggered: Opponent '${actingPlayer.name}' ${reasonText} on ${promptTargetText} of '${targetController?.name}'.`
@@ -109,7 +113,7 @@ class SpecialInitiativeService {
         item._accumulatedLogs = [];
       }
       room.broadcastGameLog(
-        `⚡ Special Initiative: ${promptTargetText} in battle ${reasonText}! ${targetController?.name || "Defender"} may play an Enhancement or Pass.`
+        `⚡ Special Initiative: ${logTargetText} in battle ${reasonText}! ${targetController?.name || "Defender"} may play an Enhancement or Pass.`
       );
     }
 
@@ -176,7 +180,7 @@ class SpecialInitiativeService {
       const targetCard = room.cardLookup?.get(psi.targetCardId);
       const cardName = isMultiple
         ? `all ${psi.targetCardIds.length} characters`
-        : (targetCard?.Name || "character");
+        : formatCardLink(targetCard, "character");
 
       if (typeof room.broadcastGameLog === "function") {
         room.broadcastGameLog(`${player?.name || "Player"} passes Special Initiative on ${cardName}.`);
@@ -274,7 +278,7 @@ class SpecialInitiativeService {
 
     if (typeof room.broadcastGameLog === "function") {
       room.broadcastGameLog(
-        `✨ ${player?.name || "Player"} plays ${playedCard?.Name || "a card"} in Special Initiative!`
+        `✨ ${player?.name || "Player"} plays ${playedCard ? formatCardLink(playedCard) : "a card"} in Special Initiative!`
       );
     }
   }

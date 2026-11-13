@@ -281,7 +281,7 @@ describe("Special Initiative (Transition Scaffolding)", () => {
     expect(state.battlefield.length).toBe(2);
 
     expect(room.broadcastGameLog).toHaveBeenCalledWith(
-      expect.stringContaining("Defending Player declares Special Initiative to defend Only Blocker")
+      expect.stringContaining("Defending Player declares Special Initiative to defend {{t_ec_only|Only Blocker}}")
     );
 
     // Now, defending player can legally play an Evil Enhancement into battle

@@ -7,7 +7,10 @@ const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants")
 const { AST_MESSAGES, AST_ACTIONS } = require("../../../shared/astConstants");
 const { ActionTelegraphService } = require("../services/ActionTelegraphService");
 const { moveCard } = require("../services/cardService");
-const { formatChronicleUndoLog } = require("../utils/gameLogFormatter");
+const {
+  formatCardLink,
+  formatChronicleUndoLog,
+} = require("../utils/gameLogFormatter");
 const logger = require("../utils/logger");
 
 /**
@@ -89,7 +92,9 @@ class RespondOptionalAbilityCommand extends BaseCommand {
           // Defending player declines Special Initiative -> proceed with discard
           const isMultiple = Array.isArray(psi.targetCardIds) && psi.targetCardIds.length > 1;
           const targetCard = this.room.cardLookup?.get(psi.targetCardId);
-          const cardName = isMultiple ? `all ${psi.targetCardIds.length} characters` : (targetCard?.Name || "character");
+          const cardName = isMultiple
+            ? `all ${psi.targetCardIds.length} characters`
+            : formatCardLink(targetCard, "character");
           this.room.broadcastGameLog(
             `${player.name} declines Special Initiative on ${cardName}.`
           );
@@ -136,7 +141,7 @@ class RespondOptionalAbilityCommand extends BaseCommand {
         // Defending player accepts Special Initiative -> card stays in battle!
         const isMultiple = Array.isArray(psi.targetCardIds) && psi.targetCardIds.length > 1;
         const targetCard = this.room.cardLookup?.get(psi.targetCardId);
-        const cardName = isMultiple ? "all characters" : (targetCard?.Name || "character");
+        const cardName = isMultiple ? "all characters" : formatCardLink(targetCard, "character");
         this.room.broadcastGameLog(
           `✨ ${player.name} declares Special Initiative to defend ${cardName}!`
         );
@@ -162,12 +167,15 @@ class RespondOptionalAbilityCommand extends BaseCommand {
       // Clear persistent preview telegraph arrow from optional ability prompt
       ActionTelegraphService.clear(this.room, { sourceCardId: item?.cardId });
 
+      const sourceCard = item?.cardId ? this.room.cardLookup?.get(item.cardId) : null;
+      const sourceTitle = sourceCard ? formatCardLink(sourceCard) : item.title;
+
       if (!accepted) {
         const declineResult = this.room.abilityResolver.resolve(item, { accepted: false });
         if (declineResult?.logEntries?.length) {
           declineResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
         } else {
-          this.room.broadcastGameLog(`${player.name} chooses not to activate ${item.title}.`);
+          this.room.broadcastGameLog(`${player.name} chooses not to activate ${sourceTitle}.`);
         }
 
         ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.PASSED);
@@ -210,7 +218,7 @@ class RespondOptionalAbilityCommand extends BaseCommand {
         astResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
       } else {
         const abilityText = item.description ? `: "${item.description}"` : "";
-        this.room.broadcastGameLog(`${player.name} activates ${item.title}${abilityText}.`);
+        this.room.broadcastGameLog(`${player.name} activates ${sourceTitle}${abilityText}.`);
       }
 
       ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);

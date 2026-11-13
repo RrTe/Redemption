@@ -4,6 +4,7 @@ const { CombatClassifier } = require("../../../shared/rules/CombatClassifier");
 const { BATTLE_STATE_REASON } = require("../../../shared/battleConstants");
 const { ZONES } = require("../../../shared/zones");
 const { PHASES } = require("../../../shared/phases");
+const { formatCardLink } = require("../utils/gameLogFormatter");
 const logger = require("../utils/logger");
 
 /**
@@ -186,10 +187,11 @@ class BattleService {
         }
 
         discardedEnhancements.push(card);
-        const logMsg = `${card.Name || "Enhancement"} is discarded (no character with matching brigade in battle).`;
-        logger.info(`[BattleService] ${logMsg}`);
+        const cardLabel = card?.Name || "Enhancement";
+        logger.info(`[BattleService] ${cardLabel} is discarded (no character with matching brigade in battle).`);
         if (typeof room?.broadcastGameLog === "function") {
-          room.broadcastGameLog(logMsg);
+          const cardLink = card ? formatCardLink(card) : "Enhancement";
+          room.broadcastGameLog(`${cardLink} is discarded (no character with matching brigade in battle).`);
         }
       }
     }

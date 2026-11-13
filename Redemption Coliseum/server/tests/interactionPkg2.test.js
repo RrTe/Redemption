@@ -250,7 +250,7 @@ describe("Paket 2: Pre-Validation, No Valid Targets Toast, Full Pile Display & O
       expect(res.handled).toBe(true);
       expect(res.awaitingConfirmation).toBeUndefined();
       expect(res.awaitingTargetSelection).toBeUndefined();
-      expect(res.logEntries).toContain("Player 1's Given to Israel [K] has no valid targets.");
+      expect(res.logEntries).toContain("Player 1's {{-816099963|Given to Israel [K]}} has no valid targets.");
 
       expect(clientP1.send).toHaveBeenCalledWith("gameToast", {
         message: "Given to Israel [K]: No valid targets.",
@@ -290,7 +290,7 @@ describe("Paket 2: Pre-Validation, No Valid Targets Toast, Full Pile Display & O
       const res = resolver.resolve(item);
       expect(res.handled).toBe(true);
       expect(res.awaitingConfirmation).toBeUndefined();
-      expect(res.logEntries).toContain("Player 1's Philistine Charioteers [L] has no valid targets.");
+      expect(res.logEntries).toContain("Player 1's {{1381592137|Philistine Charioteers [L]}} has no valid targets.");
       expect(clientP1.send).toHaveBeenCalledWith("gameToast", {
         message: "Philistine Charioteers [L]: No valid targets.",
         type: "warning",

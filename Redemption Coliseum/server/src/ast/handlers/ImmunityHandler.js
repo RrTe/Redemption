@@ -4,6 +4,7 @@ const { AST_ACTIONS, AST_MESSAGES, AST_SELECTION_MODES } = require("../../../../
 const { TargetSelectionService } = require("../TargetSelectionService");
 const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
 const { BattleService } = require("../../services/BattleService");
+const { formatCardLink } = require("../../utils/gameLogFormatter");
 const logger = require("../../utils/logger");
 
 /**
@@ -85,7 +86,7 @@ class ImmunityHandler {
       };
 
       protectedCardIds.push(card.id);
-      logEntries.push(`${card.Name} gains immunity / protection.`);
+      logEntries.push(`${formatCardLink(card)} gains immunity / protection.`);
 
       if (card.zone === ZONES.BATTLEFIELD) {
         battleRecalculateNeeded = true;

@@ -85,6 +85,22 @@ This document tracks modularization targets, line-count audits, and architectura
      - Replace all ad-hoc string inspections in `TargetSelectionService.matchesFilter`, `BattleCharacterClassifier`, and UI renderers with `CardTypeService.matchesType(card, targetType)`.
      - Eliminate magic strings and enforce compiler-checked types across client and server.
 
+### 6. Structured Game Log Events & Central Formatter Architecture
+- **Status**: Audit Planned (Architectural Technical Debt; complements Item #3)
+- **Scope**: `server/src/utils/gameLogFormatter.js`, `server/src/commands/`, `server/src/services/`, `server/src/ast/` (`AbilityResolver.js`, `handlers/`), and `client/src/ui/managers/ChatManager.ts`.
+- **Issue**:
+  - Commands, services, and AST ability handlers currently compose English prose strings inline (calling `formatCardLink(card)` or interpolating `card.Name` / `item.title`) before emitting via `room.broadcastGameLog(...)`.
+  - When a handler omits `formatCardLink()` (`{{templateId|cardName}}` / `"a face-down card"`), cards render as non-interactive plain text or break on bracketed set suffixes (e.g., `[L]` in `Altar of Burnt Offering [L]` getting partially matched by the `[Name]` fallback regex in `ChatManager.ts`).
+  - Decentralized log string assembly couples gameplay handlers and tests to exact English wording, prevents single-point enforcement of `isFaceDown` masking, and blocks clean localization alongside Item #3.
+- **Target Architecture**:
+  1. **Structured Log Payloads (`shared/` Event Descriptors)**:
+     - Replace ad-hoc prose concatenation in commands, services, and AST handlers with structured log descriptors (e.g., `{ eventKey, actorId, cardRefs, params }`).
+     - Pass typed card references instead of pre-formatted strings so callers cannot accidentally interpolate raw `card.Name`.
+  2. **Single-Point Formatting & Privacy Gateway**:
+     - Perform card-link formatting, localization template resolution (see Item #3), and `isFaceDown` masking centrally in one server log gateway before broadcasting.
+  3. **Client Game Log Rendering (`ChatManager.ts`)**:
+     - Keep bracket `[Card Name]` parsing scoped strictly to manual player chat messages while server game logs use structured tokens/events exclusively.
+
 ---
 
 ## Clean Code & Modular Architecture Guidelines

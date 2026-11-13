@@ -116,7 +116,7 @@ export class ChatManager {
           const cardId = target.getAttribute("data-cardid");
           const cardName = target.getAttribute("data-cardname");
           if (cardId) {
-            this.showPreviewForCardId(cardId, e.clientY);
+            this.showPreviewForCardId(cardId, e.clientY, cardName || undefined);
           } else if (cardName) {
             this.showPreviewForCardName(cardName, e.clientY);
           }
@@ -406,7 +406,7 @@ export class ChatManager {
         const trimmedName = cardName.trim();
         // Falls der Server-String ein Leerzeichen am Ende hatte, stellen wir es *außerhalb* des Links wieder her.
         const trailingSpace = cardName.length > trimmedName.length ? " " : "";
-        const html = `<span class="chat-card-link" data-cardid="${cardId}" style="font-weight: bold; text-decoration: underline; cursor: pointer; padding-right: 2px;">${trimmedName}</span>${trailingSpace}`;
+        const html = `<span class="chat-card-link" data-cardid="${cardId}" data-cardname="${trimmedName}" style="font-weight: bold; text-decoration: underline; cursor: pointer; padding-right: 2px;">${trimmedName}</span>${trailingSpace}`;
         placeholders.push(html);
         return `__CARD_LINK_${placeholders.length - 1}__`;
       },
@@ -433,14 +433,21 @@ export class ChatManager {
   }
 
   /** ✨ NEU: Zeigt die Kartenvorschau für eine Karten-ID an */
-  private showPreviewForCardId(cardId: string, eventY: number) {
+  private showPreviewForCardId(cardId: string, eventY: number, fallbackName?: string) {
     const cardDatabase = this.scene.registry.get("cardDatabase");
     if (!cardDatabase || !cardDatabase.cards) return;
-    
-    // Finde Karte anhand der ID
-    const cardData = cardDatabase.cards.find((c: any) => c.id === cardId);
+
+    // Look up by database ID first, then ImageFile (in case templateId uses image key).
+    const cardData =
+      cardDatabase.cards.find((c: any) => c.id === cardId) ||
+      cardDatabase.cards.find((c: any) => c.ImageFile === cardId);
     if (cardData && this.previewManager) {
-       this.previewManager.showFromData(cardData, 300, eventY);
+      this.previewManager.showFromData(cardData, 300, eventY);
+      return;
+    }
+
+    if (fallbackName) {
+      this.showPreviewForCardName(fallbackName, eventY);
     }
   }
 
@@ -448,12 +455,17 @@ export class ChatManager {
   private showPreviewForCardName(cardName: string, eventY: number) {
     const cardDatabase = this.scene.registry.get("cardDatabase");
     if (!cardDatabase || !cardDatabase.cards) return;
-    
-    // Finde Karte anhand des Namens
-    const cardData = cardDatabase.cards.find((c: any) => c.Name === cardName);
+
+    const normalizedName = cardName.toLowerCase();
+    // Finde Karte anhand des Namens (mit Case-Insensitive-Fallback)
+    const cardData =
+      cardDatabase.cards.find((c: any) => c.Name === cardName) ||
+      cardDatabase.cards.find(
+        (c: any) => typeof c.Name === "string" && c.Name.toLowerCase() === normalizedName,
+      );
     if (cardData && this.previewManager) {
-       // Chatfenster liegt zwischen x=0 und x=300 (wenn offen). Die rechte Kante ist bei x=300.
-       this.previewManager.showFromData(cardData, 300, eventY);
+      // Chatfenster liegt zwischen x=0 und x=300 (wenn offen). Die rechte Kante ist bei x=300.
+      this.previewManager.showFromData(cardData, 300, eventY);
     }
   }
 

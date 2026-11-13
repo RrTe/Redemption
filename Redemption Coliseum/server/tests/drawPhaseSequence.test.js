@@ -106,7 +106,7 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
       resolveCmd1.execute({ action: CHRONICLE_ACTIONS.EXECUTE });
 
       expect(room.broadcastGameLog).toHaveBeenCalledWith(
-        expect.stringContaining("executes Star Card s1")
+        expect.stringContaining("executes {{s1|Star Card s1}}")
       );
 
       // Step 2: Opponent Stars
@@ -130,7 +130,7 @@ describe("Draw Phase Sequence & Priority State Machine", () => {
       resolveCmd1.execute({ action: CHRONICLE_ACTIONS.EXECUTE });
 
       expect(room.broadcastGameLog).toHaveBeenCalledWith(
-        expect.stringContaining("executes Lost Soul ls1")
+        expect.stringContaining("executes {{ls1|Lost Soul ls1}}")
       );
 
       // Step 4: Opponent Souls

@@ -141,7 +141,7 @@ describe("Phase 3: Multi-Step Attack & Block Resolution (Abiathar & Egyptian Hor
     expect(state.effectChronicle.history.length).toBe(1);
     expect(state.effectChronicle.history[0].status).toBe(CHRONICLE_STATUS.COMPLETED);
     expect(room.broadcastGameLog).toHaveBeenCalledWith(
-      expect.stringContaining("Hero Player activates Abiathar [K]")
+      expect.stringContaining("Hero Player activates {{2117585467|Abiathar [K]}}")
     );
 
     // 4. Player 2 blocks with Egyptian Horsemen (Territory -> Battlefield)

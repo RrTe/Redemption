@@ -2,6 +2,7 @@
 const { BaseCommand } = require("./BaseCommand");
 const { EffectChronicleService } = require("../services/EffectChronicleService");
 const { ActionType } = require("../../../shared/actions");
+const { formatCardLink } = require("../utils/gameLogFormatter");
 const logger = require("../utils/logger");
 
 class ChatCommand extends BaseCommand {
@@ -66,7 +67,7 @@ class ChatCommand extends BaseCommand {
           ActionType.ACTIVATE_ABILITY,
           { autoExecuteSupported: true }
         );
-        this.room.broadcastGameLog(`[DEV] Enqueued ${targetCard.Name} into Effect Chronicle.`);
+        this.room.broadcastGameLog(`[DEV] Enqueued ${formatCardLink(targetCard)} into Effect Chronicle.`);
         return;
       }
     }

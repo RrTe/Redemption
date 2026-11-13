@@ -321,7 +321,7 @@ describe("Phase 3: Battlefield & Combat Triggers (Battle Primitives)", () => {
     expect(state.effectChronicle.history.length).toBe(1);
     expect(state.effectChronicle.history[0].status).toBe(CHRONICLE_STATUS.COMPLETED);
     expect(room.broadcastGameLog).toHaveBeenCalledWith(
-      expect.stringContaining("Defending Player activates Evil Tabletop Enhancement")
+      expect.stringContaining("Defending Player activates {{ee_tt_test|Evil Tabletop Enhancement}}")
     );
   });
 });

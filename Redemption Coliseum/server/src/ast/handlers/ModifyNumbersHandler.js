@@ -7,6 +7,7 @@ const { SpecialInitiativeService } = require("../../services/SpecialInitiativeSe
 const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
 const { BattleCalculator } = require("../../../../shared/BattleCalculator");
 const { BattleService } = require("../../services/BattleService");
+const { formatCardLink } = require("../../utils/gameLogFormatter");
 const logger = require("../../utils/logger");
 
 /**
@@ -89,7 +90,7 @@ class ModifyNumbersHandler {
           { isAbilityAction: true }
         );
         discardedSnapshots.push({ cardId: card.id, name: card.Name });
-        logEntries.push(`${card.Name} was defeated due to zero toughness and discarded.`);
+        logEntries.push(`${formatCardLink(card)} was defeated due to zero toughness and discarded.`);
         battlefieldAffected = true;
       }
 
@@ -169,7 +170,7 @@ class ModifyNumbersHandler {
 
       const sSign = sDelta >= 0 ? `+${sDelta}` : `${sDelta}`;
       const tSign = tDelta >= 0 ? `+${tDelta}` : `${tDelta}`;
-      logEntries.push(`${card.Name} numbers modified by ${sSign}/${tSign}.`);
+      logEntries.push(`${formatCardLink(card)} numbers modified by ${sSign}/${tSign}.`);
 
       if (card.zone === ZONES.BATTLEFIELD) {
         battlefieldAffected = true;
@@ -187,7 +188,7 @@ class ModifyNumbersHandler {
           } else {
             // Discard immediately if outside battlefield (e.g. territory)
             moveCard(owner, room.state, room.cardLookup, card.zone, ZONES.DISCARD, card.id);
-            logEntries.push(`${card.Name} was defeated due to zero toughness and discarded.`);
+            logEntries.push(`${formatCardLink(card)} was defeated due to zero toughness and discarded.`);
           }
         }
       }
@@ -214,7 +215,7 @@ class ModifyNumbersHandler {
       for (const { card, owner } of defeatedCombatants) {
         logger.info(`[ModifyNumbersHandler] ${card.Name} reduced to <= 0 toughness. Discarding.`);
         moveCard(owner, room.state, room.cardLookup, card.zone, ZONES.DISCARD, card.id);
-        logEntries.push(`${card.Name} was defeated due to zero toughness and discarded.`);
+        logEntries.push(`${formatCardLink(card)} was defeated due to zero toughness and discarded.`);
         battlefieldAffected = true;
       }
     }
