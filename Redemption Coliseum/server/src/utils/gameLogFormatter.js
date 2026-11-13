@@ -13,6 +13,7 @@ function formatCardLink(cardOrTemplateId, fallbackName = "") {
   if (!cardOrTemplateId) return fallbackName || "";
   if (typeof cardOrTemplateId === "object") {
     const card = cardOrTemplateId;
+    if (card.isFaceDown) return "a face-down card";
     const name = card.Name || card.name || card.cardName || fallbackName || "Card";
     const templateId = card.templateId || card.ImageFile || card.id || name;
     return `{{${templateId}|${name}}}`;

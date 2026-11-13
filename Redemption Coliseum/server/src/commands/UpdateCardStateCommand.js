@@ -65,7 +65,9 @@ class UpdateCardStateCommand extends BaseCommand {
 
     const player = this.state.players.get(this.client.sessionId);
     const templateId = this.templateId || this.cardName;
-    const logMsg = `[UNDO] ${player ? player.name : "Player"} reverted state of {{${templateId}|${this.cardName}}}.`;
+    const isHidden = Boolean(card.isFaceDown || this.previousState?.isFaceDown || card.zone === ZONES.HAND);
+    const cardDisplay = isHidden ? "a face-down card" : `{{${templateId}|${this.cardName}}}`;
+    const logMsg = `[UNDO] ${player ? player.name : "Player"} reverted state of ${cardDisplay}.`;
     this.room.broadcastGameLog(logMsg);
 
     if (card.zone === ZONES.BATTLEFIELD) {

@@ -56,6 +56,7 @@ class BattleTriggerService {
    * @returns {object | null} Execution summary or null if skipped.
    */
   static handleCardBattleEntry(room, player, card, message) {
+    if (!card || card.isFaceDown) return null;
     const isHeroChar = this.isHero(card);
     const isEvilChar = this.isEvilCharacter(card);
     const isGoodEnh = this.isGoodEnhancement(card);
@@ -230,7 +231,7 @@ class BattleTriggerService {
   static onDominantPlayed(room, player, card, message) {
     const isArena = Boolean(room?.state?.isArenaMode ?? room?.state?.isSandboxMode);
     if (isArena) return null;
-    if (!card || !BattleCharacterClassifier.isDominant(card)) return null;
+    if (!card || card.isFaceDown || !BattleCharacterClassifier.isDominant(card)) return null;
 
     const actionType = ActionType.ACTIVATE_ABILITY;
     const controllerId = card.controllerId || player?.sessionId;

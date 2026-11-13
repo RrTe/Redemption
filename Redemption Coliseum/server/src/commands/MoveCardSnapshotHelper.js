@@ -28,6 +28,7 @@ class MoveCardSnapshotHelper {
       controllerId: card.controllerId || player?.sessionId,
       originalOwnerId: card.originalOwnerId || player?.sessionId,
       isFaceUp: card.isFaceUp,
+      isFaceDown: Boolean(card.isFaceDown),
       rotation: card.rotation,
       isParalyzed: card.isParalyzed,
       paralyzeRounds: card.paralyzeRounds,
@@ -115,7 +116,11 @@ class MoveCardSnapshotHelper {
     // Broadcast mandatory human-readable undo log
     const logMsg = formatCardUndoLog(
       player.name,
-      { templateId: snap.templateId, Name: snap.cardName },
+      {
+        templateId: snap.templateId,
+        Name: snap.cardName,
+        isFaceDown: Boolean(snap.isFaceDown || updatedCard?.isFaceDown),
+      },
       currentZone,
       snap.fromZone,
       false

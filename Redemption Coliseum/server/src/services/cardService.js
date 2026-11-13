@@ -518,6 +518,7 @@ function _moveCardById(
   if (options?.snapshot) {
     const snap = options.snapshot;
     if (snap.isFaceUp !== undefined) movedCard.isFaceUp = snap.isFaceUp;
+    if (snap.isFaceDown !== undefined) movedCard.isFaceDown = snap.isFaceDown;
     if (snap.rotation !== undefined) movedCard.rotation = snap.rotation;
     if (snap.isParalyzed !== undefined) movedCard.isParalyzed = snap.isParalyzed;
     if (snap.paralyzeRounds !== undefined) movedCard.paralyzeRounds = snap.paralyzeRounds;
@@ -538,7 +539,7 @@ function _moveCardById(
   const templateId = movedCard.templateId || movedCard.ImageFile;
 
   // Special logging for Lost Souls being moved to Land of Bondage
-  if (isDiverted || (movedCard && isLostSoul && effectiveTo === ZONES.LAND_OF_BONDAGE)) {
+  if (isDiverted || (!movedCard.isFaceDown && movedCard && isLostSoul && effectiveTo === ZONES.LAND_OF_BONDAGE)) {
     const isToOpponent = targetPlayer.sessionId !== actingPlayer.sessionId;
     logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} to ${getZoneDisplayName(effectiveTo, isToOpponent)}. (Lost Soul rule)`;
   } else {
@@ -552,6 +553,8 @@ function _moveCardById(
 
     if (effectiveFromZone === ZONES.HAND && effectiveTo === ZONES.DECK) {
       logEntry = `${actingPlayer.name} moves a card from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${toDisplay}.`;
+    } else if (movedCard.isFaceDown) {
+      logEntry = `${actingPlayer.name} moves a face-down card from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${toDisplay}.`;
     } else {
       logEntry = `${actingPlayer.name} moves {{${templateId}|${movedCard.Name}}} from ${getZoneDisplayName(effectiveFromZone, isFromOpponent)} to ${toDisplay}.`;
     }
