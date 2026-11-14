@@ -4,7 +4,7 @@ try {
   hierarchyData = require("./cardHierarchy.json");
 } catch (_e) {
   // ESM or web fallback
-  hierarchyData = { card_types: [], type_groups: {}, type_is_a: {} };
+  hierarchyData = { card_types: [], type_groups: {}, type_is_a: {}, genders: [] };
 }
 
 /**
@@ -132,7 +132,7 @@ function matchesCardSubtype(card, subtype) {
   // Dual card in play: use active side ORDIR/Identifier/Class if available
   const isInPlay = card.zone === "battle" || card.zone === "territory" || card.zone === "battlefield";
   if (isInPlay && Array.isArray(card.sides) && card.sides.length > 1) {
-    const activeSideIndex = (card.inGameAlignment || "").toLowerCase().includes("evil") ? 1 : 0;
+    const activeSideIndex = resolveActiveSideIndex(card, card.sides);
     const side = card.sides[activeSideIndex];
     if (side) {
       if (Array.isArray(side.ORDIR) && side.ORDIR.length > 0) ordirList = side.ORDIR;
@@ -200,6 +200,88 @@ function matchesTargetType(card, targetType, activeType) {
   return matchesCardSubtype(card, rawType);
 }
 
+/**
+ * Checks whether a single side type represents a Character card type eligible to carry Gender.
+ * Covers Hero, Evil Character, Character, Hero Token, Evil Character Token, and DAC.
+ *
+ * @param {string|string[]} sideType Side or card type string.
+ * @returns {boolean} True if the type belongs to the Character hierarchy (including DAC).
+ */
+function isCharacterSideType(sideType) {
+  if (!sideType || (Array.isArray(sideType) && sideType.length === 0)) return false;
+  if (matchesCardType(sideType, "character")) return true;
+  const types = Array.isArray(sideType)
+    ? sideType
+    : String(sideType).split("/").map((t) => t.trim()).filter(Boolean);
+  return types.some((t) => normalizeTypeName(t) === "dac");
+}
+
+/**
+ * Returns the canonical character-side gender values defined in cardHierarchy.json.
+ *
+ * @returns {string[]} Valid lowercase gender identifiers.
+ */
+function getValidCardGenders() {
+  return Array.isArray(hierarchyData.genders) ? hierarchyData.genders : [];
+}
+
+/**
+ * Resolves the active side index (0 = top, 1 = bottom) for a single- or dual-sided card
+ * using inGameType, inGameAlignment, and isFlipped state.
+ *
+ * @param {object} card Card instance or normalized card data.
+ * @param {Array<object>} [sidesInput] Optional explicit array of normalized sides.
+ * @returns {number} Active side index (defaults to 0).
+ */
+function resolveActiveSideIndex(card, sidesInput) {
+  const sides = Array.isArray(sidesInput) ? sidesInput : card?.sides;
+  if (!Array.isArray(sides) || sides.length <= 1) return 0;
+
+  const inGameType = String(card?.inGameType || "").trim();
+  const inGameAlign = String(card?.inGameAlignment || "").trim();
+  const flipped = Boolean(card?.isFlipped);
+
+  if (inGameType || inGameAlign) {
+    let bestIdx = -1;
+    let bestScore = 0;
+
+    for (let i = 0; i < sides.length; i++) {
+      const side = sides[i];
+      if (!side) continue;
+      let score = 0;
+
+      if (inGameType) {
+        const sideType = side.Type || side.type || "";
+        if (sideType && normalizeTypeName(sideType) === normalizeTypeName(inGameType)) {
+          score += 4;
+        } else if (sideType && matchesCardType(sideType, inGameType)) {
+          score += 2;
+        }
+      }
+
+      if (inGameAlign) {
+        const sideAlign = String(side.Alignment || side.alignment || "").toLowerCase();
+        if (sideAlign && sideAlign === inGameAlign.toLowerCase()) {
+          score += 2;
+        } else if (sideAlign && sideAlign.includes(inGameAlign.toLowerCase())) {
+          score += 1;
+        }
+      }
+
+      if (score > bestScore || (flipped && score > 0 && score === bestScore && i === 1)) {
+        bestScore = score;
+        bestIdx = i;
+      }
+    }
+
+    if (bestIdx >= 0) {
+      return bestIdx;
+    }
+  }
+
+  return flipped ? Math.min(1, sides.length - 1) : 0;
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     cardHierarchy: hierarchyData,
@@ -208,6 +290,9 @@ if (typeof module !== "undefined" && module.exports) {
     isBaseCardType,
     matchesCardSubtype,
     matchesTargetType,
+    isCharacterSideType,
+    getValidCardGenders,
+    resolveActiveSideIndex,
   };
 }
 

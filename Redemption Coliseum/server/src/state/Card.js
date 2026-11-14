@@ -21,6 +21,7 @@ class Card extends Schema {
     this.Toughness = "";
     this.Class = "";
     this.Identifier = "";
+    this.Gender = "";
     this.SpecialAbility = "";
     this.Rarity = "";
     this.Reference = "";
@@ -69,6 +70,7 @@ type("string")(Card.prototype, "Strength");
 type("string")(Card.prototype, "Toughness");
 type("string")(Card.prototype, "Class");
 type("string")(Card.prototype, "Identifier");
+type("string")(Card.prototype, "Gender");
 type("string")(Card.prototype, "SpecialAbility");
 type("string")(Card.prototype, "Rarity");
 type("string")(Card.prototype, "Reference");

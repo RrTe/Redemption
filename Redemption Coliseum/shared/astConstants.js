@@ -129,6 +129,24 @@ export const AST_STAT_FILTER_OPERATORS = /** @type {const} */ ({
   NEQ: "!=",
 });
 
+/**
+ * Allowed gender values on AST TargetSelector nodes (ast_constants.json).
+ */
+export const AST_GENDERS = /** @type {const} */ ({
+  MALE: "male",
+  FEMALE: "female",
+});
+
+/**
+ * All valid character-side gender values per ORDIR 7.0.0 (cardHierarchy.json).
+ */
+export const CARD_GENDERS = /** @type {const} */ ({
+  MALE: "male",
+  FEMALE: "female",
+  BOTH: "both",
+  GENDERLESS: "genderless",
+});
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     AST_ACTIONS,
@@ -141,5 +159,7 @@ if (typeof module !== "undefined" && module.exports) {
     AST_MESSAGES,
     AST_STAT_FILTER_STATS,
     AST_STAT_FILTER_OPERATORS,
+    AST_GENDERS,
+    CARD_GENDERS,
   };
 }

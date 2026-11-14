@@ -122,9 +122,18 @@
     "lost_soul",
     "site"
   ],
+  "genders": [
+    "male",
+    "female"
+  ],
   "testaments": [
     "OT",
     "NT"
+  ],
+  "card_classes": [
+    "Warrior",
+    "Weapon",
+    "Territory"
   ],
   "modifier_types": [
     "cannot_be_negated",

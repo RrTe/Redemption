@@ -3,7 +3,16 @@ const path = require("path");
 const fs = require("fs");
 const { ActionType } = require("../../../shared/actions");
 const { AST_CARD_SIDES } = require("../../../shared/astConstants");
+const { resolveActiveSideIndex } = require("../../../shared/cardHierarchy");
+const { GenderEvaluator } = require("../../../shared/rules/GenderEvaluator");
+const { SideAttributeEvaluator } = require("../../../shared/rules/SideAttributeEvaluator");
 const logger = require("../utils/logger");
+
+const PROTECTION_FLAG_BY_MODIFIER = {
+  cannot_be_negated: "is_negatable",
+  cannot_be_interrupted: "is_interruptible",
+  cannot_be_prevented: "is_preventable",
+};
 
 /**
  * Singleton service for loading, caching, and querying card AST logic.
@@ -83,6 +92,9 @@ class AbilityLookup {
     );
     const isDual = Boolean(sides.top && sides.bottom);
 
+    const filterExec = (list) =>
+      options.includePassiveModifiers ? list : list.filter((a) => !this.isPassiveModifierAbility(a));
+
     // Dedicated Star Phase resolution: only execute shared / star abilities
     if (actionType === ActionType.ACTIVATE_STAR_ABILITY) {
       const starAbilities = [];
@@ -93,7 +105,7 @@ class AbilityLookup {
           )
         );
       }
-      const targetSide = isDual ? this._determineActiveSide(sides, options) : AST_CARD_SIDES.TOP;
+      const targetSide = isDual ? this._determineActiveSide(sides, { ...options, templateId }) : AST_CARD_SIDES.TOP;
       if (sides[targetSide] && Array.isArray(sides[targetSide].abilities)) {
         starAbilities.push(
           ...sides[targetSide].abilities.filter((a) =>
@@ -102,13 +114,13 @@ class AbilityLookup {
         );
       }
       if (starAbilities.length > 0) {
-        return this._expandMultiPileAbilities(starAbilities);
+        return this._expandMultiPileAbilities(filterExec(starAbilities));
       }
       // Fallback for un-migrated single-sided or shared cards
       const fallbackStars = (!isDual && sides.top?.abilities)
         ? sides.top.abilities.filter((a) => this.isStarAbility(a))
         : (sides.shared?.abilities || []);
-      return this._expandMultiPileAbilities(fallbackStars);
+      return this._expandMultiPileAbilities(filterExec(fallbackStars));
     }
 
     const abilities = [];
@@ -123,7 +135,8 @@ class AbilityLookup {
     }
 
     // Determine active side: single-sided cards strictly use sides.top
-    const targetSide = isDual ? this._determineActiveSide(sides, options) : AST_CARD_SIDES.TOP;
+    const enrichedOptions = { ...options, templateId };
+    const targetSide = isDual ? this._determineActiveSide(sides, enrichedOptions) : AST_CARD_SIDES.TOP;
     if (sides[targetSide] && Array.isArray(sides[targetSide].abilities)) {
       abilities.push(
         ...sides[targetSide].abilities.filter(
@@ -139,7 +152,24 @@ class AbilityLookup {
       );
     }
 
-    return this._expandMultiPileAbilities(abilities);
+    return this._expandMultiPileAbilities(filterExec(abilities));
+  }
+
+  /**
+   * Returns true if an AST ability is a static modifier-only node (no executable effects,
+   * e.g. conditional "cannot be negated/interrupted/prevented" protection clauses).
+   *
+   * @param {object} ability AST ability object.
+   * @returns {boolean} True for passive modifier-only static abilities.
+   */
+  static isPassiveModifierAbility(ability) {
+    return Boolean(
+      ability &&
+      String(ability.activation_mode || "").toLowerCase() === "static" &&
+      (!Array.isArray(ability.effects) || ability.effects.length === 0) &&
+      Array.isArray(ability.modifiers) &&
+      ability.modifiers.length > 0
+    );
   }
 
   /**
@@ -248,6 +278,132 @@ class AbilityLookup {
     return false;
   }
 
+  static _resolveAstSideContext(templateId, options = {}) {
+    const cardData = this.getCardLogic(templateId);
+    const sides = cardData?.sides;
+    if (!sides) return null;
+    const isDual = Boolean(sides.top && sides.bottom);
+    const sideKey = isDual
+      ? this._determineActiveSide(sides, { ...options, templateId })
+      : (sides.top ? AST_CARD_SIDES.TOP : AST_CARD_SIDES.SHARED);
+    return {
+      sides,
+      isDual,
+      sideNode: sides[sideKey] || null,
+      sharedNode: sides.shared || null,
+      cardInput: options.card
+        ? { ...options.card, templateId: options.card.templateId || templateId }
+        : { templateId, inGameType: options.inGameType, inGameAlignment: options.inGameAlignment },
+    };
+  }
+
+  /**
+   * Resolves the effective character Gender for the active side of a template card,
+   * checking AST sides first and falling back to CardSides / CardRepository when
+   * mixed-type dual cards omit side-level gender in cards_logic.json.
+   *
+   * @param {string} templateId Card catalog ID.
+   * @param {object} [options={}] Resolution options (activeSide, inGameType, inGameAlignment, card).
+   * @returns {string|null} Resolved gender or null for non-character sides.
+   */
+  static getSideGender(templateId, options = {}) {
+    const ctx = this._resolveAstSideContext(templateId, options);
+    const astGender = ctx?.sideNode?.gender ?? ctx?.sharedNode?.gender;
+    if (astGender) {
+      return String(astGender).toLowerCase();
+    }
+    const fallbackCard = ctx?.cardInput || { templateId, inGameType: options.inGameType, inGameAlignment: options.inGameAlignment };
+    return GenderEvaluator.resolveCardGender(fallbackCard, { side: options.activeSide });
+  }
+
+  /** Resolves character `IsGeneric` (`boolean | null`) for the active card side. */
+  static getSideIsGeneric(templateId, options = {}) {
+    const ctx = this._resolveAstSideContext(templateId, options);
+    const astVal = ctx?.sideNode?.is_generic ?? ctx?.sharedNode?.is_generic;
+    if (typeof astVal === "boolean") return astVal;
+    const fallbackCard = ctx?.cardInput || { templateId, inGameType: options.inGameType, inGameAlignment: options.inGameAlignment };
+    return SideAttributeEvaluator.resolveIsGeneric(fallbackCard, { side: options.activeSide });
+  }
+
+  /** Resolves character `IsHuman` (`boolean | null`) for the active card side. */
+  static getSideIsHuman(templateId, options = {}) {
+    const ctx = this._resolveAstSideContext(templateId, options);
+    const astVal = ctx?.sideNode?.is_human ?? ctx?.sharedNode?.is_human;
+    if (typeof astVal === "boolean") return astVal;
+    const fallbackCard = ctx?.cardInput || { templateId, inGameType: options.inGameType, inGameAlignment: options.inGameAlignment };
+    return SideAttributeEvaluator.resolveIsHuman(fallbackCard, { side: options.activeSide });
+  }
+
+  /** Resolves canonical `classes` array (`["Warrior"|"Weapon"|"Territory"]`) for the active card side. */
+  static getSideClasses(templateId, options = {}) {
+    const ctx = this._resolveAstSideContext(templateId, options);
+    const astClasses = ctx?.sideNode?.classes ?? ctx?.sharedNode?.classes;
+    if (Array.isArray(astClasses) && astClasses.length > 0) {
+      return SideAttributeEvaluator.normalizeClassList(astClasses);
+    }
+    const fallbackCard = ctx?.cardInput || { templateId, inGameType: options.inGameType, inGameAlignment: options.inGameAlignment };
+    return SideAttributeEvaluator.resolveClasses(fallbackCard, { side: options.activeSide });
+  }
+
+  /**
+   * Evaluates whether a card side is protected from negation, interruption, or prevention
+   * via either unconditional side/ability modifiers or conditional static protection abilities.
+   *
+   * @param {string} templateId Card catalog ID.
+   * @param {"cannot_be_negated"|"cannot_be_interrupted"|"cannot_be_prevented"} modifierType Protection modifier type.
+   * @param {object} [context={}] Runtime evaluation context (`room`, `player`, `card`, `sourceCard`, `actorCard`, `ability`, `abilityId`).
+   * @returns {boolean} True when unconditional or active conditional protection applies.
+   */
+  static isSideProtectedFrom(templateId, modifierType, context = {}) {
+    if (!templateId || !modifierType) return false;
+    const ctx = this._resolveAstSideContext(templateId, {
+      activeSide: context.activeSide,
+      inGameType: context.inGameType || context.card?.inGameType,
+      inGameAlignment: context.inGameAlignment || context.card?.inGameAlignment,
+      card: context.card,
+    });
+    if (!ctx) return false;
+
+    const matchesScope = (m) =>
+      m && m.modifier_type === modifierType &&
+      (!m.applies_to || m.applies_to === "this_side" || m.applies_to === "all_abilities");
+
+    const modifierLists = [ctx.sideNode?.modifiers, ctx.sharedNode?.modifiers];
+    if (modifierLists.some((list) => Array.isArray(list) && list.some(matchesScope))) {
+      return true;
+    }
+
+    const flagKey = PROTECTION_FLAG_BY_MODIFIER[modifierType];
+    const sideAbilities = [
+      ...(Array.isArray(ctx.sharedNode?.abilities) ? ctx.sharedNode.abilities : []),
+      ...(Array.isArray(ctx.sideNode?.abilities) ? ctx.sideNode.abilities : []),
+    ];
+
+    if (flagKey) {
+      const targetAbility =
+        context.ability ||
+        (context.abilityId ? sideAbilities.find((a) => a.ability_id === context.abilityId) : null);
+      if (targetAbility && targetAbility[flagKey] === false) {
+        return true;
+      }
+      if (targetAbility && Array.isArray(targetAbility.modifiers) && targetAbility.modifiers.some((m) => m?.modifier_type === modifierType && m?.applies_to === "this_ability")) {
+        return true;
+      }
+    }
+
+    // Evaluate conditional static protection abilities ("cannot be negated if/unless/by ...")
+    const { ConditionEvaluator } = require("./ConditionEvaluator");
+    for (const ab of sideAbilities) {
+      if (!this.isPassiveModifierAbility(ab)) continue;
+      if (!ab.modifiers.some(matchesScope)) continue;
+      const evalResult = ConditionEvaluator.evaluate(ab.conditions, context);
+      if (evalResult.valid) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * Determines active card side based on options and available sides.
    *
@@ -256,9 +412,34 @@ class AbilityLookup {
    * @returns {string} The active side name ('top' or 'bottom').
    * @private
    */
-  static _determineActiveSide(sides, options) {
+  static _determineActiveSide(sides, options = {}) {
     if (options.activeSide && sides[options.activeSide]) {
       return options.activeSide;
+    }
+    if (options.inGameType && sides.bottom) {
+      let sideArray = Array.isArray(options.card?.sides) ? options.card.sides : null;
+      if (!sideArray && (options.templateId || options.card?.templateId)) {
+        try {
+          const { CardRepository } = require("../../../shared/CardRepository");
+          const dbCard = CardRepository.isInitialized
+            ? CardRepository.getById(options.templateId || options.card.templateId)
+            : null;
+          if (dbCard && Array.isArray(dbCard.sides)) {
+            sideArray = dbCard.sides;
+          }
+        } catch (_e) { }
+      }
+      if (sideArray && sideArray.length > 1) {
+        const idx = resolveActiveSideIndex(
+          {
+            inGameType: options.inGameType,
+            inGameAlignment: options.inGameAlignment,
+            isFlipped: options.card?.isFlipped,
+          },
+          sideArray
+        );
+        return idx === 1 ? AST_CARD_SIDES.BOTTOM : AST_CARD_SIDES.TOP;
+      }
     }
     if (options.inGameAlignment && sides.bottom) {
       // Dual-alignment cards: inspect alignment match if bottom exists

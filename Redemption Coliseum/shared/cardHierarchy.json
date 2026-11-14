@@ -56,5 +56,11 @@
     "Lost Soul Token": [
       "Lost Soul"
     ]
-  }
+  },
+  "genders": [
+    "male",
+    "female",
+    "both",
+    "genderless"
+  ]
 }

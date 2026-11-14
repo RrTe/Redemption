@@ -9,6 +9,9 @@ export interface CardData {
   Toughness: string;
   Class: string;
   Identifier: string;
+  Gender?: string;
+  IsGeneric?: boolean | null;
+  IsHuman?: boolean | null;
   SpecialAbility: string;
   Rarity: string;
   Reference: string;

@@ -4,6 +4,7 @@ export interface CardHierarchyData {
   card_types: string[];
   type_groups: Record<string, string[]>;
   type_is_a: Record<string, string[]>;
+  genders?: string[];
 }
 
 export declare const cardHierarchy: CardHierarchyData;
@@ -53,5 +54,23 @@ export declare function matchesCardSubtype(card: any, subtype: string): boolean;
  * @returns True if card satisfies the target type.
  */
 export declare function matchesTargetType(card: any, targetType: string, activeType?: string | string[]): boolean;
+
+/**
+ * Checks whether a single side type represents a Character card type eligible to carry Gender.
+ *
+ * @param sideType Side or card type string.
+ * @returns True if the type belongs to the Character hierarchy (including DAC).
+ */
+export declare function isCharacterSideType(sideType: string | string[]): boolean;
+
+/**
+ * Returns the canonical character-side gender values defined in cardHierarchy.json.
+ */
+export declare function getValidCardGenders(): string[];
+
+/**
+ * Resolves the active side index (0 = top, 1 = bottom) for a card using inGameType, inGameAlignment, and isFlipped.
+ */
+export declare function resolveActiveSideIndex(card: any, sidesInput?: any[]): number;
 
 

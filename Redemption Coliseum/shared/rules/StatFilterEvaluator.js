@@ -9,6 +9,7 @@ const {
   AST_STAT_FILTER_STATS,
   AST_STAT_FILTER_OPERATORS,
 } = require("../astConstants");
+const { resolveActiveSideIndex } = require("../cardHierarchy");
 
 /**
  * Pure service for resolving and evaluating structured stat filters on cards.
@@ -131,7 +132,7 @@ class StatFilterEvaluator {
     // Dual-sided card in play: use active side stats if specified
     const isInPlay = card.zone === ZONES.BATTLEFIELD || card.zone === ZONES.TERRITORY;
     if (isInPlay && Array.isArray(card.sides) && card.sides.length > 1) {
-      const activeSideIndex = (card.inGameAlignment || "").toLowerCase().includes("evil") ? 1 : 0;
+      const activeSideIndex = resolveActiveSideIndex(card, card.sides);
       const side = card.sides[activeSideIndex];
       if (side) {
         if (side.Strength !== undefined && side.Strength !== null && side.Strength !== "") rawStr = side.Strength;

@@ -11,6 +11,9 @@ export interface CardSide {
   Toughness: string;
   SpecialAbility: string;
   Identifier?: string;
+  Gender?: string;
+  IsGeneric?: boolean | null;
+  IsHuman?: boolean | null;
   ORDIR?: string[];
 }
 
@@ -20,6 +23,9 @@ export interface NormalizedCard {
   ImageFile: string;
   OfficialSet: string;
   Identifier: string;
+  Gender?: string;
+  IsGeneric?: boolean | null;
+  IsHuman?: boolean | null;
   Rarity: string;
   Reference: string;
   Legality: string;

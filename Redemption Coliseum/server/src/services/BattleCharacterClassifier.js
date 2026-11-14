@@ -199,8 +199,11 @@ class BattleCharacterClassifier {
   static isAbilityTriggeredOnBattleEntry(ability, actionType, card = null) {
     if (!ability) return false;
 
-    // Star abilities NEVER trigger upon entering the battlefield
-    if (AbilityLookup.isStarAbility(ability, { isStarCard: Boolean(card?.IsStarCard) })) {
+    // Star abilities and passive modifier-only static abilities NEVER trigger upon battlefield entrance
+    if (
+      AbilityLookup.isStarAbility(ability, { isStarCard: Boolean(card?.IsStarCard) }) ||
+      AbilityLookup.isPassiveModifierAbility(ability)
+    ) {
       return false;
     }
 

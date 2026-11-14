@@ -99,6 +99,18 @@ export declare const AST_STAT_FILTER_OPERATORS: {
   readonly NEQ: "!=";
 };
 
+export declare const AST_GENDERS: {
+  readonly MALE: "male";
+  readonly FEMALE: "female";
+};
+
+export declare const CARD_GENDERS: {
+  readonly MALE: "male";
+  readonly FEMALE: "female";
+  readonly BOTH: "both";
+  readonly GENDERLESS: "genderless";
+};
+
 export type AstAction = typeof AST_ACTIONS[keyof typeof AST_ACTIONS];
 export type AstSelectionMode = typeof AST_SELECTION_MODES[keyof typeof AST_SELECTION_MODES];
 export type AstScope = typeof AST_SCOPES[keyof typeof AST_SCOPES];
@@ -109,6 +121,8 @@ export type AstAlignment = typeof AST_ALIGNMENTS[keyof typeof AST_ALIGNMENTS];
 export type AstMessage = typeof AST_MESSAGES[keyof typeof AST_MESSAGES];
 export type AstStatFilterStat = typeof AST_STAT_FILTER_STATS[keyof typeof AST_STAT_FILTER_STATS];
 export type AstStatFilterOperator = typeof AST_STAT_FILTER_OPERATORS[keyof typeof AST_STAT_FILTER_OPERATORS];
+export type AstGender = typeof AST_GENDERS[keyof typeof AST_GENDERS];
+export type CardGender = typeof CARD_GENDERS[keyof typeof CARD_GENDERS];
 
 export interface StatFilter {
   stat: AstStatFilterStat;

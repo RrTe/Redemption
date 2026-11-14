@@ -10,7 +10,9 @@ const { BattleCharacterClassifier } = require("../services/BattleCharacterClassi
 const { ProtectionService } = require("../../../shared/rules/ProtectionService");
 const { MovementRules } = require("../../../shared/rules/MovementRules");
 const { StatFilterEvaluator } = require("../../../shared/rules/StatFilterEvaluator");
-const { matchesCardType, matchesTargetType } = require("../../../shared/cardHierarchy");
+const { GenderEvaluator } = require("../../../shared/rules/GenderEvaluator");
+const { SideAttributeEvaluator, CANONICAL_CLASSES } = require("../../../shared/rules/SideAttributeEvaluator");
+const { matchesCardType, matchesTargetType, resolveActiveSideIndex } = require("../../../shared/cardHierarchy");
 
 const RESERVE_REMOVAL_ACTIONS = [
   AST_ACTIONS.TAKE,
@@ -427,7 +429,14 @@ class TargetSelectionService {
           else if (card.isLostSoul || (card.Name && card.Name.startsWith("Lost Soul"))) activeType = "Lost Soul";
         }
 
-        if (!matchesTargetType(card, rawType, activeType)) {
+        const allowsWeaponEnhancement =
+          rawType === "character" &&
+          Array.isArray(targetDef.classes) &&
+          targetDef.classes.some((c) => /^weapon$/i.test(String(c || "")));
+        if (
+          !matchesTargetType(card, rawType, activeType) &&
+          !(allowsWeaponEnhancement && matchesTargetType(card, "enhancement", activeType))
+        ) {
           return false;
         }
       }
@@ -505,7 +514,7 @@ class TargetSelectionService {
         // Dual card in play: use active side ORDIR if available
         const isInPlay = card.zone === ZONES.BATTLEFIELD || card.zone === ZONES.TERRITORY;
         if (isInPlay && Array.isArray(card.sides) && card.sides.length > 1) {
-          const activeSideIndex = (card.inGameAlignment || "").toLowerCase().includes("evil") ? 1 : 0;
+          const activeSideIndex = resolveActiveSideIndex(card, card.sides);
           const side = card.sides[activeSideIndex];
           if (side) {
             if (Array.isArray(side.ORDIR) && side.ORDIR.length > 0) ordirList = side.ORDIR;
@@ -513,30 +522,92 @@ class TargetSelectionService {
             if (side.Class) cardClass = side.Class;
           }
         }
-        const cardIdentStr = String(cardIdent || "").toLowerCase();
-        const ordirStr = Array.isArray(ordirList) ? ordirList.join(" ").toLowerCase() : "";
-        const cardClassStr = String(cardClass || "").toLowerCase();
-        const hasIdentMatch = idents.some((id) => {
-          const needle = String(id).trim().toLowerCase();
-          if (!needle) return false;
-
-          // Official REG Rule: All Characters are Human unless identified as an Angel, Demon, or Animal
-          if (needle === "human") {
-            const isChar = BattleCharacterClassifier.isHero(card) || BattleCharacterClassifier.isEvilCharacter(card);
-            if (!isChar) return false;
-            const nonHuman = ["angel", "demon", "animal"];
-            const isNonHuman = nonHuman.some((nh) =>
-              cardIdentStr.includes(nh) || cardClassStr.includes(nh) || ordirStr.includes(nh)
-            );
-            return !isNonHuman;
+        const normalizedIdents = idents.filter((id) => {
+          const l = String(id || "").trim().toLowerCase();
+          // Ignore bare syntactic "or" connector when structured filters carry the semantics
+          if (l === "or" && (Array.isArray(targetDef.classes) && targetDef.classes.length > 0 || targetDef.gender || typeof targetDef.is_generic === "boolean" || typeof targetDef.is_human === "boolean")) {
+            return false;
           }
-
-          const esc = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const regex = new RegExp(`(^|[^a-zA-Z0-9])${esc}([^a-zA-Z0-9]|$)`, "i");
-          return regex.test(cardIdentStr) || regex.test(cardClassStr) || regex.test(ordirStr) ||
-            (Array.isArray(ordirList) && ordirList.some((item) => String(item).trim().toLowerCase() === needle));
+          return true;
         });
-        if (!hasIdentMatch) return false;
+
+        const CONSTRAINT_IDENT_REGEX = /^(?:non-warrior(?:\s+class)?|non-weapon(?:\s+class)?|except\s+(?:(?:a|an)\s+)?(?:human|non-human|warrior(?:\s+class)?|weapon(?:\s+class)?|good\s+warriors?|good\s+weapons?))$/i;
+        const constraintIdents = [];
+        const standardIdents = [];
+
+        for (const id of normalizedIdents) {
+          const trimmed = String(id || "").trim();
+          const low = trimmed.toLowerCase();
+          if (low === "opposite gender") {
+            const refCard =
+              context.referenceCard ||
+              context.selectedCard ||
+              context.actorCard ||
+              (GenderEvaluator.resolveCardGender(context.sourceCard) ? context.sourceCard : null);
+            if (!GenderEvaluator.matchesOppositeGender(card, refCard, { targetDef })) {
+              return false;
+            }
+          } else if (CONSTRAINT_IDENT_REGEX.test(low)) {
+            constraintIdents.push(low);
+          } else if (trimmed) {
+            standardIdents.push(trimmed);
+          }
+        }
+
+        for (const constraint of constraintIdents) {
+          if (!this._matchesConstraintIdentifier(card, constraint, targetDef)) {
+            return false;
+          }
+        }
+
+        if (standardIdents.length > 0) {
+          const cardIdentStr = String(cardIdent || "").toLowerCase();
+          const ordirStr = Array.isArray(ordirList) ? ordirList.join(" ").toLowerCase() : "";
+          const cardClassStr = String(cardClass || "").toLowerCase();
+          const hasIdentMatch = standardIdents.some((id) => {
+            const needle = String(id).trim().toLowerCase();
+            if (!needle) return false;
+
+            // Official ORDIR 7.0.0 Rule: Character humanity via IsHuman / descriptor fallback
+            if (needle === "human" || needle === "humans") {
+              return SideAttributeEvaluator.resolveIsHuman(card, { targetDef }) === true;
+            }
+
+            const esc = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            const regex = new RegExp(`(^|[^a-zA-Z0-9])${esc}([^a-zA-Z0-9]|$)`, "i");
+            return regex.test(cardIdentStr) || regex.test(cardClassStr) || regex.test(ordirStr) ||
+              (Array.isArray(ordirList) && ordirList.some((item) => String(item).trim().toLowerCase() === needle));
+          });
+          if (!hasIdentMatch) return false;
+        }
+      }
+    }
+
+    // 8b. Check structured gender filter (ORDIR 7.0.0)
+    if (targetDef.gender) {
+      if (!GenderEvaluator.matchesGender(card, targetDef.gender, { targetDef })) {
+        return false;
+      }
+    }
+
+    // 8c. Check structured generic/unique character filter
+    if (typeof targetDef.is_generic === "boolean") {
+      if (!SideAttributeEvaluator.matchesIsGeneric(card, targetDef.is_generic, { targetDef })) {
+        return false;
+      }
+    }
+
+    // 8d. Check structured human/non-human filter (ORDIR 7.0.0)
+    if (typeof targetDef.is_human === "boolean") {
+      if (!SideAttributeEvaluator.matchesIsHuman(card, targetDef.is_human, { targetDef })) {
+        return false;
+      }
+    }
+
+    // 8e. Check canonical card classes filter (Warrior, Weapon, Territory)
+    if (Array.isArray(targetDef.classes) && targetDef.classes.length > 0) {
+      if (!SideAttributeEvaluator.matchesClasses(card, targetDef.classes, { targetDef })) {
+        return false;
       }
     }
 
@@ -554,6 +625,41 @@ class TargetSelectionService {
       }
     }
 
+    return true;
+  }
+
+  /**
+   * Evaluates negative and exception identifier phrases that remain in AST identifiers
+   * (e.g. "non-warrior", "non-weapon", "except a human", "except warrior class").
+   *
+   * @private
+   * @param {object} card Candidate card instance.
+   * @param {string} constraint Lowercased constraint phrase.
+   * @param {object} targetDef Selector definition.
+   * @returns {boolean} True if candidate card satisfies the constraint.
+   */
+  static _matchesConstraintIdentifier(card, constraint, targetDef) {
+    const warriorClass = CANONICAL_CLASSES.find((c) => /^warrior$/i.test(c)) || "Warrior";
+    const weaponClass = CANONICAL_CLASSES.find((c) => /^weapon$/i.test(c)) || "Weapon";
+    if (/^(?:non-warrior(?:\s+class)?|except\s+warrior(?:\s+class)?)$/.test(constraint)) {
+      return !SideAttributeEvaluator.matchesClasses(card, [warriorClass], { targetDef });
+    }
+    if (/^non-weapon(?:\s+class)?$/.test(constraint)) {
+      return !SideAttributeEvaluator.matchesClasses(card, [weaponClass], { targetDef });
+    }
+    if (/^except\s+(?:(?:a|an)\s+)?human$/.test(constraint)) {
+      return SideAttributeEvaluator.resolveIsHuman(card, { targetDef }) !== true;
+    }
+    if (/^except\s+non-human$/.test(constraint)) {
+      return SideAttributeEvaluator.resolveIsHuman(card, { targetDef }) === true;
+    }
+    const cardAlign = String(card.inGameAlignment || card.Alignment || "").toLowerCase();
+    if (/^except\s+good\s+warriors?$/.test(constraint)) {
+      return !(cardAlign.includes("good") && SideAttributeEvaluator.matchesClasses(card, [warriorClass], { targetDef }));
+    }
+    if (/^except\s+good\s+weapons?$/.test(constraint)) {
+      return !(cardAlign.includes("good") && SideAttributeEvaluator.matchesClasses(card, [weaponClass], { targetDef }));
+    }
     return true;
   }
 
@@ -602,6 +708,10 @@ class TargetSelectionService {
       (Array.isArray(targetDef.identifiers) && targetDef.identifiers.length > 0) ||
       (Array.isArray(targetDef.card_titles) && targetDef.card_titles.length > 0) ||
       (Array.isArray(targetDef.stat_filters) && targetDef.stat_filters.length > 0) ||
+      targetDef.gender ||
+      typeof targetDef.is_generic === "boolean" ||
+      typeof targetDef.is_human === "boolean" ||
+      (Array.isArray(targetDef.classes) && targetDef.classes.length > 0) ||
       targetDef.testament
     );
     if (CARD_TYPES.includes(t) || hasCardFilters) {

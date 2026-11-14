@@ -248,13 +248,13 @@ class AbilityResolver {
       const singleAbilityChoices =
         isSupportedFirstEffect && targetAbility
           ? [
-              {
-                abilityId: targetAbility.ability_id,
-                label: this._formatAbilityChoiceLabel(targetAbility, card),
-                action: firstEffect.action,
-                disabled: false,
-              },
-            ]
+            {
+              abilityId: targetAbility.ability_id,
+              label: this._formatAbilityChoiceLabel(targetAbility, card),
+              action: firstEffect.action,
+              disabled: false,
+            },
+          ]
           : undefined;
 
       const client = this.room.clients.find((c) => c.sessionId === player.sessionId);
@@ -777,6 +777,40 @@ class AbilityResolver {
     }
 
     const rawType = (target.target_type || "character").replace(/_/g, " ");
+    const quals = this._formatTargetQualifiers(target);
+
+    if (isPlural) {
+      if (
+        (rawType === "character" || rawType === "evil character") &&
+        quals.idents.length === 1 &&
+        /^[A-Z]/.test(quals.idents[0])
+      ) {
+        const pluralIdent = this._pluralizeNoun(quals.idents[0]);
+        const phrase = `${quals.genericStr}${quals.brigadeStr}${quals.testStr}${quals.refStr}${quals.genderStr}${quals.humanStr}${pluralIdent}`.trim();
+        return `Band to ${countPrefix} ${phrase}`;
+      }
+      const idenStr = quals.idents.length > 0 ? `${quals.idents.join("/")} ` : "";
+      const pluralClass = quals.classes.length > 0 ? this._pluralizeNoun(quals.classes.join(" or ").toLowerCase()) : "";
+      const typeLabel = pluralClass || this._pluralizeNoun(rawType);
+      const phrase = `${quals.genericStr}${quals.brigadeStr}${quals.testStr}${quals.refStr}${quals.genderStr}${quals.humanStr}${idenStr}${typeLabel}`.trim();
+      return `Band to ${countPrefix} ${phrase}`;
+    }
+
+    const phrase = this._formatTargetPhrase(target, { isBand: true });
+    if (phrase && phrase !== "character") {
+      return `Band to a ${phrase}`;
+    }
+    return isQuestion ? "Band a character into battle" : "Band to a character";
+  }
+
+  /**
+   * Builds normalized qualifier strings shared by band and target phrase formatters.
+   *
+   * @private
+   * @param {object} [target={}] AST target definition.
+   * @returns {object} Preformatted qualifier fragments.
+   */
+  _formatTargetQualifiers(target = {}) {
     const brigadeStr =
       Array.isArray(target.brigades) && target.brigades.length > 0 && target.brigades.length <= 2
         ? `${target.brigades.join("/")} `
@@ -793,35 +827,20 @@ class AbilityResolver {
       Array.isArray(target.references) && target.references.length > 0 && target.references.length <= 2
         ? `${target.references.join("/")} `
         : "";
-
-    const idents = Array.isArray(target.identifiers) ? target.identifiers.filter(Boolean) : [];
-
-    if (isPlural) {
-      if (
-        (rawType === "character" || rawType === "evil character") &&
-        idents.length === 1 &&
-        /^[A-Z]/.test(idents[0])
-      ) {
-        const pluralIdent = this._pluralizeNoun(idents[0]);
-        const phrase = `${brigadeStr}${testStr}${refStr}${pluralIdent}`.trim();
-        return `Band to ${countPrefix} ${phrase}`;
-      }
-      const idenStr = idents.length > 0 ? `${idents.join("/")} ` : "";
-      const pluralType = this._pluralizeNoun(rawType);
-      const phrase = `${brigadeStr}${testStr}${refStr}${idenStr}${pluralType}`.trim();
-      return `Band to ${countPrefix} ${phrase}`;
-    }
-
-    const phrase = this._formatTargetPhrase(target, { isBand: true });
-    if (phrase && phrase !== "character") {
-      return `Band to a ${phrase}`;
-    }
-    return isQuestion ? "Band a character into battle" : "Band to a character";
+    const genericStr =
+      target.is_generic === true ? "generic " : (target.is_generic === false ? "unique " : "");
+    const humanStr =
+      target.is_human === true ? "human " : (target.is_human === false ? "non-human " : "");
+    const genderStr = target.gender ? `${String(target.gender).toLowerCase()} ` : "";
+    const classes = Array.isArray(target.classes) ? target.classes.filter(Boolean) : [];
+    const idents = (Array.isArray(target.identifiers) ? target.identifiers : [])
+      .filter((id) => Boolean(id) && !(String(id).trim().toLowerCase() === "or" && classes.length > 0));
+    return { brigadeStr, testStr, refStr, genericStr, humanStr, genderStr, classes, idents };
   }
 
   /**
-   * Formats target qualifiers (alignment, brigade, testament, references, identifier/type)
-   * into a concise descriptor phrase.
+   * Formats target qualifiers (alignment, generic/unique, brigade, testament, references,
+   * gender, human/non-human, classes, identifier/type) into a concise descriptor phrase.
    *
    * @private
    * @param {object} [target] AST target definition.
@@ -835,38 +854,19 @@ class AbilityResolver {
     }
 
     const rawType = (target.target_type || (isBand ? "character" : "card")).replace(/_/g, " ");
-    const brigadeStr =
-      Array.isArray(target.brigades) && target.brigades.length > 0 && target.brigades.length <= 2
-        ? `${target.brigades.join("/")} `
-        : "";
-    const testStr =
-      target.testament === "OT"
-        ? "O.T. "
-        : target.testament === "NT"
-          ? "N.T. "
-          : target.testament
-            ? `${target.testament} `
-            : "";
-    const refStr =
-      Array.isArray(target.references) && target.references.length > 0 && target.references.length <= 2
-        ? `${target.references.join("/")} `
-        : "";
+    const quals = this._formatTargetQualifiers(target);
+    const classStr = quals.classes.length > 0 ? quals.classes.map((c) => String(c).toLowerCase()).join(" or ") : "";
 
     if (isBand) {
-      const idenStr =
-        Array.isArray(target.identifiers) && target.identifiers.length > 0
-          ? `${target.identifiers.join("/")} `
-          : "";
-      return `${brigadeStr}${testStr}${refStr}${idenStr}${rawType}`.trim();
+      const idenStr = quals.idents.length > 0 ? `${quals.idents.join("/")} ` : "";
+      const finalType = classStr || rawType;
+      return `${quals.genericStr}${quals.brigadeStr}${quals.testStr}${quals.refStr}${quals.genderStr}${quals.humanStr}${idenStr}${finalType}`.trim();
     }
 
-    const iden =
-      Array.isArray(target.identifiers) && target.identifiers.length > 0
-        ? target.identifiers[0].replace(/_/g, " ").toLowerCase()
-        : "";
-    const targetType = iden ? iden : rawType;
+    const iden = quals.idents.length > 0 ? quals.idents[0].replace(/_/g, " ").toLowerCase() : "";
+    const targetType = iden || classStr || rawType;
     const alignStr = target.alignment ? `${target.alignment} ` : "";
-    return `${alignStr}${brigadeStr}${testStr}${refStr}${targetType}`.trim();
+    return `${alignStr}${quals.genericStr}${quals.brigadeStr}${quals.testStr}${quals.refStr}${quals.genderStr}${quals.humanStr}${targetType}`.trim();
   }
 
   /**
