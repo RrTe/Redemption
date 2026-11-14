@@ -35,6 +35,7 @@ EXTENDED_CARDS = BASE_DIR / config["cards_file"]
 OUT_FILE = BASE_DIR / config["cards_extended_with_ordir_fuzzy"]
 OUT_FILE_MIN = BASE_DIR / config["cards_extended_with_ordir_fuzzy_min"]
 UNMATCHED_LOG = BASE_DIR / config["unmatched_ordir_entries_log"]
+CARD_HIERARCHY_FILE = BASE_DIR / config.get("card_hierarchy_json", "data/dist/cardHierarchy.json")
 
 # Add project root to sys.path
 sys.path.append(str(BASE_DIR))
@@ -48,6 +49,8 @@ from mappings.alias_engine import (
 from mappings.ordir_name_errata import GLOBAL_EXCEPTIONS
 from mappings.special_ordir_overrides import SPECIAL_ORDIR_OVERRIDES
 from utils.card_helpers import get_card_name, check_is_star_card
+from utils.card_hierarchy_exporter import export_card_hierarchy
+from utils.gender_resolver import apply_gender_to_card_sides
 import importlib
 _extract_shared_fields = importlib.import_module("scripts.03_extend_cards")._extract_shared_fields
 
@@ -378,6 +381,7 @@ def map_ordir_to_cards():
                     del sides[sk]["ORDIR"]
 
         c["CardSides"] = _extract_shared_fields(sides)
+        apply_gender_to_card_sides(c)
         c["IsStarCard"] = check_is_star_card(c)
 
     # Post-mapping integrity validation: verify that no card lost its core attributes
@@ -406,6 +410,9 @@ def map_ordir_to_cards():
 
     print(f"  -> {OUT_FILE}")
     print(f"  -> {OUT_FILE_MIN}")
+
+    export_card_hierarchy(CARD_HIERARCHY_FILE)
+    print(f"  -> {CARD_HIERARCHY_FILE}")
 
     # Write the unmatched registry report
     print(f"Writing {len(unmatched)} unmatched registry entries to {UNMATCHED_LOG}...")

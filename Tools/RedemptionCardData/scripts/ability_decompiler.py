@@ -19,6 +19,13 @@ def _val(obj: Any) -> str:
     return str(obj.value) if hasattr(obj, "value") else str(obj or "")
 
 
+def _scopes(scope_val: Any) -> List[str]:
+    """Extracts a list of string zone values from target.scope."""
+    if isinstance(scope_val, (list, tuple, set)):
+        return [_val(s) for s in scope_val if s is not None]
+    return [_val(scope_val)] if scope_val is not None else []
+
+
 def decompile_target(target: Optional[TargetSelector]) -> str:
     """Decompiles a TargetSelector into natural language noun phrase."""
     if not target:
@@ -27,13 +34,15 @@ def decompile_target(target: Optional[TargetSelector]) -> str:
         return " or ".join(target.card_titles)
 
     mode = _val(target.selection_mode)
-    has_specifics = target.count is not None or target.target_type == "lost_soul" or (_val(target.scope) in ("deck", "draw_pile"))
+    scopes_list = _scopes(target.scope)
+    primary_scope = scopes_list[0] if scopes_list else ""
+    has_specifics = target.count is not None or target.target_type == "lost_soul" or (primary_scope in ("deck", "draw_pile"))
     if "self" in mode and not has_specifics:
         t = _val(target.target_type).replace("_", " ") if target.target_type else "card"
         return f"This {t.title()}" if t in ("hero", "character", "evil character") else "This card"
 
     parts: List[str] = []
-    owner, scope = _val(target.zone_owner), _val(target.scope)
+    owner = _val(target.zone_owner)
 
     if target.count:
         parts.append(str(target.count.fixed_value) if target.count.fixed_value is not None else "X")
@@ -46,6 +55,7 @@ def decompile_target(target: Optional[TargetSelector]) -> str:
     elif owner == "opponent": parts.append("opponent's")
 
     if target.alignment: parts.append(_val(target.alignment))
+    if getattr(target, "gender", None): parts.append(_val(target.gender))
     if target.brigades: parts.extend([_val(b) for b in target.brigades])
     if target.identifiers: parts.extend([_val(i) for i in target.identifiers])
 
@@ -62,10 +72,12 @@ def decompile_target(target: Optional[TargetSelector]) -> str:
         "battle": "in battle", "in_play": "in play", "hand": "from hand",
         "deck": "from deck", "draw_pile": "from deck", "discard": "from discard pile",
         "discard_pile": "from discard pile", "reserve": "from Reserve",
-        "reserve_pile": "from Reserve", "territory": "in territory"
+        "reserve_pile": "from Reserve", "territory": "in territory",
+        "set_aside": "in set-aside area", "artifact_pile": "from Artifact pile"
     }
-    if scope in sc_map:
-        parts.append(sc_map[scope])
+    mapped_scopes = [sc_map[s] for s in scopes_list if s in sc_map]
+    if mapped_scopes:
+        parts.append(" or ".join(mapped_scopes))
     return " ".join(parts)
 
 
@@ -105,7 +117,8 @@ def decompile_effect(effect: ActionEffect) -> str:
 def decompile_condition(cond: ConditionExpression) -> str:
     """Formats a ConditionExpression into a natural language condition."""
     if cond.selector:
-        sc = _val(cond.selector.scope).replace("_", " ")
+        scopes_list = _scopes(cond.selector.scope)
+        sc = (scopes_list[0] if scopes_list else "in_play").replace("_", " ")
         prep = "" if sc.startswith("in") else "in "
         if cond.selector.card_titles:
             names = " or ".join(cond.selector.card_titles)
@@ -132,7 +145,7 @@ def decompile_ability(ability: Ability) -> str:
     """Synthesizes an entire Ability clause into natural card ability sentences."""
     clauses: List[str] = []
 
-    if ability.trigger_event:
+    if ability.trigger_event and str(ability.trigger_event).strip().lower() not in ("star_phase", "star"):
         trig = str(ability.trigger_event).strip()
         if not trig.lower().startswith(("if", "when", "after", "while", "during", "on")):
             trig = f"If {trig}"

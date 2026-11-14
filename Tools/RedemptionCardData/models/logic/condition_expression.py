@@ -4,8 +4,8 @@ Evaluates game-state criteria (e.g. 'if in battle', 'hand advantage')
 before abilities activate or effects resolve.
 """
 
-from typing import Optional, Union, Literal
-from pydantic import BaseModel
+from typing import Any, Optional, Union, Literal
+from pydantic import BaseModel, field_validator
 from models.enums.condition_type import ConditionType
 from models.logic.target_selector import TargetSelector
 
@@ -23,3 +23,18 @@ class ConditionExpression(BaseModel):
     selector: Optional[TargetSelector] = None
     operator: Literal["==", "!=", ">", ">=", "<", "<="] = "=="
     value: Optional[Union[int, str, bool]] = None
+
+    @field_validator("operator", mode="before")
+    @classmethod
+    def normalize_operator(cls, value: Any) -> str:
+        """Defaults missing or null operators from LLM outputs to '=='.
+
+        Args:
+            value: Raw operator value before validation.
+
+        Returns:
+            Valid relational operator string.
+        """
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return "=="
+        return str(value).strip()

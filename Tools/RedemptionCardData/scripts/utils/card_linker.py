@@ -156,11 +156,11 @@ def normalize_chained_targets(side_logic: Any) -> List[str]:
                         # Cannot chain if on step 1 and no prior cost targets: set to automatic_all
                         tgt.selection_mode = SelectionMode.AUTOMATIC_ALL
                         tgt.ref_step = None
-                    elif len(target_source_steps) == 1:
-                        # Exactly one previous step introduced a target: unambiguously link to it
-                        tgt.ref_step = target_source_steps[0]
-                    elif len(prior_steps) == 1:
-                        tgt.ref_step = prior_steps[0]
+                    elif target_source_steps:
+                        # Link to the most recent prior step that introduced a target
+                        tgt.ref_step = target_source_steps[-1]
+                    elif prior_steps:
+                        tgt.ref_step = prior_steps[-1]
                     else:
                         ambiguous.append(
                             f"Step {step} uses chained_target without valid ref_step among candidate steps {target_source_steps or prior_steps}"

@@ -79,46 +79,90 @@ PROTECTION_MODIFIERS = [
 TRIGGER_PATTERNS = [
     re.compile(r"\b(?:each\s+time|when|whenever|if)\s+(?:an?\s+)?(?:opponent|player|hero)\s+(\w+)s?\b", re.I),
     re.compile(r"\bafter\s+(?:an?\s+)?(?:opponent|player|hero)\s+(\w+)s?\b", re.I),
-    re.compile(r"\b(?:cards?|enhancements?|characters?)\s+(?:that\s+)?(?:(?:an?|your|their)\s+)?(?:opponents?|players?|heroes?|you)\s+(\w+)s?\b", re.I),
+    re.compile(r"\b(?:cards?|enhancements?|characters?)\s+(?:that\s+)?(?:(?:an?|your|their)\s+)?(?:opponents?|players?|heroes?|you)\s+((?:\w+\s*(?:,|or|and)\s*)*\w+)\b", re.I),
 ]
 
 
 def is_action_prohibited(raw_text: str, action: str) -> bool:
-    """Checks if an action verb appears in a negated, prohibited, protected, or immune context."""
+    """Checks if an action verb appears in a negated, prohibited, protected, or immune context.
+
+    Args:
+        raw_text: Original card ability text.
+        action: Canonical action verb string to test.
+
+    Returns:
+        True if the action verb is prohibited, negated, protected against, or excluded.
+    """
     raw_lower = raw_text.lower()
     prohibition_re = re.compile(
-        rf"\b(?:may\s+not|cannot|can\s+not|prevent(?:ed)?\s+from|protect(?:ed)?\s+from|immune\s+to)\s+(?:be\s+|being\s+)?{action}\b",
+        rf"\b(?:may\s+not|cannot|can\s+not|prevent(?:ed)?\s+from|protect(?:ed)?\s+from|immune\s+to)\s+(?:be\s+|being\s+)?(?:[\w\s,]+\s+(?:and|or)\s+)*{action}(?:ed|s|ing)?\b",
         re.I
     )
     if prohibition_re.search(raw_lower):
         return True
 
-    # Check for relational protection/immunity clauses: 'protect [targets] from [action]'
-    if re.search(rf"\bprotect(?:ed)?\b.*?\bfrom\s+(?:being\s+)?{action}\b", raw_lower):
+    # Relational protection/immunity clauses with single or multi-item lists:
+    # e.g., 'Protect Job from capture and discard', 'Protect ... from shuffle, capture, and discard'
+    if re.search(rf"\bprotect(?:ed)?\b[^.]*?\bfrom\s+(?:being\s+)?(?:[\w\s,]+\s+(?:and|or)\s+)*{action}(?:ed|s|ing)?\b", raw_lower):
         return True
-    if re.search(rf"\bimmune\b.*?\bto\s+(?:being\s+)?{action}\b", raw_lower):
+    if re.search(rf"\bimmune\b[^.]*?\bto\s+(?:being\s+)?(?:[\w\s,]+\s+(?:and|or)\s+)*{action}(?:ed|s|ing)?\b", raw_lower):
+        return True
+
+    # Negate / prevent / ignore / restrict / cannot use [X, Y and] {action} abilities/cards
+    if re.search(
+        rf"\b(?:negate|negates|prevent|prevents|ignore|ignores|restrict|restricts|cannot\s+use|may\s+not\s+use)\b[^.]*?\b{action}(?:[\s,]+\w+|\s+(?:and|or)\s+\w+)*\s+(?:abilities|ability|special\s+abilities|cards?|enhancements?)\b",
+        raw_lower,
+    ):
+        return True
+
+    # Exception clauses: 'except [X and] {action} (abilities)'
+    if re.search(
+        rf"\bexcept\s+(?:[\w\s,]+\s+(?:and|or)\s+)*{action}(?:\s+abilities|\s+ability|\s+special\s+abilities|\s+cards?|\s+enhancements?)?\b",
+        raw_lower,
+    ):
         return True
 
     if f"cannot be {action}" in raw_lower or f"may not be {action}" in raw_lower:
         return True
 
-    for pattern in RESTRICTION_PATTERNS:
+    for pattern in RESTRICTION_PATTERNS + CARD_PROTECTION_PATTERNS:
         for match in pattern.finditer(raw_lower):
-            matched_verb = match.group(1)
-            if matched_verb and (matched_verb.startswith(action) or action.startswith(matched_verb)):
-                return True
+            for grp in match.groups():
+                if grp and (grp.startswith(action) or action.startswith(grp)):
+                    return True
 
     return False
 
 
 def is_action_in_trigger(raw_text: str, action: str) -> bool:
-    """Checks if an action verb is part of an event trigger rather than an effect."""
+    """Checks if an action verb is part of an event trigger or condition rather than an effect.
+
+    Args:
+        raw_text: Original card ability text.
+        action: Canonical action verb string to test.
+
+    Returns:
+        True if the action verb appears inside a trigger/condition clause.
+    """
     raw_lower = raw_text.lower()
     for pattern in TRIGGER_PATTERNS:
         for match in pattern.finditer(raw_lower):
-            matched_word = match.group(1)
-            if matched_word.startswith(action) or action.startswith(matched_word):
-                return True
+            matched_text = match.group(1)
+            for w in re.findall(r"\b\w+\b", matched_text):
+                if w.startswith(action) or action.startswith(w):
+                    return True
+
+    # Conditional/trigger clauses: 'if/when/whenever/each time/after/until ... {action}'
+    if re.search(
+        rf"\b(?:each\s+time|when|whenever|if|after|until)\b[^.,;:]*?\b{action}(?:s|ed|ing)?\b",
+        raw_lower,
+    ):
+        return True
+
+    # Passive state descriptions: 'is/was/are/were/be {action}ed'
+    if re.search(rf"\b(?:is|was|are|were|be|been|being)\s+{action}(?:ed|en)\b", raw_lower):
+        return True
+
     return False
 
 

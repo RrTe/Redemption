@@ -10,6 +10,7 @@ from models.enums.action_verb import ActionVerb
 from models.enums.duration import Duration
 from models.enums.zone import Zone
 from models.logic.target_selector import TargetSelector
+from models.logic.protection_filter import ProtectionFilter
 
 
 class ActionEffect(BaseModel):
@@ -33,6 +34,7 @@ class ActionEffect(BaseModel):
     effect_type: Literal["instant", "ongoing"] = "instant"
     duration: Duration = Duration.INSTANT
     target: Optional[TargetSelector] = None
+    protection_filter: Optional[ProtectionFilter] = None
     destination: Optional[Zone] = None
     destination_position: Literal["top", "bottom", "random", "as_is"] = "as_is"
     strength_mod: Optional[int] = None

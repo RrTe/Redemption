@@ -7,6 +7,7 @@ Pydantic JSON schema constraints, automatic resume, and 1-turn self-correction r
 from __future__ import annotations
 import argparse
 import concurrent.futures
+import copy
 import json
 from pathlib import Path
 import re
@@ -153,27 +154,53 @@ def _process_single_card(backend: str, prompt: str, name: str, raw_ability: str 
 
 def _worker_task(
     item: Dict[str, str], backend: str, sys_prompt: str,
-    results: Dict[str, Any], lock: threading.Lock, stats: Dict[str, int],
+    results: Dict[str, Any], text_cache: Dict[str, Dict[str, Any]],
+    lock: threading.Lock, stats: Dict[str, int],
     linker: Optional[CardLinker] = None
 ) -> None:
     """Worker task processing a single card ability in parallel."""
     cid, name, raw = item["card_identifier"], item["card_name"], item["raw_ability"]
     card_key = f"{cid}_{item['side']}"
+    raw_clean = raw.strip()
+
+    # Instant resolution if another worker just completed the identical text
+    with lock:
+        if raw_clean in text_cache:
+            results[card_key] = {
+                "card_id": cid,
+                "card_name": name,
+                "side": item["side"],
+                "raw_ability": raw,
+                "ast": copy.deepcopy(text_cache[raw_clean]),
+            }
+            stats["success"] += 1
+            print(f" [OK-CACHE] Reused validated AST for {name} ({stats['success']}/{stats['total']})", flush=True)
+            return
+
     prompt = f"{sys_prompt}\n\nParse this card ability for card '{name}':\n\"{raw}\""
     try:
         validated = _process_single_card(backend, prompt, name, raw_ability=raw)
         if validated:
+            if re.match(r"^(?:STAR\s*:|\(\s*Star\s*\))", raw.strip(), re.IGNORECASE):
+                for ab in validated.abilities:
+                    ab.is_star = True
+                    if not ab.trigger_event or ab.trigger_event.strip().lower() == "star":
+                        ab.trigger_event = "star_phase"
+                    if not ab.ability_id.lower().startswith("star_"):
+                        ab.ability_id = f"star_{ab.ability_id}"
             normalize_chained_targets(validated)
             if linker:
                 link_side_logic_targets(validated, linker)
             with lock:
+                ast_dict = validated.model_dump()
                 results[card_key] = {
                     "card_id": cid,
                     "card_name": name,
                     "side": item["side"],
                     "raw_ability": raw,
-                    "ast": validated.model_dump()
+                    "ast": ast_dict,
                 }
+                text_cache[raw_clean] = ast_dict
                 stats["success"] += 1
                 for _ in range(3):
                     try:
@@ -185,19 +212,79 @@ def _worker_task(
                 print(f" [OK] Validated {name} ({stats['success']}/{stats['total']})", flush=True)
     except QuotaExhaustedError as qe:
         log_finding(name, "QUOTA_EXHAUSTED", str(qe), resolved=False, raw_ability=raw, card_identifier=cid)
-        print(f"\n[FATAL] Quota exhausted on card '{name}': {qe}", flush=True)
+        print(f"\n[FATAL] Quota exhausted on card '{name}': {qe}. Cooling down 45s...", flush=True)
+        time.sleep(45.0)
     except Exception as e:
         log_finding(name, "EXTRACTION_FAILED", str(e), resolved=False, raw_ability=raw, card_identifier=cid)
         print(f" [FAIL] Failed {name}: {e}", flush=True)
 
 
+def auto_resolve_exact_text_matches(
+    results: Dict[str, Any],
+    text_cache: Dict[str, Dict[str, Any]],
+) -> int:
+    """Scans unparsed abilities and auto-resolves identical raw text matches.
+
+    Args:
+        results: In-memory dictionary of all extracted ASTs.
+        text_cache: Mapping of exact raw_ability string to validated AST dictionary.
+
+    Returns:
+        Number of entries newly auto-resolved.
+    """
+    if not UNPARSED_LOG.exists() or not text_cache:
+        return 0
+
+    resolved_count = 0
+    current: Dict[str, str] = {}
+    with UNPARSED_LOG.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            m = re.match(r"^\[(.*?)\]\s*\((.*?)\)\s*(.*)$", line)
+            if m:
+                if current and "raw_ability" in current:
+                    cid, side = current["card_identifier"], current["side"]
+                    card_key = f"{cid}_{side}"
+                    raw = current["raw_ability"].strip()
+                    if card_key not in results and raw in text_cache:
+                        results[card_key] = {
+                            "card_id": cid,
+                            "card_name": current["card_name"],
+                            "side": side,
+                            "raw_ability": current["raw_ability"],
+                            "ast": copy.deepcopy(text_cache[raw]),
+                        }
+                        resolved_count += 1
+                current = {"card_identifier": m.group(1), "side": m.group(2), "card_name": m.group(3)}
+            elif line.startswith("Ability:") and current:
+                current["raw_ability"] = line[8:].strip()
+
+        if current and "raw_ability" in current:
+            cid, side = current["card_identifier"], current["side"]
+            card_key = f"{cid}_{side}"
+            raw = current["raw_ability"].strip()
+            if card_key not in results and raw in text_cache:
+                results[card_key] = {
+                    "card_id": cid,
+                    "card_name": current["card_name"],
+                    "side": side,
+                    "raw_ability": current["raw_ability"],
+                    "ast": copy.deepcopy(text_cache[raw]),
+                }
+                resolved_count += 1
+
+    return resolved_count
+
+
 def run_ai_generator() -> None:
     """Batch-processes unparsed abilities using concurrent worker threads."""
     parser = argparse.ArgumentParser(description="Stage 9: AI Ability Extractor")
-    parser.add_argument("--backend", choices=["gemini", "groq", "openrouter", "ollama", "nvidia"], default="nvidia")
-    parser.add_argument("--count", type=int, default=10)
+    parser.add_argument("--backend", choices=["gemini", "groq", "openrouter", "ollama", "nvidia"], default="gemini")
+    parser.add_argument("--count", type=int, default=100)
     parser.add_argument("--offset", type=int, default=0)
-    parser.add_argument("--workers", type=int, default=4, help="Parallel worker threads")
+    parser.add_argument("--workers", type=int, default=1, help="Parallel worker threads")
     parser.add_argument("--max-runtime", type=float, default=7200.0)
     parser.add_argument("--overwrite", action="store_true", help="Force re-extraction of cards")
     args = parser.parse_args()
@@ -210,6 +297,17 @@ def run_ai_generator() -> None:
             print(f"Loaded {len(results)} existing ASTs from {AI_OUTPUT_FILE}")
         except Exception:
             results = {}
+
+    text_cache: Dict[str, Dict[str, Any]] = {}
+    for entry in results.values():
+        raw_text = entry.get("raw_ability", "").strip()
+        if raw_text and "ast" in entry:
+            text_cache[raw_text] = entry["ast"]
+
+    newly_resolved = auto_resolve_exact_text_matches(results, text_cache)
+    if newly_resolved > 0:
+        print(f"Auto-resolved {newly_resolved} cards by exact raw_ability match against existing ASTs.")
+        AI_OUTPUT_FILE.write_text(json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print(f"Selected AI backend: {args.backend.upper()} (Target: {args.count} cards, Workers: {args.workers})")
     skip_set = None if args.overwrite else set(results.keys())
@@ -232,13 +330,18 @@ def run_ai_generator() -> None:
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor:
         futures = [
-            executor.submit(_worker_task, item, args.backend, sys_prompt, results, lock, stats, linker)
+            executor.submit(_worker_task, item, args.backend, sys_prompt, results, text_cache, lock, stats, linker)
             for item in samples
         ]
         concurrent.futures.wait(futures, timeout=args.max_runtime)
 
     rate = (stats["success"] / len(samples) * 100) if samples else 0
     print(f"\nFinished: {stats['success']}/{len(samples)} ({rate:.1f}%) ASTs in batch. Total saved: {len(results)} -> {AI_OUTPUT_FILE}")
+
+    post_resolved = auto_resolve_exact_text_matches(results, text_cache)
+    if post_resolved > 0:
+        print(f"Post-batch auto-resolved {post_resolved} cards with identical text across remaining unparsed abilities.")
+        AI_OUTPUT_FILE.write_text(json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8")
     fs = get_findings_summary()
     if fs["total"]:
         print(f"[FINDINGS] Total logged: {fs['total']} ({fs['unresolved']} unresolved) -> {FINDINGS_FILE}")

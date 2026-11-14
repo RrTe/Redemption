@@ -11,9 +11,11 @@ from models.card_side import CardSide
 from utils.extend_types import expand_and_inherit_types
 from utils.ability_splitter import split_card_abilities
 from utils.card_helpers import check_is_star_card, generate_card_id
+from utils.gender_resolver import resolve_gender
 from models.enums.brigade import ALL_BRIGADES
 from models.enums.alignment import Alignment
 from models.enums.card_type import CardType, TYPE_GROUPS
+from models.enums.gender import CHARACTER_SIDE_TYPES
 from mappings.card_type_metadata import TYPE_ALIGNMENT_MAP, TYPES_WITH_BRIGADES, TYPES_WITH_STATS
 from mappings.ordir_map import ORDIR_MAP
 
@@ -381,7 +383,7 @@ def build_card_sides(raw: dict, types: list[str]) -> dict:
                 Strength=strength,
                 Toughness=toughness,
                 Classes=classes,
-                SpecialAbility=side_abilities.get(side)
+                SpecialAbility=side_abilities.get(side) or None
             ).to_dict()
     elif is_multi_type:
         sides_info = []
@@ -408,11 +410,14 @@ def build_card_sides(raw: dict, types: list[str]) -> dict:
                 Strength=strength,
                 Toughness=toughness,
                 Classes=classes,
-                SpecialAbility=side_abilities.get(t)
+                SpecialAbility=side_abilities.get(t) or None
             ).to_dict()
     else:
         t = types[0]
         alignment = TYPE_ALIGNMENT_MAP.get(t)
+        align_val = alignment if alignment is not None else alignments.get("top")
+        align_str = align_val.value if hasattr(align_val, "value") else str(align_val) if align_val else None
+        side_abilities, star_ability = split_card_abilities(abilities, [{"key": "top", "type": t, "alignment": align_str}])
         brigade = brigades.get("top", []) if t in TYPES_WITH_BRIGADES else []
         strength = strengths.get("top") if t in TYPES_WITH_STATS else None
         toughness = toughnesses.get("top") if t in TYPES_WITH_STATS else None
@@ -425,14 +430,19 @@ def build_card_sides(raw: dict, types: list[str]) -> dict:
             Strength=strength,
             Toughness=toughness,
             Classes=classes,
-            SpecialAbility=abilities.strip()
+            SpecialAbility=side_abilities.get("top") or None
         ).to_dict()
+
+    temp_card = dict(raw, CardSides=sides)
+    for side_key, side_dict in sides.items():
+        if isinstance(side_dict, dict) and side_dict.get("Type") in CHARACTER_SIDE_TYPES:
+            side_dict["Gender"] = resolve_gender(temp_card, side_key)
 
     extracted = _extract_shared_fields(sides)
     if star_ability:
-        if "shared" not in extracted:
-            extracted["shared"] = {}
-        extracted["shared"]["SpecialAbility"] = star_ability
+        raw["StarAbility"] = star_ability
+
+
     return extracted
 
 def main():

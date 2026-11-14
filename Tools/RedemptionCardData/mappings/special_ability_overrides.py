@@ -23,7 +23,7 @@ SPECIAL_ABILITY_OVERRIDES: Dict[Tuple[str, str], CardSideLogic] = {
     # The Angel Under the Oak (RoA)
     # "You may draw 2 and exchange this Hero with a gold Judge in your hand, deck,
     #  territory, or discard pile. Protect Gideon from opponents. Cannot be negated."
-    ("The Angel Under the Oak", "shared"): CardSideLogic(
+    ("The Angel Under the Oak", "top"): CardSideLogic(
         modifiers=[
             Modifier(
                 modifier_type=ModifierType.CANNOT_BE_NEGATED,
@@ -53,7 +53,7 @@ SPECIAL_ABILITY_OVERRIDES: Dict[Tuple[str, str], CardSideLogic] = {
                         effect_type="instant",
                         target=TargetSelector(
                             selection_mode=SelectionMode.MANUAL_CONTROLLER,
-                            scope=Zone.TERRITORY,
+                            scope=[Zone.HAND, Zone.DECK, Zone.TERRITORY, Zone.DISCARD_PILE],
                             target_type="hero",
                             brigades=["Gold"],
                             identifiers=["Judge"],

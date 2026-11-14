@@ -10,3 +10,11 @@ from .modifier_type import ModifierType
 from .selection_mode import SelectionMode
 from .condition_type import ConditionType
 from .action_verb import ActionVerb
+from .gender import (
+    CHARACTER_SIDE_TYPES,
+    GENDERS,
+    Gender,
+    GenderType,
+    TARGET_GENDERS,
+    TargetGenderType,
+)

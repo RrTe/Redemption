@@ -38,7 +38,7 @@ INSTEAD_PATTERN = re.compile(
 
 # STAR Entry Trigger
 STAR_PATTERN = re.compile(
-    r'^\s*STAR\s*:\s*(.*)$',
+    r'^\s*(?:STAR\s*:|\(\s*Star\s*\))\s*(.*)$',
     re.IGNORECASE
 )
 
@@ -178,14 +178,12 @@ def extract_condition_prefix(text: str) -> Tuple[str, Optional[ConditionExpressi
     m = COND_IF_USED_BY.match(text)
     if m:
         hero_type, rem = m.groups()
-        clean_hero_type = restore_abbreviations(hero_type).strip().lower()
+        clean_hero_type = restore_abbreviations(hero_type).strip()
+        sel = build_target_selector(clean_hero_type, default_scope=[Zone.BATTLE])
+        sel.selection_mode = SelectionMode.AUTOMATIC_ALL
         cond = ConditionExpression(
             condition_type=ConditionType.ZONE_CHECK,
-            selector=TargetSelector(
-                selection_mode=SelectionMode.AUTOMATIC_ALL,
-                scope=Zone.BATTLE,
-                target_type=clean_hero_type
-            ),
+            selector=sel,
             operator=">=",
             value=1
         )

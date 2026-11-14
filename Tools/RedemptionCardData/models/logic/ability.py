@@ -32,6 +32,7 @@ class Ability(BaseModel):
         modifiers: List of modifiers scoped specifically to this ability.
     """
     ability_id: str
+    is_star: bool = False
     activation_mode: ActivationMode = ActivationMode.IMMEDIATE
     is_optional: bool = False
     is_preventable: bool = True
@@ -64,10 +65,23 @@ class Ability(BaseModel):
 
     @model_validator(mode="after")
     def validate_has_payload(self) -> Ability:
-        """Ensures that an ability contains at least one effect or modifier."""
+        """Ensures that an ability contains at least one effect or modifier and normalizes Star flags."""
         if not self.effects and not self.modifiers:
             raise ValueError(
                 f"Ability '{self.ability_id}' must contain at least one action effect (e.g. 'first strike', 'draw') "
                 "or modifier. Empty effects are not allowed."
             )
+        if (
+            self.is_star
+            or (self.trigger_event and self.trigger_event.strip().lower() in ("star_phase", "star"))
+            or self.ability_id.lower().startswith("star_")
+            or self.ability_id.lower() == "star"
+        ):
+            self.is_star = True
+            if not self.trigger_event or self.trigger_event.strip().lower() == "star":
+                self.trigger_event = "star_phase"
+            if not self.ability_id.lower().startswith("star_"):
+                self.ability_id = f"star_{self.ability_id}"
+            if self.activation_mode == ActivationMode.IMMEDIATE:
+                self.activation_mode = ActivationMode.TRIGGERED
         return self

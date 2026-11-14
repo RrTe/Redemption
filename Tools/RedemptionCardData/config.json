@@ -12,6 +12,7 @@
     "verification_report_log": "data/verification_report.log",
     "card_abilities_raw": "data/card_abilities_raw.json",
     "cards_logic_json": "data/dist/cards_logic.json",
+    "card_hierarchy_json": "data/dist/cardHierarchy.json",
     "unparsed_abilities_log": "data/unparsed_abilities.log",
     "logic_verification_report": "data/logic_verification_report.log"
 }

@@ -4,8 +4,9 @@ Serves as the root AST representation for cards evaluated by the rules engine,
 mirroring the CardSides architecture in models/card.py.
 """
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
+from models.enums.gender import GenderType
 from models.logic.modifier import Modifier
 from models.logic.ability import Ability
 
@@ -14,9 +15,11 @@ class CardSideLogic(BaseModel):
     """Encapsulates all logic associated with a single card side.
 
     Attributes:
+        gender: Character gender on character sides ('male', 'female', 'both', 'genderless').
         modifiers: Side-wide modifiers applying to all or subsets of abilities.
         abilities: List of sequential or triggered abilities on this card side.
     """
+    gender: Optional[GenderType] = None
     modifiers: List[Modifier] = Field(default_factory=list)
     abilities: List[Ability] = Field(default_factory=list)
 

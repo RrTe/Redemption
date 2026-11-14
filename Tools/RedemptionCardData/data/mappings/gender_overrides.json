@@ -1,0 +1,20 @@
+{
+  "_comment": "Explicit gender overrides and ORDIR errata exceptions for character cards.",
+  "by_card_id": {},
+  "by_set_and_name": {
+    "RoA::The Bear": "male",
+    "PoC::The Bear": "male",
+    "RR2::Children": "genderless"
+  },
+  "by_base_name": {
+    "The Bear": "male",
+    "Babylon the Great": "female",
+    "Arianna": "female",
+    "Kira": "female",
+    "Hope": "female",
+    "Stubborn Heifer": "female",
+    "Fifth Seal": "genderless",
+    "Sixth Seal": "genderless",
+    "The Stars": "male"
+  }
+}

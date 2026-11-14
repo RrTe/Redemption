@@ -108,13 +108,37 @@ def get_all_types(card: dict) -> list[str]:
     return types
 
 
+def get_star_ability(card: dict) -> str:
+    """Returns the card-wide Star ability text if present.
+
+    Checks the top-level ``StarAbility`` field first, falling back to legacy
+    ``CardSides['shared']['SpecialAbility']`` if it starts with a STAR tag.
+
+    Args:
+        card: Full card dictionary from the database.
+
+    Returns:
+        str: Cleaned Star ability text (without 'STAR:'/'(Star)' prefix), or empty string.
+    """
+    star_ab = (card.get("StarAbility") or "").strip()
+    if star_ab:
+        return re.sub(r"^(?:STAR\s*:|\(\s*Star\s*\))\s*", "", star_ab, flags=re.IGNORECASE).strip()
+
+    shared_sa = (card.get("CardSides", {}).get("shared", {}).get("SpecialAbility") or "").strip()
+    m = re.match(r"^(?:STAR\s*:|\(\s*Star\s*\))\s*(.*)$", shared_sa, flags=re.IGNORECASE)
+    if m:
+        return m.group(1).strip()
+    return ""
+
+
 def check_is_star_card(card: dict) -> bool:
     """Determines whether a card qualifies as a Star card based on Option 3 criteria.
 
     A card is recognized as a Star card if any of the following conditions hold:
-    1. 'Class' or side 'Classes' contains 'star' (case-insensitive).
-    2. Any 'SpecialAbility' contains a 'STAR:' tag or entry trigger.
-    3. 'Star Card' is present in 'ORDIR' categories.
+    1. 'StarAbility' is populated at card level.
+    2. 'Class' or side 'Classes' contains 'star' (case-insensitive).
+    3. Any 'SpecialAbility' contains a 'STAR:' or '(Star)' tag.
+    4. 'Star Card' is present in 'ORDIR' categories.
 
     Args:
         card: Full card dictionary from the database.
@@ -122,7 +146,7 @@ def check_is_star_card(card: dict) -> bool:
     Returns:
         bool: True if any Star card criterion is fulfilled, False otherwise.
     """
-    if card.get("IsStarCard") is True:
+    if card.get("IsStarCard") is True or bool(card.get("StarAbility")):
         return True
 
     # 1. Check Class / Classes
@@ -141,8 +165,8 @@ def check_is_star_card(card: dict) -> bool:
             if "star" in str(side_val.get("Class", "")).lower():
                 return True
 
-    # 2. Check SpecialAbility for STAR: tag
-    star_regex = re.compile(r"(?:^|[\s/])STAR:\s*", re.IGNORECASE)
+    # 2. Check SpecialAbility for STAR: or (Star) tag
+    star_regex = re.compile(r"(?:^|[\s/\.])(?:STAR:\s*|\(\s*Star\s*\)\s*)", re.IGNORECASE)
     raw_ability = card.get("SpecialAbility", "")
     if star_regex.search(str(raw_ability)):
         return True

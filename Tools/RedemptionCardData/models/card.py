@@ -7,13 +7,14 @@ _SIDE_ONLY_FIELDS = {
     "Name", "Type", "CardTypes", "Alignment", "Alignments",
     "Brigade", "Brigades", "Strength", "Strengths",
     "Toughness", "Toughnesses", "Class", "Classes", "SpecialAbility",
+    "Gender",
 }
 
 # Fields that are always omitted from serialization regardless of value.
 _INTERNAL_FIELDS = {"ParsedAbility"}
 
 # Card-level fields that are suppressed when empty/falsy.
-_SUPPRESS_IF_EMPTY = {"ORDIR", "Tags", "PlayablePhases", "Sound"}
+_SUPPRESS_IF_EMPTY = {"ORDIR", "Tags", "PlayablePhases", "Sound", "StarAbility"}
 
 
 class Card:
@@ -33,6 +34,7 @@ class Card:
         self.IsEnhancement = data.get("IsEnhancement", False)
         self.IsGospel = data.get("IsGospel", False)
         self.IsStarCard = data.get("IsStarCard", False)
+        self.StarAbility = data.get("StarAbility", "")
         self.Sound = data.get("Sound", "")
         self.ORDIR = data.get("ORDIR", [])
         self.Tags = data.get("Tags", [])

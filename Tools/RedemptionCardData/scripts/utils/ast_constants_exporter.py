@@ -11,6 +11,8 @@ from models.enums.selection_mode import SelectionMode
 from models.enums.zone import Zone
 from models.enums.modifier_type import ModifierType
 from models.enums.condition_type import ConditionType
+from models.enums.gender import TARGET_GENDERS
+from models.logic.target_decomposer import CANONICAL_CARD_TYPES
 
 
 def export_ast_constants(output_path: Path) -> None:
@@ -26,11 +28,17 @@ def export_ast_constants(output_path: Path) -> None:
         "durations": [e.value for e in Duration],
         "selection_modes": [e.value for e in SelectionMode],
         "zones": [e.value for e in Zone],
+        "target_types": sorted(CANONICAL_CARD_TYPES),
+        "genders": list(TARGET_GENDERS),
+        "testaments": ["OT", "NT"],
         "modifier_types": [e.value for e in ModifierType],
         "condition_types": [e.value for e in ConditionType],
         "dependencies": ["always", "if_previous_successful", "if_you_do", "if_you_cannot", "otherwise"],
         "zone_owners": ["controller", "opponent", "both", "either", "target_player"],
-        "destination_positions": ["top", "bottom", "random", "as_is"]
+        "destination_positions": ["top", "bottom", "random", "as_is"],
+        "dynamic_value_fields": ["fixed_value", "min_value", "max_value", "dynamic"],
+        "stat_filter_stats": ["strength", "toughness", "both", "either"],
+        "stat_filter_operators": [">=", "<=", "==", ">", "<", "!="],
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as f:

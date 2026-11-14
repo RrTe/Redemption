@@ -4,10 +4,10 @@ from mappings.card_type_metadata import CARD_TYPE_ABILITY_ALIASES, TYPE_ALIGNMEN
 from models.enums.card_type import TYPE_IS_A
 from scripts.utils.type_helpers import normalize_case
 
-# Regex matching ability section tags (e.g., 'HERO:', 'EC:', 'A:', 'TOP:').
-# Uses non-capturing prefix boundary (start of string, space, or slash)
-# followed by an alphabetical label and a colon.
-TAG_PATTERN = re.compile(r'(?:^|[\s/])([A-Za-z]+):\s*')
+# Regex matching ability section tags (e.g., 'HERO:', 'EC:', 'A:', 'TOP:', '(Star)', '(Hero)', '(HE)').
+# Uses lookbehind boundary (start of string, whitespace, slash, or period)
+# followed by either a colon-delimited label or a parenthetical label.
+TAG_PATTERN = re.compile(r'(?:^|(?<=[\s/\.]))(?:([A-Za-z]+):|\(\s*([A-Za-z]+)\s*\))\s*')
 
 # Patterns for protecting stat modifications like 'X/X', '2/2', '+1/+1', or 'and/or'
 STAT_PATTERN = re.compile(r'^\s*[-+]?[0-9Xx]\s*/\s*[-+]?[0-9Xx]\s*$')
@@ -94,8 +94,6 @@ def split_card_abilities(
         return {}, None
 
     cleaned_text = raw_ability.strip()
-    if len(sides_info) < 2:
-        return {sides_info[0]["key"]: cleaned_text}, None
 
     # Map all eligible tags to their corresponding side key
     tag_to_side: Dict[str, str] = {}
@@ -114,9 +112,13 @@ def split_card_abilities(
     matches = list(TAG_PATTERN.finditer(cleaned_text))
     tag_positions = []
     matched_sides: Set[str] = set()
+    has_star = False
 
     for m in matches:
-        tag_str = normalize_case(m.group(1))
+        raw_tag = m.group(1) or m.group(2)
+        if not raw_tag:
+            continue
+        tag_str = normalize_case(raw_tag)
         if tag_str in tag_to_side:
             side_key = tag_to_side[tag_str]
             tag_positions.append({
@@ -126,14 +128,18 @@ def split_card_abilities(
             })
             matched_sides.add(side_key)
         elif tag_str == "STAR":
+            has_star = True
             tag_positions.append({
                 "side_key": "star",
                 "start": m.start(),
                 "content_start": m.end()
             })
 
-    # Stage 1: Segment by matched tags if multiple distinct sides are targeted
-    if len(matched_sides) >= 2 or (len(matched_sides) == len(sides_info)):
+    if len(sides_info) < 2 and not has_star:
+        return {sides_info[0]["key"]: cleaned_text}, None
+
+    # Stage 1: Segment by matched tags if multiple distinct sides are targeted or STAR tag is present
+    if has_star or len(matched_sides) >= 2 or (len(matched_sides) == len(sides_info)):
         tag_positions.sort(key=lambda x: x["start"])
         extracted_abilities: Dict[str, str] = {}
         star_ability: Optional[str] = None
@@ -142,7 +148,7 @@ def split_card_abilities(
             next_start = tag_positions[i + 1]["start"] if i + 1 < len(tag_positions) else len(cleaned_text)
             content = cleaned_text[pos["content_start"]:next_start].strip().rstrip("/").strip()
             if pos["side_key"] == "star":
-                star_ability = f"STAR: {content}"
+                star_ability = content
             else:
                 extracted_abilities[pos["side_key"]] = content
 

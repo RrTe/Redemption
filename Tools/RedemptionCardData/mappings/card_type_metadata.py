@@ -46,7 +46,7 @@ TYPES_WITH_STATS = {
 CARD_TYPE_ABILITY_ALIASES = {
     "Hero": ["HERO", "H", "HERO CHARACTER"],
     "Evil Character": ["EC", "EVIL CHARACTER", "EVIL CHAR"],
-    "GE": ["GE", "GOOD ENHANCEMENT"],
+    "GE": ["GE", "HE", "GOOD ENHANCEMENT"],
     "EE": ["EE", "EVIL ENHANCEMENT"],
     "Artifact": ["ARTIFACT", "ART", "A"],
     "Covenant": ["COVENANT", "COV"],
@@ -54,7 +54,7 @@ CARD_TYPE_ABILITY_ALIASES = {
     "Fortress": ["FORTRESS", "FORT", "F"],
     "Site": ["SITE"],
     "City": ["CITY"],
-    "Dominant": ["DOMINANT", "DOM"],
+    "Dominant": ["DOMINANT", "DOM", "D"],
     "Lost Soul": ["LOST SOUL", "LS"],
     "Good": ["GOOD"],
     "Evil": ["EVIL"],

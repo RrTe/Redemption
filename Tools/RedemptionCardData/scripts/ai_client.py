@@ -8,11 +8,16 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import threading
 import time
 from typing import Any, Dict, List, Optional, Union
 import requests
 
 ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
+
+_last_gemini_request: float = 0.0
+_gemini_request_lock = threading.Lock()
+MIN_GEMINI_INTERVAL_SECONDS: float = 4.3  # Paces requests to <= 13.95 RPM (safely under 15 RPM Free Tier ceiling)
 
 
 class QuotaExhaustedError(Exception):
@@ -135,17 +140,24 @@ def query_llm_messages(backend: str, messages: List[Dict[str, str]]) -> str:
                 "thinkingConfig": {"thinkingBudget": 0}
             }
         }
-        for _ in range(3):
+        for attempt in range(5):
+            with _gemini_request_lock:
+                global _last_gemini_request
+                elapsed = time.time() - _last_gemini_request
+                if elapsed < MIN_GEMINI_INTERVAL_SECONDS:
+                    time.sleep(MIN_GEMINI_INTERVAL_SECONDS - elapsed)
+                _last_gemini_request = time.time()
+
             resp = requests.post(url, json=body, timeout=60)
             if resp.status_code in (500, 502, 503, 504):
                 print(f" [{resp.status_code}] Transient server error, waiting 3s...", flush=True)
                 time.sleep(3)
                 continue
             if resp.status_code == 429:
-                wait_seconds = int(resp.headers.get("retry-after", "15"))
-                if wait_seconds > 30:
+                wait_seconds = max(int(resp.headers.get("retry-after", "20")), 20)
+                if wait_seconds > 65:
                     raise QuotaExhaustedError(f"Gemini quota exhausted ({wait_seconds}s wait).")
-                print(f" [429] Waiting {wait_seconds}s before retry...", flush=True)
+                print(f" [429] Waiting {wait_seconds}s before retry ({attempt + 1}/5)...", flush=True)
                 time.sleep(wait_seconds)
                 continue
             resp.raise_for_status()
