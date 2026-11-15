@@ -108,12 +108,8 @@ SUBTYPE_MAP: Dict[str, Tuple[str, str, bool, Optional[str]]] = {
     "queens": ("Queen", "character", True, None),
     "judge": ("Judge", "character", False, None),
     "judges": ("Judge", "character", True, None),
-    "warrior": ("Warrior", "character", False, None),
-    "warriors": ("Warrior", "character", True, None),
     "musician": ("Musician", "character", False, None),
     "musicians": ("Musician", "character", True, None),
-    "human": ("Human", "character", False, None),
-    "humans": ("Human", "character", True, None),
     "animal": ("Animal", "character", False, None),
     "animals": ("Animal", "character", True, None),
     "beast": ("Beast", "character", False, None),
@@ -287,11 +283,39 @@ GENDER_MAP: Dict[str, str] = {
     "female": "female",
 }
 
+GENERIC_MAP: Dict[str, bool] = {
+    "generic": True,
+    "unique": False,
+}
+
+HUMAN_MAP: Dict[str, Tuple[bool, bool, str]] = {
+    "human": (True, False, "character"),
+    "humans": (True, True, "character"),
+    "non-human": (False, False, "character"),
+    "non-humans": (False, True, "character"),
+}
+
+CLASS_MAP: Dict[str, Tuple[str, Optional[str], bool]] = {
+    "warrior": ("Warrior", "character", False),
+    "warriors": ("Warrior", "character", True),
+    "warrior class": ("Warrior", None, False),
+    "warrior-class": ("Warrior", None, False),
+    "weapon": ("Weapon", "enhancement", False),
+    "weapons": ("Weapon", "enhancement", True),
+    "weapon class": ("Weapon", None, False),
+    "weapon-class": ("Weapon", None, False),
+    "depicting a weapon": ("Weapon", "enhancement", False),
+    "depicting weapons": ("Weapon", "enhancement", True),
+    "illustration depicting a weapon": ("Weapon", "enhancement", False),
+    "territory class": ("Territory", None, False),
+    "territory-class": ("Territory", None, False),
+}
+
 QUALIFIER_TRAITS: Dict[str, str] = {
     "meek": "Meek",
-    "unique": "unique", "generic": "generic", "lone": "lone",
-    "warrior class": "warrior class", "weapon class": "weapon class",
-    "territory class": "territory class", "gospel": "Gospel",
+    "lone": "lone",
+    "single-brigade": "single-brigade",
+    "gospel": "Gospel",
     "nativity": "Nativity", "cloud": "Cloud", "wilderness": "wilderness",
     "tabernacle": "Tabernacle", "temple": "Temple",
 }
@@ -331,8 +355,9 @@ _PROTECTED_IDENT_PREFIXES = (
     "convert abilit", "discard abilit", "played ", "drawn ", "fought ",
     "blocking ", "guarding ", "about to ", "first played", "in ", "on ",
     "at ", "from ", "not in ", "other ", "opposite ", "selected brigade",
-    "matching brigade", "different brigade", "single-brigade", "lamb icon",
-    "skull icon", "bible icon", "rescue attempt", "make a rescue", "enter battle",
+    "matching brigade", "different brigade", "non-warrior", "non-weapon",
+    "holding weapon", "lamb icon", "skull icon", "bible icon",
+    "rescue attempt", "make a rescue", "enter battle",
 )
 
 
@@ -357,7 +382,7 @@ def try_decompose_phrase(
     if low in UNAMBIGUOUS_CARD_TITLES:
         return {"card_titles": [UNAMBIGUOUS_CARD_TITLES[low]]}
 
-    if any(low.startswith(p) for p in _PROTECTED_IDENT_PREFIXES):
+    if low not in CLASS_MAP and any(low.startswith(p) for p in _PROTECTED_IDENT_PREFIXES):
         if low == "special ability":
             return {"identifiers": ["special abilities"]}
         return None
@@ -376,6 +401,9 @@ def try_decompose_phrase(
     res: Dict[str, Any] = {
         "testament": None,
         "gender": None,
+        "is_generic": None,
+        "is_human": None,
+        "classes": [],
         "references": [],
         "brigades": [],
         "alignment": None,
@@ -413,14 +441,29 @@ def try_decompose_phrase(
                 g1, g2 = p1.get("gender"), p2.get("gender")
                 if g1 and g2 and g1 != g2:
                     return None
-                for k in ("references", "brigades", "identifiers", "card_titles"):
+                ig1, ig2 = p1.get("is_generic"), p2.get("is_generic")
+                if ig1 is not None and ig2 is not None and ig1 != ig2:
+                    return None
+                ih1, ih2 = p1.get("is_human"), p2.get("is_human")
+                if ih1 is not None and ih2 is not None and ih1 != ih2:
+                    return None
+                for k in ("references", "brigades", "classes", "identifiers", "card_titles"):
                     for item in p1.get(k, []) + p2.get(k, []):
                         if item not in res[k]:
                             res[k].append(item)
                 res["gender"] = g1 or g2
+                res["is_generic"] = ig1 if ig1 is not None else ig2
+                res["is_human"] = ih1 if ih1 is not None else ih2
                 res["testament"] = p1.get("testament") or p2.get("testament")
                 res["alignment"] = p1.get("alignment") or p2.get("alignment")
-                res["target_type"] = p1.get("target_type") or p2.get("target_type")
+                t1, t2 = p1.get("target_type"), p2.get("target_type")
+                if t1 and t2 and t1 != t2:
+                    if {t1, t2} <= {"hero", "evil_character", "character"}:
+                        res["target_type"] = "character"
+                    else:
+                        res["target_type"] = "card"
+                else:
+                    res["target_type"] = t1 or t2
                 res["is_plural"] = bool(p1.get("is_plural") or p2.get("is_plural"))
                 return res
 
@@ -460,14 +503,17 @@ def try_decompose_phrase(
             rem = m_test.group(2).strip()
             continue
 
-        # 4. Leading multi-word CardType or Subtype or Brigade or Trait
+        # 4. Leading multi-word CardType or Subtype or Brigade or Class or Trait
         matched_multi = False
         for dict_obj, kind in (
             (PLURAL_CARD_TYPE_MAP, "plural_type"),
             (SINGULAR_CARD_TYPE_ALIASES, "singular_type"),
+            (HUMAN_MAP, "is_human"),
+            (CLASS_MAP, "class"),
             (SUBTYPE_MAP, "subtype"),
             (CANONICAL_BRIGADE_MAP, "brigade"),
             (GENDER_MAP, "gender"),
+            (GENERIC_MAP, "is_generic"),
             (QUALIFIER_TRAITS, "trait"),
         ):
             for k in sorted(dict_obj.keys(), key=len, reverse=True):
@@ -482,6 +528,16 @@ def try_decompose_phrase(
                         res["alignment"] = res["alignment"] or val[1]
                         if val[2]:
                             res["identifiers"].append(val[2])
+                    elif kind == "is_human":
+                        res["is_human"] = val[0]
+                        res["is_plural"] = res["is_plural"] or val[1]
+                        res["target_type"] = res["target_type"] or val[2]
+                    elif kind == "class":
+                        if val[0] not in res["classes"]:
+                            res["classes"].append(val[0])
+                        if val[1]:
+                            res["target_type"] = res["target_type"] or val[1]
+                        res["is_plural"] = res["is_plural"] or val[2]
                     elif kind == "subtype":
                         res["identifiers"].append(val[0])
                         res["target_type"] = res["target_type"] or val[1]
@@ -491,6 +547,8 @@ def try_decompose_phrase(
                         res["brigades"].append(val)
                     elif kind == "gender":
                         res["gender"] = val
+                    elif kind == "is_generic":
+                        res["is_generic"] = val
                     elif kind == "trait":
                         res["identifiers"].append(val)
                     rem = rem[len(k):].strip()
@@ -526,6 +584,10 @@ def try_decompose_phrase(
             t_tok = testament_prefix_m.group(1).lower()
             return {
                 "testament": "OT" if ("o" in t_tok or "old" in t_tok) else "NT",
+                "gender": None,
+                "is_generic": None,
+                "is_human": None,
+                "classes": [],
                 "references": [],
                 "brigades": [],
                 "alignment": None,

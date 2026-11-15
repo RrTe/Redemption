@@ -40,6 +40,7 @@ ORDIR_GENDERLESS_NAMES: FrozenSet[str] = frozenset(
     {
         "boaz' reapers",
         "bride of christ",
+        "children",
         "citizens of sychar",
         "every tribe",
         "faithful witness",
@@ -75,6 +76,7 @@ ORDIR_GENDERLESS_NAMES: FrozenSet[str] = frozenset(
         "wayward sheep",
         "wicked community",
         "wicked people",
+        "wild animals",
         "wild dogs",
         "children [rr2]",
     }

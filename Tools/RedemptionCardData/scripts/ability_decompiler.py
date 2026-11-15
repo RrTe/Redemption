@@ -55,7 +55,15 @@ def decompile_target(target: Optional[TargetSelector]) -> str:
     elif owner == "opponent": parts.append("opponent's")
 
     if target.alignment: parts.append(_val(target.alignment))
+    is_generic = getattr(target, "is_generic", None)
+    if is_generic is True: parts.append("generic")
+    elif is_generic is False: parts.append("unique")
     if getattr(target, "gender", None): parts.append(_val(target.gender))
+    is_human = getattr(target, "is_human", None)
+    if is_human is True: parts.append("human")
+    elif is_human is False: parts.append("non-human")
+    if getattr(target, "classes", None):
+        parts.extend([_val(c).lower() for c in target.classes])
     if target.brigades: parts.extend([_val(b) for b in target.brigades])
     if target.identifiers: parts.extend([_val(i) for i in target.identifiers])
 

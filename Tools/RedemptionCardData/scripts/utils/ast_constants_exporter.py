@@ -31,6 +31,7 @@ def export_ast_constants(output_path: Path) -> None:
         "target_types": sorted(CANONICAL_CARD_TYPES),
         "genders": list(TARGET_GENDERS),
         "testaments": ["OT", "NT"],
+        "card_classes": ["Warrior", "Weapon", "Territory"],
         "modifier_types": [e.value for e in ModifierType],
         "condition_types": [e.value for e in ConditionType],
         "dependencies": ["always", "if_previous_successful", "if_you_do", "if_you_cannot", "otherwise"],

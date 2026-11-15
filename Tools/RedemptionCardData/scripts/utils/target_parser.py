@@ -363,8 +363,11 @@ def parse_target_classification_with_gender(
     qualifier_patterns: List[Tuple[re.Pattern[str], str]] = [
         (re.compile(r"\bold\s+testament\b|\bo\.t\.(?=\s|$)", re.I), "O.T."),
         (re.compile(r"\bnew\s+testament\b|\bn\.t\.(?=\s|$)", re.I), "N.T."),
-        (re.compile(r"\bweapon(?:\s+class)?\b", re.I), "weapon class"),
-        (re.compile(r"\bwarrior\s+class\b", re.I), "warrior class"),
+        (re.compile(r"\bnon-humans\b", re.I), "non-humans"),
+        (re.compile(r"\bnon-human\b", re.I), "non-human"),
+        (re.compile(r"(?<!non-)\bweapon(?:\s+class)?\b", re.I), "weapon class"),
+        (re.compile(r"(?<!non-)\bwarrior(?:\s+|-)class\b", re.I), "warrior class"),
+        (re.compile(r"\bterritory(?:\s+|-)class\b", re.I), "territory class"),
         (re.compile(r"\bsingle-brigade\b|\bsingle\s+color\b", re.I), "single-brigade"),
         (re.compile(r"\bmeek\b", re.I), "Meek"),
         (re.compile(r"\bunique\b", re.I), "unique"),

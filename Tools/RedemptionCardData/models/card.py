@@ -7,7 +7,7 @@ _SIDE_ONLY_FIELDS = {
     "Name", "Type", "CardTypes", "Alignment", "Alignments",
     "Brigade", "Brigades", "Strength", "Strengths",
     "Toughness", "Toughnesses", "Class", "Classes", "SpecialAbility",
-    "Gender",
+    "Gender", "IsGeneric", "IsHuman",
 }
 
 # Fields that are always omitted from serialization regardless of value.

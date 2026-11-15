@@ -5,6 +5,7 @@ sys.path.append(str(Path(__file__).resolve().parent))
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import json
+import re
 from datetime import datetime
 from models.card import Card
 from models.card_side import CardSide
@@ -12,12 +13,13 @@ from utils.extend_types import expand_and_inherit_types
 from utils.ability_splitter import split_card_abilities
 from utils.card_helpers import check_is_star_card, generate_card_id
 from utils.gender_resolver import resolve_gender
+from utils.generic_resolver import resolve_is_generic
+from utils.human_resolver import normalize_card_classes, resolve_is_human
 from models.enums.brigade import ALL_BRIGADES
 from models.enums.alignment import Alignment
 from models.enums.card_type import CardType, TYPE_GROUPS
 from models.enums.gender import CHARACTER_SIDE_TYPES
 from mappings.card_type_metadata import TYPE_ALIGNMENT_MAP, TYPES_WITH_BRIGADES, TYPES_WITH_STATS
-from mappings.ordir_map import ORDIR_MAP
 
 # Load config from config.json
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -283,9 +285,22 @@ def parse_flip_alignment(value: str) -> dict:
     return {}
 
 def parse_classes(value: str) -> list[str]:
+    """Splits a raw Class field string on commas or slashes into trimmed class names.
+
+    Args:
+        value: Raw Class string from carddata.json (e.g. 'Territory/Warrior').
+
+    Returns:
+        List of deduplicated class name strings preserving original order.
+    """
     if not value:
         return []
-    return [c.strip() for c in value.split(",") if c.strip()]
+    result: list[str] = []
+    for c in re.split(r"[,/]", value):
+        cleaned = c.strip()
+        if cleaned and cleaned not in result:
+            result.append(cleaned)
+    return result
 
 
 
@@ -437,11 +452,12 @@ def build_card_sides(raw: dict, types: list[str]) -> dict:
     for side_key, side_dict in sides.items():
         if isinstance(side_dict, dict) and side_dict.get("Type") in CHARACTER_SIDE_TYPES:
             side_dict["Gender"] = resolve_gender(temp_card, side_key)
+            side_dict["IsGeneric"] = resolve_is_generic(temp_card, side_key)
+            side_dict["IsHuman"] = resolve_is_human(temp_card, side_key)
 
     extracted = _extract_shared_fields(sides)
     if star_ability:
         raw["StarAbility"] = star_ability
-
 
     return extracted
 
@@ -457,6 +473,7 @@ def main():
 
             raw["IsToken"] = any("Token" in t for t in raw_types)
             raw["CardSides"] = build_card_sides(raw, raw_types)
+            normalize_card_classes(raw)
             raw["IsStarCard"] = check_is_star_card(raw)
             raw["Id"] = generate_card_id(raw.get("ImageFile"), raw.get("Set"), raw.get("Name"))
 

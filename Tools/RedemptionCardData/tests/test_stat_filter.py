@@ -153,7 +153,8 @@ class TestStatFilter(unittest.TestCase):
             target_type="hero",
             identifiers=["Human", "strength 4 or greater", "toughness 5 or less"],
         )
-        self.assertEqual(sel_multi.identifiers, ["Human"])
+        self.assertIs(sel_multi.is_human, True)
+        self.assertEqual(sel_multi.identifiers, [])
         self.assertEqual(len(sel_multi.stat_filters), 2)
         self.assertEqual(sel_multi.stat_filters[0].stat, "strength")
         self.assertEqual(sel_multi.stat_filters[0].value, 4)

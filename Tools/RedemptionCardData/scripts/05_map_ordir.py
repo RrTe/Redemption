@@ -51,6 +51,8 @@ from mappings.special_ordir_overrides import SPECIAL_ORDIR_OVERRIDES
 from utils.card_helpers import get_card_name, check_is_star_card
 from utils.card_hierarchy_exporter import export_card_hierarchy
 from utils.gender_resolver import apply_gender_to_card_sides
+from utils.generic_resolver import apply_is_generic_to_card_sides
+from utils.human_resolver import apply_is_human_to_card_sides, normalize_card_classes
 import importlib
 _extract_shared_fields = importlib.import_module("scripts.03_extend_cards")._extract_shared_fields
 
@@ -288,10 +290,15 @@ def map_ordir_to_cards():
                                 SPECIAL_ORDIR_OVERRIDES.get((original_name, o_set))
 
         if matched_override_name:
-            if isinstance(matched_override_name, str):
-                # Overrides point directly to a database canonical Name. Find it.
+            if isinstance(matched_override_name, (str, list)):
+                # Overrides point directly to one or more canonical database names.
+                target_names = (
+                    [matched_override_name.lower()]
+                    if isinstance(matched_override_name, str)
+                    else [n.lower() for n in matched_override_name]
+                )
                 for idx, candidate in enumerate(lookup):
-                    if candidate["original_name"].lower() == matched_override_name.lower():
+                    if candidate["original_name"].lower() in target_names:
                         target_card_indices.append((idx, "all"))
                         matched = True
             elif isinstance(matched_override_name, dict):
@@ -382,6 +389,9 @@ def map_ordir_to_cards():
 
         c["CardSides"] = _extract_shared_fields(sides)
         apply_gender_to_card_sides(c)
+        apply_is_generic_to_card_sides(c)
+        apply_is_human_to_card_sides(c)
+        normalize_card_classes(c)
         c["IsStarCard"] = check_is_star_card(c)
 
     # Post-mapping integrity validation: verify that no card lost its core attributes

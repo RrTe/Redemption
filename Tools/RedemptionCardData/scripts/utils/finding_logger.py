@@ -8,11 +8,34 @@ from __future__ import annotations
 from datetime import datetime
 import json
 from pathlib import Path
+import re
 import threading
 from typing import Any, Dict, List, Optional
 
 FINDINGS_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "batch_findings.json"
 _LOCK = threading.Lock()
+_SECRET_PATTERNS = (
+    (re.compile(r"([?&]key=)AIza[0-9A-Za-z_-]+"), r"\1[REDACTED]"),
+    (re.compile(r"\bAIza[0-9A-Za-z_-]{20,}\b"), "[REDACTED_API_KEY]"),
+    (re.compile(r"(Bearer\s+)[0-9A-Za-z._-]+"), r"\1[REDACTED]"),
+    (re.compile(r"\b(?:gsk_|nvapi-|sk-or-v1-)[0-9A-Za-z_-]{20,}\b"), "[REDACTED_API_KEY]"),
+)
+
+
+def sanitize_finding_details(details: str) -> str:
+    """Scrubs leaked API keys and bearer tokens from finding detail strings.
+
+    Args:
+        details: Raw diagnostic or exception message passed to the finding logger.
+
+    Returns:
+        str: Sanitized message with all detected credentials redacted.
+    """
+    sanitized = details
+    # Prevent exception URLs or auth headers from ever persisting inside data/batch_findings.json.
+    for pattern, replacement in _SECRET_PATTERNS:
+        sanitized = pattern.sub(replacement, sanitized)
+    return sanitized
 
 
 def log_finding(
@@ -24,6 +47,7 @@ def log_finding(
     card_identifier: str = ""
 ) -> None:
     """Records or updates a finding for a specific card thread-safely."""
+    details = sanitize_finding_details(details)
     with _LOCK:
         findings: Dict[str, Any] = {}
         if FINDINGS_FILE.exists():

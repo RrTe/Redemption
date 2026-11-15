@@ -14,6 +14,8 @@ from models.logic.dynamic_value import DynamicValue
 from models.logic.stat_filter import StatFilter, parse_stat_filters
 from models.logic.target_decomposer import (
     CANONICAL_BRIGADE_MAP,
+    CLASS_MAP,
+    HUMAN_MAP,
     UNAMBIGUOUS_CARD_TITLES,
     PLURAL_CARD_TYPE_MAP,
     SINGULAR_CARD_TYPE_ALIASES,
@@ -97,6 +99,10 @@ class TargetSelector(BaseModel):
         target_type: Primary singular CardType classification (e.g. 'hero', 'evil_character').
         brigades: Required brigade affiliations (empty if any).
         alignment: Required alignment ('good', 'evil', 'neutral').
+        gender: Optional character gender requirement ('male' or 'female').
+        is_generic: Optional character uniqueness requirement (True for generic, False for unique).
+        is_human: Optional character humanity requirement (True for human, False for non-human).
+        classes: Required canonical card classes ('Warrior', 'Weapon', 'Territory').
         testament: Optional testament requirement ('OT' or 'NT').
         references: Biblical book or chapter references (e.g. ['Revelation'], ['I Samuel']).
         identifiers: Required singular ORDIR subtypes, roles, locations, or traits.
@@ -113,6 +119,9 @@ class TargetSelector(BaseModel):
     brigades: List[str] = Field(default_factory=list)
     alignment: Optional[str] = None
     gender: Optional[Literal["male", "female"]] = None
+    is_generic: Optional[bool] = None
+    is_human: Optional[bool] = None
+    classes: List[Literal["Warrior", "Weapon", "Territory"]] = Field(default_factory=list)
     testament: Optional[Literal["OT", "NT"]] = None
     references: List[str] = Field(default_factory=list)
     identifiers: List[str] = Field(default_factory=list)
@@ -140,6 +149,7 @@ class TargetSelector(BaseModel):
         raw_brigades = list(data.get("brigades") or [])
         raw_idents = list(data.get("identifiers") or [])
         raw_titles = list(data.get("card_titles") or [])
+        raw_classes = list(data.get("classes") or [])
         clean_refs = list(data.get("references") or [])
         clean_filters: List[Any] = list(data.get("stat_filters") or [])
         gender_val = data.get("gender")
@@ -149,6 +159,31 @@ class TargetSelector(BaseModel):
                 gender_val = g_low
             elif g_low == "":
                 gender_val = None
+        is_generic_val = data.get("is_generic")
+        if isinstance(is_generic_val, str):
+            ig_low = is_generic_val.strip().lower()
+            if ig_low in ("true", "generic"):
+                is_generic_val = True
+            elif ig_low in ("false", "unique"):
+                is_generic_val = False
+            elif ig_low == "":
+                is_generic_val = None
+        is_human_val = data.get("is_human")
+        if isinstance(is_human_val, str):
+            ih_low = is_human_val.strip().lower()
+            if ih_low in ("true", "human", "humans"):
+                is_human_val = True
+            elif ih_low in ("false", "non-human", "non-humans"):
+                is_human_val = False
+            elif ih_low == "":
+                is_human_val = None
+        clean_classes: List[str] = []
+        for cls_item in raw_classes:
+            cls_clean = str(cls_item).strip().lower()
+            if cls_clean in ("warrior", "weapon", "territory"):
+                cls_canon = cls_clean.capitalize()
+                if cls_canon not in clean_classes:
+                    clean_classes.append(cls_canon)
         testament_val = data.get("testament")
         if isinstance(testament_val, str):
             t_low = testament_val.strip().lower()
@@ -176,6 +211,20 @@ class TargetSelector(BaseModel):
                     data["alignment"] = imp_align
                 if extra_ident:
                     raw_idents.append(extra_ident)
+            elif tt_clean in HUMAN_MAP:
+                ih_bool, plur, imp_type = HUMAN_MAP[tt_clean]
+                data["target_type"] = imp_type
+                if is_human_val is None:
+                    is_human_val = ih_bool
+                if plur:
+                    is_plural = True
+            elif tt_clean in CLASS_MAP:
+                canon_cls, imp_type, plur = CLASS_MAP[tt_clean]
+                data["target_type"] = imp_type or "card"
+                if canon_cls not in clean_classes:
+                    clean_classes.append(canon_cls)
+                if plur:
+                    is_plural = True
             elif tt_clean in SUBTYPE_MAP:
                 canon_ident, imp_type, plur, imp_align = SUBTYPE_MAP[tt_clean]
                 data["target_type"] = imp_type
@@ -196,9 +245,16 @@ class TargetSelector(BaseModel):
         clean_titles: List[str] = []
 
         def _merge_decomposed(dec: Dict[str, Any]) -> None:
-            nonlocal testament_val, gender_val, is_plural
+            nonlocal testament_val, gender_val, is_generic_val, is_human_val, is_plural
             if dec.get("gender") and not gender_val:
                 gender_val = dec["gender"]
+            if dec.get("is_generic") is not None and is_generic_val is None:
+                is_generic_val = dec["is_generic"]
+            if dec.get("is_human") is not None and is_human_val is None:
+                is_human_val = dec["is_human"]
+            for c_item in dec.get("classes", []):
+                if c_item not in clean_classes:
+                    clean_classes.append(c_item)
             if dec.get("testament") and not testament_val:
                 testament_val = dec["testament"]
             if dec.get("alignment") and not data.get("alignment"):
@@ -281,6 +337,33 @@ class TargetSelector(BaseModel):
                 if not gender_val:
                     gender_val = i_str.lower()
                 continue
+            if i_str.lower() == "generic":
+                if is_generic_val is None:
+                    is_generic_val = True
+                continue
+            if i_str.lower() == "unique":
+                if is_generic_val is None:
+                    is_generic_val = False
+                continue
+            i_low = i_str.lower()
+            if i_low in HUMAN_MAP:
+                ih_bool, plur, imp_type = HUMAN_MAP[i_low]
+                if is_human_val is None:
+                    is_human_val = ih_bool
+                if plur:
+                    is_plural = True
+                if data.get("target_type") in (None, "card"):
+                    data["target_type"] = imp_type
+                continue
+            if i_low in CLASS_MAP:
+                canon_cls, imp_type, plur = CLASS_MAP[i_low]
+                if canon_cls not in clean_classes:
+                    clean_classes.append(canon_cls)
+                if plur:
+                    is_plural = True
+                if imp_type and data.get("target_type") in (None, "card"):
+                    data["target_type"] = imp_type
+                continue
             if i_str.lower() in title_lower_set:
                 continue
             dec = try_decompose_phrase(i_str, is_from_titles=False)
@@ -298,6 +381,12 @@ class TargetSelector(BaseModel):
 
         if gender_val is not None or "gender" in data:
             data["gender"] = gender_val
+        if is_generic_val is not None or "is_generic" in data:
+            data["is_generic"] = is_generic_val
+        if is_human_val is not None or "is_human" in data:
+            data["is_human"] = is_human_val
+        if raw_classes or clean_classes or "classes" in data:
+            data["classes"] = clean_classes
         if testament_val is not None or "testament" in data:
             data["testament"] = testament_val
         if clean_refs or "references" in data:

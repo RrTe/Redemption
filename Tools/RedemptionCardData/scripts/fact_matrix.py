@@ -30,6 +30,24 @@ def _collect_selector_facts(
         identifiers.add(str(sel.testament).lower())
     if getattr(sel, "gender", None):
         identifiers.add(str(sel.gender).lower())
+    is_generic = getattr(sel, "is_generic", None)
+    if is_generic is True:
+        identifiers.add("generic")
+    elif is_generic is False:
+        identifiers.add("unique")
+    is_human = getattr(sel, "is_human", None)
+    if is_human is True:
+        identifiers.add("human")
+    elif is_human is False:
+        identifiers.add("non-human")
+    for cls in getattr(sel, "classes", []) or []:
+        c_low = str(cls).lower()
+        identifiers.add(c_low)
+        identifiers.add(f"{c_low} class")
+        if c_low == "weapon":
+            identifiers.add("weapons")
+            identifiers.add("depicting a weapon")
+            identifiers.add("depicting weapons")
     for ref in getattr(sel, "references", []) or []:
         identifiers.add(ref.lower())
         for rnum in re.findall(r"\b\d+\b", ref):
@@ -349,5 +367,12 @@ def verify_fact_matrix(raw: str, ast_facts: Dict[str, Any]) -> Tuple[bool, List[
 
     if "used by this card" in raw_lower and "used by this card" not in all_target_facts:
         issues.append("Missing restriction identifier: 'used by this card'")
+
+    if re.search(r"(?<!non-)\bgeneric\b", raw_lower) and "generic" not in all_target_facts:
+        issues.append("Missing generic qualifier: 'is_generic: true'")
+
+    raw_unique_check = re.sub(r"\bsame\s+unique\b", " ", raw_lower)
+    if re.search(r"(?<!non-)\bunique\b", raw_unique_check) and "unique" not in all_target_facts:
+        issues.append("Missing unique qualifier: 'is_generic: false'")
 
     return len(issues) == 0, issues

@@ -22,7 +22,7 @@ sys.path.extend([str(Path(__file__).resolve().parent), str(BASE_DIR)])
 
 from models.logic.card_logic import CardSideLogic
 from ability_prompt import build_system_prompt
-from ai_client import load_env, query_llm_messages, QuotaExhaustedError
+from ai_client import load_env, query_llm_messages, QuotaExhaustedError, sanitize_error_message
 from utils.finding_logger import log_finding, resolve_card_findings, get_findings_summary, FINDINGS_FILE
 from utils.card_linker import CardLinker, link_side_logic_targets, normalize_chained_targets
 
@@ -147,7 +147,7 @@ def _process_single_card(backend: str, prompt: str, name: str, raw_ability: str 
                 log_finding(name, "VALIDATION_ISSUE", f"Auto-fixed: {', '.join(issues)}", resolved=True, raw_ability=raw_ability)
                 print(f" [OK-RETRY] Successfully fixed issues for {name}!", flush=True)
             except Exception as e:
-                print(f" [WARN] Correction retry could not parse: {e}. Keeping previous valid AST.", flush=True)
+                print(f" [WARN] Correction retry could not parse: {sanitize_error_message(str(e))}. Keeping previous valid AST.", flush=True)
 
     return validated
 
@@ -211,12 +211,14 @@ def _worker_task(
                 resolve_card_findings(name)
                 print(f" [OK] Validated {name} ({stats['success']}/{stats['total']})", flush=True)
     except QuotaExhaustedError as qe:
-        log_finding(name, "QUOTA_EXHAUSTED", str(qe), resolved=False, raw_ability=raw, card_identifier=cid)
-        print(f"\n[FATAL] Quota exhausted on card '{name}': {qe}. Cooling down 45s...", flush=True)
+        safe_err = sanitize_error_message(str(qe))
+        log_finding(name, "QUOTA_EXHAUSTED", safe_err, resolved=False, raw_ability=raw, card_identifier=cid)
+        print(f"\n[FATAL] Quota exhausted on card '{name}': {safe_err}. Cooling down 45s...", flush=True)
         time.sleep(45.0)
     except Exception as e:
-        log_finding(name, "EXTRACTION_FAILED", str(e), resolved=False, raw_ability=raw, card_identifier=cid)
-        print(f" [FAIL] Failed {name}: {e}", flush=True)
+        safe_err = sanitize_error_message(str(e))
+        log_finding(name, "EXTRACTION_FAILED", safe_err, resolved=False, raw_ability=raw, card_identifier=cid)
+        print(f" [FAIL] Failed {name}: {safe_err}", flush=True)
 
 
 def auto_resolve_exact_text_matches(

@@ -1,5 +1,5 @@
 {
-    "ordir_file": "data/ORDIR_PDF_7.0.0.txt",
+    "ordir_file": "data/ORDIR_PDF_7.1.0.txt",
     "cards_file": "data/cards_extended.json",
     "cards_file_min": "data/cards_extended.min.json",
     "carddata_url": "https://raw.githubusercontent.com/jalstad/RedemptionLackeyCCG/master/RedemptionQuick/sets/carddata.txt",

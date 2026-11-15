@@ -62,6 +62,7 @@ SET_ALIAS = {
     "Pri": "Pi",
     "Prp": "Pr",
     "RR": "RR",
+    "RR2": "RR2",
     "RoA": ["RA", "RA2", "RA3"],
     "RoA 3": ["RA", "RA2", "RA3"],
     "RoA [Ban]": ["RA", "RA2", "RA3"],

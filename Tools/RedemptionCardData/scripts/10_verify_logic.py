@@ -20,7 +20,9 @@ sys.path.append(str(BASE_DIR))
 from models.logic.card_logic import CardLogic
 from models.logic.target_selector import TargetSelector
 from models.logic.stat_filter import parse_stat_filters, StatFilter
-from models.logic.target_decomposer import CANONICAL_CARD_TYPES, PLURAL_CARD_TYPE_MAP, SUBTYPE_MAP
+from models.logic.target_decomposer import (
+    CANONICAL_CARD_TYPES, PLURAL_CARD_TYPE_MAP, SUBTYPE_MAP, HUMAN_MAP, CLASS_MAP,
+)
 from models.logic.dynamic_value import DynamicValue
 from models.enums import (
     SelectionMode, Zone, ActionVerb, ActivationMode, Duration, ModifierType, ConditionType,
@@ -38,6 +40,15 @@ _BAND_ZONE_RESTRICTION_RE = __import__("re").compile(
     __import__("re").IGNORECASE,
 )
 _PLURAL_SUBTYPE_SET = {k for k, v in SUBTYPE_MAP.items() if v[2]} | set(PLURAL_CARD_TYPE_MAP.keys())
+_UNMIGRATED_HUMAN_TOKENS = {
+    "human", "humans", "non-human", "non-humans",
+} | set(HUMAN_MAP.keys())
+_UNMIGRATED_CLASS_TOKENS = {
+    "warrior", "warriors", "warrior class", "warrior-class",
+    "weapon", "weapons", "weapon class", "weapon-class",
+    "depicting a weapon", "depicting weapons", "illustration depicting a weapon",
+    "territory class", "territory-class",
+} | set(CLASS_MAP.keys())
 
 
 def _audit_selector_invariants(sel: TargetSelector, ab_id: str, side_key: str, issues: List[str]) -> None:
@@ -50,6 +61,12 @@ def _audit_selector_invariants(sel: TargetSelector, ab_id: str, side_key: str, i
             issues.append(f"Unextracted testament '{ident}' in identifiers of '{ab_id}' ({side_key})")
         if low in ("male", "female"):
             issues.append(f"Unmigrated gender '{ident}' in identifiers of '{ab_id}' ({side_key})")
+        if low in ("generic", "unique"):
+            issues.append(f"Unmigrated generic qualifier '{ident}' in identifiers of '{ab_id}' ({side_key})")
+        if low in _UNMIGRATED_HUMAN_TOKENS:
+            issues.append(f"Unmigrated human qualifier '{ident}' in identifiers of '{ab_id}' ({side_key})")
+        if low in _UNMIGRATED_CLASS_TOKENS:
+            issues.append(f"Unmigrated class qualifier '{ident}' in identifiers of '{ab_id}' ({side_key})")
         if low in _PLURAL_SUBTYPE_SET:
             issues.append(f"Unsplit/plural identifier '{ident}' in '{ab_id}' ({side_key})")
         if parse_stat_filters(ident):
@@ -77,6 +94,9 @@ def verify_card_logic(
     is_dual_card: bool = False,
     side_types: Dict[str, str] | None = None,
     side_genders: Dict[str, str] | None = None,
+    side_generics: Dict[str, bool] | None = None,
+    side_humans: Dict[str, bool] | None = None,
+    side_classes: Dict[str, List[str]] | None = None,
     raw_abilities: Dict[str, str] | None = None,
 ) -> tuple[List[str], Dict[str, Any] | None]:
     """Audits CardLogic node integrity and links referenced card_titles to canonical IDs.
@@ -88,6 +108,10 @@ def verify_card_logic(
         has_star_ability: True if the card has a card-wide StarAbility in extended card data.
         is_dual_card: True if the card has a bottom side in extended card data.
         side_types: Optional mapping of side keys ('top', 'bottom') to CardType strings.
+        side_genders: Optional mapping of side keys to resolved character Gender strings.
+        side_generics: Optional mapping of side keys to resolved IsGeneric booleans.
+        side_humans: Optional mapping of side keys to resolved IsHuman booleans.
+        side_classes: Optional mapping of side keys to normalized Classes lists.
         raw_abilities: Optional mapping of card sides to raw ability texts for factual matrix audit.
 
     Returns:
@@ -121,6 +145,30 @@ def verify_card_logic(
                     resolved_side_gender = next(iter(unique_genders))
             if resolved_side_gender in GENDERS:
                 side_logic.gender = resolved_side_gender  # type: ignore[assignment]
+        if side_generics:
+            resolved_side_generic = side_generics.get(side_key)
+            if resolved_side_generic is None and side_key == "shared":
+                unique_generics = set(side_generics.values())
+                if len(unique_generics) == 1 and (not side_types or len(side_generics) == len(side_types)):
+                    resolved_side_generic = next(iter(unique_generics))
+            if isinstance(resolved_side_generic, bool):
+                side_logic.is_generic = resolved_side_generic
+        if side_humans:
+            resolved_side_human = side_humans.get(side_key)
+            if resolved_side_human is None and side_key == "shared":
+                unique_humans = set(side_humans.values())
+                if len(unique_humans) == 1 and (not side_types or len(side_humans) == len(side_types)):
+                    resolved_side_human = next(iter(unique_humans))
+            if isinstance(resolved_side_human, bool):
+                side_logic.is_human = resolved_side_human
+        if side_classes:
+            resolved_side_classes = side_classes.get(side_key)
+            if resolved_side_classes is None and side_key == "shared":
+                unique_class_tuples = {tuple(v) for v in side_classes.values()}
+                if len(unique_class_tuples) == 1 and (not side_types or len(side_classes) == len(side_types)):
+                    resolved_side_classes = list(next(iter(unique_class_tuples)))
+            if resolved_side_classes:
+                side_logic.classes = list(resolved_side_classes)
         # Auto-renumber duplicate step indices before normalizing chained targets
         for ability in side_logic.abilities:
             cost_steps = [c.step for c in ability.costs]
@@ -306,6 +354,9 @@ def run_logic_verifier(export_dist: bool = True) -> None:
     dual_card_ids: set[str] = set()
     id_to_side_types: Dict[str, Dict[str, str]] = {}
     id_to_side_genders: Dict[str, Dict[str, str]] = {}
+    id_to_side_generics: Dict[str, Dict[str, bool]] = {}
+    id_to_side_humans: Dict[str, Dict[str, bool]] = {}
+    id_to_side_classes: Dict[str, Dict[str, List[str]]] = {}
     id_to_raw_abilities: Dict[str, Dict[str, str]] = {}
     if CARDS_EXT_FILE.exists():
         print(f"Loading extended cards for ID linking from: {CARDS_EXT_FILE}")
@@ -325,6 +376,9 @@ def run_logic_verifier(export_dist: bool = True) -> None:
                     dual_card_ids.add(cid)
                 st_map: Dict[str, str] = {}
                 sg_map: Dict[str, str] = {}
+                sgen_map: Dict[str, bool] = {}
+                shum_map: Dict[str, bool] = {}
+                scls_map: Dict[str, List[str]] = {}
                 real_side_keys = [
                     k for k, v in sides_dict.items()
                     if k != "shared" and isinstance(v, dict)
@@ -335,15 +389,38 @@ def run_logic_verifier(export_dist: bool = True) -> None:
                         st_map[sk] = str(t_val)
                 for sk in real_side_keys:
                     t_val = get_side_field(c, sk, "Type")
+                    cls_val = get_side_field(c, sk, "Classes")
+                    if isinstance(cls_val, list) and cls_val:
+                        cls_list = [str(x) for x in cls_val if x]
+                        if cls_list:
+                            scls_map[sk] = cls_list
+                            if sk not in ("top", "bottom"):
+                                scls_map.setdefault("top", list(cls_list))
                     if t_val in CHARACTER_SIDE_TYPES:
                         g_val = get_side_field(c, sk, "Gender")
                         if g_val in GENDERS:
                             sg_map[sk] = str(g_val)
                             if sk not in ("top", "bottom"):
                                 sg_map.setdefault("top", str(g_val))
+                        ig_val = get_side_field(c, sk, "IsGeneric")
+                        if isinstance(ig_val, bool):
+                            sgen_map[sk] = ig_val
+                            if sk not in ("top", "bottom"):
+                                sgen_map.setdefault("top", ig_val)
+                        ih_val = get_side_field(c, sk, "IsHuman")
+                        if isinstance(ih_val, bool):
+                            shum_map[sk] = ih_val
+                            if sk not in ("top", "bottom"):
+                                shum_map.setdefault("top", ih_val)
                 id_to_side_types[cid] = st_map
                 if sg_map:
                     id_to_side_genders[cid] = sg_map
+                if sgen_map:
+                    id_to_side_generics[cid] = sgen_map
+                if shum_map:
+                    id_to_side_humans[cid] = shum_map
+                if scls_map:
+                    id_to_side_classes[cid] = scls_map
                 sm: Dict[str, str] = {}
                 top_sa = get_side_field(c, "top", "SpecialAbility")
                 bottom_sa = get_side_field(c, "bottom", "SpecialAbility")
@@ -400,6 +477,9 @@ def run_logic_verifier(export_dist: bool = True) -> None:
             is_dual_card=(card_id in dual_card_ids),
             side_types=id_to_side_types.get(card_id),
             side_genders=id_to_side_genders.get(card_id),
+            side_generics=id_to_side_generics.get(card_id),
+            side_humans=id_to_side_humans.get(card_id),
+            side_classes=id_to_side_classes.get(card_id),
             raw_abilities=id_to_raw_abilities.get(card_id),
         )
         meta_name, meta_set = id_to_meta.get(card_id, ("", ""))

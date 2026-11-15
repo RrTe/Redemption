@@ -19,6 +19,7 @@ sys.path.append(str(BASE_DIR))
 
 from utils.card_helpers import get_card_name, get_side_field, get_star_ability
 from utils.ability_patterns import (
+    extract_conditional_protection_abilities,
     extract_modifiers_from_text,
     extract_star_trigger,
     extract_condition_prefix,
@@ -975,12 +976,15 @@ def parse_side_ability(
     is_star = is_star_clause or extracted_star
     activation_mode = ActivationMode.TRIGGERED if is_star else ActivationMode.IMMEDIATE
 
-    # 4. Extract Modifiers (Layer A)
+    # 4. Extract Modifiers (Layer A) and conditional protection clauses
     remainder, modifiers = extract_modifiers_from_text(text_after_star)
+    remainder, cond_prot_abilities = extract_conditional_protection_abilities(
+        remainder, start_idx=1, is_star=is_star
+    )
 
-    # If the entire ability was just modifiers (e.g. "Cannot be negated.")
+    # If the entire ability was modifiers and/or conditional protections
     if not remainder:
-        side_logic = CardSideLogic(modifiers=modifiers, abilities=[])
+        side_logic = CardSideLogic(modifiers=modifiers, abilities=cond_prot_abilities)
         side_logic.propagate_side_modifiers()
         return side_logic, None
 
@@ -1012,6 +1016,16 @@ def parse_side_ability(
                 ability.ability_id = f"star_{ability.ability_id}"
 
         parsed_abilities.append(ability)
+
+    next_idx = len(parsed_abilities) + 1
+    for offset, prot_ab in enumerate(cond_prot_abilities):
+        prot_ab.ability_id = re.sub(
+            r'ab_\d+_',
+            f'ab_{next_idx + offset}_',
+            prot_ab.ability_id,
+            count=1,
+        )
+        parsed_abilities.append(prot_ab)
 
     side_logic = CardSideLogic(modifiers=modifiers, abilities=parsed_abilities)
     side_logic.propagate_side_modifiers()

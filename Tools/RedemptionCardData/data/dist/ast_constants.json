@@ -130,6 +130,11 @@
     "OT",
     "NT"
   ],
+  "card_classes": [
+    "Warrior",
+    "Weapon",
+    "Territory"
+  ],
   "modifier_types": [
     "cannot_be_negated",
     "cannot_be_interrupted",

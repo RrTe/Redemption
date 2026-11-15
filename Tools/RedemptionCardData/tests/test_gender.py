@@ -192,7 +192,8 @@ class TestTargetSelectorGender(unittest.TestCase):
         sel3 = TargetSelector(identifiers=["male human"])
         self.assertEqual(sel3.gender, "male")
         self.assertEqual(sel3.target_type, "character")
-        self.assertIn("Human", sel3.identifiers)
+        self.assertIs(sel3.is_human, True)
+        self.assertEqual(sel3.identifiers, [])
         self.assertNotIn("male", [i.lower() for i in sel3.identifiers])
 
     def test_preserves_relational_and_exception_identifiers(self) -> None:
@@ -208,7 +209,8 @@ class TestTargetParserAndMigration(unittest.TestCase):
         sel_male_human = build_target_selector("male human")
         self.assertEqual(sel_male_human.gender, "male")
         self.assertEqual(sel_male_human.target_type, "character")
-        self.assertIn("Human", sel_male_human.identifiers)
+        self.assertIs(sel_male_human.is_human, True)
+        self.assertEqual(sel_male_human.identifiers, [])
         self.assertNotIn("male", [i.lower() for i in sel_male_human.identifiers])
 
         sel_female_ec = build_target_selector("female evil character")
@@ -280,7 +282,7 @@ class TestTargetParserAndMigration(unittest.TestCase):
                                 "zone_owner": "opponent",
                                 "scope": ["battle"],
                                 "target_type": "hero",
-                                "identifiers": ["male", "Human"],
+                                "identifiers": ["male", "Egyptian"],
                             },
                         }
                     ],
@@ -291,7 +293,7 @@ class TestTargetParserAndMigration(unittest.TestCase):
         self.assertEqual(hits, ["male"])
         tgt = migrated["abilities"][0]["effects"][0]["target"]
         self.assertEqual(tgt["gender"], "male")
-        self.assertEqual(tgt["identifiers"], ["Human"])
+        self.assertEqual(tgt["identifiers"], ["Egyptian"])
         self.assertEqual(scan_gender_identifiers(migrated), [])
 
 

@@ -48,6 +48,14 @@ data/ordir_extracted_raw.json
 data/unmatched_ordir_entries.log
 data/verification_report.log
 verification_report.log
+data/batch_findings.json
+data/*.backup*.json
+data/ai_generated_abilities.backup_before_reset.json
+data/logic_verification_report.log
+data/unparsed_abilities.log
+data/semantic_audit_report.md
+data/implementation_plan.md
+data/KonzeptUmsetzungCardAbilities.md
 
 # Ausnahmen (Config und Template müssen eingecheckt werden)
 !config.json

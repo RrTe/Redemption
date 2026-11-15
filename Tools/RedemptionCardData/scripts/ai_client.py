@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 import threading
 import time
 from typing import Any, Dict, List, Optional, Union
@@ -23,6 +24,30 @@ MIN_GEMINI_INTERVAL_SECONDS: float = 4.3  # Paces requests to <= 13.95 RPM (safe
 class QuotaExhaustedError(Exception):
     """Raised when API rate limits or quota wait periods exceed thresholds."""
     pass
+
+
+_SECRET_REDACTION_PATTERNS = (
+    (re.compile(r"([?&]key=)AIza[0-9A-Za-z_-]+"), r"\1[REDACTED]"),
+    (re.compile(r"\bAIza[0-9A-Za-z_-]{20,}\b"), "[REDACTED_API_KEY]"),
+    (re.compile(r"(Bearer\s+)[0-9A-Za-z._-]+"), r"\1[REDACTED]"),
+    (re.compile(r"\b(?:gsk_|nvapi-|sk-or-v1-)[0-9A-Za-z_-]{20,}\b"), "[REDACTED_API_KEY]"),
+)
+
+
+def sanitize_error_message(message: str) -> str:
+    """Redacts API keys and bearer tokens from exception or log messages.
+
+    Args:
+        message: Raw exception text or log string that may contain request URLs or credentials.
+
+    Returns:
+        str: Sanitized message with API keys and bearer tokens replaced by placeholders.
+    """
+    sanitized = message
+    # Scrub both query-string keys (legacy URLs) and standalone provider tokens before logging.
+    for pattern, replacement in _SECRET_REDACTION_PATTERNS:
+        sanitized = pattern.sub(replacement, sanitized)
+    return sanitized
 
 
 def load_env() -> None:
@@ -86,7 +111,7 @@ def query_llm_messages(backend: str, messages: List[Dict[str, str]]) -> str:
             try:
                 resp = requests.post(url, headers=headers, json=body, timeout=75)
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as net_err:
-                print(f" [Network/Timeout error] {net_err}, waiting 4s before retry ({attempt + 1}/5)...", flush=True)
+                print(f" [Network/Timeout error] {sanitize_error_message(str(net_err))}, waiting 4s before retry ({attempt + 1}/5)...", flush=True)
                 time.sleep(4)
                 continue
             if resp.status_code in (500, 502, 503, 504):
@@ -125,7 +150,9 @@ def query_llm_messages(backend: str, messages: List[Dict[str, str]]) -> str:
         if not api_key:
             raise ValueError("GEMINI_API_KEY not configured in .env")
         model_name = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+        # Pass the API key via header instead of query params so network errors never log the secret URL.
+        headers = {"x-goog-api-key": api_key, "Content-Type": "application/json"}
         # Combine conversation turns into Gemini contents
         contents = []
         for msg in messages:
@@ -148,7 +175,12 @@ def query_llm_messages(backend: str, messages: List[Dict[str, str]]) -> str:
                     time.sleep(MIN_GEMINI_INTERVAL_SECONDS - elapsed)
                 _last_gemini_request = time.time()
 
-            resp = requests.post(url, json=body, timeout=60)
+            try:
+                resp = requests.post(url, headers=headers, json=body, timeout=60)
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError, requests.exceptions.SSLError) as net_err:
+                print(f" [Network/Timeout error] {sanitize_error_message(str(net_err))}, waiting 4s before retry ({attempt + 1}/5)...", flush=True)
+                time.sleep(4)
+                continue
             if resp.status_code in (500, 502, 503, 504):
                 print(f" [{resp.status_code}] Transient server error, waiting 3s...", flush=True)
                 time.sleep(3)

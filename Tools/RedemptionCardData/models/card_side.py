@@ -14,7 +14,9 @@ class CardSide:
         SpecialAbility: Optional[str] = None,
         Classes: Optional[List[str]] = None,
         ORDIR: Optional[List[str]] = None,
-        Gender: Optional[str] = None
+        Gender: Optional[str] = None,
+        IsGeneric: Optional[bool] = None,
+        IsHuman: Optional[bool] = None,
     ):
         self.Name = Name
         self.Type = Type
@@ -26,6 +28,8 @@ class CardSide:
         self.Classes = Classes or []
         self.ORDIR = ORDIR or []
         self.Gender = Gender
+        self.IsGeneric = IsGeneric
+        self.IsHuman = IsHuman
 
     def to_dict(self) -> dict:
         """Serializes the CardSide, omitting None values and empty collections.

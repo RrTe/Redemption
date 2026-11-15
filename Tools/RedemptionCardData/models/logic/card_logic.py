@@ -16,10 +16,16 @@ class CardSideLogic(BaseModel):
 
     Attributes:
         gender: Character gender on character sides ('male', 'female', 'both', 'genderless').
+        is_generic: Whether a character side is generic (True) or unique (False).
+        is_human: Whether a character side is human (True) or non-human (False).
+        classes: Canonical card classes assigned to this side (e.g. ['Warrior', 'Territory']).
         modifiers: Side-wide modifiers applying to all or subsets of abilities.
         abilities: List of sequential or triggered abilities on this card side.
     """
     gender: Optional[GenderType] = None
+    is_generic: Optional[bool] = None
+    is_human: Optional[bool] = None
+    classes: List[str] = Field(default_factory=list)
     modifiers: List[Modifier] = Field(default_factory=list)
     abilities: List[Ability] = Field(default_factory=list)
 

@@ -51,59 +51,6 @@ CATEGORY_SET = set(clean_text(c) for c in ORDIR_CATEGORIES)
 def is_bullet(line: str) -> bool:
     return line.startswith(("•", "·", "\u2022"))
 
-def parse_card_lines(block: str) -> list[dict]:
-    """
-    Takes a full bullet block like:
-    • (Good): Card A (Set 1), Card B (Set 2) and Card C (Set 3)
-    Extracts each card name and its raw set string.
-    """
-    results = []
-    
-    # Strip bullet
-    line = re.sub(r"^[•·\u2022]\s*", "", block).strip()
-    # Strip optional Role/Alignment prefix like (Good):
-    line = re.sub(r"^\([^)]+\):\s*", "", line).strip()
-    
-    # Split rules: ')' followed by 'and' or ','
-    line = re.sub(r"\)\s+and\s+", ")|", line)
-    line = re.sub(r"\)\s+or\s+", ")|", line)
-    line = re.sub(r"\),\s+", ")|", line)
-    
-    parts = line.split("|")
-    for part in parts:
-        part = part.strip()
-        if not part:
-            continue
-            
-        # Robust regex to capture: Name, optional [Brackets], and mandatory (Sets)
-        # We NO LONGER blindly strip [] beforehand.
-        match = re.search(r'^([^\[\(\)]+?)\s*(?:\[([^\]]+)\])?\s*\(([^)]+)\)\s*$', part)
-        
-        if match:
-            raw_name = match.group(1).strip()
-            brackets = match.group(2).strip() if match.group(2) else ""
-            raw_sets = match.group(3).strip()
-            
-            # Split Sets by comma or 'and'
-            raw_sets_split = raw_sets.replace(" and ", ",")
-            sets = [s.strip() for s in raw_sets_split.split(",") if s.strip()]
-            for s in sets:
-                results.append({
-                    "card_name": raw_name,
-                    "brackets": brackets,
-                    "set": s,
-                    "raw_string": part
-                })
-        else:
-            # Fallback if no sets are found or malformed
-            results.append({
-                "card_name": part,
-                "brackets": "",
-                "set": "UNKNOWN",
-                "raw_string": part
-            })
-            
-    return results
 
 def is_membership_marker(line: str) -> bool:
     """
@@ -123,6 +70,9 @@ def is_membership_marker(line: str) -> bool:
     
     # Strict check for the identifying marker or variations thereof
     if "the following" not in l: return False
+    # Slice from the last "the following" so trailing "refer"/"relate" in a preceding
+    # line inside a 2-line window does not poison the new marker sentence.
+    l = l[l.rfind("the following"):]
     if "redemption" not in l and "card" not in l: return False
     
     # Avoid lines that say "The following cards refer to..." because those are reference lists,
@@ -134,7 +84,7 @@ def is_membership_marker(line: str) -> bool:
         " are ", " is ", " from ", " represent ", " depict ", 
         " list of ", " have ", " identify ", " are listed ", 
         " can be ", " are considered ", " characters that ",
-        " are members ", " belongs to "
+        " are members ", " belongs to ", " involve "
     ]
     return any(x in l for x in membership_keywords)
 
@@ -143,8 +93,9 @@ def is_reference_marker(line: str) -> bool:
     Determines if a line indicates a list of cards that REFER TO the category, but are not
     actually members of the category. We currently skip these lists.
     """
-    l = line.lower()
+    l = clean_text(line.lower())
     if "the following" not in l: return False
+    l = l[l.rfind("the following"):]
     return any(x in l for x in [" refer to ", " refers to ", " relate to "])
 
 def clean_block_text(text: str) -> str:
@@ -181,11 +132,22 @@ def parse_card_lines(block: str) -> list[dict]:
     
     # Cleaning
     line = clean_block_text(line)
-    
-    # Split rules: ')' followed by 'and' or ','
-    line = re.sub(r"\)\s+and\s+", ")|", line)
-    line = re.sub(r"\)\s+or\s+", ")|", line)
+
+    # Normalize source PDF conjoined-card typos where the first card lacks its set block
+    line = line.replace(
+        "Zelophehad, the Lone and Zimri, Son of Salu (RA, IR)",
+        "Zelophehad, the Lone (IR) and Zimri, Son of Salu (RA, IR)",
+    )
+    line = line.replace(
+        "The Power of Death and Thorns and Thistles (CW)",
+        "The Power of Death (Pi) and Thorns and Thistles (CW)",
+    )
+
+    # Split rules: ')' followed by optional Oxford comma + 'and'/'or', ',' or ';'
+    # Replace Oxford-comma conjunctions BEFORE "), " so "and "/"or " is not left on the next name.
+    line = re.sub(r"\),?\s+(?:and|or)\s+", ")|", line)
     line = re.sub(r"\),\s+", ")|", line)
+    line = re.sub(r"\)\s*;\s*", ")|", line)
     
     parts = line.split("|")
     for part in parts:
@@ -229,9 +191,9 @@ def parse_card_lines(block: str) -> list[dict]:
         else:
             sub_names = [raw_name]
             
-        # Split Sets by comma or 'and'
+        # Split Sets by comma or 'and' and normalize hyphen spacing (e.g. "B- L" -> "B-L")
         raw_sets_split = raw_sets.replace(" and ", ",")
-        sets = [s.strip() for s in raw_sets_split.split(",") if s.strip()]
+        sets = [re.sub(r"\s*-\s*", "-", s.strip()) for s in raw_sets_split.split(",") if s.strip()]
         
         for name in sub_names:
             for s in sets:
@@ -247,63 +209,102 @@ def parse_card_lines(block: str) -> list[dict]:
 def extract_ordir():
     print(f"Reading ORDIR from {ORDIR_FILE}")
     with ORDIR_FILE.open("r", encoding="utf-8") as f:
-        lines = [clean_text(line) for line in f if line.strip()]
+        lines = [clean_text(line) for line in f]
 
-    ordir_data = [] # List of dicts
-    
+    ordir_data = []  # List of dicts
+
     i = 0
     while i < len(lines):
         line = lines[i]
-        
+        if not line:
+            i += 1
+            continue
+
         if line in CATEGORY_SET:
             current_category = line
             i += 1
-            
+
             extracted_cards = []
-            extracting_enabled = False # Don't start until we hit a membership marker
-            
+            extracting_enabled = False  # Don't start until we hit a membership marker
+            prev_non_empty = ""
+
             # Read until the next category
             while i < len(lines):
-                if lines[i] in CATEGORY_SET:
+                cur = lines[i]
+                if not cur:
+                    i += 1
+                    continue
+                if cur in CATEGORY_SET:
                     break
-                
-                # Create a 2-line window to catch markers that are split across lines 
+
+                # Create a 2-line window to catch markers that are split across lines
                 # (e.g. "The following Redemption cards\nrefer to...")
-                window = lines[i]
-                if i > 0 and not is_bullet(lines[i]) and not is_bullet(lines[i-1]):
-                    window = lines[i-1] + " " + lines[i]
-                
+                window = cur
+                if prev_non_empty and not is_bullet(cur) and not is_bullet(prev_non_empty):
+                    window = prev_non_empty + " " + cur
+
                 # Check for markers
                 if is_membership_marker(window):
                     extracting_enabled = True
+                    prev_non_empty = cur
                     i += 1
                     continue
                 elif is_reference_marker(window):
-                    extracting_enabled = False # Stop on "refer to"
+                    extracting_enabled = False  # Stop on "refer to"
+                    prev_non_empty = cur
                     i += 1
                     continue
-                
+
                 # If we hit a bullet, read the full block IF enabled
-                if is_bullet(lines[i]):
+                if is_bullet(cur):
                     if extracting_enabled:
-                        block = lines[i]
+                        block = cur
+                        prev_non_empty = cur
                         i += 1
                         while i < len(lines):
-                            # Same window check for breaking out of the block
-                            break_window = lines[i]
-                            if i > 0 and not is_bullet(lines[i]) and not is_bullet(lines[i-1]):
-                                break_window = lines[i-1] + " " + lines[i]
-                                
-                            if is_bullet(lines[i]) or is_membership_marker(break_window) or is_reference_marker(break_window) or lines[i] in CATEGORY_SET or re.match(r"^[A-Z]$", lines[i]):
+                            next_l = lines[i]
+                            if not next_l:
+                                # Blank line encountered: check if it is just a PDF page break (page number)
+                                j = i + 1
+                                while j < len(lines) and not lines[j]:
+                                    j += 1
+                                if j < len(lines) and re.match(r"^\d+$", lines[j]):
+                                    i = j + 1
+                                    while i < len(lines) and not lines[i]:
+                                        i += 1
+                                    continue
+                                # Genuine paragraph break after bullet: stop accumulating this bullet
+                                if j < len(lines) and not is_bullet(lines[j]):
+                                    extracting_enabled = False
                                 break
-                            block += " " + lines[i]
+
+                            # Same window check for breaking out of the block
+                            break_window = next_l
+                            if prev_non_empty and not is_bullet(next_l) and not is_bullet(prev_non_empty):
+                                break_window = prev_non_empty + " " + next_l
+
+                            if (
+                                is_bullet(next_l)
+                                or is_membership_marker(break_window)
+                                or is_reference_marker(break_window)
+                                or next_l in CATEGORY_SET
+                                or re.match(r"^[A-Z]$", next_l)
+                            ):
+                                break
+                            if re.match(r"^\d+$", next_l):
+                                i += 1
+                                continue
+                            block += " " + next_l
+                            prev_non_empty = next_l
                             i += 1
                         extracted_cards.extend(parse_card_lines(block))
                     else:
-                        i += 1 # Skip definition bullets
+                        prev_non_empty = cur
+                        i += 1  # Skip definition bullets
                 else:
+                    prev_non_empty = cur
                     i += 1
-            
+
             if extracted_cards:
                 ordir_data.append({
                     "category": current_category,
