@@ -49,11 +49,11 @@ class SearchHelper {
     player.searchContext.isInteractive = isInteractive;
 
     player.searchContext.cards.clear();
-    cards.forEach((card) => {
-      // ✨ FIX: Use original references instead of clones to maintain
-      // object identity and prevent state desync during Resolve.
-      // The reference itself is enough here.
-      player.searchContext.cards.push(card);
+    Array.from(cards).forEach((card) => {
+      // Store detached clones so searchContext.clear()/splice() never alters
+      // refCount or parentChain on live zone Card instances.
+      const clonedCard = typeof card?.clone === "function" ? card.clone() : card;
+      player.searchContext.cards.push(clonedCard);
     });
 
     const pileId = this.generatePileId(originalOwnerId, zone);
@@ -86,7 +86,13 @@ class SearchHelper {
    * Slices the pile based on count and position (top/bottom).
    */
   static slicePile(pile, count, position = "top") {
-    return position === "bottom" ? pile.slice(-count) : pile.slice(0, count);
+    if (!pile || !count || count <= 0) return [];
+    // Convert ArraySchema to a plain Array before slicing to avoid creating an
+    // unattached ArraySchema wrapper that mutates live items' parentChain.
+    const plainPile = Array.from(pile);
+    return position === "bottom"
+      ? plainPile.slice(-count)
+      : plainPile.slice(0, count);
   }
 
   /**

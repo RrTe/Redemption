@@ -50,6 +50,9 @@ class ResolveRevealCommand extends BaseCommand {
 
     // First, put "bottom" cards back (push to end of array)
     for (const card of bottomCards) {
+      const liveCard = this.room.cardLookup?.get(card.id) || card;
+      if (liveCard.zone !== context.zone) continue;
+
       moveCard(
         originalOwner,
         this.state,
@@ -64,6 +67,9 @@ class ResolveRevealCommand extends BaseCommand {
 
     // Then, put "top" cards back in reverse order so the original order is maintained at the top
     for (const card of [...topCards].reverse()) {
+      const liveCard = this.room.cardLookup?.get(card.id) || card;
+      if (liveCard.zone !== context.zone) continue;
+
       moveCard(
         originalOwner,
         this.state,

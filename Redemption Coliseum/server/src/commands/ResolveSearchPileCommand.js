@@ -146,8 +146,9 @@ class ResolveSearchPileCommand extends BaseCommand {
           (c) => positionMap.get(c.id) === "bottom",
         );
         for (const card of bottomCards) {
-          // ✨ FIX: Only move back if still perceived as being in deck-look context
-          if (card.zone !== fromZone) continue;
+          // Inspect live card zone in cardLookup because searchContext holds clones.
+          const liveCard = this.room.cardLookup?.get(card.id) || card;
+          if (liveCard.zone !== fromZone) continue;
 
           moveCard(
             originalOwner,
@@ -166,7 +167,8 @@ class ResolveSearchPileCommand extends BaseCommand {
           (c) => positionMap.get(c.id) !== "bottom",
         );
         for (const card of [...topCards].reverse()) {
-          if (card.zone !== fromZone) continue;
+          const liveCard = this.room.cardLookup?.get(card.id) || card;
+          if (liveCard.zone !== fromZone) continue;
 
           moveCard(
             originalOwner,

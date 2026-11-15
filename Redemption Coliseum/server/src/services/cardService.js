@@ -41,27 +41,64 @@ function _syncParentIndexes(zoneArr) {
 }
 
 /**
- * Unshifts a card to the beginning of a zone (e.g. top of DECK), fixing the
- * @colyseus/schema ArraySchema bug where unshift does not attach the instance
- * to the parent or root ChangeTree.
+ * Replaces an ArraySchema's contents with orderedItems without losing Schema root
+ * references or leaving stale deletedIndexes from earlier operations in the same tick.
  *
- * @param {ArraySchema} zoneArr The target zone ArraySchema.
- * @param {Card} card The card to unshift.
+ * @param {ArraySchema} zoneArr - Target Colyseus ArraySchema collection.
+ * @param {Array} orderedItems - Desired ordered item list.
  */
-function _unshiftToZone(zoneArr, card) {
-  const changeTree = zoneArr[CHANGES_SYMBOL];
-  zoneArr.unshift(card);
-  if (changeTree && card[CHANGES_SYMBOL]) {
-    card[CHANGES_SYMBOL].setParent(zoneArr, changeTree.root, 0);
-  }
-  _syncParentIndexes(zoneArr);
-  if (changeTree?.root) {
-    if (changeTree.filteredChanges !== undefined) {
-      changeTree.root.enqueueChangeTree(changeTree, "filteredChanges");
-    } else {
-      changeTree.root.enqueueChangeTree(changeTree, "changes");
+function _replaceArraySchemaOrder(zoneArr, orderedItems) {
+  const changeTree = zoneArr?.[CHANGES_SYMBOL];
+  const root = changeTree?.root;
+  const retainedTrees = [];
+
+  if (root) {
+    // Bump refCount before clear() so surviving items stay >= 1 and are not
+    // dropped from root.allChanges or detached from child StateViews.
+    for (const item of new Set(orderedItems)) {
+      const itemChanges = item?.[CHANGES_SYMBOL];
+      if (itemChanges && itemChanges.root === root) {
+        root.add(itemChanges);
+        retainedTrees.push(itemChanges);
+      }
     }
   }
+
+  if (zoneArr.length > 0) {
+    zoneArr.clear();
+  }
+  // Colyseus v3 ArraySchema#clear() leaves stale deletedIndexes until encode flush;
+  // resetting prevents splice/getByIndex index corruption within the same tick.
+  if (zoneArr.deletedIndexes !== undefined && zoneArr.length === 0 && (!zoneArr.tmpItems || zoneArr.tmpItems.length === 0)) {
+    zoneArr.deletedIndexes = {};
+  }
+
+  if (orderedItems.length > 0) {
+    zoneArr.push(...orderedItems);
+  }
+
+  for (const itemChanges of retainedTrees) {
+    root.remove(itemChanges);
+  }
+
+  _syncParentIndexes(zoneArr);
+}
+
+/**
+ * Inserts a card at index 0 of a target zone collection safely for Colyseus sync.
+ *
+ * @param {ArraySchema|Array} zoneArr - Target zone collection.
+ * @param {Card} card - Card to insert at the top.
+ */
+function _unshiftToZone(zoneArr, card) {
+  if (!(zoneArr instanceof ArraySchema)) {
+    zoneArr.unshift(card);
+    return;
+  }
+
+  // Rebuild via clear()+push() when non-empty so multi-unshift and same-tick
+  // splice+unshift sequences produce deterministic ADD indices on clients.
+  _replaceArraySchemaOrder(zoneArr, [card, ...Array.from(zoneArr)]);
 }
 
 
@@ -781,15 +818,34 @@ function findCardById(state, cardId) {
 }
 
 /**
- * In-place Fisher-Yates array shuffle.
+ * In-place Fisher-Yates shuffle for a plain JS array.
  *
- * @param {Array} arr - The array to shuffle (e.g. deck).
+ * @param {Array} plainArr - Plain array to shuffle.
+ */
+function _shufflePlainArray(plainArr) {
+  for (let i = plainArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [plainArr[i], plainArr[j]] = [plainArr[j], plainArr[i]];
+  }
+}
+
+/**
+ * Fisher-Yates shuffle supporting both plain arrays and Colyseus ArraySchema
+ * collections without corrupting refCounts or same-tick patch indices.
+ *
+ * @param {Array | ArraySchema} arr - The array or zone collection to shuffle.
  */
 function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+  if (!arr || arr.length <= 1) return;
+
+  if (arr instanceof ArraySchema) {
+    const shuffled = Array.from(arr);
+    _shufflePlainArray(shuffled);
+    _replaceArraySchemaOrder(arr, shuffled);
+    return;
   }
+
+  _shufflePlainArray(arr);
 }
 
 /**

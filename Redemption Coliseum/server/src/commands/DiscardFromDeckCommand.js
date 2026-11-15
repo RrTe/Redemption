@@ -5,6 +5,7 @@ const {
   getZoneDisplayName,
 } = require("../services/cardService");
 const { ZONES } = require("../../../shared/zones");
+const SearchHelper = require("../utils/SearchHelper");
 const logger = require("../utils/logger");
 
 class DiscardFromDeckCommand extends BaseCommand {
@@ -18,10 +19,10 @@ class DiscardFromDeckCommand extends BaseCommand {
     if (!targetPlayer || !actingPlayer) return;
 
     const deck = getZoneCollection(targetPlayer, this.state, ZONES.DECK);
-    if (deck.length < count) return;
+    if (!count || count <= 0 || deck.length < count) return;
 
-    const cardsToDiscard =
-      position === "top" ? deck.slice(0, count) : deck.slice(-count);
+    const slicePosition = position === "top" ? "top" : "bottom";
+    const cardsToDiscard = SearchHelper.slicePile(deck, count, slicePosition);
 
     for (const card of cardsToDiscard) {
       moveCard(
