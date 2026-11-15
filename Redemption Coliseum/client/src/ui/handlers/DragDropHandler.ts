@@ -15,6 +15,7 @@ import { cardData as staticCardData } from "../../utils/CardService";
 import { ToastManager } from "../managers/ToastManager";
 import { UI_STRINGS } from "../../constants/uiStrings";
 import { GameEvents } from "../../constants/EventNames";
+import { CARD_DRAG_CONFIG } from "../config/visualConfig.js";
 
 const ATTACH_HOVER_DELAY = 700;
 
@@ -36,6 +37,8 @@ export class DragDropHandler {
   private attachHoverTimer: number | null = null;
   private currentHoveredDeck: StackedPileUI | null = null;
   private pendingDroppedCards: Map<string, CardUI> = new Map();
+  private pendingDropTimeouts: Map<string, number> = new Map();
+  private dropTokenCounter: number = 0;
 
   constructor(
     scene: Phaser.Scene,
@@ -73,10 +76,73 @@ export class DragDropHandler {
     this.scene.input.off("dragend", this.onDragEnd, this);
     this.scene.input.off("drop", this.onDrop, this);
     this.scene.events.off(GameEvents.NET_CARD_MOVE_FAILED, this.onCardMoveFailed, this);
+    this.pendingDropTimeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    this.pendingDropTimeouts.clear();
     this.pendingDroppedCards.clear();
   }
 
+  /**
+   * Marks a dropped card as awaiting server confirmation and schedules a safety timeout.
+   *
+   * @param {CardUI} gameObject The dropped card awaiting a server state patch.
+   */
+  private markPendingServerDrop(gameObject: CardUI): void {
+    const cardId = gameObject.cardData?.id;
+    if (!cardId) return;
+
+    this.clearPendingDropTimeout(cardId);
+    const token = ++this.dropTokenCounter;
+    this.pendingDroppedCards.set(cardId, gameObject);
+    gameObject.setData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_SERVER_DROP, true);
+    gameObject.setData(CARD_DRAG_CONFIG.DATA_KEYS.SERVER_DROP_TOKEN, token);
+
+    const timeoutId = window.setTimeout(() => {
+      this.pendingDropTimeouts.delete(cardId);
+      const hasMatchingToken =
+        gameObject.getData(CARD_DRAG_CONFIG.DATA_KEYS.SERVER_DROP_TOKEN) === token;
+      const isStillWaiting = Boolean(
+        gameObject.getData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_SERVER_DROP),
+      );
+
+      if (hasMatchingToken && isStillWaiting && gameObject.scene && gameObject.active) {
+        log("Input", `[DROP_TIMEOUT] Clearing stale pending drop for card ${cardId}`);
+        this.clearPendingServerDrop(gameObject);
+        this.snapBack(gameObject);
+      }
+    }, CARD_DRAG_CONFIG.PENDING_DROP_TIMEOUT_MS);
+
+    this.pendingDropTimeouts.set(cardId, timeoutId);
+  }
+
+  /**
+   * Clears pending server-drop tracking and any active fallback timer for a card.
+   *
+   * @param {CardUI} gameObject The card whose pending drop state should be cleared.
+   */
+  private clearPendingServerDrop(gameObject: CardUI): void {
+    const cardId = gameObject.cardData?.id;
+    if (cardId) {
+      this.clearPendingDropTimeout(cardId);
+      this.pendingDroppedCards.delete(cardId);
+    }
+    gameObject.setData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_SERVER_DROP, false);
+    gameObject.setData(CARD_DRAG_CONFIG.DATA_KEYS.SERVER_DROP_TOKEN, null);
+  }
+
+  private clearPendingDropTimeout(cardId: string): void {
+    const existingTimeout = this.pendingDropTimeouts.get(cardId);
+    if (existingTimeout !== undefined) {
+      window.clearTimeout(existingTimeout);
+      this.pendingDropTimeouts.delete(cardId);
+    }
+  }
+
   public snapBack(gameObject: CardUI) {
+    if (!gameObject.scene) return;
+
+    this.animationManager.stopHandHoverAnimation(gameObject);
+    this.scene.tweens.killTweensOf(gameObject);
+
     const targetX =
       gameObject.targetX !== undefined
         ? gameObject.targetX
@@ -90,7 +156,15 @@ export class DragDropHandler {
         ? gameObject.targetAngle
         : (gameObject.getData("start_angle") ?? 0);
 
-    gameObject.setData("is_snapping_back", true);
+    let finished = false;
+    const finishSnapBack = () => {
+      if (finished || !gameObject.scene) return;
+      finished = true;
+      gameObject.setData(CARD_DRAG_CONFIG.DATA_KEYS.IS_SNAPPING_BACK, false);
+      gameObject.setData("drop_action_taken", false);
+    };
+
+    gameObject.setData(CARD_DRAG_CONFIG.DATA_KEYS.IS_SNAPPING_BACK, true);
     this.scene.tweens.add({
       targets: gameObject,
       x: targetX,
@@ -98,36 +172,26 @@ export class DragDropHandler {
       angle: targetAngle,
       ease: "Power1",
       duration: 200,
-      onComplete: () => {
-        gameObject.setData("is_snapping_back", false);
-        gameObject.setData("drop_action_taken", false);
-      },
+      onComplete: finishSnapBack,
+      onStop: finishSnapBack,
     });
 
-    if (gameObject.scene) {
-      const startDepth =
-        gameObject.getData("start_depth") ??
-        (gameObject.currentZone === ZONES.HAND ? 100 : 0);
-      gameObject.setDepth(startDepth);
-    }
+    const startDepth =
+      gameObject.getData("start_depth") ??
+      (gameObject.currentZone === ZONES.HAND ? 100 : 0);
+    gameObject.setDepth(startDepth);
   }
 
   private onCardMoveFailed(data: { cardId: string; error?: string }) {
     log("Input", `[NET_CARD_MOVE_FAILED] Move rejected for card ${data.cardId}: ${data.error}`);
-    const card = this.pendingDroppedCards.get(data.cardId);
+    const trackedCard = this.pendingDroppedCards.get(data.cardId);
+    const allCards = (this.scene as any).gameUI?.cardRenderer?.getAllCardUIs?.();
+    const card = trackedCard || allCards?.get(data.cardId);
     if (card) {
       card.setData("drop_action_taken", false);
-      card.setData("waiting_for_overlay", false);
+      card.setData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_OVERLAY, false);
+      this.clearPendingServerDrop(card);
       this.snapBack(card);
-      this.pendingDroppedCards.delete(data.cardId);
-    } else {
-      const allCards = (this.scene as any).gameUI?.cardRenderer?.getAllCardUIs?.();
-      const fallbackCard = allCards?.get(data.cardId);
-      if (fallbackCard) {
-        fallbackCard.setData("drop_action_taken", false);
-        fallbackCard.setData("waiting_for_overlay", false);
-        this.snapBack(fallbackCard);
-      }
     }
 
     if (data.error) {
@@ -141,13 +205,16 @@ export class DragDropHandler {
       return;
     }
 
-    if (gameObject.cardData?.id) {
-      this.pendingDroppedCards.delete(gameObject.cardData.id);
-    }
+    this.clearPendingServerDrop(gameObject);
+    gameObject.setData(CARD_DRAG_CONFIG.DATA_KEYS.IS_SNAPPING_BACK, false);
+    gameObject.setData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_OVERLAY, false);
 
     this.isDragging = true;
     log("Input", `dragstart on ${gameObject.cardData?.id}`);
 
+    // Mark dragged before clearing hover so hover-out skips return tweens on this card.
+    gameObject.isBeingDragged = true;
+    this.scene.tweens.killTweensOf(gameObject);
     this.previewManager.hide();
     this.scene.events.emit("ui:clear-hover");
     this.animationManager.stopHandHoverAnimation(gameObject);
@@ -168,7 +235,6 @@ export class DragDropHandler {
     gameObject.dragTargetY = gameObject.y;
 
     this.currentDragTarget = null;
-    gameObject.isBeingDragged = true;
     gameObject.startGlow();
     this.scene.children.bringToTop(gameObject);
   }
@@ -322,7 +388,7 @@ export class DragDropHandler {
     this.previewManager.hide();
     this.scene.events.emit("ui:clear-hover");
 
-    if (gameObject.scene && !gameObject.getData("is_snapping_back")) {
+    if (gameObject.scene && !gameObject.getData(CARD_DRAG_CONFIG.DATA_KEYS.IS_SNAPPING_BACK)) {
       const startDepth =
         gameObject.getData("start_depth") ??
         (gameObject.currentZone === ZONES.HAND ? 100 : 0);
@@ -330,6 +396,7 @@ export class DragDropHandler {
     }
 
     gameObject.isBeingDragged = false;
+    this.animationManager.stopHandHoverAnimation(gameObject);
     gameObject.resetDragEffects();
     gameObject.setTransparent(false);
     gameObject.stopGlow();
@@ -416,7 +483,7 @@ export class DragDropHandler {
         `[DROP] Attaching card ${gameObject.cardData.id} to ${attachTarget.cardData.id}`,
       );
       gameObject.setData("drop_action_taken", true);
-      this.pendingDroppedCards.set(gameObject.cardData.id, gameObject);
+      this.markPendingServerDrop(gameObject);
       attachTarget.playAttachAnimation();
 
       this.networkManager.sendMoveCard({
@@ -520,9 +587,7 @@ export class DragDropHandler {
       );
 
       if (isFieldMove && staticData && staticData.sides && staticData.sides.length > 1) {
-        log("Input", `[MOVE] Dual Card detected! Showing TypeSelectionOverlay...`);
-        gameObject.setData("drop_action_taken", true);
-        gameObject.setData("waiting_for_overlay", true);
+        log("Input", `[MOVE] Dual Card detected! Evaluating TypeSelectionOverlay options...`);
 
         // Build options based on card sides without duplicates
         const options: TypeSelectionOption[] = [];
@@ -569,7 +634,7 @@ export class DragDropHandler {
         if (options.length > 1) {
           log("Input", `[MOVE] Dual Card detected! Showing TypeSelectionOverlay...`);
           gameObject.setData("drop_action_taken", true);
-          gameObject.setData("waiting_for_overlay", true);
+          gameObject.setData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_OVERLAY, true);
 
           const overlay = new TypeSelectionOverlay(
             this.scene,
@@ -578,17 +643,17 @@ export class DragDropHandler {
             options,
             (selectedOption: TypeSelectionOption) => {
               log("Input", `[MOVE] Dual Card option selected:`, selectedOption);
-              gameObject.setData("waiting_for_overlay", false);
+              gameObject.setData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_OVERLAY, false);
               
               message.inGameType = selectedOption.inGameType;
               message.inGameAlignment = selectedOption.inGameAlignment;
               
-              this.pendingDroppedCards.set(gameObject.cardData.id, gameObject);
+              this.markPendingServerDrop(gameObject);
               this.networkManager.sendMoveCard(message);
             },
             () => {
               log("Input", `[MOVE] Dual Card selection cancelled.`);
-              gameObject.setData("waiting_for_overlay", false);
+              gameObject.setData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_OVERLAY, false);
               this.snapBack(gameObject);
             }
           );
@@ -607,7 +672,7 @@ export class DragDropHandler {
         message,
       );
       gameObject.setData("drop_action_taken", true);
-      this.pendingDroppedCards.set(gameObject.cardData.id, gameObject);
+      this.markPendingServerDrop(gameObject);
       this.networkManager.sendMoveCard(message);
     }
   }

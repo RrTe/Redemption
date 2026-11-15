@@ -169,6 +169,8 @@ export class InteractionHandler {
     pointer: Phaser.Input.Pointer,
     gameObject: Phaser.GameObjects.GameObject,
   ) {
+    // Prevent drag inertia from triggering hover-out return tweens while the card lags behind the cursor.
+    if (this.dragDropHandler.isDragging) return;
     if (!(gameObject instanceof CardUI)) return;
     if (ViewportManager.isTouchPrimary() || pointer.wasTouch) return; // ✨ Mobile: Ignore hover out
     this.cardInteractionHandler.handleHoverOut(gameObject);

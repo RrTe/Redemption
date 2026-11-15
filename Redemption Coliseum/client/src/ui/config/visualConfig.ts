@@ -40,6 +40,16 @@ export const INTERACTION_CONFIG = {
   TAP_MOVE_THRESHOLD_PX: 15,
 };
 
+export const CARD_DRAG_CONFIG = {
+  PENDING_DROP_TIMEOUT_MS: 2000,
+  DATA_KEYS: {
+    WAITING_FOR_SERVER_DROP: "waiting_for_server_drop",
+    SERVER_DROP_TOKEN: "server_drop_token",
+    WAITING_FOR_OVERLAY: "waiting_for_overlay",
+    IS_SNAPPING_BACK: "is_snapping_back",
+  },
+} as const;
+
 export const EFFECT_CHRONICLE_CONFIG = {
   ASSET_KEY: "chronicle_icon",
   ASSET_PATH: "assets/ui/icons/chronicle_icon_compressed.png",

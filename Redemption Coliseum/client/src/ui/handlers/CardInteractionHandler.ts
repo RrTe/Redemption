@@ -9,7 +9,7 @@ import { type MenuFactory } from "../factories/MenuFactory.js";
 import { RadialMenu } from "../components/RadialMenu.js";
 import { ViewportManager } from "../managers/ViewportManager.js";
 import { log } from "../../utils/logger.js";
-import { INTERACTION_CONFIG } from "../config/visualConfig.js";
+import { CARD_DRAG_CONFIG, INTERACTION_CONFIG } from "../config/visualConfig.js";
 
 /**
  * Handles interactions specific to individual cards (Radial Menu, Flipping, Face-down).
@@ -168,8 +168,17 @@ export class CardInteractionHandler {
     );
   }
 
+  private isCardHoverBlocked(card: CardUI): boolean {
+    return Boolean(
+      card.isBeingDragged ||
+        card.getData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_OVERLAY) ||
+        card.getData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_SERVER_DROP) ||
+        card.getData(CARD_DRAG_CONFIG.DATA_KEYS.IS_SNAPPING_BACK),
+    );
+  }
+
   public handleHoverIn(card: CardUI) {
-    if (card.getData("waiting_for_overlay")) return;
+    if (this.isCardHoverBlocked(card)) return;
 
     if (this.currentHoveredCard === card) {
       return;
@@ -205,7 +214,13 @@ export class CardInteractionHandler {
    * Cleans up visual hover effects.
    */
   public handleHoverOut(card: CardUI) {
-    if (card.getData("waiting_for_overlay")) return;
+    if (this.isCardHoverBlocked(card)) {
+      if (this.currentHoveredCard === card) {
+        this.currentHoveredCard = null;
+        this.previewManager.hide(card);
+      }
+      return;
+    }
 
     const isMyHandCard =
       card.currentZone === ZONES.HAND &&

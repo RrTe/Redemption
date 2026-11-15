@@ -10,6 +10,7 @@ import { log, DEBUG } from "../../utils/logger";
 import { HandRenderer } from "./HandRenderer"; // ✨ Liegt jetzt im selben Ordner
 import { FieldRenderer } from "./FieldRenderer"; // ✨ NEU
 import { PileRenderer } from "./PileRenderer"; // ✨ NEU
+import { CARD_DRAG_CONFIG } from "../config/visualConfig.js";
 
 /**
  * ✨ REFACTORING: Verwaltet das Rendern (Erstellen, Positionieren, Aktualisieren)
@@ -321,7 +322,10 @@ export class CardRenderer {
       if (oldZone !== newZone) {
         this.animationManager.stopActiveTween(cardId);
         this.animationManager.stopHandHoverAnimation(cardUI);
-        cardUI.setData("waiting_for_overlay", false);
+        this.scene.tweens.killTweensOf(cardUI);
+        cardUI.setData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_OVERLAY, false);
+        cardUI.setData(CARD_DRAG_CONFIG.DATA_KEYS.IS_SNAPPING_BACK, false);
+        this.clearCardDropWaitFlags(cardUI);
         cardUI.setLockedVisibility(false);
         cardUI.isBeingDragged = false;
       }
@@ -340,6 +344,11 @@ export class CardRenderer {
       // ✨ FIX: Wir müssen die cardData jetzt schon aktualisieren, damit 
       // sekundäre Effekte (wie SymbolZoom) Zugriff auf das aktuelle inGameType haben!
       const hasMoved = cardData.lastMoved > cardUI.cardData.lastMoved;
+      const attachedToChanged = cardData.attachedTo !== cardUI.cardData.attachedTo;
+      if (hasMoved || attachedToChanged) {
+        // Clears wait state for same-zone moves such as attaching within Territory.
+        this.clearCardDropWaitFlags(cardUI);
+      }
       cardUI.cardData = cardData;
 
       // ✨ DEBUG: Logge die Entscheidungsgrundlage für die Play-Animation
@@ -405,7 +414,14 @@ export class CardRenderer {
     // 1. Sie nicht am Ziel ist
     // 2. KEINE Animation läuft (frische Prüfung!)
     // 3. Sie NICHT gerade vom User gezogen wird (oder auf Server-Drop-Bestätigung wartet)
-    if (!isAtTarget && !isAnimating && !cardUI.isBeingDragged && !cardUI.getData("waiting_for_overlay")) {
+    if (
+      !isAtTarget &&
+      !isAnimating &&
+      !cardUI.isBeingDragged &&
+      !cardUI.getData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_OVERLAY) &&
+      !cardUI.getData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_SERVER_DROP) &&
+      !cardUI.getData(CARD_DRAG_CONFIG.DATA_KEYS.IS_SNAPPING_BACK)
+    ) {
       // ✨ NEU: Smooth transition for cards shifting within the same play area or revealed opponent Star cards
       if (
         oldZone === newZone &&
@@ -599,6 +615,7 @@ export class CardRenderer {
         const cardUI = this.cardUIs.get(cardId);
         this.cardUIs.delete(cardId);
         if (!cardUI) continue;
+        this.clearCardDropWaitFlags(cardUI);
 
         const pileTarget = player
           ? this.resolveConcealedPileTarget(cardId, player, opponent)
@@ -606,6 +623,8 @@ export class CardRenderer {
 
         if (pileTarget && cardUI.scene) {
           this.animationManager.stopActiveTween(cardId);
+          this.animationManager.stopHandHoverAnimation(cardUI);
+          this.scene.tweens.killTweensOf(cardUI);
           cardUI.disableInteractive();
           this.scene.children.bringToTop(cardUI);
           this.scene.tweens.add({
@@ -627,6 +646,16 @@ export class CardRenderer {
         }
       }
     }
+  }
+
+  /**
+   * Clears pending server-drop state flags after the card is reconciled by state updates.
+   *
+   * @param {CardUI} cardUI The card instance to clear.
+   */
+  private clearCardDropWaitFlags(cardUI: CardUI): void {
+    cardUI.setData(CARD_DRAG_CONFIG.DATA_KEYS.WAITING_FOR_SERVER_DROP, false);
+    cardUI.setData(CARD_DRAG_CONFIG.DATA_KEYS.SERVER_DROP_TOKEN, null);
   }
 
   public getCardUI(cardId: string): CardUI | undefined {
