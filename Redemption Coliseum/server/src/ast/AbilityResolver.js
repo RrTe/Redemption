@@ -3,7 +3,8 @@ const { AbilityLookup } = require("./AbilityLookup");
 const { ConditionEvaluator } = require("./ConditionEvaluator");
 const { AstEffectRunner } = require("./AstEffectRunner");
 const { TargetSelectionService } = require("./TargetSelectionService");
-const { AST_MESSAGES, AST_ACTIONS } = require("../../../shared/astConstants");
+const { parseTargetCount } = require("./TargetCountResolver");
+const { AST_MESSAGES, AST_ACTIONS, AST_SELECTION_MODES } = require("../../../shared/astConstants");
 const { ActionType } = require("../../../shared/actions");
 const { ZONES } = require("../../../shared/zones");
 const { formatCardLink } = require("../utils/gameLogFormatter");
@@ -34,9 +35,9 @@ class AbilityResolver {
 
     const card = this.room?.cardLookup?.get(item.cardId);
     const fallbackBand = card ? AbilityResolver.getFallbackBandAbility(card) : null;
-    if (!card || (!card.templateId && !fallbackBand)) {
+    if (!card) {
       logger.info(
-        `[AbilityResolver] Card not found or templateId missing for cardId '${item.cardId}'. Triggering fallback.`
+        `[AbilityResolver] Card not found for cardId '${item.cardId}'. Triggering fallback.`
       );
       return { handled: false, reason: "CARD_OR_TEMPLATE_NOT_FOUND" };
     }
@@ -74,7 +75,10 @@ class AbilityResolver {
 
       if (abilities.length > 0) {
         // Choice Group support: prompt player to select between multiple effects (e.g. "Choose One")
-        const choiceGroup = abilities[0]?.choice_group;
+        const matchedAbility = item.abilityId
+          ? abilities.find((a) => a.ability_id === item.abilityId)
+          : abilities.find((a) => Boolean(a?.choice_group));
+        const choiceGroup = matchedAbility?.choice_group;
         const choiceAbilities = choiceGroup
           ? abilities.filter((a) => a.choice_group === choiceGroup)
           : [];
@@ -203,8 +207,7 @@ class AbilityResolver {
       item.actionType === ActionType?.ACTIVATE_STAR_ABILITY ||
       Boolean(item.isDeclared) ||
       Boolean(options.isDeclared) ||
-      Boolean(card?.IsStarCard) ||
-      Boolean(card?.Class && card.Class.includes("Star"));
+      Boolean(targetAbility?.is_star);
 
     const isAlreadyAccepted =
       Boolean(item.isConfirmed || item.accepted || item.isDeclared || options.accepted === true || options.isDeclared);
@@ -370,12 +373,7 @@ class AbilityResolver {
         const isBandAction =
           currentEffect.action === AST_ACTIONS.BAND ||
           currentEffect.action === AST_ACTIONS.ADD_TO_BATTLE;
-        const targetCountDef = currentEffect.target?.count;
-        const isOriginalSingleTarget =
-          !targetCountDef ||
-          targetCountDef.fixed_value === 1 ||
-          (targetCountDef.max_value === 1 && targetCountDef.min_value !== 0) ||
-          (typeof targetCountDef === "number" && targetCountDef === 1);
+        const { isSingleTarget: isOriginalSingleTarget } = parseTargetCount(currentEffect.target);
 
         const isAutoBandSingleChoice =
           isBandAction &&
@@ -760,16 +758,21 @@ class AbilityResolver {
       return `Band ${prep} ${target.card_titles.join(" or ")}`;
     }
 
-    const countObj = target.count || {};
-    const maxVal = countObj.max_value ?? countObj.fixed_value ?? 1;
-    const minVal = countObj.min_value ?? countObj.fixed_value ?? 1;
-    const isPlural = maxVal > 1;
+    const {
+      maxCount: maxVal,
+      minCount: minVal,
+      fixedValue,
+      isAll,
+      isPlural,
+    } = parseTargetCount(target);
 
     let countPrefix = "a";
     if (isPlural) {
-      if (minVal === 0) {
+      if (isAll) {
+        countPrefix = "all";
+      } else if (minVal === 0) {
         countPrefix = `up to ${maxVal}`;
-      } else if (countObj.fixed_value > 1 || minVal === maxVal) {
+      } else if (fixedValue > 1 || minVal === maxVal) {
         countPrefix = `${maxVal}`;
       } else {
         countPrefix = `${minVal}-${maxVal}`;
@@ -849,6 +852,9 @@ class AbilityResolver {
    * @returns {string} Concise target phrase.
    */
   _formatTargetPhrase(target = {}, { isBand = false } = {}) {
+    if (!isBand && target?.selection_mode === AST_SELECTION_MODES.AUTOMATIC_SELF) {
+      return "this card";
+    }
     if (isBand && Array.isArray(target.card_titles) && target.card_titles.length > 0) {
       return target.card_titles.join(" or ");
     }
@@ -864,9 +870,40 @@ class AbilityResolver {
     }
 
     const iden = quals.idents.length > 0 ? quals.idents[0].replace(/_/g, " ").toLowerCase() : "";
-    const targetType = iden || classStr || rawType;
+    const ADJECTIVE_IDENT_REGEX = /^(?:lone|blocked|unblocked|activated|captured|face[- ]?down|opposing|alone)$/;
+    const baseNoun = classStr || rawType;
+    const targetType = iden
+      ? (ADJECTIVE_IDENT_REGEX.test(iden) ? `${iden} ${baseNoun}` : iden)
+      : baseNoun;
     const alignStr = target.alignment ? `${target.alignment} ` : "";
     return `${alignStr}${quals.genericStr}${quals.brigadeStr}${quals.testStr}${quals.refStr}${quals.genderStr}${quals.humanStr}${targetType}`.trim();
+  }
+
+  /**
+   * Formats a protection_filter object into a readable "from ..." clause.
+   *
+   * @private
+   * @param {object} [protectionFilter={}]
+   * @returns {string}
+   */
+  _formatProtectionClause(protectionFilter = {}) {
+    if (!protectionFilter || typeof protectionFilter !== "object") return "";
+    const parts = [];
+    if (protectionFilter.from_harm) {
+      parts.push("harm");
+    }
+    if (Array.isArray(protectionFilter.actions) && protectionFilter.actions.length > 0) {
+      parts.push(protectionFilter.actions.map((a) => String(a).replace(/_/g, " ")).join("/"));
+    }
+    if (Array.isArray(protectionFilter.card_sources) && protectionFilter.card_sources.length > 0) {
+      const sourceLabels = protectionFilter.card_sources
+        .map((src) => this._formatTargetPhrase(src))
+        .filter(Boolean);
+      if (sourceLabels.length > 0) {
+        parts.push(sourceLabels.join(" or "));
+      }
+    }
+    return parts.length > 0 ? `from ${parts.join(", ")}` : "";
   }
 
   /**
@@ -883,10 +920,7 @@ class AbilityResolver {
     if (!effect) {
       return `Activate the optional ability of ${cardName}?`;
     }
-    let count = effect.count ?? effect.target?.count ?? 1;
-    if (typeof count === "object" && count !== null) {
-      count = count.fixed_value ?? 1;
-    }
+    let { displayCount: count } = parseTargetCount(effect.target, effect.count);
     switch (effect.action) {
       case AST_ACTIONS.DRAW:
         return `Draw ${count} card${count > 1 ? "s" : ""}?`;
@@ -919,6 +953,13 @@ class AbilityResolver {
       case AST_ACTIONS.RETURN_TO_HAND: {
         const phrase = this._formatTargetPhrase(effect.target);
         return `Return ${phrase} to hand?`;
+      }
+      case AST_ACTIONS.PROTECT:
+      case AST_ACTIONS.IMMUNE: {
+        const phrase = this._formatTargetPhrase(effect.target);
+        const clause = this._formatProtectionClause(effect.protection_filter);
+        const verb = effect.action === AST_ACTIONS.IMMUNE ? "Grant immunity to" : "Protect";
+        return `${verb} ${phrase}${clause ? ` ${clause}` : ""}?`;
       }
       default:
         return `Activate ${cardName}'s optional ability?`;
@@ -968,6 +1009,12 @@ class AbilityResolver {
       case AST_ACTIONS.BAND:
       case AST_ACTIONS.ADD_TO_BATTLE:
         return this._formatBandActionText(target, { isQuestion: false });
+      case AST_ACTIONS.PROTECT:
+      case AST_ACTIONS.IMMUNE: {
+        const clause = this._formatProtectionClause(effect.protection_filter);
+        const verb = action === AST_ACTIONS.IMMUNE ? "Grant immunity to" : "Protect";
+        return `${verb} ${phrase}${clause ? ` ${clause}` : ""}`;
+      }
       default: {
         const actLabel = action.charAt(0).toUpperCase() + action.slice(1);
         return `${actLabel} ${phrase}`;

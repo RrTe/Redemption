@@ -18,6 +18,11 @@ export const AST_ACTIONS = /** @type {const} */ ({
   IMMUNE: "immune",
   PROTECT: "protect",
   SET_IMMUNITY: "set_immunity",
+  PARALYZE: "paralyze",
+  RELEASE: "release",
+  WITHDRAW: "withdraw",
+  CHOOSE_OPPONENT: "choose opponent",
+  PRESENT: "present",
   BOUNCE: "bounce",
   RETURN_TO_HAND: "return to hand",
   TOPDECK: "topdeck",
@@ -84,6 +89,7 @@ export const AST_ACTIVATION_MODES = /** @type {const} */ ({
   IMMEDIATE: "immediate",
   TRIGGERED: "triggered",
   MANUALLY_TRIGGERED: "manually_triggered",
+  STATIC: "static",
 });
 
 /**

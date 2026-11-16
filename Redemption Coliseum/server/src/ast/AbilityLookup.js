@@ -12,6 +12,7 @@ const PROTECTION_FLAG_BY_MODIFIER = {
   cannot_be_negated: "is_negatable",
   cannot_be_interrupted: "is_interruptible",
   cannot_be_prevented: "is_preventable",
+  cannot_be_ignored: "is_ignorable",
 };
 
 /**

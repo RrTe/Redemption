@@ -2,6 +2,7 @@
 const { ChronicleItem } = require("../state/EffectChronicleState");
 const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants");
 const { ActionType } = require("../../../shared/actions");
+const { DRAW_STEPS } = require("../../../shared/phases");
 const { ChronicleHistoryService } = require("./ChronicleHistoryService");
 const GameLogService = require("./GameLogService");
 const { formatCardLink } = require("../utils/gameLogFormatter");
@@ -260,6 +261,42 @@ class EffectChronicleService {
 
   static hasPendingItems(room) {
     return Boolean(room.state.effectChronicle && room.state.effectChronicle.items.length > 0);
+  }
+
+  /**
+   * Advances the Effect Chronicle after an item finishes or is resolved.
+   * Preserves manual fast-track notes during Draw Sequences while auto-executing
+   * subsequent confirmed/non-optional or tabletop items in combat and normal play.
+   *
+   * @param {import('../rooms/GameRoom').GameRoom} room
+   * @param {object} [options={}]
+   */
+  static advanceChronicle(room, options = {}) {
+    const chronicle = room?.state?.effectChronicle;
+    if (!chronicle) return;
+
+    if (chronicle.items.length === 0) {
+      this.finishChronicle(room);
+      return;
+    }
+
+    const nextItem = chronicle.items[0];
+    chronicle.priorityPlayerId = nextItem.controllerId;
+    const nextClient =
+      room.clients?.find((c) => c.sessionId === nextItem.controllerId) ||
+      { sessionId: nextItem.controllerId };
+
+    const isDrawSequenceActive = Boolean(
+      room._drawSequencePlan ||
+      (room.state?.drawStep && room.state.drawStep !== DRAW_STEPS.NONE) ||
+      nextItem.actionType === ActionType.ACTIVATE_STAR_ABILITY
+    );
+
+    this.executeItem(room, nextClient, nextItem.id, {
+      ...options,
+      autoExecute: options.autoExecute !== undefined ? options.autoExecute : !isDrawSequenceActive,
+      autoExecuteSupported: true,
+    });
   }
 }
 

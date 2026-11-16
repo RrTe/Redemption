@@ -129,10 +129,12 @@ export class AbilityPromptManager {
         Name: msg.cardTitle,
       };
 
-      const hasSingleChoice = Boolean(msg.choices && msg.choices.length === 1);
-      const dialogMessage = hasSingleChoice
-        ? `Choose an effect for ${msg.cardTitle || "this card"}:`
-        : msg.promptText || `Activate the optional ability of ${msg.cardTitle}?`;
+      const hasMultipleChoices = Boolean(msg.choices && msg.choices.length > 1);
+      const dialogMessage =
+        msg.promptText ||
+        (hasMultipleChoices
+          ? `Choose an effect for ${msg.cardTitle || "this card"}:`
+          : `Activate the optional ability of ${msg.cardTitle}?`);
 
       const dialogData: ConfirmationDialogData = {
         title: msg.cardTitle || "Optional Ability",

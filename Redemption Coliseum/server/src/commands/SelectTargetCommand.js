@@ -141,14 +141,7 @@ class SelectTargetCommand extends BaseCommand {
       ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
       chronicle.items.splice(index, 1);
       EffectChronicleService._reindexOrders(chronicle);
-      if (chronicle.items.length === 0) {
-        EffectChronicleService.finishChronicle(this.room);
-      } else {
-        const nextItem = chronicle.items[0];
-        chronicle.priorityPlayerId = nextItem.controllerId;
-        const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
-        EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, { autoExecuteSupported: true });
-      }
+      EffectChronicleService.advanceChronicle(this.room);
 
       this.executedItem = item;
       this.astResult = astResult;

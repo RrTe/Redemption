@@ -2,6 +2,7 @@
 const { ZONES } = require("../../../../shared/zones");
 const { AST_ACTIONS, AST_MESSAGES, AST_SELECTION_MODES } = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
+const { parseTargetCount } = require("../TargetCountResolver");
 const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
 const { BattleService } = require("../../services/BattleService");
 const { formatCardLink } = require("../../utils/gameLogFormatter");
@@ -230,9 +231,10 @@ class ImmunityHandler {
     );
 
     const candidates = [];
-    const maxCount = targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_ALL
+    const parsedCount = parseTargetCount(targetDef);
+    const maxCount = parsedCount.isAll
       ? eligible.eligibleCardIds.length
-      : (typeof targetDef.count?.fixed_value === "number" ? targetDef.count.fixed_value : 1);
+      : parsedCount.maxCount;
 
     for (const cardId of eligible.eligibleCardIds) {
       const c = room.cardLookup?.get(cardId);

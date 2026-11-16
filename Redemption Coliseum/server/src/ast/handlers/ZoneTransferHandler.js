@@ -7,6 +7,7 @@ const {
   AST_SELECTION_MODES,
 } = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
+const { parseTargetCount } = require("../TargetCountResolver");
 const { BattleCharacterClassifier } = require("../../services/BattleCharacterClassifier");
 const { SpecialInitiativeService } = require("../../services/SpecialInitiativeService");
 const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
@@ -44,10 +45,7 @@ class ZoneTransferHandler {
     const action = effect?.action || AST_ACTIONS.BOUNCE;
     const { toZone, position } = this._determineDestination(effect, action);
     const targetDef = effect?.target || {};
-    const isAll = targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_ALL || targetDef.all === true;
-    const count = isAll
-      ? Infinity
-      : (typeof targetDef.count?.fixed_value === "number" ? targetDef.count.fixed_value : 1);
+    const { isAll, count } = parseTargetCount(targetDef);
 
     const sourceCard = item?.cardId ? room.cardLookup?.get(item.cardId) : null;
     const targets = this._resolveTargets(

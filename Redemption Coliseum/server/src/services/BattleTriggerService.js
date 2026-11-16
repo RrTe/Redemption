@@ -1,6 +1,7 @@
 // server/src/services/BattleTriggerService.js
 const { ZONES } = require("../../../shared/zones");
 const { ActionType } = require("../../../shared/actions");
+const { AST_ACTIVATION_MODES } = require("../../../shared/astConstants");
 const { AbilityLookup } = require("../ast/AbilityLookup");
 const { AstEffectRunner } = require("../ast/AstEffectRunner");
 const { ConditionEvaluator } = require("../ast/ConditionEvaluator");
@@ -88,10 +89,7 @@ class BattleTriggerService {
         `[BattleTriggerService] Enqueueing AST '${card.Name}' (${astAbility.ability_id}) for '${actionType}'.`
       );
 
-      const hasMayKeyword = /\bmay\b/i.test(card.SpecialAbility || card.specialAbility || "");
-      const isSupported = this._isSupportedAstAbility(astAbility);
-      const isChoice = Boolean(astAbility.choice_group);
-      const isOptional = Boolean(astAbility.is_optional || hasMayKeyword || isChoice || !isSupported);
+      const { isSupported, isChoice, isOptional } = this._resolveAbilityFlags(card, astAbility);
 
       EffectChronicleService.enqueueCards(
         room,
@@ -243,10 +241,7 @@ class BattleTriggerService {
         `[BattleTriggerService] Enqueueing AST Dominant '${card.Name}' (${astAbility.ability_id}) for '${actionType}'.`
       );
 
-      const hasMayKeyword = /\bmay\b/i.test(card.SpecialAbility || card.specialAbility || "");
-      const isSupported = this._isSupportedAstAbility(astAbility);
-      const isChoice = Boolean(astAbility.choice_group);
-      const isOptional = Boolean(astAbility.is_optional || hasMayKeyword || isChoice || !isSupported);
+      const { isSupported, isChoice, isOptional } = this._resolveAbilityFlags(card, astAbility);
 
       EffectChronicleService.enqueueCards(
         room,
@@ -295,6 +290,29 @@ class BattleTriggerService {
     }
 
     return null;
+  }
+
+  /**
+   * Resolves ability support, choice-group membership, and optionality.
+   * Excludes negative "may not" prohibitions from triggering the "may" optionality heuristic.
+   * @param {Object} card
+   * @param {Object} astAbility
+   * @returns {{ isSupported: boolean, isChoice: boolean, isOptional: boolean }}
+   */
+  static _resolveAbilityFlags(card, astAbility) {
+    const specialAbilityText = card.SpecialAbility || card.specialAbility || "";
+    const hasMayKeyword = /\bmay\b(?!\s+not\b)/i.test(specialAbilityText);
+    const isSupported = this._isSupportedAstAbility(astAbility);
+    const isChoice = Boolean(astAbility.choice_group);
+    const isStaticMandatory =
+      astAbility.activation_mode === AST_ACTIVATION_MODES.STATIC &&
+      astAbility.is_optional !== true &&
+      !isChoice &&
+      isSupported;
+    const isOptional = isStaticMandatory
+      ? false
+      : Boolean(astAbility.is_optional || hasMayKeyword || isChoice || !isSupported);
+    return { isSupported, isChoice, isOptional };
   }
 
   static isHero(card) {

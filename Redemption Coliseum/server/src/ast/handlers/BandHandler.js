@@ -3,6 +3,7 @@ const { moveCard } = require("../../services/cardService");
 const { ZONES } = require("../../../../shared/zones");
 const { AST_ACTIONS, AST_MESSAGES, AST_SELECTION_MODES } = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
+const { parseTargetCount } = require("../TargetCountResolver");
 const { BattleCharacterClassifier } = require("../../services/BattleCharacterClassifier");
 const { BattleService } = require("../../services/BattleService");
 const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
@@ -71,9 +72,7 @@ class BandHandler {
       };
     }
 
-    const isAll =
-      targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_ALL ||
-      targetDef.all === true;
+    const { isAll } = parseTargetCount(targetDef);
     const targetIds = explicitIds.length > 0
       ? explicitIds
       : (isAll ? eligible.eligibleCardIds : (eligible.eligibleCardIds[0] ? [eligible.eligibleCardIds[0]] : []));
@@ -250,17 +249,12 @@ class BandHandler {
     }
 
     const isManual = targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_CONTROLLER;
-    const isAll =
-      targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_ALL ||
-      targetDef.all === true;
-    const hasCustomMin = targetDef.count && typeof targetDef.count.min_value === "number";
-    const hasCustomMax = targetDef.count && typeof targetDef.count.max_value === "number";
-    const count = typeof targetDef.count === "number"
-      ? targetDef.count
-      : (targetDef.count?.fixed_value || 1);
+    const { isAll, hasCustomMin, hasCustomMax, count } = parseTargetCount(targetDef);
 
     const minTargets = isAll
-      ? eligibleCardIds.length
+      ? (isManual
+        ? (hasCustomMin ? Math.min(targetDef.count.min_value, eligibleCardIds.length) : Math.min(1, eligibleCardIds.length))
+        : eligibleCardIds.length)
       : (hasCustomMin ? Math.min(targetDef.count.min_value, eligibleCardIds.length) : Math.min(count, Math.max(1, eligibleCardIds.length)));
     const maxTargets = isAll
       ? Math.max(1, eligibleCardIds.length)

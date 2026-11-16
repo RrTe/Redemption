@@ -12,6 +12,7 @@ const { MovementRules } = require("../../../shared/rules/MovementRules");
 const { StatFilterEvaluator } = require("../../../shared/rules/StatFilterEvaluator");
 const { GenderEvaluator } = require("../../../shared/rules/GenderEvaluator");
 const { SideAttributeEvaluator, CANONICAL_CLASSES } = require("../../../shared/rules/SideAttributeEvaluator");
+const { parseTargetCount } = require("./TargetCountResolver");
 const { matchesCardType, matchesTargetType, resolveActiveSideIndex } = require("../../../shared/cardHierarchy");
 
 const RESERVE_REMOVAL_ACTIONS = [
@@ -55,14 +56,7 @@ class TargetSelectionService {
     const scope = targetDef.scope || AST_SCOPES.IN_PLAY;
     const targetType = targetDef.target_type || "";
     const playersToScan = this._getPlayersToScan(room, actingPlayer, targetDef.zone_owner);
-    const isAll = targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_ALL || targetDef.all === true;
-    const hasCustomMin = typeof targetDef.count?.min_value === "number";
-    const hasCustomMax = typeof targetDef.count?.max_value === "number";
-    const count = isAll
-      ? Infinity
-      : (typeof targetDef.count?.fixed_value === "number"
-        ? targetDef.count.fixed_value
-        : (hasCustomMax ? targetDef.count.max_value : 1));
+    const { isAll, hasCustomMin, hasCustomMax, count } = parseTargetCount(targetDef);
     const isManualOpponent = targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_OPPONENT;
     const isManual =
       targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_CONTROLLER || isManualOpponent;
@@ -225,7 +219,9 @@ class TargetSelectionService {
     const isOptionalUpTo = hasCustomMin && targetDef.count.min_value === 0;
     const minTargets = hasCustomMin
       ? Math.min(targetDef.count.min_value, eligibleCardIds.length)
-      : (isAll ? eligibleCardIds.length : Math.min(count, eligibleCardIds.length));
+      : (isAll
+        ? (isManual ? Math.min(1, eligibleCardIds.length) : eligibleCardIds.length)
+        : Math.min(count, eligibleCardIds.length));
     const maxTargets = hasCustomMax
       ? Math.min(targetDef.count.max_value, eligibleCardIds.length)
       : (isAll ? eligibleCardIds.length : count);
@@ -233,7 +229,7 @@ class TargetSelectionService {
 
     const defaultPrompt = isOptionalUpTo
       ? `Select up to ${targetDef.count.max_value} card(s) to target`
-      : `Select ${count} card(s) to target`;
+      : (isAll ? "Select card(s) to target" : `Select ${count} card(s) to target`);
 
     const normScopes = this._normalizeScopes(effectiveScope);
     const PILE_SCOPES = [
@@ -318,6 +314,80 @@ class TargetSelectionService {
    * @param {object} [context={}] Additional context.
    * @returns {boolean} True if card qualifies.
    */
+  /**
+   * Evaluates a TargetSelector `testament` ("OT" / "NT") constraint against a card.
+   *
+   * @param {object} card Candidate card instance.
+   * @param {string} [reqTestament] Required testament token.
+   * @returns {boolean} True if testament filter passes or is unspecified.
+   */
+  static _matchesTestament(card, reqTestament) {
+    if (!reqTestament) return true;
+    const normalizedReq = String(reqTestament).trim().toUpperCase();
+    let cardTestament = card.Testament || "";
+    let ordirList = card.ORDIR;
+    if (!cardTestament && card.templateId) {
+      try {
+        const { CardRepository } = require("../../../shared/CardRepository");
+        const dbCard = CardRepository.getById(card.templateId) || CardRepository.get(card.templateId);
+        if (dbCard) {
+          cardTestament = dbCard.Testament || "";
+          if (!ordirList || ordirList.length === 0) ordirList = dbCard.ORDIR;
+        }
+      } catch (_e) { }
+    }
+    const cardTestStr = String(cardTestament).toUpperCase();
+    const matchesDirect = cardTestStr !== "UNKNOWN" && cardTestStr.includes(normalizedReq);
+    const ordirStr = Array.isArray(ordirList) ? ordirList.join(" ").toUpperCase() : "";
+    const matchesOrdir = ordirStr.includes(`${normalizedReq} CARD`) ||
+      ordirStr.includes(`${normalizedReq} CHARACTER`) ||
+      ordirStr.includes(`${normalizedReq} HERO`) ||
+      ordirStr.includes(`${normalizedReq} EVIL CHARACTER`) ||
+      ordirStr.includes(`${normalizedReq} ENHANCEMENT`) ||
+      new RegExp(`(^|[^a-zA-Z0-9])${normalizedReq}([^a-zA-Z0-9]|$)`, "i").test(ordirStr);
+    return matchesDirect || matchesOrdir;
+  }
+
+  /**
+   * Evaluates unambiguous typed constraints (`testament`, `gender`, `is_generic`, `classes`, `stat_filters`).
+   * Shared by the main filter path and the `target_card_ids` fast-path so noisy title/identifier
+   * metadata on resolved IDs is bypassed while typed runtime bounds remain enforced.
+   *
+   * @param {object} card Candidate card instance.
+   * @param {object} targetDef AST target definition.
+   * @param {object} [context={}] Filter context.
+   * @param {object} [options={}] Evaluation options.
+   * @returns {boolean} True if all specified typed constraints match.
+   */
+  static _matchesStructuredConstraints(card, targetDef, context = {}, { includeTestament = true } = {}) {
+    if (includeTestament && targetDef.testament) {
+      if (!this._matchesTestament(card, targetDef.testament)) {
+        return false;
+      }
+    }
+    if (targetDef.gender) {
+      if (!GenderEvaluator.matchesGender(card, targetDef.gender, { targetDef })) {
+        return false;
+      }
+    }
+    if (typeof targetDef.is_generic === "boolean") {
+      if (!SideAttributeEvaluator.matchesIsGeneric(card, targetDef.is_generic, { targetDef })) {
+        return false;
+      }
+    }
+    if (Array.isArray(targetDef.classes) && targetDef.classes.length > 0) {
+      if (!SideAttributeEvaluator.matchesClasses(card, targetDef.classes, { targetDef })) {
+        return false;
+      }
+    }
+    if (Array.isArray(targetDef.stat_filters) && targetDef.stat_filters.length > 0) {
+      if (!StatFilterEvaluator.matchesStatFilters(card, targetDef.stat_filters, context)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   static matchesFilter(card, targetDef = {}, context = {}) {
     if (!card) return false;
 
@@ -325,6 +395,9 @@ class TargetSelectionService {
     if (Array.isArray(targetDef.target_card_ids) && targetDef.target_card_ids.length > 0) {
       const cardId = String(card.templateId || card.id || "");
       if (!targetDef.target_card_ids.some((id) => String(id) === cardId)) {
+        return false;
+      }
+      if (!this._matchesStructuredConstraints(card, targetDef, context)) {
         return false;
       }
       // Protection check applies even to specifically targeted cards
@@ -347,32 +420,8 @@ class TargetSelectionService {
     }
 
     // 3. Check testament filter (Bucket 3: "OT" or "NT")
-    if (targetDef.testament) {
-      const reqTestament = String(targetDef.testament).trim().toUpperCase();
-      let cardTestament = card.Testament || "";
-      let ordirList = card.ORDIR;
-      if (!cardTestament && card.templateId) {
-        try {
-          const { CardRepository } = require("../../../shared/CardRepository");
-          const dbCard = CardRepository.getById(card.templateId) || CardRepository.get(card.templateId);
-          if (dbCard) {
-            cardTestament = dbCard.Testament || "";
-            if (!ordirList || ordirList.length === 0) ordirList = dbCard.ORDIR;
-          }
-        } catch (_e) { }
-      }
-      const cardTestStr = String(cardTestament).toUpperCase();
-      const matchesDirect = cardTestStr !== "UNKNOWN" && cardTestStr.includes(reqTestament);
-      const ordirStr = Array.isArray(ordirList) ? ordirList.join(" ").toUpperCase() : "";
-      const matchesOrdir = ordirStr.includes(`${reqTestament} CARD`) ||
-        ordirStr.includes(`${reqTestament} CHARACTER`) ||
-        ordirStr.includes(`${reqTestament} HERO`) ||
-        ordirStr.includes(`${reqTestament} EVIL CHARACTER`) ||
-        ordirStr.includes(`${reqTestament} ENHANCEMENT`) ||
-        new RegExp(`(^|[^a-zA-Z0-9])${reqTestament}([^a-zA-Z0-9]|$)`, "i").test(ordirStr);
-      if (!matchesDirect && !matchesOrdir) {
-        return false;
-      }
+    if (targetDef.testament && !this._matchesTestament(card, targetDef.testament)) {
+      return false;
     }
 
     // 4. Check references filter (Bucket 4: Biblical Book Citations)
@@ -584,19 +633,6 @@ class TargetSelectionService {
     }
 
     // 8b. Check structured gender filter (ORDIR 7.0.0)
-    if (targetDef.gender) {
-      if (!GenderEvaluator.matchesGender(card, targetDef.gender, { targetDef })) {
-        return false;
-      }
-    }
-
-    // 8c. Check structured generic/unique character filter
-    if (typeof targetDef.is_generic === "boolean") {
-      if (!SideAttributeEvaluator.matchesIsGeneric(card, targetDef.is_generic, { targetDef })) {
-        return false;
-      }
-    }
-
     // 8d. Check structured human/non-human filter (ORDIR 7.0.0)
     if (typeof targetDef.is_human === "boolean") {
       if (!SideAttributeEvaluator.matchesIsHuman(card, targetDef.is_human, { targetDef })) {
@@ -604,18 +640,9 @@ class TargetSelectionService {
       }
     }
 
-    // 8e. Check canonical card classes filter (Warrior, Weapon, Territory)
-    if (Array.isArray(targetDef.classes) && targetDef.classes.length > 0) {
-      if (!SideAttributeEvaluator.matchesClasses(card, targetDef.classes, { targetDef })) {
-        return false;
-      }
-    }
-
-    // 9. Check structured stat_filters (strength, toughness, both, either)
-    if (Array.isArray(targetDef.stat_filters) && targetDef.stat_filters.length > 0) {
-      if (!StatFilterEvaluator.matchesStatFilters(card, targetDef.stat_filters, context)) {
-        return false;
-      }
+    // 8b/8c/8e/9. Structured gender, is_generic, classes, and stat_filters constraints
+    if (!this._matchesStructuredConstraints(card, targetDef, context, { includeTestament: false })) {
+      return false;
     }
 
     // 10. Protection check: protected or immune cards cannot be targeted by harm

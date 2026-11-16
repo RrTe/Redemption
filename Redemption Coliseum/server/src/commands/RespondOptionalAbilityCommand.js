@@ -60,16 +60,7 @@ class RespondOptionalAbilityCommand extends BaseCommand {
     if (index === -1) {
       logger.warn(`[RespondOptionalAbilityCommand] Chronicle item '${itemId}' not found for client '${this.client.sessionId}'.`);
       if (chronicle.priorityPlayerId === this.client.sessionId) {
-        if (chronicle.items.length === 0) {
-          EffectChronicleService.finishChronicle(this.room);
-        } else {
-          const nextItem = chronicle.items[0];
-          chronicle.priorityPlayerId = nextItem.controllerId;
-          const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
-          EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, {
-            autoExecuteSupported: true,
-          });
-        }
+        EffectChronicleService.advanceChronicle(this.room);
       }
       return;
     }
@@ -127,14 +118,7 @@ class RespondOptionalAbilityCommand extends BaseCommand {
           ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
           chronicle.items.splice(index, 1);
           EffectChronicleService._reindexOrders(chronicle);
-          if (chronicle.items.length === 0) {
-            EffectChronicleService.finishChronicle(this.room);
-          } else {
-            const nextItem = chronicle.items[0];
-            chronicle.priorityPlayerId = nextItem.controllerId;
-            const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
-            EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, { autoExecuteSupported: true });
-          }
+          EffectChronicleService.advanceChronicle(this.room);
           return;
         }
 
@@ -153,14 +137,7 @@ class RespondOptionalAbilityCommand extends BaseCommand {
         ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
         chronicle.items.splice(index, 1);
         EffectChronicleService._reindexOrders(chronicle);
-        if (chronicle.items.length === 0) {
-          EffectChronicleService.finishChronicle(this.room);
-        } else {
-          const nextItem = chronicle.items[0];
-          chronicle.priorityPlayerId = nextItem.controllerId;
-          const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
-          EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, { autoExecuteSupported: true });
-        }
+        EffectChronicleService.advanceChronicle(this.room);
         return;
       }
 
@@ -181,17 +158,7 @@ class RespondOptionalAbilityCommand extends BaseCommand {
         ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.PASSED);
         chronicle.items.splice(index, 1);
         EffectChronicleService._reindexOrders(chronicle);
-
-        if (chronicle.items.length === 0) {
-          EffectChronicleService.finishChronicle(this.room);
-        } else {
-          const nextItem = chronicle.items[0];
-          chronicle.priorityPlayerId = nextItem.controllerId;
-          const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
-          EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, {
-            autoExecuteSupported: true,
-          });
-        }
+        EffectChronicleService.advanceChronicle(this.room);
         return;
       }
 
@@ -224,17 +191,7 @@ class RespondOptionalAbilityCommand extends BaseCommand {
       ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
       chronicle.items.splice(index, 1);
       EffectChronicleService._reindexOrders(chronicle);
-
-      if (chronicle.items.length === 0) {
-        EffectChronicleService.finishChronicle(this.room);
-      } else {
-        const nextItem = chronicle.items[0];
-        chronicle.priorityPlayerId = nextItem.controllerId;
-        const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
-        EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, {
-          autoExecuteSupported: true,
-        });
-      }
+      EffectChronicleService.advanceChronicle(this.room);
 
       this.executedItem = item;
       this.astResult = astResult;
@@ -243,16 +200,7 @@ class RespondOptionalAbilityCommand extends BaseCommand {
       logger.error(`[RespondOptionalAbilityCommand] Fatal error resolving chronicle item '${item.title}':`, err);
       chronicle.items.splice(index, 1);
       EffectChronicleService._reindexOrders(chronicle);
-      if (chronicle.items.length === 0) {
-        EffectChronicleService.finishChronicle(this.room);
-      } else {
-        const nextItem = chronicle.items[0];
-        chronicle.priorityPlayerId = nextItem.controllerId;
-        const nextClient = this.room.clients?.find((c) => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
-        EffectChronicleService.executeItem(this.room, nextClient, nextItem.id, {
-          autoExecuteSupported: true,
-        });
-      }
+      EffectChronicleService.advanceChronicle(this.room);
     }
   }
 

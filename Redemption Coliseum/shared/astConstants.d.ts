@@ -15,6 +15,11 @@ export declare const AST_ACTIONS: {
   readonly IMMUNE: "immune";
   readonly PROTECT: "protect";
   readonly SET_IMMUNITY: "set_immunity";
+  readonly PARALYZE: "paralyze";
+  readonly RELEASE: "release";
+  readonly WITHDRAW: "withdraw";
+  readonly CHOOSE_OPPONENT: "choose opponent";
+  readonly PRESENT: "present";
   readonly BOUNCE: "bounce";
   readonly RETURN_TO_HAND: "return to hand";
   readonly TOPDECK: "topdeck";
@@ -66,6 +71,7 @@ export declare const AST_ACTIVATION_MODES: {
   readonly IMMEDIATE: "immediate";
   readonly TRIGGERED: "triggered";
   readonly MANUALLY_TRIGGERED: "manually_triggered";
+  readonly STATIC: "static";
 };
 
 export declare const AST_ALIGNMENTS: {

@@ -380,19 +380,24 @@ describe("Typed Gender Attribute Integration (ORDIR 7.0.0 & AST)", () => {
   });
 
   describe("4. ProtectionService (Gender card_sources & Exception Clauses)", () => {
-    test("matchesSource blocks matching gender + 'both' and excludes genderless/opposite gender (Scarlet Line)", () => {
-      const scarletLineSourceDef = rawLogicMap["732467072"].sides.top.abilities[0].effects[0].protection_filter.card_sources[0];
-      const protectedHero = { id: "h1", controllerId: "p1", Alignment: "Good", isProtected: true, _protection: { card_sources: [scarletLineSourceDef] } };
+    test("matchesSource blocks matching gender + 'both' and excludes genderless/opposite gender (Beast from the Earth)", () => {
+      const beastSourceDef = rawLogicMap["1456858680"].sides.top.abilities[0].effects[0].protection_filter.card_sources[0];
+      const protectedEvil = { id: "e1", controllerId: "p1", Alignment: "Evil", isProtected: true, _protection: { card_sources: [beastSourceDef] } };
 
-      const maleEC = { id: "ec_m", controllerId: "p2", Type: "Evil Character", inGameType: "Evil Character", Alignment: "Evil", Gender: "male" };
-      const femaleEC = { id: "ec_f", controllerId: "p2", Type: "Evil Character", inGameType: "Evil Character", Alignment: "Evil", Gender: "female" };
-      const bothEC = { id: "ec_b", controllerId: "p2", Type: "Evil Character", inGameType: "Evil Character", Alignment: "Evil", Gender: "both" };
-      const genderlessEC = { id: "ec_g", controllerId: "p2", Type: "Evil Character", inGameType: "Evil Character", Alignment: "Evil", Gender: "genderless" };
+      const femaleHero = { id: "h_f", controllerId: "p2", Type: "Hero", inGameType: "Hero", Alignment: "Good", Gender: "female" };
+      const maleHero = { id: "h_m", controllerId: "p2", Type: "Hero", inGameType: "Hero", Alignment: "Good", Gender: "male" };
+      const bothHero = { id: "h_b", controllerId: "p2", Type: "Hero", inGameType: "Hero", Alignment: "Good", Gender: "both" };
+      const genderlessHero = { id: "h_g", controllerId: "p2", Type: "Hero", inGameType: "Hero", Alignment: "Good", Gender: "genderless" };
 
-      expect(ProtectionService.isProtected(protectedHero, maleEC, AST_ACTIONS.DISCARD)).toBe(true);
-      expect(ProtectionService.isProtected(protectedHero, bothEC, AST_ACTIONS.DISCARD)).toBe(true);
-      expect(ProtectionService.isProtected(protectedHero, femaleEC, AST_ACTIONS.DISCARD)).toBe(false);
-      expect(ProtectionService.isProtected(protectedHero, genderlessEC, AST_ACTIONS.DISCARD)).toBe(false);
+      expect(ProtectionService.isProtected(protectedEvil, femaleHero, AST_ACTIONS.DISCARD)).toBe(true);
+      expect(ProtectionService.isProtected(protectedEvil, bothHero, AST_ACTIONS.DISCARD)).toBe(true);
+      expect(ProtectionService.isProtected(protectedEvil, maleHero, AST_ACTIONS.DISCARD)).toBe(false);
+      expect(ProtectionService.isProtected(protectedEvil, genderlessHero, AST_ACTIONS.DISCARD)).toBe(false);
+
+      // REG v11.1.0 moved Scarlet Line's block-restriction rule from protect to static paralyze targeting male characters
+      const scarletLineEffect = rawLogicMap["732467072"].sides.top.abilities[0].effects[0];
+      expect(scarletLineEffect.action).toBe(AST_ACTIONS.PARALYZE);
+      expect(scarletLineEffect.target.gender).toBe(AST_GENDERS.MALE);
     });
 
     test("Lost Soul Jeremiah 7:18 (Female Only) blocks male/genderless Heroes while allowing female, both, and Son of God", () => {

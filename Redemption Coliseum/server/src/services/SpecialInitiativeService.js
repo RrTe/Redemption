@@ -218,16 +218,7 @@ class SpecialInitiativeService {
         ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
         chronicle.items.splice(index, 1);
         EffectChronicleService._reindexOrders(chronicle);
-        if (chronicle.items.length === 0) {
-          EffectChronicleService.finishChronicle(room);
-        } else {
-          const nextItem = chronicle.items[0];
-          chronicle.priorityPlayerId = nextItem.controllerId;
-          const nextClient = room.clients?.find((c) => c.sessionId === nextItem.controllerId) || {
-            sessionId: nextItem.controllerId,
-          };
-          EffectChronicleService.executeItem(room, nextClient, nextItem.id, { autoExecuteSupported: true });
-        }
+        EffectChronicleService.advanceChronicle(room);
       }
     }
 

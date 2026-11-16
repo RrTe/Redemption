@@ -2,6 +2,7 @@
 const { moveCard } = require("../../services/cardService");
 const { ZONES } = require("../../../../shared/zones");
 const { AST_ACTIONS } = require("../../../../shared/astConstants");
+const { parseTargetCount } = require("../TargetCountResolver");
 const logger = require("../../utils/logger");
 
 /**
@@ -30,10 +31,8 @@ class DrawHandler {
       };
     }
 
-    // Extract count from AST target definition (default to 1)
-    const count = typeof effect?.target?.count?.fixed_value === "number"
-      ? effect.target.count.fixed_value
-      : 1;
+    // Extract finite draw count from AST target definition (defaults to 1)
+    const count = parseTargetCount(effect?.target).finiteCount;
 
     // Map destination zone
     const destination = effect?.destination === "hand" ? ZONES.HAND : ZONES.HAND;

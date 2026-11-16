@@ -3,6 +3,7 @@ const { moveCard } = require("../../services/cardService");
 const { ZONES } = require("../../../../shared/zones");
 const { AST_ACTIONS, AST_MESSAGES, AST_SELECTION_MODES } = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
+const { parseTargetCount } = require("../TargetCountResolver");
 const { SpecialInitiativeService } = require("../../services/SpecialInitiativeService");
 const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
 const { BattleCalculator } = require("../../../../shared/BattleCalculator");
@@ -277,9 +278,10 @@ class ModifyNumbersHandler {
     );
 
     const candidates = [];
-    const maxCount = targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_ALL
+    const parsedCount = parseTargetCount(targetDef);
+    const maxCount = parsedCount.isAll
       ? eligible.eligibleCardIds.length
-      : (typeof targetDef.count?.fixed_value === "number" ? targetDef.count.fixed_value : 1);
+      : parsedCount.maxCount;
 
     for (const cardId of eligible.eligibleCardIds) {
       const c = room.cardLookup?.get(cardId);
