@@ -1,4 +1,4 @@
-"""Centralized Redemption REG v11.0.0 Vocabulary & Legacy Equivalence Matrix.
+"""Centralized Redemption REG v11.1.0 Vocabulary & Legacy Equivalence Matrix.
 
 Maps legacy, slang, or obsolete terms to canonical REG enums and defines
 syntactic patterns for player restrictions and action prohibitions.
@@ -16,6 +16,8 @@ REG_LEGACY_SYNONYMS: Dict[str, str] = {
     "retreat": "withdraw",
     "return to territory": "withdraw",
     "return to hand": "bounce",
+    "remove to owner's hand": "bounce",
+    "remove to hand": "bounce",
     "take prisoner": "capture",
     "restore abilities": "heal",
     "band with": "band",
@@ -25,6 +27,8 @@ REG_LEGACY_SYNONYMS: Dict[str, str] = {
     "do this twice": "repeat",
     "put on bottom of deck": "underdeck",
     "put on top of deck": "topdeck",
+    "return to bottom of deck": "underdeck",
+    "return to top of deck": "topdeck",
     "discard as it is played": "toss",
     "force to block": "taunt",
     "force to enter battle": "taunt",
@@ -44,15 +48,15 @@ PLAYER_RESTRICTION_PATTERNS = [
 
 # 2. "No [card] may [action]" -> ActionVerb.PREVENT (card active prohibition)
 CARD_PREVENTION_PATTERNS = [
-    re.compile(r"\bno\s+(?!player\b)(\w+)\s+(?:may|can)\s+(?!be\b)(\w+)\b", re.I),
-    re.compile(r"\b(?:characters?|heroes?|evil\s+characters?|demons?|beasts?|cards?)\s+(?:may\s+not|cannot)\s+(?!be\b)(\w+)\b", re.I),
+    re.compile(r"\bno\s+(?!player\b)(\w+)\s+(?:may|can)\s+(?!be\b|enter\s+battle\b)(\w+)\b", re.I),
+    re.compile(r"\b(?:characters?|heroes?|evil\s+characters?|demons?|beasts?|cards?)\s+(?:may\s+not|cannot)\s+(?!be\b|enter\s+battle\b)(\w+)\b", re.I),
     re.compile(r"\bprevents?\s+(?:heroes?|evil\s+characters?|characters?)\s+from\s+(\w+ing)\b", re.I),
 ]
 
 # 3. "No [card] may be [action-ed]" -> ActionVerb.PROTECT (card passive protection)
 CARD_PROTECTION_PATTERNS = [
-    re.compile(r"\bno\s+(?!player\b)(\w+)\s+(?:may|can)\s+be\s+(\w+)\b", re.I),
-    re.compile(r"\b(?:cards?|characters?|heroes?|evil\s+characters?)\s+(?:cannot|may\s+not)\s+be\s+(\w+)\b", re.I),
+    re.compile(r"\bno\s+(?!player\b)(\w+)\s+(?:may|can)\s+be\s+(?!blocked\s+by\b)(\w+)\b", re.I),
+    re.compile(r"\b(?:cards?|characters?|heroes?|evil\s+characters?)\s+(?:cannot|may\s+not)\s+be\s+(?!blocked\s+by\b)(\w+)\b", re.I),
     re.compile(r"\bprotected\s+from\s+(\w+)\b", re.I),
     re.compile(r"\bimmune\s+to\s+(\w+)\b", re.I),
 ]
@@ -60,13 +64,17 @@ CARD_PROTECTION_PATTERNS = [
 # Combined restriction patterns for backward compatibility and general prohibition checks
 RESTRICTION_PATTERNS = PLAYER_RESTRICTION_PATTERNS + CARD_PREVENTION_PATTERNS
 
-# Regex patterns identifying battle entry prohibitions (ActionVerb: WITHDRAW per REG)
-BATTLE_ENTRY_PROHIBITIONS = [
+# Regex patterns identifying battle entry and blocking prohibitions (ActionVerb: PARALYZE per REG v11.1.0)
+# Note: "repels?" remains ActionVerb: WITHDRAW per REG v11.1.0.
+PARALYZE_PROHIBITIONS = [
     re.compile(r"\bcannot\s+enter\s+battle\b", re.I),
-    re.compile(r"\bmay\s+not\s+be\s+blocked\s+by\b", re.I),
     re.compile(r"\bmay\s+not\s+enter\s+battle\b", re.I),
-    re.compile(r"\brepels?\b", re.I),
+    re.compile(r"\bcannot\s+be\s+blocked\s+by\b", re.I),
+    re.compile(r"\bmay\s+not\s+be\s+blocked\s+by\b", re.I),
 ]
+
+# Backward-compatible alias for downstream callers importing BATTLE_ENTRY_PROHIBITIONS
+BATTLE_ENTRY_PROHIBITIONS = PARALYZE_PROHIBITIONS
 
 # Regex patterns identifying passive card protection modifiers
 PROTECTION_MODIFIERS = [

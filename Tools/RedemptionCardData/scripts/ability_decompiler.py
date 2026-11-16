@@ -1,6 +1,6 @@
 """Decompiler converting CardSideLogic ASTs back into canonical English rule text.
 
-Performs round-trip synthesis of abilities according to REG v11.0.0 rules
+Performs round-trip synthesis of abilities according to REG v11.1.0 rules
 to enable semantic validation and fidelity auditing without consuming API tokens.
 """
 

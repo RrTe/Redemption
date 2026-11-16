@@ -1,6 +1,6 @@
 """Card title to canonical card ID resolution module.
 
-Provides REG v11.0.0-compliant linking between human-readable card titles
+Provides REG v11.1.0-compliant linking between human-readable card titles
 (e.g., 'Nadab') and static Coliseum card IDs, enforcing strict word boundaries
 to prevent false positive matches like 'Amminadab' for 'Nadab'.
 """
@@ -57,7 +57,7 @@ class CardLinker:
     def resolve_title(self, target_title: str) -> List[str]:
         """Resolves a single card title to all matching canonical card IDs.
 
-        Follows REG v11.0.0 rules:
+        Follows REG v11.1.0 rules:
         - Matches exact full name (case-insensitive)
         - Matches whole-word boundary (\\bName\\b)
         - Rejects partial substrings (e.g., 'Amminadab' for 'Nadab')

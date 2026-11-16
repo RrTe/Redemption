@@ -41254,7 +41254,49 @@
       "top": {
         "classes": [],
         "modifiers": [],
-        "abilities": []
+        "abilities": [
+          {
+            "ability_id": "ab_1_paralyze",
+            "is_star": false,
+            "activation_mode": "static",
+            "is_optional": false,
+            "is_preventable": true,
+            "is_interruptible": true,
+            "is_negatable": true,
+            "conditions": [],
+            "costs": [],
+            "effects": [
+              {
+                "step": 1,
+                "action": "paralyze",
+                "effect_type": "ongoing",
+                "duration": "while_condition",
+                "target": {
+                  "selection_mode": "automatic_all",
+                  "zone_owner": "opponent",
+                  "scope": [
+                    "in_play"
+                  ],
+                  "target_type": "character",
+                  "brigades": [],
+                  "classes": [],
+                  "references": [],
+                  "identifiers": [
+                    "Pharisee",
+                    "Sadducee"
+                  ],
+                  "card_titles": [],
+                  "target_card_ids": [],
+                  "stat_filters": []
+                },
+                "destination_position": "as_is",
+                "creates_context_scope": false,
+                "dependency": "always"
+              }
+            ],
+            "modifiers": []
+          }
+        ]
       }
     }
   },

@@ -3537,7 +3537,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -12349,7 +12349,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -12435,7 +12435,7 @@
               },
               {
                 "step": 2,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -12489,7 +12489,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -13246,7 +13246,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -13302,7 +13302,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -13357,7 +13357,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -46622,7 +46622,49 @@
         "is_human": true,
         "classes": [],
         "modifiers": [],
-        "abilities": []
+        "abilities": [
+          {
+            "ability_id": "ab_1_paralyze",
+            "is_star": false,
+            "activation_mode": "static",
+            "is_optional": false,
+            "is_preventable": true,
+            "is_interruptible": true,
+            "is_negatable": true,
+            "conditions": [],
+            "costs": [],
+            "effects": [
+              {
+                "step": 1,
+                "action": "paralyze",
+                "effect_type": "ongoing",
+                "duration": "while_condition",
+                "target": {
+                  "selection_mode": "automatic_all",
+                  "zone_owner": "opponent",
+                  "scope": [
+                    "in_play"
+                  ],
+                  "target_type": "character",
+                  "brigades": [],
+                  "classes": [],
+                  "references": [],
+                  "identifiers": [
+                    "Pharisee",
+                    "Sadducee"
+                  ],
+                  "card_titles": [],
+                  "target_card_ids": [],
+                  "stat_filters": []
+                },
+                "destination_position": "as_is",
+                "creates_context_scope": false,
+                "dependency": "always"
+              }
+            ],
+            "modifiers": []
+          }
+        ]
       }
     }
   },
@@ -87047,9 +87089,9 @@
                 "duration": "instant",
                 "target": {
                   "selection_mode": "manual_controller",
-                  "zone_owner": "both",
+                  "zone_owner": "opponent",
                   "scope": [
-                    "in_play"
+                    "territory"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -90691,7 +90733,7 @@
               },
               {
                 "step": 2,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -96380,9 +96422,9 @@
                 "duration": "instant",
                 "target": {
                   "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
+                  "zone_owner": "opponent",
                   "scope": [
-                    "in_play"
+                    "territory"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -99825,7 +99867,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "place",
+                "action": "withdraw",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -108587,7 +108629,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "place",
+                "action": "withdraw",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -109917,7 +109959,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "take",
+                "action": "release",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -109931,7 +109973,9 @@
                   "alignment": "good",
                   "classes": [],
                   "references": [],
-                  "identifiers": [],
+                  "identifiers": [
+                    "captured"
+                  ],
                   "card_titles": [],
                   "target_card_ids": [],
                   "stat_filters": []
@@ -110763,14 +110807,14 @@
             "effects": [
               {
                 "step": 1,
-                "action": "restrict",
+                "action": "choose opponent",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
                   "selection_mode": "manual_opponent",
                   "zone_owner": "opponent",
                   "scope": [
-                    "in_play"
+                    "territory"
                   ],
                   "target_type": "evil_character",
                   "brigades": [],
@@ -121288,9 +121332,9 @@
                 "duration": "instant",
                 "target": {
                   "selection_mode": "manual_controller",
-                  "zone_owner": "both",
+                  "zone_owner": "opponent",
                   "scope": [
-                    "in_play"
+                    "territory"
                   ],
                   "target_type": "evil_character",
                   "brigades": [],
@@ -138430,7 +138474,7 @@
               },
               {
                 "step": 3,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -151703,7 +151747,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -160852,7 +160896,7 @@
             "effects": [
               {
                 "step": 2,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -168059,7 +168103,8 @@
                   "selection_mode": "automatic_all",
                   "zone_owner": "opponent",
                   "scope": [
-                    "hand"
+                    "hand",
+                    "territory"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -174469,7 +174514,8 @@
                   "selection_mode": "automatic_all",
                   "zone_owner": "opponent",
                   "scope": [
-                    "in_play"
+                    "hand",
+                    "territory"
                   ],
                   "target_type": "character",
                   "brigades": [],
@@ -181311,7 +181357,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -186025,7 +186071,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "withdraw",
+                "action": "negate",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -186121,7 +186167,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "withdraw",
+                "action": "negate",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -196908,7 +196954,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "restrict",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "until_end_of_phase",
                 "target": {
@@ -197038,7 +197084,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "restrict",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "while_condition",
                 "target": {
@@ -199006,7 +199052,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "prevent",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "while_condition",
                 "target": {
@@ -199218,7 +199264,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "prevent",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "this_turn",
                 "target": {
@@ -208754,7 +208800,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "prevent",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "permanent",
                 "target": {
@@ -214050,14 +214096,14 @@
             "effects": [
               {
                 "step": 1,
-                "action": "withdraw",
+                "action": "release",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
                   "selection_mode": "automatic_all",
                   "zone_owner": "both",
                   "scope": [
-                    "set_aside"
+                    "land_of_bondage"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -214071,6 +214117,7 @@
                   "target_card_ids": [],
                   "stat_filters": []
                 },
+                "destination": "territory",
                 "destination_position": "as_is",
                 "creates_context_scope": false,
                 "dependency": "always"
@@ -225391,7 +225438,7 @@
               },
               {
                 "step": 2,
-                "action": "prevent",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "while_condition",
                 "target": {
@@ -239939,14 +239986,14 @@
             "effects": [
               {
                 "step": 1,
-                "action": "place",
+                "action": "release",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
                   "selection_mode": "automatic_all",
                   "zone_owner": "either",
                   "scope": [
-                    "set_aside"
+                    "land_of_bondage"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -245831,7 +245878,8 @@
                   "selection_mode": "manual_opponent",
                   "zone_owner": "opponent",
                   "scope": [
-                    "hand"
+                    "hand",
+                    "territory"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -246060,7 +246108,8 @@
                   "selection_mode": "manual_opponent",
                   "zone_owner": "opponent",
                   "scope": [
-                    "hand"
+                    "hand",
+                    "territory"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -250456,7 +250505,8 @@
                   "selection_mode": "manual_opponent",
                   "zone_owner": "opponent",
                   "scope": [
-                    "hand"
+                    "hand",
+                    "territory"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -250563,7 +250613,8 @@
                   "selection_mode": "manual_opponent",
                   "zone_owner": "opponent",
                   "scope": [
-                    "hand"
+                    "hand",
+                    "territory"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -251308,7 +251359,8 @@
                   "selection_mode": "manual_opponent",
                   "zone_owner": "opponent",
                   "scope": [
-                    "hand"
+                    "hand",
+                    "territory"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -252171,21 +252223,23 @@
               },
               {
                 "step": 2,
-                "action": "place",
+                "action": "release",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
                   "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
+                  "zone_owner": "both",
                   "scope": [
-                    "territory"
+                    "land_of_bondage"
                   ],
                   "target_type": "hero",
                   "brigades": [],
                   "alignment": "good",
                   "classes": [],
                   "references": [],
-                  "identifiers": [],
+                  "identifiers": [
+                    "captured"
+                  ],
                   "card_titles": [],
                   "target_card_ids": [],
                   "stat_filters": []
@@ -260050,9 +260104,9 @@
                 "duration": "instant",
                 "target": {
                   "selection_mode": "manual_controller",
-                  "zone_owner": "both",
+                  "zone_owner": "opponent",
                   "scope": [
-                    "in_play"
+                    "territory"
                   ],
                   "target_type": "character",
                   "brigades": [],
@@ -267058,7 +267112,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -272749,9 +272803,9 @@
                 "duration": "instant",
                 "target": {
                   "selection_mode": "manual_controller",
-                  "zone_owner": "controller",
+                  "zone_owner": "opponent",
                   "scope": [
-                    "in_play"
+                    "territory"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -276118,7 +276172,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "withdraw",
+                "action": "negate",
                 "effect_type": "ongoing",
                 "duration": "permanent",
                 "target": {
@@ -276127,7 +276181,7 @@
                   "scope": [
                     "in_play"
                   ],
-                  "target_type": "hero",
+                  "target_type": "card",
                   "brigades": [],
                   "alignment": "good",
                   "classes": [],
@@ -277020,7 +277074,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -278386,14 +278440,14 @@
             "effects": [
               {
                 "step": 1,
-                "action": "withdraw",
+                "action": "release",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
                   "selection_mode": "automatic_all",
                   "zone_owner": "controller",
                   "scope": [
-                    "in_play"
+                    "land_of_bondage"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -287354,7 +287408,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -288042,7 +288096,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "place",
+                "action": "withdraw",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -289364,7 +289418,7 @@
               },
               {
                 "step": 2,
-                "action": "place",
+                "action": "withdraw",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -290378,7 +290432,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "place",
+                "action": "withdraw",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -299201,7 +299255,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -299300,7 +299354,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -318426,7 +318480,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "prevent",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "while_condition",
                 "target": {
@@ -330668,7 +330722,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "withdraw",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "permanent",
                 "target": {
@@ -349358,7 +349412,8 @@
                   "selection_mode": "manual_opponent",
                   "zone_owner": "opponent",
                   "scope": [
-                    "in_play"
+                    "hand",
+                    "territory"
                   ],
                   "target_type": "evil_character",
                   "brigades": [],
@@ -361049,7 +361104,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "withdraw",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "permanent",
                 "target": {
@@ -361074,7 +361129,6 @@
                   ],
                   "stat_filters": []
                 },
-                "destination": "territory",
                 "destination_position": "as_is",
                 "creates_context_scope": false,
                 "dependency": "always"
@@ -389596,7 +389650,8 @@
                   "selection_mode": "manual_controller",
                   "zone_owner": "controller",
                   "scope": [
-                    "hand"
+                    "hand",
+                    "territory"
                   ],
                   "target_type": "hero",
                   "brigades": [
@@ -406002,7 +406057,9 @@
                   "is_human": true,
                   "classes": [],
                   "references": [],
-                  "identifiers": [],
+                  "identifiers": [
+                    "until healed"
+                  ],
                   "card_titles": [],
                   "target_card_ids": [],
                   "stat_filters": [],
@@ -406013,35 +406070,6 @@
                 "destination_position": "as_is",
                 "creates_context_scope": false,
                 "dependency": "always"
-              },
-              {
-                "step": 2,
-                "action": "withdraw",
-                "effect_type": "ongoing",
-                "duration": "while_condition",
-                "target": {
-                  "selection_mode": "chained_target",
-                  "zone_owner": "opponent",
-                  "scope": [
-                    "territory"
-                  ],
-                  "target_type": "hero",
-                  "brigades": [],
-                  "alignment": "good",
-                  "classes": [],
-                  "references": [],
-                  "identifiers": [
-                    "cannot enter battle",
-                    "until healed"
-                  ],
-                  "card_titles": [],
-                  "target_card_ids": [],
-                  "stat_filters": [],
-                  "ref_step": 1
-                },
-                "destination_position": "as_is",
-                "creates_context_scope": false,
-                "dependency": "if_previous_successful"
               }
             ],
             "modifiers": []
@@ -406663,7 +406691,7 @@
               },
               {
                 "step": 2,
-                "action": "withdraw",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "while_condition",
                 "target": {
@@ -411479,7 +411507,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "withdraw",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "while_condition",
                 "target": {
@@ -412510,7 +412538,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "withdraw",
+                "action": "release",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -455293,7 +455321,7 @@
               },
               {
                 "step": 2,
-                "action": "withdraw",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "this_turn",
                 "target": {
@@ -456071,52 +456099,25 @@
             "effects": [
               {
                 "step": 1,
-                "action": "protect",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "until_end_of_battle",
                 "target": {
                   "selection_mode": "automatic_all",
-                  "zone_owner": "controller",
+                  "zone_owner": "opponent",
                   "scope": [
                     "battle"
                   ],
-                  "target_type": "hero",
+                  "target_type": "evil_character",
                   "brigades": [],
-                  "alignment": "good",
-                  "gender": "female",
+                  "alignment": "evil",
+                  "gender": "male",
                   "classes": [],
                   "references": [],
                   "identifiers": [],
                   "card_titles": [],
                   "target_card_ids": [],
                   "stat_filters": []
-                },
-                "protection_filter": {
-                  "from_harm": false,
-                  "actions": [],
-                  "except_actions": [],
-                  "card_sources": [
-                    {
-                      "selection_mode": "automatic_all",
-                      "zone_owner": "opponent",
-                      "scope": [
-                        "battle"
-                      ],
-                      "target_type": "evil_character",
-                      "brigades": [],
-                      "alignment": "evil",
-                      "gender": "male",
-                      "classes": [],
-                      "references": [],
-                      "identifiers": [],
-                      "card_titles": [],
-                      "target_card_ids": [],
-                      "stat_filters": []
-                    }
-                  ],
-                  "qualifiers": [
-                    "cannot be blocked by"
-                  ]
                 },
                 "destination_position": "as_is",
                 "creates_context_scope": false,
@@ -457223,7 +457224,7 @@
               },
               {
                 "step": 2,
-                "action": "restrict",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "while_condition",
                 "target": {
@@ -465823,7 +465824,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "prevent",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "while_condition",
                 "target": {
@@ -482176,7 +482177,7 @@
               },
               {
                 "step": 3,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -491600,7 +491601,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "place",
+                "action": "withdraw",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -507047,8 +507048,8 @@
                   "selection_mode": "manual_opponent",
                   "zone_owner": "opponent",
                   "scope": [
-                    "in_play",
-                    "hand"
+                    "hand",
+                    "territory"
                   ],
                   "target_type": "hero",
                   "brigades": [],
@@ -517819,7 +517820,7 @@
             "effects": [
               {
                 "step": 2,
-                "action": "withdraw",
+                "action": "release",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -517842,7 +517843,7 @@
                     "fixed_value": "all"
                   }
                 },
-                "destination": "in_play",
+                "destination": "territory",
                 "destination_position": "as_is",
                 "creates_context_scope": false,
                 "dependency": "always"
@@ -519539,7 +519540,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "place",
+                "action": "release",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -519562,7 +519563,7 @@
                     "fixed_value": 1
                   }
                 },
-                "destination": "in_play",
+                "destination": "territory",
                 "destination_position": "as_is",
                 "creates_context_scope": false,
                 "dependency": "always"
@@ -548320,7 +548321,7 @@
               },
               {
                 "step": 2,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -548346,7 +548347,7 @@
               },
               {
                 "step": 3,
-                "action": "return to hand",
+                "action": "bounce",
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
@@ -554865,7 +554866,7 @@
             "effects": [
               {
                 "step": 1,
-                "action": "restrict",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "permanent",
                 "target": {
@@ -557645,53 +557646,26 @@
               },
               {
                 "step": 2,
-                "action": "protect",
+                "action": "paralyze",
                 "effect_type": "ongoing",
                 "duration": "until_end_of_battle",
                 "target": {
-                  "selection_mode": "chained_target",
-                  "zone_owner": "controller",
+                  "selection_mode": "automatic_all",
+                  "zone_owner": "opponent",
                   "scope": [
-                    "battle"
+                    "battle",
+                    "in_play"
                   ],
-                  "target_type": "hero",
+                  "target_type": "evil_character",
                   "brigades": [],
-                  "alignment": "good",
+                  "alignment": "evil",
+                  "is_human": true,
                   "classes": [],
                   "references": [],
                   "identifiers": [],
                   "card_titles": [],
                   "target_card_ids": [],
-                  "stat_filters": [],
-                  "ref_step": 1
-                },
-                "protection_filter": {
-                  "from_harm": false,
-                  "actions": [],
-                  "except_actions": [],
-                  "card_sources": [
-                    {
-                      "selection_mode": "automatic_all",
-                      "zone_owner": "opponent",
-                      "scope": [
-                        "battle",
-                        "in_play"
-                      ],
-                      "target_type": "evil_character",
-                      "brigades": [],
-                      "alignment": "evil",
-                      "is_human": true,
-                      "classes": [],
-                      "references": [],
-                      "identifiers": [],
-                      "card_titles": [],
-                      "target_card_ids": [],
-                      "stat_filters": []
-                    }
-                  ],
-                  "qualifiers": [
-                    "cannot be blocked by"
-                  ]
+                  "stat_filters": []
                 },
                 "destination_position": "as_is",
                 "creates_context_scope": false,

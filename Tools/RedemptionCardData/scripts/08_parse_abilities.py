@@ -109,7 +109,15 @@ REMOVE_FROM_GAME_PATTERN = re.compile(
     re.IGNORECASE,
 )
 RETURN_TO_HAND_PATTERN = re.compile(
-    rf"^(?:you\s+may\s+|holder\s+may\s+)?(?:return\s+{_COUNT_GROUP}([a-zA-Z0-9\s\(\)\'\-\.,]+?)\s+to\s+(?:your\s+|owner's\s+|their\s+)?hand|bounce\s+{_COUNT_GROUP}([a-zA-Z0-9\s\(\)\'\-\.,]+?))\.?$",
+    rf"^(?:you\s+may\s+|holder\s+may\s+)?(?:(?:return|remove)\s+{_COUNT_GROUP}([a-zA-Z0-9\s\(\)\'\-\.,]+?)\s+to\s+(?:your\s+|owner's\s+|their\s+)?hand|bounce\s+{_COUNT_GROUP}([a-zA-Z0-9\s\(\)\'\-\.,]+?))\.?$",
+    re.IGNORECASE,
+)
+RETURN_DECK_POS_PATTERN = re.compile(
+    rf"^(?:you\s+may\s+|holder\s+may\s+)?return\s+{_COUNT_GROUP}(?:the\s+)?([a-zA-Z0-9\s\(\)\'\-\.,]+?)\s+to\s+(?:the\s+)?(top|bottom)\s+of\s+(?:your\s+|owner's\s+|their\s+)?(?:deck|draw\s+pile)\.?$",
+    re.IGNORECASE,
+)
+RETURN_TO_TERRITORY_PATTERN = re.compile(
+    rf"^(?:you\s+may\s+|holder\s+may\s+)?return\s+{_COUNT_GROUP}(?:the\s+)?([a-zA-Z0-9\s\(\)\'\-\.,]+?)\s+to\s+(?:your\s+|its\s+|owner's\s+|their\s+)?territory\.?$",
     re.IGNORECASE,
 )
 SHUFFLE_PATTERN = re.compile(
@@ -125,7 +133,15 @@ IMMUNE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 WITHDRAW_PATTERN = re.compile(
-    rf"^(?:you\s+may\s+|holder\s+may\s+)?(?:withdraw|ignore)\s+{_COUNT_GROUP}([a-zA-Z0-9\s\(\)\'\-\.,]+?)\.?$",
+    rf"^(?:you\s+may\s+|holder\s+may\s+)?(?:withdraw|ignore|repel)\s+{_COUNT_GROUP}([a-zA-Z0-9\s\(\)\'\-\.,]+?)\.?$",
+    re.IGNORECASE,
+)
+PARALYZE_BLOCKED_BY_PATTERN = re.compile(
+    r"^(?:this\s+(?:character|hero|evil\s+character|card)\s+)?(?:cannot|may\s+not)\s+be\s+blocked\s+by\s+(.+?)\.?$",
+    re.IGNORECASE,
+)
+PARALYZE_ENTER_BATTLE_PATTERN = re.compile(
+    rf"^{_COUNT_GROUP}([a-zA-Z0-9\s\(\)\'\-\.,]+?)\s+(?:cannot|may\s+not)\s+enter\s+(?:the\s+)?battle\.?$",
     re.IGNORECASE,
 )
 ACTIVATE_ARTIFACT_PATTERN = re.compile(
@@ -158,7 +174,7 @@ COMPOUND_DUAL_PATTERN = re.compile(
 # Generic Cost-Benefit Pattern: [Discard/Negate-and-Discard/Banish X] to [Action Y]
 COST_BENEFIT_PATTERN = re.compile(
     r"^(?:you\s+may\s+|holder\s+may\s+)?((?:negate\s+and\s+)?discard\s+.+?|remove\s+.+?\s+from\s+the\s+game|banish\s+.+?)\s+to\s+"
-    r"((?:negate\s+and\s+discard|discard|draw|take|underdeck|topdeck|negate|interrupt|withdraw|protect|add|return|bounce|banish|remove|shuffle|activate)\b.+?)\.?$",
+    r"((?:negate\s+and\s+discard|discard|draw|take|underdeck|topdeck|negate|interrupt|withdraw|protect|add|return|release|bounce|banish|remove|shuffle|activate)\b.+?)\.?$",
     re.IGNORECASE,
 )
 
@@ -818,7 +834,155 @@ def _parse_single_action_effects(clause: str) -> Optional[Tuple[str, List[Action
             ActivationMode.STATIC,
         )
 
+    # 19. Return to top/bottom of deck (REG v11.1.0 -> TOPDECK / UNDERDECK)
+    return_deck_match = RETURN_DECK_POS_PATTERN.match(cleaned)
+    if return_deck_match:
+        cnt_token = return_deck_match.group(1) or "1"
+        target_str = return_deck_match.group(2).strip()
+        pos = return_deck_match.group(3).lower()
+        if UNPARSED_CLAUSE_GUARD.search(target_str):
+            return None
+        sel = build_target_selector(target_str, cnt_token, default_scope=[Zone.IN_PLAY])
+        action_verb = ActionVerb.TOPDECK if pos == "top" else ActionVerb.UNDERDECK
+        return (
+            action_verb.value,
+            [
+                ActionEffect(
+                    step=1,
+                    action=action_verb,
+                    effect_type="instant",
+                    destination=Zone.DECK,
+                    destination_position=pos,
+                    target=sel,
+                )
+            ],
+            None,
+        )
+
+    # 20. Return to territory (REG v11.1.0: captured/captive -> RELEASE, in battle -> WITHDRAW)
+    ret_terr_match = RETURN_TO_TERRITORY_PATTERN.match(cleaned)
+    if ret_terr_match:
+        cnt_token = ret_terr_match.group(1) or "1"
+        target_str = ret_terr_match.group(2).strip()
+        if UNPARSED_CLAUSE_GUARD.search(target_str):
+            return None
+        is_captive = bool(
+            re.search(r"\b(?:captured|captive|land\s+of\s+bondage)\b", target_str, re.IGNORECASE)
+        )
+        if is_captive:
+            sel = build_target_selector(
+                target_str, cnt_token, default_scope=[Zone.LAND_OF_BONDAGE]
+            )
+            return (
+                "release",
+                [
+                    ActionEffect(
+                        step=1,
+                        action=ActionVerb.RELEASE,
+                        effect_type="instant",
+                        destination=Zone.TERRITORY,
+                        target=sel,
+                    )
+                ],
+                None,
+            )
+        sel = build_target_selector(target_str, cnt_token, default_scope=[Zone.BATTLE])
+        return (
+            "withdraw",
+            [
+                ActionEffect(
+                    step=1,
+                    action=ActionVerb.WITHDRAW,
+                    effect_type="instant",
+                    destination=Zone.TERRITORY,
+                    target=sel,
+                )
+            ],
+            None,
+        )
+
+    # 21. Paralyze: Cannot / may not be blocked by (REG v11.1.0)
+    paralyze_blk_match = PARALYZE_BLOCKED_BY_PATTERN.match(cleaned)
+    if paralyze_blk_match:
+        sel = _parse_paralyze_blocked_by_selector(paralyze_blk_match.group(1).strip())
+        if sel is not None:
+            return (
+                "paralyze",
+                [
+                    ActionEffect(
+                        step=1,
+                        action=ActionVerb.PARALYZE,
+                        effect_type="ongoing",
+                        duration=Duration.WHILE_CONDITION,
+                        target=sel,
+                    )
+                ],
+                ActivationMode.STATIC,
+            )
+
+    # 22. Paralyze: Cannot / may not enter battle (REG v11.1.0)
+    paralyze_ent_match = PARALYZE_ENTER_BATTLE_PATTERN.match(cleaned)
+    if paralyze_ent_match:
+        cnt_token = paralyze_ent_match.group(1) or "all"
+        target_str = paralyze_ent_match.group(2).strip()
+        if not UNPARSED_CLAUSE_GUARD.search(target_str):
+            sel = build_target_selector(target_str, cnt_token, default_scope=[Zone.IN_PLAY])
+            return (
+                "paralyze",
+                [
+                    ActionEffect(
+                        step=1,
+                        action=ActionVerb.PARALYZE,
+                        effect_type="ongoing",
+                        duration=Duration.WHILE_CONDITION,
+                        target=sel,
+                    )
+                ],
+                ActivationMode.STATIC,
+            )
+
     return None
+
+
+def _parse_paralyze_blocked_by_selector(blocker_clause: str) -> Optional[TargetSelector]:
+    """Parses the blocker phrase in 'cannot/may not be blocked by <target>' into a TargetSelector.
+
+    Splits simple disjunctive target lists (e.g. 'Pharisees or Sadducees') before running
+    the unparsed clause guard so disjunctive character identifiers parse deterministically
+    per REG v11.1.0 without swallowing conditional/compound sentences.
+
+    Args:
+        blocker_clause: Raw blocker target text following 'blocked by'.
+
+    Returns:
+        Populated TargetSelector with opposing blocker scope, or None if too complex.
+    """
+    raw_parts = [p.strip() for p in re.split(r"\s+or\s+", blocker_clause, flags=re.IGNORECASE) if p.strip()]
+    if not raw_parts:
+        return None
+
+    selectors: List[TargetSelector] = []
+    for part in raw_parts:
+        clean_part = re.sub(r"^(?:a|an|any)\s+", "", part, flags=re.IGNORECASE).strip()
+        if not clean_part or UNPARSED_CLAUSE_GUARD.search(clean_part):
+            return None
+        selectors.append(build_target_selector(clean_part, "all", default_scope=[Zone.IN_PLAY]))
+
+    merged = selectors[0].model_copy(deep=True)
+    if len(selectors) > 1:
+        for extra in selectors[1:]:
+            for field_name in ("brigades", "classes", "references", "identifiers", "card_titles"):
+                merged_vals = getattr(merged, field_name)
+                for val in getattr(extra, field_name):
+                    if val not in merged_vals:
+                        merged_vals.append(val)
+            if merged.target_type != extra.target_type:
+                merged.target_type = "character"
+
+    # Only opposing characters can block; restrict implicit 'both' ownership to opponent.
+    if merged.zone_owner == "both":
+        merged.zone_owner = "opponent"
+    return merged
 
 
 def parse_deterministic_clause(
@@ -829,7 +993,7 @@ def parse_deterministic_clause(
 ) -> Optional[Ability]:
     """Matches an individual clause against deterministic regex patterns."""
     cleaned = clause.strip()
-    is_optional = bool(re.search(r"\b(?:you\s+may|holder\s+may|may)\b", cleaned, re.IGNORECASE))
+    is_optional = bool(re.search(r"\b(?:you\s+may|holder\s+may|may(?!\s+not))\b", cleaned, re.IGNORECASE))
     conditions = [condition] if condition else []
 
     # 1. Colon Context Scope (Look/Reveal ... : ...)

@@ -1,7 +1,7 @@
 """Regex pattern engine and tokenizers for parsing Redemption card abilities.
 
 Extracts protection modifiers, limits, triggers, context creators, and
-standard effect clauses per the Redemption Exegesis Guide (REG v11.0.0).
+standard effect clauses per the Redemption Exegesis Guide (REG v11.1.0).
 """
 
 from __future__ import annotations

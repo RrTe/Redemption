@@ -273,8 +273,31 @@ def verify_fact_matrix(raw: str, ast_facts: Dict[str, Any]) -> Tuple[bool, List[
                     issues.append(f"Missing action '{canonical_act}' for legacy term '{legacy_term}'")
 
     if re.search(r"\b(?:has|have|had)\s+no\s+effect\b", raw_lower):
-        if not any(a in ast_facts["actions"] for a in ["withdraw", "negate", "ignore", "protect", "immune"]):
-            issues.append("Missing action 'withdraw' or 'negate' for 'has no effect'")
+        if not any(a in ast_facts["actions"] for a in ["negate", "protect", "immune"]):
+            issues.append("Missing action 'negate' for 'has no effect'")
+
+    # REG v11.1.0: battle entry & blocked-by prohibitions map to 'paralyze'
+    if re.search(r"\b(?:cannot|may\s+not)\s+enter\s+battle\b", raw_lower):
+        if not any(a in ast_facts["actions"] for a in ["paralyze", "protect", "immune"]):
+            issues.append("Missing action 'paralyze' for 'cannot/may not enter battle'")
+    if re.search(r"\b(?:cannot|may\s+not)\s+be\s+blocked\s+by\b", raw_lower):
+        if not any(a in ast_facts["actions"] for a in ["paralyze", "protect", "immune"]):
+            issues.append("Missing action 'paralyze' for 'cannot/may not be blocked by'")
+
+    # REG v11.1.0: returning a captured character to territory is 'release', not 'withdraw'
+    is_release_clause = (
+        re.search(
+            r"\breturn\b[^.]*\b(?:captured|held\s+captive|captives?)\b[^.]*\bto\s+(?:your\s+|player's\s+|its\s+|owner's\s+|owners'\s+|their\s+)?territor(?:y|ies)\b",
+            raw_lower,
+        )
+        or re.search(
+            r"\btaken\s+prisoner\b[^.]*\breturn(?:s|ed)?\b[^.]*\bto\s+(?:your\s+|player's\s+|its\s+|owner's\s+|owners'\s+|their\s+)?territor(?:y|ies)\b",
+            raw_lower,
+        )
+    )
+    if is_release_clause and not re.search(r"\binstead\b", raw_lower):
+        if not any(a in ast_facts["actions"] for a in ["release", "rescue"]):
+            issues.append("Missing action 'release' for returning captured card to territory")
 
     # Mask out quoted literal words, ability-type descriptors, phase names, and zone nouns
     # before checking whether core_actions / discard appear as active effect verbs.

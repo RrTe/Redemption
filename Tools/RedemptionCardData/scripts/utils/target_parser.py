@@ -1,6 +1,6 @@
 """Target parsing and classification utilities for Redemption CCG abilities.
 
-Handles REG v11.0.0 compliant multi-zone extraction, owner resolution,
+Handles REG v11.1.0 compliant multi-zone extraction, owner resolution,
 plural-to-all semantics, and strict 4-way target attribute separation
 (brigades, canonical target_type, identifiers, and card_titles).
 """
@@ -213,7 +213,7 @@ def parse_target_zone_suffix(
 ) -> Tuple[str, List[Zone], Literal["controller", "opponent", "both", "either"], List[str]]:
     """Extracts trailing or embedded multi-zone descriptions (e.g. 'from deck or Reserve').
 
-    Per REG v11.0.0, if no explicit zone is specified, targets default to [Zone.IN_PLAY],
+    Per REG v11.1.0, if no explicit zone is specified, targets default to [Zone.IN_PLAY],
     and unrestricted targets can belong to 'either' player (or 'both' if 'all').
 
     Args:
@@ -697,7 +697,7 @@ def parse_protection_filter(from_str: str) -> ProtectionFilter:
     """Parses a protection clause into a structured ProtectionFilter model.
 
     Separates the protected actions, card sources, harm status, and qualifiers
-    from the raw 'from ...' or 'immune to ...' string per Redemption REG v11.0.0.
+    from the raw 'from ...' or 'immune to ...' string per Redemption REG v11.1.0.
 
     Args:
         from_str: The raw clause specifying what is blocked (e.g. 'evil cards',

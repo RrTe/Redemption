@@ -1,4 +1,4 @@
-"""Exporter utility for canonical Redemption REG v11.0.0 AST constants."""
+"""Exporter utility for canonical Redemption REG v11.1.0 AST constants."""
 
 from __future__ import annotations
 import json
@@ -22,7 +22,7 @@ def export_ast_constants(output_path: Path) -> None:
         output_path: Destination path for the exported constants JSON file.
     """
     constants = {
-        "version": "11.0.0",
+        "version": "11.1.0",
         "action_verbs": sorted([e.value for e in ActionVerb if e != ActionVerb.UNKNOWN]),
         "activation_modes": [e.value for e in ActivationMode],
         "durations": [e.value for e in Duration],

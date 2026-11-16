@@ -1,7 +1,7 @@
 """Prompt template and schema definitions for AI-assisted ability parsing.
 
 Provides a token-optimized structural specification of CardSideLogic conforming
-to REG v11.0.0 without the overhead of the full Pydantic JSON schema dump.
+to REG v11.1.0 without the overhead of the full Pydantic JSON schema dump.
 """
 
 from __future__ import annotations
@@ -94,9 +94,9 @@ def build_system_prompt() -> str:
         None
 
     Returns:
-        str: Formatted system prompt with slim schema and REG v11.0.0 parsing rules.
+        str: Formatted system prompt with slim schema and REG v11.1.0 parsing rules.
     """
-    return f"""You are an expert Redemption CCG rules and card ability parser conforming to the Redemption Exegesis Guide (REG v11.0.0).
+    return f"""You are an expert Redemption CCG rules and card ability parser conforming to the Redemption Exegesis Guide (REG v11.1.0).
 Parse raw card ability texts into valid CardSideLogic JSON conforming strictly to this structure:
 
 {SLIM_SCHEMA_TEMPLATE}
@@ -122,7 +122,7 @@ Rules:
 - 'No [player] may [action]' / 'player may not [action]' / 'opponent cannot [action]' / 'restrict [player/Dominants]' is action: 'restrict' (ongoing, target zone_owner: 'opponent'|'both', target_type: null, prohibited action in target 'identifiers': ['draw'], ['play'], ['rescue attempt'], ['search']).
 - 'No [card] may [action]' / '[card] cannot [action]' is action: 'prevent' (ongoing, targets the acting card: target_type: 'hero'|'evil_character'|'character'|'beast', prevented action in target 'identifiers': ['band'], ['block']).
 - 'No [card] may be [action]' / '[card] cannot be [action]' is action: 'protect' (ongoing, targets the protected card: target_type: 'character'|'enhancement', protected action in identifiers or modifier: 'cannot_be_X').
-18. REG Vocabulary Equivalences: Per official REG v11.0.0: 'repent' and 'fall' mean action: 'convert'; 'repel', 'repels', 'ignore', 'may not be blocked by', 'return to territory', and 'cannot enter battle' mean action: 'withdraw' (when targeting a brigade/character, target is opposing characters of that brigade in battle, scope: ['battle']); 'has no effect' when referring to characters means action: 'withdraw' (opposing character withdraws); 'has no effect' when referring to cards other than characters (e.g. artifacts, fortresses, enhancements) means action: 'negate'; 'renders harmless' means action: 'negate'; 'return to hand' means action: 'bounce'; 'take prisoner' means action: 'capture'; 'restore abilities' means action: 'heal'; 'band with' and 'join the battle' mean action: 'band'; 'remove from the game' means action: 'banish'; 'do this twice' means action: 'repeat'; 'put on bottom of deck' means action: 'underdeck'; 'put on top of deck' means action: 'topdeck'; 'discard as it is played' means action: 'toss'; 'force to block' means action: 'taunt'.
+18. REG Vocabulary Equivalences: Per official REG v11.1.0: 'repent' and 'fall' mean action: 'convert'; 'repel', 'repels', 'ignore', and 'return [card in battle] to territory' mean action: 'withdraw' (when targeting a brigade/character in battle, target scope is ['battle']); 'cannot enter battle', 'may not enter battle', 'cannot be blocked by', and 'may not be blocked by' mean action: 'paralyze' (ongoing/static targeting the prohibited characters in play or battle); 'return [captured/captive card] to territory' means action: 'release' (typically scope: ['land_of_bondage'], zone_owner: 'both' or 'opponent', destination: 'territory'); 'has no effect' always means action: 'negate' (same as 'renders harmless'); 'return to hand' and 'remove to owner's hand' mean action: 'bounce' (for in-play cards); 'take prisoner' means action: 'capture'; 'restore abilities' means action: 'heal'; 'band with' and 'join the battle' mean action: 'band'; 'remove from the game' means action: 'banish'; 'do this twice' means action: 'repeat'; 'put on bottom of deck' and 'return to bottom of deck' mean action: 'underdeck'; 'put on top of deck' and 'return to top of deck' mean action: 'topdeck'; 'discard as it is played' means action: 'toss'; 'force to block' means action: 'taunt'; 'present' targets scope ['hand', 'territory']; 'choose opponent' (for choosing a blocker) targets zone_owner: 'opponent' in scope ['territory'].
 19. Replacement & Meta Modifiers ('instead', 'regardless', 'limit'): 'instead' represents a replacement modifier (e.g. 'if X, do Y instead') -> model in 'modifiers' with modifier_type: 'instead' and replacement_params: {{"trigger_event": "X", "replace_with_action": "Y"}}. 'regardless of [X]' (e.g. protect abilities, brigade) uses modifier_type: 'regardless'. Usage limits ('limit once per turn/battle') use modifier_type: 'limit' with limit_params: {{"count": 1, "per": "turn"|"battle"}}. ('Limit X per territory' is action: 'restrict', not a limit modifier).
 20. Target Exclusions ('except'): When a target clause contains 'except [X]' (e.g. 'except meek Heroes', 'all evil characters except Assyrians', 'except a king'), extract the exception clause into target 'identifiers' (e.g. identifiers: ["except meek Heroes"]) so it is never lost or ignored.
 21. Target Scope Fidelity (No Overgeneralization): When an ability targets, protects from, or negates a specific concept, effect, or label (e.g. 'poisons', 'curses', 'banding cards', 'music', 'demons'), target ONLY that specific concept (via matching identifiers or specific target_type). NEVER overgeneralize to broad card categories (e.g. do NOT expand 'poisons' to 'all evil enhancements' or 'curses' to 'all evil cards').

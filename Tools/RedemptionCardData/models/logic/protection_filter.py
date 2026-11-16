@@ -1,7 +1,7 @@
 """Structured protection filter model for Protect and Immune effects.
 
 Separates protection causes (actions, card sources, harm, exceptions) from the
-entity receiving protection, strictly adhering to Redemption REG v11.0.0.
+entity receiving protection, strictly adhering to Redemption REG v11.1.0.
 """
 
 from __future__ import annotations
