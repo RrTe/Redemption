@@ -7,17 +7,19 @@ the production-ready cards_logic.json file for the Colyseus rules engine.
 
 from __future__ import annotations
 import argparse
+import copy
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(Path(__file__).resolve().parent))
 sys.path.append(str(BASE_DIR))
 
-from models.logic.card_logic import CardLogic
+from models.logic.card_logic import CardLogic, CardSideLogic
 from models.logic.target_selector import TargetSelector
 from models.logic.stat_filter import parse_stat_filters, StatFilter
 from models.logic.target_decomposer import (
@@ -34,11 +36,13 @@ from utils.ast_constants_exporter import export_ast_constants
 from utils.card_hierarchy_exporter import export_card_hierarchy
 from fact_matrix import extract_ast_facts, verify_fact_matrix
 
-_BAND_ZONE_RESTRICTION_RE = __import__("re").compile(
+_BAND_ZONE_RESTRICTION_RE = re.compile(
     r"\bband\b[^.;]*\b(?:in\s+play|in\s+battle|in\s+territory|in\s+territories|from\s+hand|in\s+hand|"
     r"from\s+discard|in\s+discard|from\s+reserve|in\s+reserve|from\s+set-aside|in\s+set-aside)\b",
-    __import__("re").IGNORECASE,
+    re.IGNORECASE,
 )
+_SIDE_SUFFIX_RE = re.compile(r"_(?:top|bottom|shared|star)$", re.IGNORECASE)
+_TRIVIAL_ABILITY_TEXTS = {"", "none", "n/a", "meek", "-", "no special ability"}
 _PLURAL_SUBTYPE_SET = {k for k, v in SUBTYPE_MAP.items() if v[2]} | set(PLURAL_CARD_TYPE_MAP.keys())
 _UNMIGRATED_HUMAN_TOKENS = {
     "human", "humans", "non-human", "non-humans",
@@ -84,6 +88,291 @@ OUTPUT_CONSTANTS_FILE = BASE_DIR / "data" / "dist" / "ast_constants.json"
 OUTPUT_HIERARCHY_FILE = BASE_DIR / _config.get("card_hierarchy_json", "data/dist/cardHierarchy.json")
 REPORT_LOG = BASE_DIR / _config.get("logic_verification_report", "data/logic_verification_report.log")
 CARDS_EXT_FILE = BASE_DIR / _config.get("cards_extended_with_ordir_fuzzy", "data/cards_extended_with_ordir_fuzzy.json")
+
+
+def merge_side_ast(
+    existing_side: Optional[Dict[str, Any]],
+    incoming_ast: Dict[str, Any],
+    is_star_entry: bool = False,
+) -> Dict[str, Any]:
+    """Merges an incoming Stage 9 AST into an existing Stage 8/9 side payload without data loss.
+
+    Preserves deterministic ``is_star=True`` abilities when merging regular ``top``/``shared`` AI
+    abilities, and conversely preserves regular abilities when merging a ``side="star"`` AI entry.
+
+    Args:
+        existing_side: Existing serialized CardSideLogic dict on the target side, or None.
+        incoming_ast: Incoming serialized CardSideLogic dict from Stage 9.
+        is_star_entry: True when the incoming Stage 9 entry had ``side="star"``.
+
+    Returns:
+        Merged CardSideLogic dictionary ready for schema validation and verification.
+    """
+    incoming = copy.deepcopy(incoming_ast)
+    if is_star_entry:
+        for ab in incoming.get("abilities", []):
+            ab["is_star"] = True
+            trig = (ab.get("trigger_event") or "").strip().lower()
+            if not trig or trig == "star":
+                ab["trigger_event"] = "star_phase"
+            ab_id = ab.get("ability_id") or "ability"
+            if not ab_id.lower().startswith("star_"):
+                ab["ability_id"] = f"star_{ab_id}"
+            if ab.get("activation_mode") == "immediate":
+                ab["activation_mode"] = "triggered"
+
+    if not existing_side:
+        return incoming
+
+    merged = copy.deepcopy(existing_side)
+    existing_abs = list(merged.get("abilities", []))
+    incoming_abs = list(incoming.get("abilities", []))
+
+    if is_star_entry:
+        # Keep existing regular (non-star) abilities and supply incoming Star abilities
+        regular_abs = [ab for ab in existing_abs if not ab.get("is_star")]
+        merged["abilities"] = regular_abs + incoming_abs
+    else:
+        incoming_has_star = any(bool(ab.get("is_star")) for ab in incoming_abs)
+        if incoming_has_star:
+            merged["abilities"] = incoming_abs
+        else:
+            # Retain deterministically parsed is_star abilities alongside incoming regular abilities
+            existing_star_abs = [ab for ab in existing_abs if ab.get("is_star")]
+            merged["abilities"] = existing_star_abs + incoming_abs
+
+    seen_mods = {
+        (m.get("modifier_type"), m.get("applies_to"))
+        for m in merged.get("modifiers", [])
+        if isinstance(m, dict)
+    }
+    merged_mods = list(merged.get("modifiers", []))
+    for m in incoming.get("modifiers", []):
+        sig = (m.get("modifier_type"), m.get("applies_to")) if isinstance(m, dict) else None
+        if sig not in seen_mods:
+            merged_mods.append(m)
+            seen_mods.add(sig)
+    merged["modifiers"] = merged_mods
+
+    for meta_key in ("gender", "is_generic", "is_human"):
+        if merged.get(meta_key) is None and incoming.get(meta_key) is not None:
+            merged[meta_key] = incoming[meta_key]
+    if not merged.get("classes") and incoming.get("classes"):
+        merged["classes"] = list(incoming["classes"])
+
+    return merged
+
+
+def _combine_raw_texts_for_side(
+    side_key: str,
+    side_logic: CardSideLogic,
+    raw_abilities: Dict[str, str],
+) -> tuple[str, str]:
+    """Resolves banding raw context text and fact-matrix raw text for a card side.
+
+    Matches Star-only parsed sides solely against Star text so partially parsed cards
+    with an unparsed regular side are not falsely rejected by ``verify_fact_matrix``.
+
+    Args:
+        side_key: Target side key (``top``, ``bottom``, or ``shared``).
+        side_logic: Validated CardSideLogic instance for the side.
+        raw_abilities: Mapping of raw text sources (``top``, ``bottom``, ``shared``, ``star``).
+
+    Returns:
+        Tuple of ``(raw_text_for_banding_checks, raw_text_for_fact_matrix)``.
+    """
+    base_reg = (raw_abilities.get(side_key) or raw_abilities.get("shared") or "").strip()
+    star_txt = (raw_abilities.get("star") or "").strip()
+
+    banding_parts = []
+    if base_reg:
+        banding_parts.append(base_reg)
+    elif raw_abilities.get("top") and side_key != "bottom":
+        banding_parts.append(raw_abilities["top"].strip())
+    if star_txt and side_key in ("top", "shared") and star_txt not in " ".join(banding_parts):
+        banding_parts.append(star_txt)
+    banding_text = " ".join(p for p in banding_parts if p)
+
+    has_star = any(ab.is_star for ab in side_logic.abilities)
+    has_reg = any(not ab.is_star for ab in side_logic.abilities)
+
+    if has_star and not has_reg:
+        fact_text = star_txt or base_reg
+    elif has_star and has_reg:
+        if star_txt and star_txt.lower() not in base_reg.lower():
+            fact_text = f"{base_reg} {star_txt}".strip()
+        else:
+            fact_text = base_reg or star_txt
+    else:
+        fact_text = base_reg
+
+    return banding_text, fact_text
+
+
+def _is_trivial_ability_text(text: Any) -> bool:
+    """Returns True when a SpecialAbility text represents no executable ability."""
+    cleaned = str(text or "").strip().lower()
+    return cleaned in _TRIVIAL_ABILITY_TEXTS
+
+
+def _collect_unresolved_selectors(node: Any, path: str = "") -> List[tuple[str, List[str]]]:
+    """Walks a serialized CardSideLogic dict and collects selectors with unresolved card_titles."""
+    hits: List[tuple[str, List[str]]] = []
+    if isinstance(node, dict):
+        titles = node.get("card_titles")
+        if titles and not node.get("target_card_ids"):
+            hits.append((path, list(titles)))
+        for k, v in node.items():
+            hits.extend(_collect_unresolved_selectors(v, f"{path}.{k}" if path else k))
+    elif isinstance(node, list):
+        for idx, item in enumerate(node):
+            hits.extend(_collect_unresolved_selectors(item, f"{path}[{idx}]"))
+    return hits
+
+
+def audit_ext_coverage(
+    ext_cards: List[Dict[str, Any]],
+    raw_map: Dict[str, Dict[str, Any]],
+    dist_map: Dict[str, Dict[str, Any]],
+) -> Dict[str, List[str]]:
+    """Audits Stage 10 logic coverage and structural consistency against extended card data.
+
+    All checks are non-blocking and reported as structured sections in
+    ``logic_verification_report.log`` without excluding otherwise valid cards from export.
+
+    Args:
+        ext_cards: Canonical extended card list from ``cards_extended_with_ordir_fuzzy.json``.
+        raw_map: Combined Stage 8 + Stage 9 card logic map.
+        dist_map: Exportable clean distribution card map.
+
+    Returns:
+        Dictionary mapping audit category names to formatted finding lines.
+    """
+    sections: Dict[str, List[str]] = {
+        "missing_from_logic": [],
+        "orphaned_ids": [],
+        "missing_regular_sides": [],
+        "missing_star_abilities": [],
+        "shared_vs_top_deviations": [],
+        "unresolved_card_titles": [],
+    }
+    ext_ids: set[str] = set()
+
+    for c in ext_cards:
+        cid = str(c.get("Id", "")).strip()
+        if not cid:
+            continue
+        ext_ids.add(cid)
+        cname = get_card_name(c) or f"Card {cid}"
+        sides_dict = c.get("CardSides", {})
+        is_dual = isinstance(sides_dict.get("bottom"), dict)
+
+        logic_entry = dist_map.get(cid)
+        if not logic_entry:
+            status = "rejected_by_verifier" if cid in raw_map else "missing_from_raw_and_ai"
+            sections["missing_from_logic"].append(f"[{cid}] {cname} ({status})")
+            logic_entry = raw_map.get(cid)
+            if not logic_entry:
+                continue
+
+        sides_ast = logic_entry.get("sides", {})
+        star_sa = get_star_ability(c).strip()
+        shared_sa = (
+            (c.get("SpecialAbility") or "")
+            or (sides_dict.get("shared", {}).get("SpecialAbility", "") if isinstance(sides_dict.get("shared"), dict) else "")
+        ).strip()
+        direct_top_sa = (
+            sides_dict.get("top", {}).get("SpecialAbility", "")
+            if isinstance(sides_dict.get("top"), dict)
+            else ""
+        ) or ""
+        direct_bottom_sa = (
+            sides_dict.get("bottom", {}).get("SpecialAbility", "")
+            if isinstance(sides_dict.get("bottom"), dict)
+            else ""
+        ) or ""
+        has_shared_regular_sa = bool(
+            shared_sa and not re.match(r"^(?:STAR\s*:|\(\s*Star\s*\))", shared_sa, re.I)
+        )
+
+        def _has_regular_logic(s_node: Optional[Dict[str, Any]]) -> bool:
+            if not s_node:
+                return False
+            has_reg_ab = any(not ab.get("is_star") for ab in s_node.get("abilities", []))
+            return has_reg_ab or bool(s_node.get("modifiers"))
+
+        # 1. Missing regular non-trivial SpecialAbility sides (uses direct CardSides keys without fallback)
+        if is_dual:
+            if not _is_trivial_ability_text(direct_top_sa):
+                if not _has_regular_logic(sides_ast.get("top")):
+                    sections["missing_regular_sides"].append(
+                        f"[{cid}] {cname} | missing/empty 'top' side | ext_top={direct_top_sa!r}"
+                    )
+            if not _is_trivial_ability_text(direct_bottom_sa):
+                if not _has_regular_logic(sides_ast.get("bottom")):
+                    sections["missing_regular_sides"].append(
+                        f"[{cid}] {cname} | missing/empty 'bottom' side | ext_bottom={direct_bottom_sa!r}"
+                    )
+            if has_shared_regular_sa and not _is_trivial_ability_text(shared_sa):
+                if not _has_regular_logic(sides_ast.get("shared")):
+                    sections["missing_regular_sides"].append(
+                        f"[{cid}] {cname} | missing/empty 'shared' side | ext_shared={shared_sa!r}"
+                    )
+        else:
+            expected_single_sa = shared_sa if has_shared_regular_sa else direct_top_sa
+            if not _is_trivial_ability_text(expected_single_sa):
+                if not _has_regular_logic(sides_ast.get("top")):
+                    sections["missing_regular_sides"].append(
+                        f"[{cid}] {cname} | missing/empty 'top' side | ext={expected_single_sa!r}"
+                    )
+
+        # 2. Missing StarAbility
+        if not _is_trivial_ability_text(star_sa):
+            has_star_ast = any(
+                bool(ab.get("is_star"))
+                for s_data in sides_ast.values()
+                for ab in s_data.get("abilities", [])
+            )
+            if not has_star_ast:
+                kind = "dual" if is_dual else "single"
+                sections["missing_star_abilities"].append(
+                    f"[{cid}] {cname} ({kind}) | missing is_star AST | star={star_sa!r}"
+                )
+
+        # 3. Shared vs Top side deviations
+        has_shared_ast = "shared" in sides_ast
+        has_top_ast = "top" in sides_ast
+        if not is_dual and has_shared_ast:
+            sections["shared_vs_top_deviations"].append(
+                f"[{cid}] {cname} | single-sided card uses 'shared' in logic (sides={sorted(sides_ast)})"
+            )
+        elif (
+            is_dual
+            and has_shared_ast
+            and not has_top_ast
+            and not has_shared_regular_sa
+            and not _is_trivial_ability_text(direct_top_sa)
+        ):
+            sections["shared_vs_top_deviations"].append(
+                f"[{cid}] {cname} | dual card has 'shared' without 'top' despite non-trivial direct top SA"
+            )
+        elif not is_dual and isinstance(sides_dict.get("shared"), dict) and not isinstance(sides_dict.get("top"), dict):
+            if has_shared_regular_sa and not _is_trivial_ability_text(shared_sa) and has_top_ast:
+                sections["shared_vs_top_deviations"].append(
+                    f"[{cid}] {cname} | ext CardSides uses 'shared' (no 'top') while logic stores under 'top'"
+                )
+
+        # 4. Unresolved card_titles without target_card_ids
+        for skey, s_data in sides_ast.items():
+            for path, titles in _collect_unresolved_selectors(s_data, skey):
+                sections["unresolved_card_titles"].append(
+                    f"[{cid}] {cname} | {path} | card_titles={titles}"
+                )
+
+    for rid in sorted(set(raw_map.keys()) - ext_ids):
+        sections["orphaned_ids"].append(f"[{rid}] present in raw/AI logic but absent from extended DB")
+
+    return sections
 
 
 def verify_card_logic(
@@ -132,8 +421,11 @@ def verify_card_logic(
 
     for side_key, side_logic in card_logic.sides.items():
         raw_text_for_side = ""
+        raw_text_for_fact = ""
         if raw_abilities:
-            raw_text_for_side = raw_abilities.get(side_key) or raw_abilities.get("top") or raw_abilities.get("shared", "")
+            raw_text_for_side, raw_text_for_fact = _combine_raw_texts_for_side(
+                side_key, side_logic, raw_abilities
+            )
         side_card_type = ""
         if side_types:
             side_card_type = side_types.get(side_key) or side_types.get("top", "")
@@ -182,8 +474,22 @@ def verify_card_logic(
                     eff.step = offset + idx
 
         normalize_chained_targets(side_logic)
+        has_explicit_star_ab = any(
+            ability.is_star or ability.ability_id.lower().startswith("star_")
+            for ability in side_logic.abilities
+        )
+        has_regular_shared_text = bool(
+            raw_abilities
+            and raw_abilities.get("shared")
+            and raw_abilities["shared"].strip() != raw_abilities.get("star", "").strip()
+        )
         for ability in side_logic.abilities:
-            if (side_key == "shared" and has_star_ability) or (
+            if (
+                side_key == "shared"
+                and has_star_ability
+                and not has_explicit_star_ab
+                and not has_regular_shared_text
+            ) or (
                 has_star_ability and (ability.is_star or ability.ability_id.lower().startswith("star_"))
             ):
                 ability.is_star = True
@@ -308,6 +614,8 @@ def verify_card_logic(
 
             # Resolve card_titles to canonical target_card_ids if linker provided
             if linker:
+                if ability.trigger_filter and ability.trigger_filter.card_titles:
+                    ability.trigger_filter.target_card_ids = linker.resolve_titles(ability.trigger_filter.card_titles)
                 for cond in ability.conditions:
                     if cond.selector and cond.selector.card_titles:
                         cond.selector.target_card_ids = linker.resolve_titles(cond.selector.card_titles)
@@ -328,7 +636,7 @@ def verify_card_logic(
 
         # Audit against raw ability text via factual game-mechanic matrix
         if raw_abilities:
-            raw_text = raw_abilities.get(side_key) or raw_abilities.get("shared", "")
+            raw_text = raw_text_for_fact
             if raw_text and raw_text.strip().lower() not in ("none", "n/a", "meek"):
                 is_valid, fact_issues = verify_fact_matrix(raw_text, extract_ast_facts(side_logic))
                 if not is_valid:
@@ -424,10 +732,11 @@ def run_logic_verifier(export_dist: bool = True) -> None:
                 sm: Dict[str, str] = {}
                 top_sa = get_side_field(c, "top", "SpecialAbility")
                 bottom_sa = get_side_field(c, "bottom", "SpecialAbility")
-                shared_sa = c.get("SpecialAbility", "")
+                shared_node = sides_dict.get("shared", {}) if isinstance(sides_dict.get("shared"), dict) else {}
+                shared_sa = (c.get("SpecialAbility") or shared_node.get("SpecialAbility") or "").strip()
                 if star_sa:
-                    sm["shared"] = star_sa
-                elif shared_sa:
+                    sm["star"] = star_sa
+                if shared_sa and not re.match(r"^(?:STAR\s*:|\(\s*Star\s*\))", shared_sa, re.IGNORECASE):
                     sm["shared"] = shared_sa
                 if top_sa:
                     sm["top"] = top_sa
@@ -435,20 +744,24 @@ def run_logic_verifier(export_dist: bool = True) -> None:
                     sm["bottom"] = bottom_sa
                 id_to_raw_abilities[cid] = sm
             print(f"CardLinker initialized with {len(linker._index)} cards.")
+    else:
+        ext_cards = []
 
     print(f"Loading raw card abilities from: {INPUT_FILE}")
     with INPUT_FILE.open("r", encoding="utf-8") as f:
         raw_map: Dict[str, Dict[str, Any]] = json.load(f)
 
-    # Merge AI generated abilities (Stage 9)
+    # Merge AI generated abilities (Stage 9) cleanly without dropping Star or partial sides
     AI_INPUT_FILE = BASE_DIR / "data" / "ai_generated_abilities.json"
     if AI_INPUT_FILE.exists():
         print(f"Merging AI generated abilities from: {AI_INPUT_FILE}")
         with AI_INPUT_FILE.open("r", encoding="utf-8") as f_ai:
             ai_data = json.load(f_ai)
         for entry in ai_data.values():
-            cid = str(entry.get("card_id", "")).strip()
-            side = entry.get("side", "shared")
+            cid = _SIDE_SUFFIX_RE.sub("", str(entry.get("card_id", "")).strip())
+            raw_side = entry.get("side", "shared")
+            is_star_entry = raw_side == "star"
+            target_side = ("shared" if cid in dual_card_ids else "top") if is_star_entry else raw_side
             ast = entry.get("ast")
             raw_ab = entry.get("raw_ability", "").strip()
             if not cid or not ast:
@@ -456,10 +769,16 @@ def run_logic_verifier(export_dist: bool = True) -> None:
             if cid not in id_to_raw_abilities:
                 id_to_raw_abilities[cid] = {}
             if raw_ab:
-                id_to_raw_abilities[cid][side] = raw_ab
+                if is_star_entry:
+                    id_to_raw_abilities[cid].setdefault("star", raw_ab)
+                else:
+                    id_to_raw_abilities[cid].setdefault(target_side, raw_ab)
             if cid not in raw_map:
                 raw_map[cid] = {"card_identifier": cid, "sides": {}}
-            raw_map[cid]["sides"][side] = ast
+            existing_side_ast = raw_map[cid]["sides"].get(target_side)
+            raw_map[cid]["sides"][target_side] = merge_side_ast(
+                existing_side_ast, ast, is_star_entry=is_star_entry
+            )
 
     total_cards = len(raw_map)
     clean_cards = 0
@@ -517,6 +836,8 @@ def run_logic_verifier(export_dist: bool = True) -> None:
         if raw_carddata.exists():
             shutil.copy2(raw_carddata, dist_dir / "carddata.json")
 
+    coverage_audit = audit_ext_coverage(ext_cards, raw_map, verified_distribution_map)
+
     # Write audit log report
     with REPORT_LOG.open("w", encoding="utf-8") as rep:
         rep.write(f"# Redemption Ability Logic Verification Report\n# Total Cards Evaluated: {total_cards}\n"
@@ -532,9 +853,36 @@ def run_logic_verifier(export_dist: bool = True) -> None:
         else:
             rep.write("All evaluated cards passed semantic and structural validation without errors.\n")
 
+        section_titles = {
+            "missing_from_logic": "## Audit (Non-Blocking): Missing Cards vs. Extended DB",
+            "orphaned_ids": "## Audit (Non-Blocking): Orphaned Card IDs",
+            "missing_regular_sides": "## Audit (Non-Blocking): Missing Non-Trivial SpecialAbility Sides",
+            "missing_star_abilities": "## Audit (Non-Blocking): Missing StarAbilities (is_star=True)",
+            "shared_vs_top_deviations": "## Audit (Non-Blocking): Shared vs. Top Side Deviations",
+            "unresolved_card_titles": "## Audit (Non-Blocking): Unresolved card_titles Without target_card_ids",
+        }
+        rep.write("\n## Coverage & Structural Audit Summary (Non-Blocking):\n")
+        for key, title in section_titles.items():
+            rep.write(f"- {title.split(': ', 1)[1]}: {len(coverage_audit[key])}\n")
+        rep.write("\n")
+        for key, title in section_titles.items():
+            items = coverage_audit[key]
+            rep.write(f"{title} ({len(items)}):\n")
+            for item in items:
+                rep.write(f"  - {item}\n")
+            rep.write("\n")
+
     print(f"\nStage 10 Complete:\n - Evaluated Cards:        {total_cards}\n"
           f" - Clean Verified Cards:   {clean_cards} ({clean_cards / max(1, total_cards):.1%})\n"
-          f" - Total Issues Found:     {total_issues}\n - Production File Export: {OUTPUT_LOGIC_FILE}\n"
+          f" - Total Issues Found:     {total_issues}\n"
+          f" - Coverage Audit (non-blocking): "
+          f"missing_cards={len(coverage_audit['missing_from_logic'])}, "
+          f"orphaned={len(coverage_audit['orphaned_ids'])}, "
+          f"missing_sides={len(coverage_audit['missing_regular_sides'])}, "
+          f"missing_stars={len(coverage_audit['missing_star_abilities'])}, "
+          f"shared_vs_top={len(coverage_audit['shared_vs_top_deviations'])}, "
+          f"unresolved_titles={len(coverage_audit['unresolved_card_titles'])}\n"
+          f" - Production File Export: {OUTPUT_LOGIC_FILE}\n"
           f" - AST Constants Export:   {OUTPUT_CONSTANTS_FILE}\n"
           f" - Card Hierarchy Export:  {OUTPUT_HIERARCHY_FILE}")
 

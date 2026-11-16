@@ -25,7 +25,7 @@ from models.logic.target_selector import TargetSelector
 PROTECTION_REGEX = re.compile(
     r'\b(?:(?:this(?:\s+(?:card|ability|enhancement|curse|covenant|fortress|site|artifact))?|ability)\s+)?'
     r'(?:can\s*\[?not\]?|cannot)\s+be\s+'
-    r'((?:negated|interrupted|prevented)(?:\s*(?:,|or|and)\s*(?:negated|interrupted|prevented))*)\b'
+    r'((?:negated|interrupted|prevented)(?:\s*(?:,\s*(?:or|and)?|\bor\b|\band\b)\s*(?:negated|interrupted|prevented))*)\b'
     r'(?!\s+(?:if|while|unless|except|by|when|during)\b)\s*(?:\.|$)',
     re.IGNORECASE,
 )
@@ -35,7 +35,7 @@ CONDITIONAL_PROTECTION_SENTENCE_RE = re.compile(
     r'(?:^|(?<=[.;])\s*)'
     r'((?:(?:this(?:\s+(?:card|ability|enhancement|curse|covenant|fortress|site|artifact))?|ability)\s+)?'
     r'(?:can\s*\[?not\]?|cannot)\s+be\s+'
-    r'((?:negated|interrupted|prevented)(?:\s*(?:,|or|and)\s*(?:negated|interrupted|prevented))*)\s+'
+    r'((?:negated|interrupted|prevented)(?:\s*(?:,\s*(?:or|and)?|\bor\b|\band\b)\s*(?:negated|interrupted|prevented))*)\s+'
     r'((?:if|while|unless|except|by|when|during)\b[^.;]*?))'
     r'(?=\s*(?:[.;]|$))',
     re.IGNORECASE,

@@ -21,8 +21,22 @@ from ability_decompiler import decompile_card_side
 AI_OUTPUT_FILE = BASE_DIR / "data" / "ai_generated_abilities.json"
 REPORT_FILE = BASE_DIR / "data" / "semantic_audit_report.md"
 
-# Load local embedding model once (cached in memory)
-EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+
+def load_embed_model() -> SentenceTransformer | None:
+    """Loads the sentence-transformer embedding model offline from cache when available.
+
+    Returns:
+        Initialized SentenceTransformer instance, or None if neither offline cache
+        nor remote download is accessible.
+    """
+    try:
+        return SentenceTransformer("all-MiniLM-L6-v2", local_files_only=True)
+    except Exception:
+        try:
+            return SentenceTransformer("all-MiniLM-L6-v2")
+        except Exception as err:
+            print(f"[WARN] Could not load embedding model 'all-MiniLM-L6-v2': {err}")
+            return None
 
 
 from fact_matrix import extract_ast_facts, verify_fact_matrix
@@ -90,9 +104,13 @@ def audit_cards() -> None:
         })
 
     # Second pass: Batch compute local semantic embeddings (extremely fast)
+    embed_model = load_embed_model()
+    if embed_model is None:
+        print("Aborting Stage 11 embedding computation cleanly (offline cache unavailable).")
+        return
     print("Computing local semantic embeddings via all-MiniLM-L6-v2...")
-    raw_embeds = EMBED_MODEL.encode(raw_texts, normalize_embeddings=True, show_progress_bar=False)
-    decomp_embeds = EMBED_MODEL.encode(decomp_texts, normalize_embeddings=True, show_progress_bar=False)
+    raw_embeds = embed_model.encode(raw_texts, normalize_embeddings=True, show_progress_bar=False)
+    decomp_embeds = embed_model.encode(decomp_texts, normalize_embeddings=True, show_progress_bar=False)
 
     import numpy as np
     sims = np.sum(raw_embeds * decomp_embeds, axis=1)

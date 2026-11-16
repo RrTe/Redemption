@@ -9,6 +9,8 @@ from typing import Any, List, Optional
 from models.logic.card_logic import CardSideLogic
 from models.logic.ability import Ability
 from models.logic.action_effect import ActionEffect
+from models.logic.protection_filter import ProtectionFilter
+from models.logic.stat_filter import StatFilter
 from models.logic.target_selector import TargetSelector
 from models.logic.condition_expression import ConditionExpression
 from models.logic.modifier import Modifier
@@ -26,8 +28,81 @@ def _scopes(scope_val: Any) -> List[str]:
     return [_val(scope_val)] if scope_val is not None else []
 
 
+def _format_stat_filter(sf: StatFilter) -> str:
+    """Formats a single numeric StatFilter into canonical rule phrasing.
+
+    Args:
+        sf: StatFilter model with stat, operator, value, or variable.
+
+    Returns:
+        Formatted constraint phrase (e.g. ``with strength >= 10``).
+    """
+    thresh = sf.variable if sf.variable else (str(sf.value) if sf.value is not None else "X")
+    stat_label = "abilities" if sf.stat in ("both", "either") else sf.stat
+    if sf.operator == ">=":
+        rel = f"{thresh} or greater"
+    elif sf.operator == "<=":
+        rel = f"{thresh} or less"
+    elif sf.operator == ">":
+        rel = f"greater than {thresh}"
+    elif sf.operator == "<":
+        rel = f"less than {thresh}"
+    elif sf.operator == "==":
+        rel = f"of {thresh}"
+    else:
+        rel = f"!= {thresh}"
+    return f"with {stat_label} {rel}"
+
+
+def decompile_protection_filter(pf: ProtectionFilter, preposition: str = "from") -> str:
+    """Decompiles a ProtectionFilter into a natural English protection clause.
+
+    Args:
+        pf: ProtectionFilter specification containing actions, sources, and qualifiers.
+        preposition: Connecting preposition (``from`` for protect, ``to`` for immune).
+
+    Returns:
+        Formatted protection tail (e.g. ``from evil discard abilities``), or empty string.
+    """
+    action_labels = [_val(a).replace("_", " ") for a in pf.actions]
+    source_parts = [decompile_target(cs) for cs in pf.card_sources]
+    qual_parts = [q.strip() for q in pf.qualifiers if q and q.strip()]
+
+    cause_tokens: List[str] = []
+    if action_labels:
+        act_str = " or ".join(action_labels)
+        cause_tokens.append(f"{act_str} abilities" if len(action_labels) == 1 else f"{act_str} abilities")
+    elif pf.from_harm and not source_parts:
+        cause_tokens.append("harm")
+
+    tail_parts: List[str] = []
+    if source_parts and cause_tokens:
+        tail_parts.append(f"{preposition} {' and '.join(source_parts)} {' '.join(cause_tokens)}")
+    elif source_parts:
+        tail_parts.append(f"{preposition} {' and '.join(source_parts)}")
+    elif cause_tokens:
+        tail_parts.append(f"{preposition} {' '.join(cause_tokens)}")
+
+    if pf.except_actions:
+        exc_str = ", ".join(_val(a).replace("_", " ") for a in pf.except_actions)
+        tail_parts.append(f"(except {exc_str})")
+
+    if qual_parts:
+        tail_parts.extend(qual_parts)
+
+    return " ".join(tail_parts).strip()
+
+
 def decompile_target(target: Optional[TargetSelector]) -> str:
-    """Decompiles a TargetSelector into natural language noun phrase."""
+    """Decompiles a TargetSelector into a natural language noun phrase.
+
+    Args:
+        target: TargetSelector instance or None.
+
+    Returns:
+        Natural language target noun phrase including testament, generic/human/gender/class
+        qualifiers, stat filters, and zone scope.
+    """
     if not target:
         return "a card"
     if target.card_titles:
@@ -51,37 +126,60 @@ def decompile_target(target: Optional[TargetSelector]) -> str:
     elif "random" in mode:
         parts.append("a random")
 
-    if owner == "controller": parts.append("your")
-    elif owner == "opponent": parts.append("opponent's")
+    if owner == "controller":
+        parts.append("your")
+    elif owner == "opponent":
+        parts.append("opponent's")
 
-    if target.alignment: parts.append(_val(target.alignment))
+    if target.alignment:
+        parts.append(_val(target.alignment))
+    testament = getattr(target, "testament", None)
+    if testament:
+        t_up = _val(testament).upper()
+        parts.append("O.T." if t_up == "OT" else ("N.T." if t_up == "NT" else _val(testament)))
     is_generic = getattr(target, "is_generic", None)
-    if is_generic is True: parts.append("generic")
-    elif is_generic is False: parts.append("unique")
-    if getattr(target, "gender", None): parts.append(_val(target.gender))
+    if is_generic is True:
+        parts.append("generic")
+    elif is_generic is False:
+        parts.append("unique")
+    if getattr(target, "gender", None):
+        parts.append(_val(target.gender))
     is_human = getattr(target, "is_human", None)
-    if is_human is True: parts.append("human")
-    elif is_human is False: parts.append("non-human")
+    if is_human is True:
+        parts.append("human")
+    elif is_human is False:
+        parts.append("non-human")
+    if target.brigades:
+        parts.extend([_val(b) for b in target.brigades])
     if getattr(target, "classes", None):
-        parts.extend([_val(c).lower() for c in target.classes])
-    if target.brigades: parts.extend([_val(b) for b in target.brigades])
-    if target.identifiers: parts.extend([_val(i) for i in target.identifiers])
+        for cls_item in target.classes:
+            cls_low = _val(cls_item).lower()
+            parts.append(f"{cls_low} class" if not cls_low.endswith("class") else cls_low)
+    if getattr(target, "references", None):
+        parts.extend([_val(r) for r in target.references])
+    if target.identifiers:
+        parts.extend([_val(i) for i in target.identifiers])
 
     t_type = _val(target.target_type).replace("_", " ")
     if "Lost Soul" in target.identifiers or "lost" in t_type:
         parts = [p for p in parts if p not in ("evil", "good")]
-        if "Lost Soul" not in parts: parts.append("Lost Soul")
+        if "Lost Soul" not in parts:
+            parts.append("Lost Soul")
     elif t_type:
         parts.append(t_type)
     elif not parts or parts[-1] in ("your", "opponent's", "all"):
         parts.append("cards" if "all" in mode else "card")
+
+    stat_filters = getattr(target, "stat_filters", None) or []
+    for sf in stat_filters:
+        parts.append(_format_stat_filter(sf))
 
     sc_map = {
         "battle": "in battle", "in_play": "in play", "hand": "from hand",
         "deck": "from deck", "draw_pile": "from deck", "discard": "from discard pile",
         "discard_pile": "from discard pile", "reserve": "from Reserve",
         "reserve_pile": "from Reserve", "territory": "in territory",
-        "set_aside": "in set-aside area", "artifact_pile": "from Artifact pile"
+        "set_aside": "in set-aside area", "artifact_pile": "from Artifact pile",
     }
     mapped_scopes = [sc_map[s] for s in scopes_list if s in sc_map]
     if mapped_scopes:
@@ -115,6 +213,13 @@ def decompile_effect(effect: ActionEffect) -> str:
     elif "use other enhancements" in act: clause = f"{tgt} may use other enhancements" if tgt and tgt != "a card" else "may use other enhancements"
     elif act == "site access": clause = f"{tgt} has access to any Site" if tgt and tgt != "a card" else "has access to any Site"
     else: clause = f"{act} {tgt}"
+
+    pf = getattr(effect, "protection_filter", None)
+    if pf is not None:
+        prep = "to" if act == "immune" else "from"
+        pf_str = decompile_protection_filter(pf, preposition=prep)
+        if pf_str:
+            clause = f"{clause} {pf_str}"
 
     dur = _val(effect.duration)
     if dur == "this_turn": clause += " this turn"
@@ -150,13 +255,25 @@ def decompile_modifier(mod: Modifier) -> str:
 
 
 def decompile_ability(ability: Ability) -> str:
-    """Synthesizes an entire Ability clause into natural card ability sentences."""
+    """Synthesizes an entire Ability clause into natural card ability sentences.
+
+    Args:
+        ability: Structured Ability clause model.
+
+    Returns:
+        Natural language representation of the ability clause.
+    """
     clauses: List[str] = []
 
     if ability.trigger_event and str(ability.trigger_event).strip().lower() not in ("star_phase", "star"):
         trig = str(ability.trigger_event).strip()
         if not trig.lower().startswith(("if", "when", "after", "while", "during", "on")):
             trig = f"If {trig}"
+        tf = getattr(ability, "trigger_filter", None)
+        if tf is not None:
+            tf_str = decompile_target(tf)
+            if tf_str and tf_str not in ("a card", "This card") and tf_str.lower() not in trig.lower():
+                trig = f"{trig} ({tf_str})"
         clauses.append(trig)
 
     for cond in ability.conditions:
@@ -179,7 +296,10 @@ def decompile_ability(ability: Ability) -> str:
     for m in ability.modifiers:
         clauses.append(decompile_modifier(m))
 
-    return " ".join(clauses).strip()
+    rendered = " ".join(clauses).strip()
+    if getattr(ability, "is_star", False) and rendered and not rendered.upper().startswith("STAR:"):
+        return f"STAR: {rendered}"
+    return rendered
 
 
 def decompile_card_side(side_logic: CardSideLogic) -> str:

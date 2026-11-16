@@ -168,6 +168,21 @@ STANDALONE_IDENTIFIER_NOUNS: Dict[str, Tuple[str, bool, str]] = {
     "weapon": ("enhancement", False, "weapon class"),
     "storehouse": ("fortress", False, "Storehouse"),
     "temple": ("artifact", False, "Temple"),
+    "antediluvians": ("character", True, "Antediluvian"),
+    "antediluvian": ("character", False, "Antediluvian"),
+    "flood survivors": ("character", True, "Flood Survivor"),
+    "flood survivor": ("character", False, "Flood Survivor"),
+    "deacons": ("character", True, "Deacon"),
+    "deacon": ("character", False, "Deacon"),
+    "kings of israel": ("character", True, "King of Israel"),
+    "king of israel": ("character", False, "King of Israel"),
+    "roman emperors": ("evil_character", True, "Roman Emperor"),
+    "roman emperor": ("evil_character", False, "Roman Emperor"),
+    "false prophets": ("evil_character", True, "False Prophet"),
+    "false prophet": ("evil_character", False, "False Prophet"),
+    "idols": ("artifact", True, "Idol"),
+    "idol": ("artifact", False, "Idol"),
+    "rest": ("card", True, "rest"),
 }
 
 # Brigade patterns (sorted longest first so 'Pale Green' and 'Multi-Brigade' match before single words)
@@ -353,12 +368,35 @@ def parse_target_classification_with_gender(
 
     # 4. Extract well-known qualifiers into identifiers (and map gender directly)
     if not re.search(r"\bopposite\s+gender\b", clean, re.I):
-        if re.search(r"\bfemale\b", clean, re.I):
+        if re.search(r"\bfemales?\b", clean, re.I):
             gender = "female"
-            clean = re.sub(r"\bfemale\b", "", clean, flags=re.I).strip()
-        elif re.search(r"\bmale\b", clean, re.I):
+            clean = re.sub(r"\bfemales?\b", "", clean, flags=re.I).strip()
+        elif re.search(r"\bmales?\b", clean, re.I):
             gender = "male"
-            clean = re.sub(r"\bmale\b", "", clean, flags=re.I).strip()
+            clean = re.sub(r"\bmales?\b", "", clean, flags=re.I).strip()
+
+    # ORDIR 7.1.0 canonical title/concept phrase normalization (preserves 'musician'/'music' untouched)
+    ordir_patterns: List[Tuple[re.Pattern[str], str, Optional[str], Optional[str]]] = [
+        (re.compile(r"\b(?:with\s+)?herod(?:'s\s+name)?\s+in\s+the\s+title\b", re.I), "Herod in the Title", None, None),
+        (re.compile(r"\b(?:with\s+)?gideon(?:'s\s+name)?\s+in\s+the\s+title\b", re.I), "Gideon in the Title", None, None),
+        (re.compile(r"\b(?:with\s+)?paul(?:'s\s+name)?\s+in\s+the\s+title\b", re.I), "Paul in the Title", None, None),
+        (
+            re.compile(r"\bdepicting\s+(?:an?\s+)?(?:idol|evil\s+altar|false\s+religious\s+practice)\b", re.I),
+            "Idol",
+            None,
+            None,
+        ),
+        (re.compile(r"\bevil\s+prophets?\b", re.I), "False Prophet", "evil_character", "evil"),
+    ]
+    for o_pat, o_label, o_type, o_align in ordir_patterns:
+        if o_pat.search(clean):
+            if o_label not in identifiers:
+                identifiers.append(o_label)
+            if o_type and target_type is None:
+                target_type = o_type
+            if o_align and alignment is None:
+                alignment = o_align
+            clean = o_pat.sub("", clean).strip()
 
     qualifier_patterns: List[Tuple[re.Pattern[str], str]] = [
         (re.compile(r"\bold\s+testament\b|\bo\.t\.(?=\s|$)", re.I), "O.T."),
@@ -449,8 +487,16 @@ def parse_target_classification_with_gender(
                 if "special abilities" not in identifiers:
                     identifiers.append("special abilities")
             else:
-                # Specific named card (e.g., 'Samuel', 'Miriam', 'Angry Mob', 'Potter's Field')
-                card_titles.append(clean)
+                # Split unambiguous multi-title lists ('Abiram or Korah', 'Abner, Michal or Doeg')
+                title_parts = [
+                    tp.strip(" ,")
+                    for tp in re.split(r"\s*,\s*(?:or\s+)?|\s+or\s+", clean)
+                    if tp.strip(" ,")
+                ]
+                if len(title_parts) > 1:
+                    card_titles.extend(title_parts)
+                else:
+                    card_titles.append(clean)
 
     if target_type is None and not card_titles and (brigades or alignment or identifiers or gender):
         target_type = "card"
@@ -568,6 +614,29 @@ def build_target_selector(
             scope=[Zone.DECK],
             target_type="card",
             count=cnt_val,
+        )
+
+    # 4b. Bare zone target check: e.g. 'draw pile', 'discard pile', 'your draw pile'
+    bare_zone_match = re.match(
+        r"^(?:(your|own|holder's|opponent's|opponents'|their|a|the)\s+)?(draw\s+pile|deck|decks|discard\s+pile|reserve\s+pile|reserves|reserve)$",
+        text,
+        re.IGNORECASE,
+    )
+    if bare_zone_match:
+        z_owner_tok, z_name_tok = bare_zone_match.groups()
+        z_mapped = _map_zone_token(z_name_tok) or Zone.DECK
+        z_owner: Literal["controller", "opponent", "both", "either"] = "either"
+        if z_owner_tok:
+            ol = z_owner_tok.lower()
+            if ol in ("your", "own", "holder's"):
+                z_owner = "controller"
+            elif "opponent" in ol:
+                z_owner = "opponent"
+        return TargetSelector(
+            selection_mode=SelectionMode.AUTOMATIC_ALL,
+            zone_owner=z_owner,
+            scope=[z_mapped],
+            target_type="card",
         )
 
     # 5. Extract zone suffix(es) and owner

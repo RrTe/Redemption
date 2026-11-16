@@ -24,6 +24,34 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR))
 sys.path.append(str(Path(__file__).resolve().parent))
 from utils.card_helpers import get_card_name, get_side_field, get_all_types
+
+
+def _extract_card_sides_values(card: dict, field: str) -> list:
+    """Collects all values of a given field across every CardSide entry including shared/subtypes.
+
+    Args:
+        card: Full card dictionary from extended card database.
+        field: Field name inside each side dictionary (e.g. ``Type``, ``Alignment``, ``Classes``).
+
+    Returns:
+        List of non-empty field values collected across all CardSides dicts.
+    """
+    values = []
+    sides = card.get("CardSides", {})
+    if isinstance(sides, dict):
+        for side_val in sides.values():
+            if isinstance(side_val, dict):
+                val = side_val.get(field)
+                if isinstance(val, list):
+                    values.extend(v for v in val if v)
+                elif val:
+                    values.append(val)
+    top_level = card.get(field)
+    if isinstance(top_level, list):
+        values.extend(v for v in top_level if v)
+    elif top_level:
+        values.append(top_level)
+    return values
 # Load config from config.json
 CONFIG_FILE = BASE_DIR / "config.json"
 with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
@@ -60,47 +88,55 @@ def verify():
     # list of cards provided by the ORDIR, which makes secondary metadata validation largely redundant,
     # except for catching severe false positives.
     for c in data:
-        alignment = get_side_field(c, "top", "Alignment", default="")
+        alignments = {str(a).strip() for a in _extract_card_sides_values(c, "Alignment")}
+        if not alignments:
+            top_align = get_side_field(c, "top", "Alignment", default="")
+            if top_align:
+                alignments.add(str(top_align).strip())
         ordir = c.get("ORDIR", [])
         name = get_card_name(c)
-        types = [t.lower() for t in get_all_types(c)]
-        
+        all_types = set(t.lower() for t in get_all_types(c))
+        all_types.update(str(t).lower() for t in _extract_card_sides_values(c, "Type"))
+        all_classes = {str(cl).lower() for cl in _extract_card_sides_values(c, "Classes")}
+
         for cat in ordir:
             cat_lower = cat.lower()
-            
-            # 1. Alignment checks
-            if alignment == "Good" and "evil" in cat_lower and "hero" not in cat_lower:
+
+            # 1. Alignment checks (account for dual-alignment cards)
+            if "Good" in alignments and "Evil" not in alignments and "evil" in cat_lower and "hero" not in cat_lower:
                 suspicious.append(f"Alignment Mismatch: Good card '{name}' in Evil category '{cat}'")
-            if alignment == "Evil" and re.search(r"\bhero\b", cat_lower):
+            if "Evil" in alignments and "Good" not in alignments and re.search(r"\bhero\b", cat_lower):
                 suspicious.append(f"Alignment Mismatch: Evil Character '{name}' in Hero category '{cat}'")
-                
-            # 2. CardType specific checks
-            if "artifact" in cat_lower and "artifact" not in types:
-                if "tabernacle" not in cat_lower: # special exception where people might count other things
-                    suspicious.append(f"Type Mismatch: '{name}' in Artifact category '{cat}' but is not an Artifact")
-                    
-            if "site" in cat_lower and "site" not in types:
-                suspicious.append(f"Type Mismatch: '{name}' in Site category '{cat}' but is not a Site")
-                
-            if "fortress" in cat_lower and "fortress" not in types:
-                suspicious.append(f"Type Mismatch: '{name}' in Fortress category '{cat}' but is not a Fortress")
-                
-            if "curse" in cat_lower and "curse" not in types:
+
+            # 2. CardType specific checks (handle multi-type shared dicts & disjunctive 'Site or Fortress')
+            if "site or fortress" in cat_lower:
+                if "site" not in all_types and "fortress" not in all_types:
+                    suspicious.append(f"Type Mismatch: '{name}' in '{cat}' but is neither a Site nor a Fortress")
+            else:
+                if "artifact" in cat_lower and "artifact" not in all_types:
+                    if "tabernacle" not in cat_lower:  # special exception where non-Artifacts appear
+                        suspicious.append(f"Type Mismatch: '{name}' in Artifact category '{cat}' but is not an Artifact")
+
+                if "site" in cat_lower and "site" not in all_types:
+                    suspicious.append(f"Type Mismatch: '{name}' in Site category '{cat}' but is not a Site")
+
+                if "fortress" in cat_lower and "fortress" not in all_types:
+                    suspicious.append(f"Type Mismatch: '{name}' in Fortress category '{cat}' but is not a Fortress")
+
+            if "curse" in cat_lower and "curse" not in all_types:
                 suspicious.append(f"Type Mismatch: '{name}' in Curse category '{cat}' but is not a Curse")
-                
-            if "covenant" in cat_lower and "covenant" not in types:
+
+            if "covenant" in cat_lower and "covenant" not in all_types:
                 suspicious.append(f"Type Mismatch: '{name}' in Covenant category '{cat}' but is not a Covenant")
-                
-            if "lost soul" in cat_lower and "lost soul" not in types:
+
+            if "lost soul" in cat_lower and "lost soul" not in all_types:
                 suspicious.append(f"Type Mismatch: '{name}' in Lost Soul category '{cat}' but is not a Lost Soul")
 
             # 3. Class checks
             if "cloud" in cat_lower:
-                card_class_list = get_side_field(c, "top", "Classes", default=[])
-                card_class = ", ".join(card_class_list) if isinstance(card_class_list, list) else str(card_class_list)
-                if "cloud" not in card_class.lower():
-                    suspicious.append(f"Class Mismatch: '{name}' in Cloud category '{cat}' but Class is '{card_class}'")
-                    
+                if not any("cloud" in cl for cl in all_classes):
+                    suspicious.append(f"Class Mismatch: '{name}' in Cloud category '{cat}' but Class is '{', '.join(sorted(all_classes))}'")
+
             # 4. Nativity scope check
             if cat_lower == "nativity card":
                 ref = c.get("Reference", "").lower()
@@ -115,18 +151,14 @@ def verify():
                 # Luke 1-2
                 if "luke 1" in ref or "luke 2" in ref:
                     is_nativity = True
-                
+
                 if not is_nativity:
                     suspicious.append(f"Nativity Mismatch: '{name}' in Nativity category but reference ({ref}) does not match Nativity scope.")
 
-            # 5. Star card check
+            # 5. Star card check (Star Cards are identified via IsStarCard; 'Star' was removed from Classes)
             if cat_lower == "star card":
                 if not c.get("IsStarCard", False):
                     suspicious.append(f"IsStarCard Flag Missing: '{name}' in Star category but IsStarCard is False")
-                card_class_list = get_side_field(c, "top", "Classes", default=[])
-                card_class = ", ".join(card_class_list) if isinstance(card_class_list, list) else str(card_class_list)
-                if "star" not in card_class.lower():
-                    suspicious.append(f"Class Mismatch: '{name}' in Star category but Class is '{card_class}'")
 
     # Check 3: The "High-Category Anomaly" (Ausreißer-Check)
     # If a card is mapped to an unusually high number of ORDIR categories (> 10), it's highly suspicious.

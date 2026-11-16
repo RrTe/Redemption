@@ -35,6 +35,7 @@ from mappings.special_ability_overrides import SPECIAL_ABILITY_OVERRIDES
 from models.logic.card_logic import CardLogic, CardSideLogic
 from models.logic.ability import Ability
 from models.logic.action_effect import ActionEffect
+from models.logic.protection_filter import ProtectionFilter
 from models.logic.target_selector import TargetSelector
 from models.logic.modifier import Modifier
 from models.logic.dynamic_value import DynamicValue, DynamicValueCalculation
@@ -126,6 +127,10 @@ SHUFFLE_PATTERN = re.compile(
 )
 PROTECT_PATTERN = re.compile(
     rf"^(?:you\s+may\s+|holder\s+may\s+)?protect\s+{_COUNT_GROUP}([a-zA-Z0-9\s\(\)\'\-\.]+?)\s+from\s+([a-zA-Z0-9\s\(\)\'\-\.,]+?)\.?$",
+    re.IGNORECASE,
+)
+SELF_CANNOT_BE_PROTECT_PATTERN = re.compile(
+    r"^(?:this\s+(?:character|hero|evil\s+character|card)\s+)?(?:can\s*\[?not\]?|cannot)\s+be\s+(taken\s+prisoner|captured|redirected)\.?$",
     re.IGNORECASE,
 )
 IMMUNE_PATTERN = re.compile(
@@ -766,6 +771,30 @@ def _parse_single_action_effects(clause: str) -> Optional[Tuple[str, List[Action
             ActivationMode.STATIC,
         )
 
+    # 16b. Self-protection against capture/prisoner or redirect
+    self_prot_match = SELF_CANNOT_BE_PROTECT_PATTERN.match(cleaned)
+    if self_prot_match:
+        protected_token = self_prot_match.group(1).strip().lower()
+        prot_action = ActionVerb.REDIRECT if protected_token == "redirected" else ActionVerb.CAPTURE
+        return (
+            f"protect_from_{prot_action.value}",
+            [
+                ActionEffect(
+                    step=1,
+                    action=ActionVerb.PROTECT,
+                    effect_type="ongoing",
+                    duration=Duration.PERMANENT,
+                    target=TargetSelector(
+                        selection_mode=SelectionMode.AUTOMATIC_SELF,
+                        zone_owner="controller",
+                        scope=[Zone.IN_PLAY],
+                    ),
+                    protection_filter=ProtectionFilter(actions=[prot_action]),
+                )
+            ],
+            ActivationMode.STATIC,
+        )
+
     # 17. Immune
     immune_match = IMMUNE_PATTERN.match(cleaned)
     if immune_match:
@@ -1135,8 +1164,14 @@ def parse_side_ability(
     if override_key in SPECIAL_ABILITY_OVERRIDES and not is_star_clause:
         return SPECIAL_ABILITY_OVERRIDES[override_key], None
 
-    # 3. Extract STAR trigger prefix
+    # 3. Extract STAR trigger prefix and split mixed ', or redirected' suffix from modifier clauses
     text_after_star, extracted_star = extract_star_trigger(text)
+    text_after_star = re.sub(
+        r"\b(negated|interrupted|prevented)\s*(?:,\s*(?:or|and)?|\bor\b|\band\b)\s*redirected\b",
+        r"\1. Cannot be redirected",
+        text_after_star,
+        flags=re.IGNORECASE,
+    )
     is_star = is_star_clause or extracted_star
     activation_mode = ActivationMode.TRIGGERED if is_star else ActivationMode.IMMEDIATE
 
@@ -1196,6 +1231,91 @@ def parse_side_ability(
     return side_logic, None
 
 
+def parse_card_record(
+    card: Dict[str, Any],
+) -> Tuple[str, Optional[Dict[str, Any]], int, int, List[Dict[str, Any]]]:
+    """Parses all sides and Star abilities of a single extended card record.
+
+    Deterministically parsed sides are retained independently even when another side
+    or Star clause on the same card fails parsing. Failed Star clauses are emitted
+    with ``side="star"`` so Stage 9 can distinguish them from regular ``top`` or
+    ``shared`` abilities without schema changes to ``CardLogic.sides``.
+
+    Args:
+        card: Raw or extended card dictionary containing ``Id`` and ``CardSides``.
+
+    Returns:
+        Tuple of ``(card_id, serialized_card_logic_or_none, evaluated_sides, parsed_sides, unparsed_records)``.
+    """
+    card_id = str(card.get("Id", "")).strip() or (card.get("OfficialSet", "") + "_" + card.get("Name", ""))
+    card_name = get_card_name(card)
+    sides_dict = card.get("CardSides", {})
+    shared_data = sides_dict.get("shared", {}) if isinstance(sides_dict.get("shared"), dict) else {}
+    top_data = sides_dict.get("top", {}) if isinstance(sides_dict.get("top"), dict) else {}
+    bottom_data = sides_dict.get("bottom") if isinstance(sides_dict.get("bottom"), dict) else None
+
+    card_logic_entry = CardLogic(card_identifier=card_id)
+    sides_to_process: List[Tuple[str, str, bool]] = []
+    star_sa = get_star_ability(card)
+    shared_sa = (shared_data.get("SpecialAbility") or "").strip()
+    top_sa = (top_data.get("SpecialAbility") or "").strip()
+    bottom_sa = (bottom_data.get("SpecialAbility") or "").strip() if bottom_data else ""
+
+    if star_sa:
+        star_target_side = "shared" if bottom_data is not None else "top"
+        sides_to_process.append((star_target_side, star_sa, True))
+    if shared_sa and not re.match(r"^(?:STAR\s*:|\(\s*Star\s*\))", shared_sa, re.IGNORECASE):
+        target_side = "shared" if bottom_data is not None else "top"
+        sides_to_process.append((target_side, shared_sa, False))
+    if top_sa:
+        sides_to_process.append(("top", top_sa, False))
+    if bottom_sa:
+        sides_to_process.append(("bottom", bottom_sa, False))
+
+    if not sides_to_process:
+        default_empty_side = "shared" if (bottom_data is not None and not top_data) else "top"
+        sides_to_process = [(default_empty_side, "", False)]
+
+    total_sides = 0
+    parsed_sides = 0
+    unparsed_records: List[Dict[str, Any]] = []
+
+    for side_key, raw_ability, is_star_clause in sides_to_process:
+        total_sides += 1
+        side_logic, failure_reason = parse_side_ability(
+            card_name, side_key, raw_ability, is_star_clause=is_star_clause
+        )
+
+        if side_logic is not None:
+            if side_key in card_logic_entry.sides:
+                existing_side = card_logic_entry.sides[side_key]
+                seen_mods = {(m.modifier_type, m.applies_to) for m in existing_side.modifiers}
+                for mod in side_logic.modifiers:
+                    sig = (mod.modifier_type, mod.applies_to)
+                    if sig not in seen_mods:
+                        existing_side.modifiers.append(mod)
+                        seen_mods.add(sig)
+                existing_side.abilities.extend(side_logic.abilities)
+            else:
+                card_logic_entry.sides[side_key] = side_logic
+            parsed_sides += 1
+        else:
+            # Separate failed StarAbility from regular top/shared SpecialAbility in unparsed logs
+            unparsed_side = "star" if is_star_clause else side_key
+            unparsed_records.append(
+                {
+                    "card_identifier": card_id,
+                    "card_name": card_name,
+                    "side": unparsed_side,
+                    "raw_ability": f"STAR: {raw_ability}" if is_star_clause else raw_ability,
+                    "reason": failure_reason,
+                }
+            )
+
+    serialized = card_logic_entry.model_dump() if card_logic_entry.sides else None
+    return card_id, serialized, total_sides, parsed_sides, unparsed_records
+
+
 def run_ability_parser() -> None:
     """Executes the ability parsing pipeline over all cards in the database."""
     if not INPUT_FILE or not INPUT_FILE.exists():
@@ -1212,66 +1332,14 @@ def run_ability_parser() -> None:
     unparsed_records: List[Dict[str, Any]] = []
     output_logic_map: Dict[str, Dict[str, Any]] = {}
 
-    print(f"Processing {len(cards)} cards (Abbreviation Protection, X, Colon Scope, All-Or-Nothing)...")
+    print(f"Processing {len(cards)} cards (Abbreviation Protection, X, Colon Scope, Partial-Side Retention)...")
     for card in cards:
-        card_id = str(card.get("Id", "")).strip() or (card.get("OfficialSet", "") + "_" + card.get("Name", ""))
-        card_name = get_card_name(card)
-        sides_dict = card.get("CardSides", {})
-        shared_data = sides_dict.get("shared", {}) if isinstance(sides_dict.get("shared"), dict) else {}
-        top_data = sides_dict.get("top", {}) if isinstance(sides_dict.get("top"), dict) else {}
-        bottom_data = sides_dict.get("bottom") if isinstance(sides_dict.get("bottom"), dict) else None
-
-        card_logic_entry = CardLogic(card_identifier=card_id)
-
-        sides_to_process: List[Tuple[str, str, bool]] = []
-        star_sa = get_star_ability(card)
-        shared_sa = (shared_data.get("SpecialAbility") or "").strip()
-        top_sa = (top_data.get("SpecialAbility") or "").strip()
-        bottom_sa = (bottom_data.get("SpecialAbility") or "").strip() if bottom_data else ""
-
-        if star_sa:
-            star_target_side = "shared" if bottom_data is not None else "top"
-            sides_to_process.append((star_target_side, star_sa, True))
-        if shared_sa and not re.match(r"^(?:STAR\s*:|\(\s*Star\s*\))", shared_sa, re.IGNORECASE):
-            target_side = "shared" if bottom_data is not None else "top"
-            sides_to_process.append((target_side, shared_sa, False))
-        if top_sa:
-            sides_to_process.append(("top", top_sa, False))
-        if bottom_sa:
-            sides_to_process.append(("bottom", bottom_sa, False))
-
-        if not sides_to_process:
-            default_empty_side = "shared" if (bottom_data is not None and not top_data) else "top"
-            sides_to_process = [(default_empty_side, "", False)]
-
-        card_all_parsed = True
-        for side_key, raw_ability, is_star_clause in sides_to_process:
-            total_sides += 1
-            side_logic, failure_reason = parse_side_ability(
-                card_name, side_key, raw_ability, is_star_clause=is_star_clause
-            )
-
-            if side_logic is not None:
-                if side_key in card_logic_entry.sides:
-                    card_logic_entry.sides[side_key].modifiers.extend(side_logic.modifiers)
-                    card_logic_entry.sides[side_key].abilities.extend(side_logic.abilities)
-                else:
-                    card_logic_entry.sides[side_key] = side_logic
-                parsed_sides += 1
-            else:
-                card_all_parsed = False
-                unparsed_records.append(
-                    {
-                        "card_identifier": card_id,
-                        "card_name": card_name,
-                        "side": side_key,
-                        "raw_ability": f"STAR: {raw_ability}" if is_star_clause else raw_ability,
-                        "reason": failure_reason,
-                    }
-                )
-
-        if card_all_parsed and card_logic_entry.sides:
-            output_logic_map[card_id] = card_logic_entry.model_dump()
+        card_id, serialized, card_total, card_parsed, card_unparsed = parse_card_record(card)
+        total_sides += card_total
+        parsed_sides += card_parsed
+        unparsed_records.extend(card_unparsed)
+        if serialized is not None:
+            output_logic_map[card_id] = serialized
 
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with OUTPUT_FILE.open("w", encoding="utf-8") as out:
@@ -1291,7 +1359,7 @@ def run_ability_parser() -> None:
     print(f" - Total Card Sides Evaluated: {total_sides}")
     print(f" - Successfully Parsed Sides:  {parsed_sides} ({parsed_sides / max(1, total_sides):.1%})")
     print(f" - Unparsed Sides Logged:      {len(unparsed_records)} -> {UNPARSED_LOG}")
-    print(f" - 100% Fully Parsed Cards:    {len(output_logic_map)} cards -> {OUTPUT_FILE}")
+    print(f" - Cards with Parsed Sides:    {len(output_logic_map)} cards -> {OUTPUT_FILE}")
 
 
 if __name__ == "__main__":

@@ -33,23 +33,90 @@ AI_OUTPUT_FILE = BASE_DIR / "data" / "ai_generated_abilities.json"
 CARDS_EXT_FILE = BASE_DIR / _config.get("cards_extended_with_ordir_fuzzy", "data/cards_extended_with_ordir_fuzzy.json")
 
 
-def load_unparsed_sample(offset: int = 0, max_items: int = 10, existing: Optional[set] = None) -> List[Dict[str, str]]:
-    """Parses unparsed ability entries with offset, limit, and existing card filtering.
+_SIDE_SUFFIX_RE = re.compile(r"_(?:top|bottom|shared|star)$", re.IGNORECASE)
+_STAR_PREFIX_RE = re.compile(r"^(?:STAR\s*:|\(\s*Star\s*\))", re.IGNORECASE)
+
+
+def canonical_card_id(card_identifier: str) -> str:
+    """Strips any accidental side suffix from a card identifier.
 
     Args:
-        offset: Number of non-extracted cards to skip.
-        max_items: Maximum entries to return.
-        existing: Set of already generated card keys to skip.
+        card_identifier: Raw or suffixed card identifier string.
 
     Returns:
-        List of unparsed card dictionaries.
+        Canonical card ID without trailing ``_top``, ``_bottom``, ``_shared``, or ``_star``.
     """
-    if not UNPARSED_LOG.exists():
+    return _SIDE_SUFFIX_RE.sub("", str(card_identifier).strip())
+
+
+def compute_star_done_cids(results: Dict[str, Any]) -> set[str]:
+    """Collects canonical card IDs that already have an AI Star ability AST.
+
+    Args:
+        results: Mapping of AI entry keys to saved AST dictionaries.
+
+    Returns:
+        Set of canonical card IDs that already contain at least one ``is_star`` ability.
+    """
+    done: set[str] = set()
+    for entry in results.values():
+        cid = canonical_card_id(entry.get("card_id", ""))
+        if not cid:
+            continue
+        if entry.get("side") == "star":
+            done.add(cid)
+            continue
+        abilities = entry.get("ast", {}).get("abilities", [])
+        if any(bool(ab.get("is_star")) for ab in abilities):
+            done.add(cid)
+    return done
+
+
+def is_entry_done(
+    cid: str,
+    side: str,
+    existing: Optional[set] = None,
+    star_done_cids: Optional[set[str]] = None,
+) -> bool:
+    """Checks accurately whether a card side or Star entry has already been extracted.
+
+    Unlike legacy heuristics, presence of ``{cid}_top`` never skips ``bottom`` or
+    ``star`` entries, and presence of ``{cid}_shared`` never skips ``top``.
+
+    Args:
+        cid: Canonical card identifier.
+        side: Unparsed entry side key (``top``, ``bottom``, ``shared``, or ``star``).
+        existing: Set of existing result keys (``{cid}_{side}``).
+        star_done_cids: Set of card IDs that already have an extracted Star ability.
+
+    Returns:
+        True if the exact requested side/star entry is already present.
+    """
+    if existing is None:
+        return False
+    canon_cid = canonical_card_id(cid)
+    if f"{canon_cid}_{side}" in existing:
+        return True
+    if side == "star" and star_done_cids and canon_cid in star_done_cids:
+        return True
+    return False
+
+
+def _iter_unparsed_entries(log_path: Path) -> List[Dict[str, str]]:
+    """Parses all entries from ``unparsed_abilities.log`` into normalized dicts.
+
+    Args:
+        log_path: Path to the Stage 8 unparsed log file.
+
+    Returns:
+        List of entry dicts containing ``card_identifier``, ``side``, ``card_name``,
+        ``raw_ability``, and optional ``reason``.
+    """
+    if not log_path.exists():
         return []
-    entries: List[Dict[str, str]] = []
+    parsed: List[Dict[str, str]] = []
     current: Dict[str, str] = {}
-    seen = 0
-    with UNPARSED_LOG.open("r", encoding="utf-8") as f:
+    with log_path.open("r", encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith("#"):
@@ -57,26 +124,77 @@ def load_unparsed_sample(offset: int = 0, max_items: int = 10, existing: Optiona
             m = re.match(r"^\[(.*?)\]\s*\((.*?)\)\s*(.*)$", line)
             if m:
                 if current and "raw_ability" in current:
-                    cid, side = current["card_identifier"], current["side"]
-                    is_done = existing and any(f"{cid}_{s}" in existing for s in (side, "shared", "top"))
-                    if not is_done:
-                        seen += 1
-                        if seen > offset:
-                            entries.append(current)
-                            if len(entries) >= max_items:
-                                break
-                current = {"card_identifier": m.group(1), "side": m.group(2), "card_name": m.group(3)}
+                    parsed.append(current)
+                current = {
+                    "card_identifier": canonical_card_id(m.group(1)),
+                    "side": m.group(2).strip(),
+                    "card_name": m.group(3).strip(),
+                }
             elif line.startswith("Ability:") and current:
                 current["raw_ability"] = line[8:].strip()
             elif line.startswith("Reason:") and current:
                 current["reason"] = line[7:].strip()
-        if current and "raw_ability" in current and len(entries) < max_items:
-            cid, side = current["card_identifier"], current["side"]
-            is_done = existing and any(f"{cid}_{s}" in existing for s in (side, "shared", "top"))
-            if not is_done:
-                seen += 1
-                if seen > offset:
-                    entries.append(current)
+        if current and "raw_ability" in current:
+            parsed.append(current)
+    return parsed
+
+
+def _ensure_star_ast_dict(ast_dict: Dict[str, Any], side: str, raw_ability: str) -> Dict[str, Any]:
+    """Ensures cached/copied AST dictionaries carry Star flags when required.
+
+    Args:
+        ast_dict: Serialized CardSideLogic dictionary.
+        side: Entry side key from Stage 8 unparsed log.
+        raw_ability: Raw ability text.
+
+    Returns:
+        Normalized copy/mutated AST dictionary with ``is_star=True`` on Star clauses.
+    """
+    is_star = side == "star" or bool(_STAR_PREFIX_RE.match(raw_ability.strip()))
+    if not is_star:
+        return ast_dict
+    for ab in ast_dict.get("abilities", []):
+        ab["is_star"] = True
+        trig = (ab.get("trigger_event") or "").strip().lower()
+        if not trig or trig == "star":
+            ab["trigger_event"] = "star_phase"
+        ab_id = ab.get("ability_id") or "ability"
+        if not ab_id.lower().startswith("star_"):
+            ab["ability_id"] = f"star_{ab_id}"
+        if ab.get("activation_mode") == "immediate":
+            ab["activation_mode"] = "triggered"
+    return ast_dict
+
+
+def load_unparsed_sample(
+    offset: int = 0,
+    max_items: int = 10,
+    existing: Optional[set] = None,
+    star_done_cids: Optional[set[str]] = None,
+) -> List[Dict[str, str]]:
+    """Parses unparsed ability entries with offset, limit, and exact side filtering.
+
+    Args:
+        offset: Number of non-extracted entries to skip.
+        max_items: Maximum entries to return.
+        existing: Set of already generated entry keys (``{card_id}_{side}``) to skip.
+        star_done_cids: Optional set of card IDs that already possess an ``is_star`` ability.
+
+    Returns:
+        List of unparsed card entry dictionaries.
+    """
+    entries: List[Dict[str, str]] = []
+    seen = 0
+    for item in _iter_unparsed_entries(UNPARSED_LOG):
+        cid = item["card_identifier"]
+        side = item["side"]
+        if is_entry_done(cid, side, existing=existing, star_done_cids=star_done_cids):
+            continue
+        seen += 1
+        if seen > offset:
+            entries.append(item)
+            if len(entries) >= max_items:
+                break
     print(f"Loaded {len(entries)} unparsed cards for AI extraction.")
     return entries
 
@@ -159,19 +277,22 @@ def _worker_task(
     linker: Optional[CardLinker] = None
 ) -> None:
     """Worker task processing a single card ability in parallel."""
-    cid, name, raw = item["card_identifier"], item["card_name"], item["raw_ability"]
-    card_key = f"{cid}_{item['side']}"
+    cid = canonical_card_id(item["card_identifier"])
+    name, raw = item["card_name"], item["raw_ability"]
+    side = item["side"]
+    card_key = f"{cid}_{side}"
     raw_clean = raw.strip()
 
     # Instant resolution if another worker just completed the identical text
     with lock:
         if raw_clean in text_cache:
+            cached_ast = _ensure_star_ast_dict(copy.deepcopy(text_cache[raw_clean]), side, raw_clean)
             results[card_key] = {
                 "card_id": cid,
                 "card_name": name,
-                "side": item["side"],
+                "side": side,
                 "raw_ability": raw,
-                "ast": copy.deepcopy(text_cache[raw_clean]),
+                "ast": cached_ast,
             }
             stats["success"] += 1
             print(f" [OK-CACHE] Reused validated AST for {name} ({stats['success']}/{stats['total']})", flush=True)
@@ -181,13 +302,15 @@ def _worker_task(
     try:
         validated = _process_single_card(backend, prompt, name, raw_ability=raw)
         if validated:
-            if re.match(r"^(?:STAR\s*:|\(\s*Star\s*\))", raw.strip(), re.IGNORECASE):
+            if side == "star" or _STAR_PREFIX_RE.match(raw_clean):
                 for ab in validated.abilities:
                     ab.is_star = True
                     if not ab.trigger_event or ab.trigger_event.strip().lower() == "star":
                         ab.trigger_event = "star_phase"
                     if not ab.ability_id.lower().startswith("star_"):
                         ab.ability_id = f"star_{ab.ability_id}"
+                    if ab.activation_mode == "immediate":
+                        ab.activation_mode = "triggered"
             normalize_chained_targets(validated)
             if linker:
                 link_side_logic_targets(validated, linker)
@@ -196,7 +319,7 @@ def _worker_task(
                 results[card_key] = {
                     "card_id": cid,
                     "card_name": name,
-                    "side": item["side"],
+                    "side": side,
                     "raw_ability": raw,
                     "ast": ast_dict,
                 }
@@ -237,45 +360,30 @@ def auto_resolve_exact_text_matches(
     if not UNPARSED_LOG.exists() or not text_cache:
         return 0
 
+    existing_keys = set(results.keys())
+    star_done_cids = compute_star_done_cids(results)
     resolved_count = 0
-    current: Dict[str, str] = {}
-    with UNPARSED_LOG.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            m = re.match(r"^\[(.*?)\]\s*\((.*?)\)\s*(.*)$", line)
-            if m:
-                if current and "raw_ability" in current:
-                    cid, side = current["card_identifier"], current["side"]
-                    card_key = f"{cid}_{side}"
-                    raw = current["raw_ability"].strip()
-                    if card_key not in results and raw in text_cache:
-                        results[card_key] = {
-                            "card_id": cid,
-                            "card_name": current["card_name"],
-                            "side": side,
-                            "raw_ability": current["raw_ability"],
-                            "ast": copy.deepcopy(text_cache[raw]),
-                        }
-                        resolved_count += 1
-                current = {"card_identifier": m.group(1), "side": m.group(2), "card_name": m.group(3)}
-            elif line.startswith("Ability:") and current:
-                current["raw_ability"] = line[8:].strip()
 
-        if current and "raw_ability" in current:
-            cid, side = current["card_identifier"], current["side"]
-            card_key = f"{cid}_{side}"
-            raw = current["raw_ability"].strip()
-            if card_key not in results and raw in text_cache:
-                results[card_key] = {
-                    "card_id": cid,
-                    "card_name": current["card_name"],
-                    "side": side,
-                    "raw_ability": current["raw_ability"],
-                    "ast": copy.deepcopy(text_cache[raw]),
-                }
-                resolved_count += 1
+    for item in _iter_unparsed_entries(UNPARSED_LOG):
+        cid = item["card_identifier"]
+        side = item["side"]
+        card_key = f"{cid}_{side}"
+        raw = item["raw_ability"].strip()
+        if is_entry_done(cid, side, existing=existing_keys, star_done_cids=star_done_cids):
+            continue
+        if raw in text_cache:
+            cached_ast = _ensure_star_ast_dict(copy.deepcopy(text_cache[raw]), side, raw)
+            results[card_key] = {
+                "card_id": cid,
+                "card_name": item["card_name"],
+                "side": side,
+                "raw_ability": item["raw_ability"],
+                "ast": cached_ast,
+            }
+            existing_keys.add(card_key)
+            if side == "star":
+                star_done_cids.add(cid)
+            resolved_count += 1
 
     return resolved_count
 
@@ -313,7 +421,13 @@ def run_ai_generator() -> None:
 
     print(f"Selected AI backend: {args.backend.upper()} (Target: {args.count} cards, Workers: {args.workers})")
     skip_set = None if args.overwrite else set(results.keys())
-    samples = load_unparsed_sample(offset=args.offset, max_items=args.count, existing=skip_set)
+    star_done_cids = None if args.overwrite else compute_star_done_cids(results)
+    samples = load_unparsed_sample(
+        offset=args.offset,
+        max_items=args.count,
+        existing=skip_set,
+        star_done_cids=star_done_cids,
+    )
     if not samples:
         print("No unparsed cards left to process.")
         return

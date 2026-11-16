@@ -18,6 +18,7 @@ def _collect_selector_facts(
     entities: Set[str],
     target_types: Set[str],
     restrict_identifiers: Set[str],
+    brigades: Set[str],
     is_restrict: bool = False,
 ) -> None:
     """Extracts factual tokens and numeric bounds from a TargetSelector instance."""
@@ -25,6 +26,10 @@ def _collect_selector_facts(
         return
     if getattr(sel, "target_type", None):
         target_types.add(str(sel.target_type).lower())
+    for brig in getattr(sel, "brigades", []) or []:
+        brig_low = str(getattr(brig, "value", brig)).lower()
+        if brig_low:
+            brigades.add(brig_low)
     if getattr(sel, "testament", None):
         identifiers.add("o.t." if sel.testament == "OT" else "n.t.")
         identifiers.add(str(sel.testament).lower())
@@ -99,6 +104,7 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
     entities: Set[str] = set()
     identifiers: Set[str] = set()
     target_types: Set[str] = set()
+    brigades: Set[str] = set()
 
     restrict_identifiers: Set[str] = set()
 
@@ -127,7 +133,7 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
                 numbers.add(int(tn))
         if ab.trigger_filter:
             _collect_selector_facts(
-                ab.trigger_filter, numbers, max_values, identifiers, entities, target_types, restrict_identifiers
+                ab.trigger_filter, numbers, max_values, identifiers, entities, target_types, restrict_identifiers, brigades
             )
 
         for m in ab.modifiers:
@@ -146,7 +152,7 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
                 numbers.add(cond.value)
             if cond.selector:
                 _collect_selector_facts(
-                    cond.selector, numbers, max_values, identifiers, entities, target_types, restrict_identifiers
+                    cond.selector, numbers, max_values, identifiers, entities, target_types, restrict_identifiers, brigades
                 )
 
         for eff in list(ab.effects) + list(ab.costs):
@@ -161,7 +167,7 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
             if eff.target:
                 _collect_selector_facts(
                     eff.target, numbers, max_values, identifiers, entities, target_types,
-                    restrict_identifiers, is_restrict=(act == "restrict")
+                    restrict_identifiers, brigades, is_restrict=(act == "restrict")
                 )
 
             if eff.protection_filter:
@@ -171,7 +177,7 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
                     actions.add(pact_str)
                 for cs in pf.card_sources:
                     _collect_selector_facts(
-                        cs, numbers, max_values, identifiers, entities, target_types, restrict_identifiers
+                        cs, numbers, max_values, identifiers, entities, target_types, restrict_identifiers, brigades
                     )
                 for q in pf.qualifiers:
                     for qnum in re.findall(r"\b\d+\b", q):
@@ -185,7 +191,8 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
         "entities": entities,
         "identifiers": identifiers,
         "restrict_identifiers": restrict_identifiers,
-        "target_types": target_types
+        "target_types": target_types,
+        "brigades": brigades,
     }
 
 
@@ -381,6 +388,17 @@ def verify_fact_matrix(raw: str, ast_facts: Dict[str, Any]) -> Tuple[bool, List[
         m = re.search(pat, raw_lower)
         if m:
             concept = m.group(1)
+            # ORDIR 7.1.0 equivalences:
+            # - "depicting an evil altar / false religious practice" -> "Idol"
+            # - "connected with demons" (Enhancements) -> orange + enhancement
+            if prefix == "depicting" and "idol" in all_target_facts and re.search(
+                r"\bdepicting\s+(?:an?\s+)?(?:idol|evil\s+altar|false\s+religious\s+practice)\b", raw_lower
+            ):
+                continue
+            if prefix == "connected with" and concept == "demons" and (
+                "orange" in ast_facts.get("brigades", set()) and "enhancement" in ast_facts.get("target_types", set())
+            ):
+                continue
             if concept not in all_target_facts:
                 issues.append(f"Missing conceptual identifier: '{prefix} {concept}'")
 

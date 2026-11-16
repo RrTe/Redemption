@@ -4265,14 +4265,13 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "alignment": "evil",
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "discard abilities"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -6189,7 +6188,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "battle"
@@ -6198,9 +6197,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Abner, the Commander (Roots)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -6304,9 +6301,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Abner's Spear (Ki)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -8182,10 +8177,10 @@
                 "is_human": true,
                 "classes": [],
                 "references": [],
-                "identifiers": [],
-                "card_titles": [
-                  "Antediluvian Human"
+                "identifiers": [
+                  "Antediluvian"
                 ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": [],
                 "count": {
@@ -13326,14 +13321,13 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "alignment": "evil",
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "withdraw"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -16284,14 +16278,15 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "alignment": "good",
                     "classes": [],
                     "references": [],
-                    "identifiers": [],
-                    "card_titles": [
-                      "special abilities this turn"
+                    "identifiers": [
+                      "special abilities"
                     ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -20402,13 +20397,13 @@
                 "scope": [
                   "territory"
                 ],
-                "target_type": "hero",
+                "target_type": "evil_character",
                 "brigades": [],
                 "alignment": "evil",
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "Prophet"
+                  "False Prophet"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -43140,9 +43135,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Beast from the Earth (RoJ AB)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -45386,13 +45379,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -45988,7 +45980,9 @@
                 "card_titles": [
                   "John the Forerunner"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "1687537342"
+                ],
                 "stat_filters": []
               },
               "operator": ">=",
@@ -48210,13 +48204,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -48257,13 +48250,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -48304,13 +48296,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -51025,9 +51016,42 @@
                 "references": [],
                 "identifiers": [],
                 "card_titles": [
-                  "Saul/Paul"
+                  "Saul",
+                  "Paul"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-1137844919",
+                  "-1235799952",
+                  "-1415125678",
+                  "-1541910337",
+                  "-1580082644",
+                  "-1607730169",
+                  "-1747746633",
+                  "-1761888345",
+                  "-1820845090",
+                  "-2038412362",
+                  "-223206899",
+                  "-269222088",
+                  "-369201500",
+                  "-512400025",
+                  "-555608753",
+                  "-568326450",
+                  "-889283811",
+                  "-954025615",
+                  "-969837433",
+                  "1432929303",
+                  "1475180009",
+                  "1564094832",
+                  "170508337",
+                  "177713717",
+                  "1778874634",
+                  "2068819044",
+                  "245708396",
+                  "811724032",
+                  "852945638",
+                  "9023971",
+                  "958007248"
+                ],
                 "stat_filters": [],
                 "count": {
                   "fixed_value": 1
@@ -51053,9 +51077,42 @@
                 "references": [],
                 "identifiers": [],
                 "card_titles": [
-                  "Saul/Paul"
+                  "Saul",
+                  "Paul"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-1137844919",
+                  "-1235799952",
+                  "-1415125678",
+                  "-1541910337",
+                  "-1580082644",
+                  "-1607730169",
+                  "-1747746633",
+                  "-1761888345",
+                  "-1820845090",
+                  "-2038412362",
+                  "-223206899",
+                  "-269222088",
+                  "-369201500",
+                  "-512400025",
+                  "-555608753",
+                  "-568326450",
+                  "-889283811",
+                  "-954025615",
+                  "-969837433",
+                  "1432929303",
+                  "1475180009",
+                  "1564094832",
+                  "170508337",
+                  "177713717",
+                  "1778874634",
+                  "2068819044",
+                  "245708396",
+                  "811724032",
+                  "852945638",
+                  "9023971",
+                  "958007248"
+                ],
                 "stat_filters": [],
                 "count": {
                   "fixed_value": 1
@@ -53478,9 +53535,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Boaz Sandal"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -53564,9 +53619,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Boaz Sandal"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -68830,10 +68883,10 @@
                 "brigades": [],
                 "classes": [],
                 "references": [],
-                "identifiers": [],
-                "card_titles": [
-                  "Draw"
+                "identifiers": [
+                  "draw"
                 ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -70428,13 +70481,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -71039,13 +71091,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -76939,7 +76990,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "discard_pile"
@@ -76948,9 +76999,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Conspiring Herodians (GoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -77209,9 +77258,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Conspiring Servants (LoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -85829,9 +85876,7 @@
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "Brigades"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -85926,9 +85971,7 @@
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "Brigades"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -87208,9 +87251,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Concealed Riches (GoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": [],
                 "count": {
@@ -87235,7 +87276,7 @@
           "is_negatable": true,
           "trigger_event": "discard",
           "trigger_filter": {
-            "selection_mode": "automatic_all",
+            "selection_mode": "automatic_self",
             "zone_owner": "controller",
             "scope": [
               "hand"
@@ -87244,9 +87285,7 @@
             "classes": [],
             "references": [],
             "identifiers": [],
-            "card_titles": [
-              "Concealed Riches (GoC)"
-            ],
+            "card_titles": [],
             "target_card_ids": [],
             "stat_filters": []
           },
@@ -87290,7 +87329,7 @@
           "is_negatable": true,
           "trigger_event": "discard",
           "trigger_filter": {
-            "selection_mode": "automatic_all",
+            "selection_mode": "automatic_self",
             "zone_owner": "controller",
             "scope": [
               "hand"
@@ -87299,9 +87338,7 @@
             "classes": [],
             "references": [],
             "identifiers": [],
-            "card_titles": [
-              "Concealed Riches (GoC)"
-            ],
+            "card_titles": [],
             "target_card_ids": [],
             "stat_filters": []
           },
@@ -90243,7 +90280,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "battle"
@@ -90252,9 +90289,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Daniel's Prayer (Promo)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -93408,7 +93443,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "battle"
@@ -93417,9 +93452,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "David's Descendant (LoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -96581,9 +96614,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "David's Tent [K]"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -96649,9 +96680,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "David's Tent [K]"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -99677,13 +99706,14 @@
                 "scope": [
                   "in_play"
                 ],
+                "target_type": "character",
                 "brigades": [],
                 "classes": [],
                 "references": [],
-                "identifiers": [],
-                "card_titles": [
+                "identifiers": [
                   "King of Israel"
                 ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -99749,7 +99779,10 @@
                 "card_titles": [
                   "King Jehu"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-632970623",
+                  "409835075"
+                ],
                 "stat_filters": []
               },
               "operator": ">=",
@@ -101344,11 +101377,12 @@
                 "scope": [
                   "deck"
                 ],
+                "target_type": "artifact",
                 "brigades": [],
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "depicting an idol"
+                  "Idol"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -101386,11 +101420,12 @@
                 "scope": [
                   "in_play"
                 ],
+                "target_type": "artifact",
                 "brigades": [],
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "depicting an idol"
+                  "Idol"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -102180,7 +102215,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "depicting idol"
+                  "Idol"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -102209,7 +102244,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "depicting idol"
+                  "Idol"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -104016,9 +104051,13 @@
                 "references": [],
                 "identifiers": [],
                 "card_titles": [
-                  "Solomon's Temple Fortress Site"
+                  "Solomon's Temple"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-1454927819",
+                  "143946224",
+                  "484231532"
+                ],
                 "stat_filters": []
               },
               "destination_position": "as_is",
@@ -110259,10 +110298,10 @@
                 "brigades": [],
                 "classes": [],
                 "references": [],
-                "identifiers": [],
-                "card_titles": [
-                  "His Strength"
+                "identifiers": [
+                  "his strength"
                 ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -110351,10 +110390,10 @@
                 "brigades": [],
                 "classes": [],
                 "references": [],
-                "identifiers": [],
-                "card_titles": [
-                  "His Strength"
+                "identifiers": [
+                  "his strength"
                 ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -111265,14 +111304,13 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "alignment": "evil",
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "discard abilities"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -111390,14 +111428,13 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "alignment": "evil",
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "discard abilities"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -111515,14 +111552,13 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "alignment": "evil",
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "discard abilities"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -117637,9 +117673,17 @@
                 "references": [],
                 "identifiers": [],
                 "card_titles": [
-                  "Goliath's Brother (Lahmi)"
+                  "Lahmi"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-1123051222",
+                  "-1373255334",
+                  "-1678056730",
+                  "-282412183",
+                  "-839792347",
+                  "-86382191",
+                  "1934768141"
+                ],
                 "stat_filters": [],
                 "count": {
                   "fixed_value": 1
@@ -117692,9 +117736,17 @@
                 "references": [],
                 "identifiers": [],
                 "card_titles": [
-                  "Goliath's Brother"
+                  "Lahmi"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-1123051222",
+                  "-1373255334",
+                  "-1678056730",
+                  "-282412183",
+                  "-839792347",
+                  "-86382191",
+                  "1934768141"
+                ],
                 "stat_filters": []
               },
               "destination_position": "as_is",
@@ -118560,9 +118612,13 @@
                   "Tabernacle"
                 ],
                 "card_titles": [
-                  "Eli's sons"
+                  "Hophni, son of Eli",
+                  "Phinehas, son of Eli"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-1557246335",
+                  "1086515329"
+                ],
                 "stat_filters": [],
                 "count": {
                   "fixed_value": 2
@@ -119476,9 +119532,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Elijah in Glory (GoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": [],
                 "count": {
@@ -130641,7 +130695,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "Paul's name in the title"
+                  "Paul in the Title"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -130778,12 +130832,13 @@
                 "target_type": "evil_character",
                 "brigades": [],
                 "alignment": "evil",
-                "classes": [],
+                "is_human": true,
+                "classes": [
+                  "Warrior"
+                ],
                 "testament": "OT",
                 "references": [],
-                "identifiers": [
-                  "fought in an earthly battle"
-                ],
+                "identifiers": [],
                 "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": [],
@@ -133353,10 +133408,10 @@
                 "alignment": "good",
                 "classes": [],
                 "references": [],
-                "identifiers": [],
-                "card_titles": [
+                "identifiers": [
                   "Deacon"
                 ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": [],
                 "count": {
@@ -134706,7 +134761,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "battle"
@@ -134715,9 +134770,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Everlasting Beings (RoJ AB)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -134920,9 +134973,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Everlasting Beings (RoJ)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -144290,13 +144341,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -144337,9 +144387,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Faith of Joseph (CoW AB)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": [],
                 "count": {
@@ -144987,7 +145035,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "battle"
@@ -144996,9 +145044,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Faith of Joshua (CoW AB)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -145203,7 +145249,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "battle"
@@ -145212,9 +145258,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Faith of Joshua (CoW AB)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -149640,7 +149684,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "battle"
@@ -149649,9 +149693,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "False Prophecy (PoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -150551,7 +150593,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "in_play"
@@ -150560,9 +150602,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "False Prophets (PoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -151824,7 +151864,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "battle"
@@ -151833,9 +151873,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Feast of Booths (LoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -151889,7 +151927,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "battle"
@@ -151898,9 +151936,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Feast of Booths (LoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -155391,13 +155427,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "from opponent"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -155457,13 +155492,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "from opponent"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -155523,13 +155557,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "from opponent"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -160512,13 +160545,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "used by opponent"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -161094,13 +161126,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "used by opponent"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -163331,13 +163362,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -165274,7 +165304,9 @@
               },
               "protection_filter": {
                 "from_harm": false,
-                "actions": [],
+                "actions": [
+                  "look"
+                ],
                 "except_actions": [],
                 "card_sources": [
                   {
@@ -165283,13 +165315,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents' look"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -167826,13 +167857,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -170264,7 +170294,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "Gideon's name in the title"
+                  "Gideon in the Title"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -170362,7 +170392,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "Gideon's name in the title"
+                  "Gideon in the Title"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -172854,13 +172884,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -172904,13 +172933,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -173000,13 +173028,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -173050,13 +173077,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -173526,13 +173552,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -173577,13 +173602,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -174466,13 +174490,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "protected from opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -174516,13 +174539,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "protected from opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -174966,9 +174988,7 @@
             "classes": [],
             "references": [],
             "identifiers": [],
-            "card_titles": [
-              "God's Mercy (Jonah's Anger)"
-            ],
+            "card_titles": [],
             "target_card_ids": [],
             "stat_filters": []
           },
@@ -174990,9 +175010,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "God's Mercy (Jonah's Anger)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -175080,9 +175098,7 @@
             "classes": [],
             "references": [],
             "identifiers": [],
-            "card_titles": [
-              "God's Mercy (Jonah's Anger)"
-            ],
+            "card_titles": [],
             "target_card_ids": [],
             "stat_filters": []
           },
@@ -175104,9 +175120,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "God's Mercy (Jonah's Anger)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -175174,7 +175188,11 @@
                 "card_titles": [
                   "Jonah"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-812698732",
+                  "109770730",
+                  "344620080"
+                ],
                 "stat_filters": []
               },
               "operator": "=="
@@ -178611,9 +178629,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Grain Offering [IR]"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -178737,10 +178753,10 @@
                     "alignment": "evil",
                     "classes": [],
                     "references": [],
-                    "identifiers": [],
-                    "card_titles": [
+                    "identifiers": [
                       "selected brigade"
                     ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -182467,16 +182483,14 @@
                 "selection_mode": "automatic_all",
                 "zone_owner": "controller",
                 "scope": [
-                  "in_play"
+                  "land_of_redemption"
                 ],
-                "target_type": "site",
+                "target_type": "card",
                 "brigades": [],
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Land of Redemption"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": [],
                 "count": {
@@ -183188,9 +183202,13 @@
                 "references": [],
                 "identifiers": [],
                 "card_titles": [
-                  "Zebubbabel's Temple"
+                  "Zerubbabel's Temple"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "1203146101",
+                  "1622407641",
+                  "730431348"
+                ],
                 "stat_filters": [],
                 "count": {
                   "fixed_value": 1
@@ -190342,13 +190360,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -197029,13 +197046,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -198940,9 +198956,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Herod Antipas (GoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -201507,7 +201521,12 @@
                 "card_titles": [
                   "Judas Iscariot"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-152576017",
+                  "-711177304",
+                  "400196567",
+                  "847138628"
+                ],
                 "stat_filters": []
               },
               "operator": ">=",
@@ -206369,9 +206388,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Herod's Guard (GoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -210130,9 +210147,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Invoking Terror (LoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": [],
                 "count": {
@@ -211934,13 +211949,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -213712,13 +213726,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -213762,13 +213775,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -213809,14 +213821,33 @@
             ],
             "target_card_ids": [
               "-1323209924",
+              "-1655869813",
+              "-1787516759",
+              "-1860684958",
+              "-1874742100",
               "-188554805",
               "-1931729365",
+              "-2078298320",
+              "-239764639",
+              "-390912493",
+              "-500454065",
+              "-736371789",
+              "-823646862",
               "-954470221",
               "1098945456",
+              "1111722375",
               "1159899492",
+              "1412214119",
               "1495576902",
+              "1911685035",
+              "1949982372",
+              "2011322691",
               "251756403",
-              "677552277"
+              "385635840",
+              "584200035",
+              "677552277",
+              "685450880",
+              "783343378"
             ],
             "stat_filters": []
           },
@@ -213894,14 +213925,33 @@
             ],
             "target_card_ids": [
               "-1323209924",
+              "-1655869813",
+              "-1787516759",
+              "-1860684958",
+              "-1874742100",
               "-188554805",
               "-1931729365",
+              "-2078298320",
+              "-239764639",
+              "-390912493",
+              "-500454065",
+              "-736371789",
+              "-823646862",
               "-954470221",
               "1098945456",
+              "1111722375",
               "1159899492",
+              "1412214119",
               "1495576902",
+              "1911685035",
+              "1949982372",
+              "2011322691",
               "251756403",
-              "677552277"
+              "385635840",
+              "584200035",
+              "677552277",
+              "685450880",
+              "783343378"
             ],
             "stat_filters": []
           },
@@ -214221,7 +214271,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "in_play"
@@ -214230,9 +214280,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Jacob Buries the Idols (LoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -214287,7 +214335,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "in_play"
@@ -214296,9 +214344,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Jacob Buries the Idols (LoC)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -217120,13 +217166,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -217168,13 +217213,12 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "opponents"
-                    ],
+                    "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
                   }
@@ -217216,14 +217260,33 @@
             ],
             "target_card_ids": [
               "-1323209924",
+              "-1655869813",
+              "-1787516759",
+              "-1860684958",
+              "-1874742100",
               "-188554805",
               "-1931729365",
+              "-2078298320",
+              "-239764639",
+              "-390912493",
+              "-500454065",
+              "-736371789",
+              "-823646862",
               "-954470221",
               "1098945456",
+              "1111722375",
               "1159899492",
+              "1412214119",
               "1495576902",
+              "1911685035",
+              "1949982372",
+              "2011322691",
               "251756403",
-              "677552277"
+              "385635840",
+              "584200035",
+              "677552277",
+              "685450880",
+              "783343378"
             ],
             "stat_filters": []
           },
@@ -217301,14 +217364,33 @@
             ],
             "target_card_ids": [
               "-1323209924",
+              "-1655869813",
+              "-1787516759",
+              "-1860684958",
+              "-1874742100",
               "-188554805",
               "-1931729365",
+              "-2078298320",
+              "-239764639",
+              "-390912493",
+              "-500454065",
+              "-736371789",
+              "-823646862",
               "-954470221",
               "1098945456",
+              "1111722375",
               "1159899492",
+              "1412214119",
               "1495576902",
+              "1911685035",
+              "1949982372",
+              "2011322691",
               "251756403",
-              "677552277"
+              "385635840",
+              "584200035",
+              "677552277",
+              "685450880",
+              "783343378"
             ],
             "stat_filters": []
           },
@@ -228920,9 +229002,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Boaz Sandal"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -229006,9 +229086,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Boaz Sandal"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -229213,7 +229291,7 @@
             {
               "condition_type": "zone_check",
               "selector": {
-                "selection_mode": "automatic_all",
+                "selection_mode": "automatic_self",
                 "zone_owner": "controller",
                 "scope": [
                   "battle"
@@ -229222,9 +229300,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [],
-                "card_titles": [
-                  "Daniel's Prayer (Promo)"
-                ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
               },
@@ -231145,11 +231221,13 @@
                 "target_type": "hero",
                 "brigades": [],
                 "alignment": "good",
-                "classes": [],
-                "references": [],
-                "identifiers": [
-                  "fought in an earthly battle"
+                "is_human": true,
+                "classes": [
+                  "Warrior"
                 ],
+                "testament": "OT",
+                "references": [],
+                "identifiers": [],
                 "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": [],
@@ -232019,7 +232097,12 @@
                 "card_titles": [
                   "Uriah"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-1003502777",
+                  "-1138774337",
+                  "-2068502549",
+                  "-572443447"
+                ],
                 "stat_filters": []
               },
               "operator": ">=",
@@ -247523,7 +247606,6 @@
                 "references": [],
                 "identifiers": [
                   "capture ability",
-                  "depicting an idol",
                   "Idol"
                 ],
                 "card_titles": [],
@@ -249071,9 +249153,11 @@
                 "references": [],
                 "identifiers": [],
                 "card_titles": [
-                  "King Joram of Israel"
+                  "King Joram"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-1742199777"
+                ],
                 "stat_filters": [],
                 "count": {
                   "fixed_value": 1
@@ -249231,7 +249315,6 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "depicting an idol",
                   "Idol"
                 ],
                 "card_titles": [],
@@ -249580,8 +249663,6 @@
                 "testament": "OT",
                 "references": [],
                 "identifiers": [
-                  "O.T. Artifact depicting an idol",
-                  "depicting an idol",
                   "Idol"
                 ],
                 "card_titles": [],
@@ -258331,9 +258412,13 @@
                 "references": [],
                 "identifiers": [],
                 "card_titles": [
-                  "King Amaziah of Judah"
+                  "King Amaziah"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-1564861084",
+                  "-985281279",
+                  "111232080"
+                ],
                 "stat_filters": []
               },
               "destination": "land_of_bondage",
@@ -294177,14 +294262,13 @@
                       "in_play"
                     ],
                     "target_type": "enhancement",
-                    "brigades": [],
+                    "brigades": [
+                      "Orange"
+                    ],
                     "alignment": "evil",
                     "classes": [],
                     "references": [],
-                    "identifiers": [
-                      "connected with demons",
-                      "Demon"
-                    ],
+                    "identifiers": [],
                     "card_titles": [],
                     "target_card_ids": [],
                     "stat_filters": []
@@ -300259,196 +300343,6 @@
               "applies_to": "this_side"
             }
           ]
-        }
-      ]
-    }
-  },
-  "-1587655157_shared_top": {
-    "card_id": "-1587655157_shared",
-    "card_name": "Melchizedek",
-    "side": "top",
-    "raw_ability": "STAR: Topdeck a * card from Reserve.",
-    "ast": {
-      "classes": [],
-      "modifiers": [],
-      "abilities": [
-        {
-          "ability_id": "star_topdeck_from_reserve",
-          "is_star": true,
-          "activation_mode": "triggered",
-          "is_optional": false,
-          "is_preventable": true,
-          "is_interruptible": true,
-          "is_negatable": true,
-          "trigger_event": "star_phase",
-          "conditions": [],
-          "costs": [],
-          "effects": [
-            {
-              "step": 1,
-              "action": "topdeck",
-              "effect_type": "instant",
-              "duration": "instant",
-              "target": {
-                "selection_mode": "manual_controller",
-                "zone_owner": "controller",
-                "scope": [
-                  "reserve_pile"
-                ],
-                "target_type": "card",
-                "brigades": [],
-                "classes": [],
-                "references": [],
-                "identifiers": [
-                  "*"
-                ],
-                "card_titles": [],
-                "target_card_ids": [],
-                "stat_filters": [],
-                "count": {
-                  "fixed_value": 1
-                }
-              },
-              "destination": "deck",
-              "destination_position": "top",
-              "creates_context_scope": false,
-              "dependency": "always"
-            }
-          ],
-          "modifiers": []
-        }
-      ]
-    }
-  },
-  "-1587655157_top_top": {
-    "card_id": "-1587655157_top",
-    "card_name": "Melchizedek",
-    "side": "top",
-    "raw_ability": "Protect Lost Souls from evil cards. If opponent uses an evil search ability, you may discard an evil card from their deck.",
-    "ast": {
-      "classes": [],
-      "modifiers": [],
-      "abilities": [
-        {
-          "ability_id": "protect_lost_souls",
-          "is_star": false,
-          "activation_mode": "static",
-          "is_optional": false,
-          "is_preventable": true,
-          "is_interruptible": true,
-          "is_negatable": true,
-          "conditions": [],
-          "costs": [],
-          "effects": [
-            {
-              "step": 1,
-              "action": "protect",
-              "effect_type": "ongoing",
-              "duration": "permanent",
-              "target": {
-                "selection_mode": "automatic_all",
-                "zone_owner": "both",
-                "scope": [
-                  "in_play"
-                ],
-                "target_type": "lost_soul",
-                "brigades": [],
-                "classes": [],
-                "references": [],
-                "identifiers": [],
-                "card_titles": [],
-                "target_card_ids": [],
-                "stat_filters": []
-              },
-              "protection_filter": {
-                "from_harm": true,
-                "actions": [],
-                "except_actions": [],
-                "card_sources": [
-                  {
-                    "selection_mode": "automatic_all",
-                    "zone_owner": "both",
-                    "scope": [
-                      "battle"
-                    ],
-                    "target_type": "card",
-                    "brigades": [],
-                    "alignment": "evil",
-                    "classes": [],
-                    "references": [],
-                    "identifiers": [],
-                    "card_titles": [],
-                    "target_card_ids": [],
-                    "stat_filters": []
-                  }
-                ],
-                "qualifiers": []
-              },
-              "destination_position": "as_is",
-              "creates_context_scope": false,
-              "dependency": "always"
-            }
-          ],
-          "modifiers": []
-        },
-        {
-          "ability_id": "discard_on_evil_search",
-          "is_star": false,
-          "activation_mode": "triggered",
-          "is_optional": true,
-          "is_preventable": true,
-          "is_interruptible": true,
-          "is_negatable": true,
-          "trigger_event": "search",
-          "trigger_filter": {
-            "selection_mode": "automatic_all",
-            "zone_owner": "opponent",
-            "scope": [
-              "battle"
-            ],
-            "brigades": [],
-            "alignment": "evil",
-            "classes": [],
-            "references": [],
-            "identifiers": [],
-            "card_titles": [],
-            "target_card_ids": [],
-            "stat_filters": []
-          },
-          "conditions": [],
-          "costs": [],
-          "effects": [
-            {
-              "step": 1,
-              "action": "discard",
-              "effect_type": "instant",
-              "duration": "instant",
-              "target": {
-                "selection_mode": "manual_controller",
-                "zone_owner": "opponent",
-                "scope": [
-                  "deck"
-                ],
-                "target_type": "card",
-                "brigades": [],
-                "alignment": "evil",
-                "classes": [],
-                "references": [],
-                "identifiers": [],
-                "card_titles": [],
-                "target_card_ids": [],
-                "stat_filters": [],
-                "count": {
-                  "fixed_value": 1
-                }
-              },
-              "destination": "discard_pile",
-              "destination_position": "as_is",
-              "creates_context_scope": false,
-              "dependency": "always"
-            }
-          ],
-          "modifiers": []
         }
       ]
     }
@@ -329780,9 +329674,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "depicting an idol or evil altar",
-                  "Idol",
-                  "evil altar"
+                  "Idol"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -357592,7 +357484,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "Prophet"
+                  "False Prophet"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -366478,10 +366370,10 @@
                 "brigades": [],
                 "classes": [],
                 "references": [],
-                "identifiers": [],
-                "card_titles": [
+                "identifiers": [
                   "Fruit of the Spirit"
                 ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": [],
                 "count": {
@@ -379077,41 +378969,22 @@
                 "references": [],
                 "identifiers": [],
                 "card_titles": [
-                  "Saul",
                   "Paul"
                 ],
                 "target_card_ids": [
-                  "-1137844919",
                   "-1235799952",
                   "-1415125678",
-                  "-1541910337",
-                  "-1580082644",
                   "-1607730169",
                   "-1747746633",
                   "-1761888345",
                   "-1820845090",
-                  "-2038412362",
-                  "-223206899",
                   "-269222088",
-                  "-369201500",
                   "-512400025",
-                  "-555608753",
                   "-568326450",
-                  "-889283811",
                   "-954025615",
-                  "-969837433",
-                  "1432929303",
                   "1475180009",
-                  "1564094832",
                   "170508337",
-                  "177713717",
-                  "1778874634",
-                  "2068819044",
-                  "245708396",
-                  "811724032",
-                  "852945638",
-                  "9023971",
-                  "958007248"
+                  "177713717"
                 ],
                 "stat_filters": []
               },
@@ -384438,13 +384311,14 @@
                 "brigades": [],
                 "classes": [],
                 "references": [],
-                "identifiers": [
+                "identifiers": [],
+                "card_titles": [
                   "Heavenly Temple"
                 ],
-                "card_titles": [
-                  "The Heavenly Temple"
+                "target_card_ids": [
+                  "-1197427029",
+                  "-755815350"
                 ],
-                "target_card_ids": [],
                 "stat_filters": [],
                 "count": {
                   "fixed_value": 1
@@ -402097,9 +401971,14 @@
                 "references": [],
                 "identifiers": [],
                 "card_titles": [
-                  "Kingdoms of this World"
+                  "Kingdoms of the World"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-1072877990",
+                  "1167228521",
+                  "2126867914",
+                  "513165601"
+                ],
                 "stat_filters": [],
                 "count": {
                   "fixed_value": 1
@@ -403088,11 +402967,13 @@
                 "target_type": "hero",
                 "brigades": [],
                 "alignment": "good",
-                "classes": [],
-                "references": [],
-                "identifiers": [
-                  "fought in an earthly battle"
+                "is_human": true,
+                "classes": [
+                  "Warrior"
                 ],
+                "testament": "OT",
+                "references": [],
+                "identifiers": [],
                 "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": []
@@ -404276,7 +404157,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "spiritual gift"
+                  "Fruit of the Spirit"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -450452,10 +450333,10 @@
                 "brigades": [],
                 "classes": [],
                 "references": [],
-                "identifiers": [],
-                "card_titles": [
+                "identifiers": [
                   "Grim Reaper"
                 ],
+                "card_titles": [],
                 "target_card_ids": [],
                 "stat_filters": [],
                 "count": {
@@ -468124,9 +468005,14 @@
                 "references": [],
                 "identifiers": [],
                 "card_titles": [
-                  "Kingdoms of this World"
+                  "Kingdoms of the World"
                 ],
-                "target_card_ids": [],
+                "target_card_ids": [
+                  "-1072877990",
+                  "1167228521",
+                  "2126867914",
+                  "513165601"
+                ],
                 "stat_filters": []
               },
               "destination": "discard_pile",
@@ -468613,7 +468499,7 @@
                 "identifiers": [
                   "Pharisee",
                   "Sadducee",
-                  "Prophet"
+                  "False Prophet"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],
@@ -481304,8 +481190,7 @@
                 "classes": [],
                 "references": [],
                 "identifiers": [
-                  "Idol",
-                  "evil altar"
+                  "Idol"
                 ],
                 "card_titles": [],
                 "target_card_ids": [],

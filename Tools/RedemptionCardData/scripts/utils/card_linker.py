@@ -72,17 +72,32 @@ class CardLinker:
         if not title_clean:
             return []
 
-        # Strict whole-word regex: \bTitle\b
-        pattern = re.compile(rf"\b{re.escape(title_clean)}\b", re.IGNORECASE)
+        matched_ids = self._match_exact_title(title_clean)
+        if not matched_ids:
+            # Retry after stripping trailing edition/set qualifiers, e.g. "(CoW AB)", "[IR]"
+            stripped = re.sub(r"(?:\s*[\(\[].*?[\)\]])+$", "", title_clean).strip()
+            if stripped and stripped != title_clean and len(stripped) >= 3:
+                matched_ids = self._match_exact_title(stripped)
 
+        return sorted(matched_ids)
+
+    def _match_exact_title(self, title_clean: str) -> Set[str]:
+        """Matches a normalized title string with strict whole-word boundaries.
+
+        Args:
+            title_clean: Stripped card title to match.
+
+        Returns:
+            Set of matching canonical card IDs.
+        """
+        pattern = re.compile(rf"\b{re.escape(title_clean)}\b", re.IGNORECASE)
         matched_ids: Set[str] = set()
         for cid, _, clean_names in self._index:
             for name in clean_names:
                 if pattern.search(name):
                     matched_ids.add(cid)
                     break
-
-        return sorted(matched_ids)
+        return matched_ids
 
     def resolve_titles(self, target_titles: List[str]) -> List[str]:
         """Resolves multiple card titles and returns unified list of matching IDs.
@@ -107,6 +122,9 @@ def link_side_logic_targets(side_logic: Any, linker: CardLinker) -> None:
         linker: Pre-indexed CardLinker instance.
     """
     for ab in getattr(side_logic, "abilities", []):
+        tf = getattr(ab, "trigger_filter", None)
+        if tf and getattr(tf, "card_titles", None):
+            tf.target_card_ids = linker.resolve_titles(tf.card_titles)
         for cond in getattr(ab, "conditions", []):
             sel = getattr(cond, "selector", None)
             if sel and getattr(sel, "card_titles", None):
@@ -119,6 +137,11 @@ def link_side_logic_targets(side_logic: Any, linker: CardLinker) -> None:
             tgt = getattr(eff, "target", None)
             if tgt and getattr(tgt, "card_titles", None):
                 tgt.target_card_ids = linker.resolve_titles(tgt.card_titles)
+            pf = getattr(eff, "protection_filter", None)
+            if pf:
+                for cs in getattr(pf, "card_sources", []):
+                    if getattr(cs, "card_titles", None):
+                        cs.target_card_ids = linker.resolve_titles(cs.card_titles)
 
 
 def normalize_chained_targets(side_logic: Any) -> List[str]:
