@@ -49,6 +49,59 @@ def canonical_card_id(card_identifier: str) -> str:
     return _SIDE_SUFFIX_RE.sub("", str(card_identifier).strip())
 
 
+def is_pure_star_entry(entry: Dict[str, Any]) -> bool:
+    """Checks whether an AI output entry represents solely a Star ability.
+
+    Legacy Stage 9 runs stored pure ``STAR:`` extractions under ``{cid}_top`` or
+    ``{cid}_shared``. Such entries must never block extraction of the regular
+    ``top`` or ``shared`` ability side.
+
+    Args:
+        entry: Saved AI entry dictionary from ``ai_generated_abilities.json``.
+
+    Returns:
+        True if the entry contains only Star ability logic (or has ``side='star'``).
+    """
+    side = str(entry.get("side") or "").strip().lower()
+    if side == "star":
+        return True
+    ast_abs = (entry.get("ast") or {}).get("abilities") or []
+    has_star = any(bool(ab.get("is_star")) for ab in ast_abs)
+    has_reg = any(not bool(ab.get("is_star")) for ab in ast_abs)
+    if has_star and not has_reg:
+        return True
+    raw_ab = str(entry.get("raw_ability") or "").strip()
+    if not ast_abs and bool(_STAR_PREFIX_RE.match(raw_ab)):
+        return True
+    return False
+
+
+def compute_done_entry_keys(results: Dict[str, Any]) -> set[str]:
+    """Collects completed non-blocking side keys from ``ai_generated_abilities.json``.
+
+    Excludes legacy pure-``STAR:`` entries stored under ``top`` or ``shared`` so
+    regular side abilities remain scheduled for extraction.
+
+    Args:
+        results: Mapping of AI entry keys to saved AST dictionaries.
+
+    Returns:
+        Set of normalized ``{cid}_{side}`` keys for genuinely completed entries.
+    """
+    done: set[str] = set()
+    for key, entry in results.items():
+        if not isinstance(entry, dict):
+            continue
+        cid = canonical_card_id(entry.get("card_id", "")) or canonical_card_id(key)
+        side = str(entry.get("side") or "").strip().lower()
+        if not cid or not side:
+            continue
+        if side != "star" and is_pure_star_entry(entry):
+            continue
+        done.add(f"{cid}_{side}")
+    return done
+
+
 def compute_star_done_cids(results: Dict[str, Any]) -> set[str]:
     """Collects canonical card IDs that already have an AI Star ability AST.
 
@@ -75,31 +128,53 @@ def compute_star_done_cids(results: Dict[str, Any]) -> set[str]:
 def is_entry_done(
     cid: str,
     side: str,
-    existing: Optional[set] = None,
+    existing: Optional[set | Dict[str, Any]] = None,
     star_done_cids: Optional[set[str]] = None,
+    results: Optional[Dict[str, Any]] = None,
 ) -> bool:
     """Checks accurately whether a card side or Star entry has already been extracted.
 
     Unlike legacy heuristics, presence of ``{cid}_top`` never skips ``bottom`` or
-    ``star`` entries, and presence of ``{cid}_shared`` never skips ``top``.
+    ``star`` entries, presence of ``{cid}_shared`` never skips ``top``, and a
+    legacy pure-``STAR:`` entry stored under ``{cid}_top`` or ``{cid}_shared``
+    never marks a regular ``top`` or ``shared`` side as done.
 
     Args:
         cid: Canonical card identifier.
         side: Unparsed entry side key (``top``, ``bottom``, ``shared``, or ``star``).
-        existing: Set of existing result keys (``{cid}_{side}``).
+        existing: Set of existing result keys (``{cid}_{side}``) or raw results dict.
         star_done_cids: Set of card IDs that already have an extracted Star ability.
+        results: Optional full AI results dictionary for inspecting pure-Star entries.
 
     Returns:
         True if the exact requested side/star entry is already present.
     """
-    if existing is None:
+    results_map = results if results is not None else (existing if isinstance(existing, dict) else None)
+    existing_keys = existing if isinstance(existing, set) else None
+
+    if existing_keys is None and results_map is None:
         return False
     canon_cid = canonical_card_id(cid)
-    if f"{canon_cid}_{side}" in existing:
-        return True
-    if side == "star" and star_done_cids and canon_cid in star_done_cids:
-        return True
-    return False
+    norm_side = str(side).strip().lower()
+    target_key = f"{canon_cid}_{norm_side}"
+
+    if norm_side == "star":
+        if existing_keys and target_key in existing_keys:
+            return True
+        if star_done_cids and canon_cid in star_done_cids:
+            return True
+        if results_map is not None:
+            if target_key in results_map or canon_cid in compute_star_done_cids(results_map):
+                return True
+        return False
+
+    if results_map is not None:
+        entry = results_map.get(target_key)
+        if entry is not None:
+            return not is_pure_star_entry(entry)
+        return False
+
+    return bool(existing_keys and target_key in existing_keys)
 
 
 def _iter_unparsed_entries(log_path: Path) -> List[Dict[str, str]]:
@@ -171,6 +246,7 @@ def load_unparsed_sample(
     max_items: int = 10,
     existing: Optional[set] = None,
     star_done_cids: Optional[set[str]] = None,
+    results: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, str]]:
     """Parses unparsed ability entries with offset, limit, and exact side filtering.
 
@@ -179,6 +255,7 @@ def load_unparsed_sample(
         max_items: Maximum entries to return.
         existing: Set of already generated entry keys (``{card_id}_{side}``) to skip.
         star_done_cids: Optional set of card IDs that already possess an ``is_star`` ability.
+        results: Optional full AI results dict to filter legacy pure-Star entries.
 
     Returns:
         List of unparsed card entry dictionaries.
@@ -188,7 +265,7 @@ def load_unparsed_sample(
     for item in _iter_unparsed_entries(UNPARSED_LOG):
         cid = item["card_identifier"]
         side = item["side"]
-        if is_entry_done(cid, side, existing=existing, star_done_cids=star_done_cids):
+        if is_entry_done(cid, side, existing=existing, star_done_cids=star_done_cids, results=results):
             continue
         seen += 1
         if seen > offset:
@@ -360,7 +437,7 @@ def auto_resolve_exact_text_matches(
     if not UNPARSED_LOG.exists() or not text_cache:
         return 0
 
-    existing_keys = set(results.keys())
+    existing_keys = compute_done_entry_keys(results)
     star_done_cids = compute_star_done_cids(results)
     resolved_count = 0
 
@@ -369,7 +446,7 @@ def auto_resolve_exact_text_matches(
         side = item["side"]
         card_key = f"{cid}_{side}"
         raw = item["raw_ability"].strip()
-        if is_entry_done(cid, side, existing=existing_keys, star_done_cids=star_done_cids):
+        if is_entry_done(cid, side, existing=existing_keys, star_done_cids=star_done_cids, results=results):
             continue
         if raw in text_cache:
             cached_ast = _ensure_star_ast_dict(copy.deepcopy(text_cache[raw]), side, raw)
@@ -412,6 +489,8 @@ def run_ai_generator() -> None:
     for entry in results.values():
         raw_text = entry.get("raw_ability", "").strip()
         if raw_text and "ast" in entry:
+            if is_pure_star_entry(entry) and not _STAR_PREFIX_RE.match(raw_text):
+                continue
             text_cache[raw_text] = entry["ast"]
 
     newly_resolved = auto_resolve_exact_text_matches(results, text_cache)
@@ -420,13 +499,14 @@ def run_ai_generator() -> None:
         AI_OUTPUT_FILE.write_text(json.dumps(results, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print(f"Selected AI backend: {args.backend.upper()} (Target: {args.count} cards, Workers: {args.workers})")
-    skip_set = None if args.overwrite else set(results.keys())
+    skip_set = None if args.overwrite else compute_done_entry_keys(results)
     star_done_cids = None if args.overwrite else compute_star_done_cids(results)
     samples = load_unparsed_sample(
         offset=args.offset,
         max_items=args.count,
         existing=skip_set,
         star_done_cids=star_done_cids,
+        results=None if args.overwrite else results,
     )
     if not samples:
         print("No unparsed cards left to process.")

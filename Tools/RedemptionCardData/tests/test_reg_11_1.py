@@ -331,7 +331,7 @@ class TestRegV111DistArtifacts(unittest.TestCase):
 
         # Bounce (return to hand)
         self.assertIn("bounce", _collect_actions(self.cards_logic["891460711"]))
-        self.assertIn("bounce", _collect_actions(self.cards_logic["1381610582"], "shared"))
+        self.assertIn("bounce", _collect_actions(self.cards_logic["1381610582"], "bottom"))
 
         # Choose opponent -> opponent + territory
         asahel_eff = self.cards_logic["-1070093237"]["sides"]["top"]["abilities"][1]["effects"][0]

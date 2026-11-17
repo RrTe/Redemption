@@ -134,7 +134,11 @@ def merge_side_ast(
         merged["abilities"] = regular_abs + incoming_abs
     else:
         incoming_has_star = any(bool(ab.get("is_star")) for ab in incoming_abs)
-        if incoming_has_star:
+        incoming_has_reg = any(not bool(ab.get("is_star")) for ab in incoming_abs)
+        if incoming_has_star and not incoming_has_reg:
+            regular_abs = [ab for ab in existing_abs if not ab.get("is_star")]
+            merged["abilities"] = regular_abs + incoming_abs
+        elif incoming_has_star:
             merged["abilities"] = incoming_abs
         else:
             # Retain deterministically parsed is_star abilities alongside incoming regular abilities
@@ -545,7 +549,7 @@ def verify_card_logic(
                             count=DynamicValue.from_int(1)
                         )
                     else:
-                        if not eff.target.scope or eff.target.scope in ([Zone.BATTLE], [Zone.IN_PLAY]):
+                        if eff.target.scope != [Zone.DECK]:
                             eff.target.scope = [Zone.DECK]
                         if eff.target.selection_mode == SelectionMode.AUTOMATIC_ALL:
                             eff.target.selection_mode = SelectionMode.AUTOMATIC_NEXT

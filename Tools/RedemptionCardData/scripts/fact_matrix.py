@@ -107,6 +107,7 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
     brigades: Set[str] = set()
 
     restrict_identifiers: Set[str] = set()
+    has_capture_protection: bool = False
 
     for m in side_logic.modifiers:
         m_type = str(m.modifier_type.value if hasattr(m.modifier_type, "value") else m.modifier_type).lower()
@@ -175,6 +176,8 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
                 for pact in pf.actions:
                     pact_str = str(pact.value if hasattr(pact, "value") else pact).lower()
                     actions.add(pact_str)
+                    if act in ("protect", "immune") and pact_str == "capture":
+                        has_capture_protection = True
                 for cs in pf.card_sources:
                     _collect_selector_facts(
                         cs, numbers, max_values, identifiers, entities, target_types, restrict_identifiers, brigades
@@ -193,6 +196,7 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
         "restrict_identifiers": restrict_identifiers,
         "target_types": target_types,
         "brigades": brigades,
+        "has_capture_protection": has_capture_protection,
     }
 
 
@@ -372,6 +376,25 @@ def verify_fact_matrix(raw: str, ast_facts: Dict[str, Any]) -> Tuple[bool, List[
         if not any(a in ast_facts["actions"] for a in ["protect", "prevent", "ignore", "immune"]):
             if not any("cannot_be" in m for m in ast_facts["modifiers"]):
                 issues.append("Missing card protection action: 'protect'")
+
+    if re.search(r"\b(?:cannot|may\s+not)\s+be\s+(?:taken\s+prisoner|captured)\b", raw_lower):
+        if not ast_facts.get("has_capture_protection"):
+            issues.append(
+                "Missing capture protection ('protect'/'immune' with protection_filter action 'capture')"
+            )
+
+    cleaned_prot_check = re.sub(
+        r"\b(?:do\s+not|does\s+not|not|regardless\s+of|negate|negates|ignore|ignores|prevent|prevents)\s+protect(?:ing|ed|s)?\b",
+        " ",
+        raw_lower,
+    )
+    cleaned_prot_check = re.sub(r"\bprotect\s+(?:abilities|ability|special\s+abilities)\b", " ", cleaned_prot_check)
+    if (
+        re.search(r"\b(?:protect|protected|immune)\b", cleaned_prot_check)
+        and "restrict" in ast_facts["actions"]
+        and not any(a in ast_facts["actions"] for a in ("protect", "immune"))
+    ):
+        issues.append("Misclassified protection as 'restrict' (expected 'protect' or 'immune')")
 
     # 4. Relational / Conceptual Identifiers (e.g. music, weapon, idol, curse, demon)
     all_target_facts = " ".join(

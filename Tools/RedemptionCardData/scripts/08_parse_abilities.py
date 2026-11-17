@@ -97,6 +97,14 @@ UNDERDECK_PATTERN = re.compile(
     rf"^(?:you\s+may\s+|holder\s+may\s+)?underdeck\s+{_COUNT_GROUP}(?:the\s+)?([a-zA-Z0-9\s\(\)\'\-\.,]+?)\.?$",
     re.IGNORECASE,
 )
+RESERVE_PATTERN = re.compile(
+    rf"^(?:you\s+may\s+|holder\s+may\s+)?reserve\s+{_COUNT_GROUP}([a-zA-Z0-9\s\(\)\'\-\.,]+?)\.?$",
+    re.IGNORECASE,
+)
+DECREASE_STATS_PATTERN = re.compile(
+    r"^(?:you\s+may\s+|holder\s+may\s+)?decrease\s+([a-zA-Z0-9\s\(\)\'\-\.,]+?)\s+(?:by\s+)?(\d+)/(\d+)\.?$",
+    re.IGNORECASE,
+)
 TAKE_PATTERN = re.compile(
     rf"^(?:you\s+may\s+|holder\s+may\s+)?take\s+{_COUNT_GROUP}(?:the\s+)?([a-zA-Z0-9\s\(\)\'\-\.,]+?)\.?$",
     re.IGNORECASE,
@@ -353,6 +361,24 @@ def parse_colon_clause(clause: str, ability_idx: int) -> Optional[Ability]:
     )
 
 
+def _has_unparsed_clause(target_str: str) -> bool:
+    """Checks for unparsed compound clauses after stripping any trailing zone suffix.
+
+    Prevents trailing multi-zone suffixes such as ``in play or set aside area`` or
+    ``in play or a set-aside area`` from triggering the ``set aside`` / ``or a``
+    compound-target guards while still rejecting genuine multi-target clauses.
+
+    Args:
+        target_str: Raw target fragment extracted from a single-action pattern.
+
+    Returns:
+        True if the target (excluding a clean trailing zone suffix) contains an
+        unparsed compound clause.
+    """
+    clean_for_guard, _, _, _ = parse_target_zone_suffix(target_str)
+    return bool(UNPARSED_CLAUSE_GUARD.search(clean_for_guard))
+
+
 def _parse_single_action_effects(clause: str) -> Optional[Tuple[str, List[ActionEffect], Optional[ActivationMode]]]:
     """Parses a single-verb or compound-dual clause into (suffix_name, effects_list, override_mode).
 
@@ -457,7 +483,7 @@ def _parse_single_action_effects(clause: str) -> Optional[Tuple[str, List[Action
     if negate_match:
         cnt_token = negate_match.group(1) or "all"
         target_str = negate_match.group(2).strip()
-        if UNPARSED_CLAUSE_GUARD.search(target_str):
+        if _has_unparsed_clause(target_str):
             return None
         sel = build_target_selector(target_str, cnt_token, default_scope=[Zone.BATTLE])
         eff_type = "ongoing" if trailing_duration else "instant"
@@ -592,7 +618,7 @@ def _parse_single_action_effects(clause: str) -> Optional[Tuple[str, List[Action
     if underdeck_match:
         cnt_token = underdeck_match.group(1) or "1"
         target_str = underdeck_match.group(2).strip()
-        if UNPARSED_CLAUSE_GUARD.search(target_str):
+        if _has_unparsed_clause(target_str):
             return None
         sel = build_target_selector(target_str, cnt_token, default_scope=[Zone.IN_PLAY])
         return (
@@ -609,6 +635,50 @@ def _parse_single_action_effects(clause: str) -> Optional[Tuple[str, List[Action
             ],
             None,
         )
+
+    # 9b. Reserve
+    reserve_match = RESERVE_PATTERN.match(cleaned)
+    if reserve_match:
+        cnt_token = reserve_match.group(1) or "1"
+        target_str = reserve_match.group(2).strip()
+        if not re.match(r"^(?:the\s+)?(?:top|bottom)\b", target_str, re.IGNORECASE) and not _has_unparsed_clause(target_str):
+            sel = build_target_selector(target_str, cnt_token, default_scope=[Zone.IN_PLAY])
+            return (
+                "reserve",
+                [
+                    ActionEffect(
+                        step=1,
+                        action=ActionVerb.RESERVE,
+                        effect_type="instant",
+                        destination=Zone.RESERVE_PILE,
+                        target=sel,
+                    )
+                ],
+                None,
+            )
+
+    # 9c. Decrease stats (numeric S/T)
+    dec_match = DECREASE_STATS_PATTERN.match(cleaned)
+    if dec_match:
+        target_str, str_tok, tgh_tok = dec_match.groups()
+        target_str = target_str.strip()
+        if not _has_unparsed_clause(target_str):
+            sel = build_target_selector(target_str, "all", default_scope=[Zone.BATTLE])
+            return (
+                "decrease",
+                [
+                    ActionEffect(
+                        step=1,
+                        action=ActionVerb.DECREASE,
+                        effect_type="ongoing",
+                        duration=trailing_duration or Duration.THIS_TURN,
+                        strength_mod=-int(str_tok),
+                        toughness_mod=-int(tgh_tok),
+                        target=sel,
+                    )
+                ],
+                None,
+            )
 
     # 10. Take
     take_match = TAKE_PATTERN.match(cleaned)
@@ -1199,11 +1269,14 @@ def parse_side_ability(
 
     # Strict all-or-nothing: every single sentence must parse successfully
     for idx, raw_sentence in enumerate(raw_sentences, start=1):
-        clean_sentence = restore_abbreviations(raw_sentence).strip(" .")
+        sentence_masked = raw_sentence
+        cond_for_clause = leading_condition if idx == 1 else None
+        if idx > 1:
+            sentence_masked, cond_for_clause = extract_condition_prefix(sentence_masked)
+        clean_sentence = restore_abbreviations(sentence_masked).strip(" .")
         if not clean_sentence:
             continue
 
-        cond_for_clause = leading_condition if idx == 1 else None
         ability = parse_deterministic_clause(clean_sentence, idx, cond_for_clause, activation_mode)
         if not ability:
             return None, f"Unmatched clause: '{clean_sentence}'"

@@ -4,10 +4,13 @@ from mappings.card_type_metadata import CARD_TYPE_ABILITY_ALIASES, TYPE_ALIGNMEN
 from models.enums.card_type import TYPE_IS_A
 from scripts.utils.type_helpers import normalize_case
 
-# Regex matching ability section tags (e.g., 'HERO:', 'EC:', 'A:', 'TOP:', '(Star)', '(Hero)', '(HE)').
-# Uses lookbehind boundary (start of string, whitespace, slash, or period)
-# followed by either a colon-delimited label or a parenthetical label.
-TAG_PATTERN = re.compile(r'(?:^|(?<=[\s/\.]))(?:([A-Za-z]+):|\(\s*([A-Za-z]+)\s*\))\s*')
+# Regex matching ability section tags:
+# - Compound slash tags like 'GE/EE:' (preceded by start, whitespace, or period)
+# - Single colon-delimited labels ('HERO:', 'EC:', 'TOP:') or parenthetical labels ('(Star)')
+TAG_PATTERN = re.compile(
+    r'(?:(?:^|(?<=[\s\.]))([A-Za-z]+(?:/[A-Za-z]+)+):'
+    r'|(?:^|(?<=[\s/\.]))(?:([A-Za-z]+):|\(\s*([A-Za-z]+)\s*\)))\s*'
+)
 
 # Patterns for protecting stat modifications like 'X/X', '2/2', '+1/+1', or 'and/or'
 STAT_PATTERN = re.compile(r'^\s*[-+]?[0-9Xx]\s*/\s*[-+]?[0-9Xx]\s*$')
@@ -115,14 +118,37 @@ def split_card_abilities(
     has_star = False
 
     for m in matches:
-        raw_tag = m.group(1) or m.group(2)
+        compound_tag = m.group(1)
+        if compound_tag:
+            # Handle compound shared prefixes such as 'GE/EE:' without splitting the first tag into StarAbility.
+            parts = [normalize_case(p) for p in compound_tag.split("/") if p]
+            if parts and all(p in tag_to_side for p in parts):
+                side_keys = list(dict.fromkeys(tag_to_side[p] for p in parts))
+                tag_positions.append({
+                    "side_keys": side_keys,
+                    "start": m.start(),
+                    "content_start": m.end(),
+                })
+                matched_sides.update(side_keys)
+            elif parts and parts[-1] in tag_to_side:
+                side_key = tag_to_side[parts[-1]]
+                slash_offset = compound_tag.rfind("/") + 1
+                tag_positions.append({
+                    "side_keys": [side_key],
+                    "start": m.start() + slash_offset,
+                    "content_start": m.end(),
+                })
+                matched_sides.add(side_key)
+            continue
+
+        raw_tag = m.group(2) or m.group(3)
         if not raw_tag:
             continue
         tag_str = normalize_case(raw_tag)
         if tag_str in tag_to_side:
             side_key = tag_to_side[tag_str]
             tag_positions.append({
-                "side_key": side_key,
+                "side_keys": [side_key],
                 "start": m.start(),
                 "content_start": m.end()
             })
@@ -130,7 +156,7 @@ def split_card_abilities(
         elif tag_str == "STAR":
             has_star = True
             tag_positions.append({
-                "side_key": "star",
+                "side_keys": ["star"],
                 "start": m.start(),
                 "content_start": m.end()
             })
@@ -147,10 +173,11 @@ def split_card_abilities(
         for i, pos in enumerate(tag_positions):
             next_start = tag_positions[i + 1]["start"] if i + 1 < len(tag_positions) else len(cleaned_text)
             content = cleaned_text[pos["content_start"]:next_start].strip().rstrip("/").strip()
-            if pos["side_key"] == "star":
-                star_ability = content
-            else:
-                extracted_abilities[pos["side_key"]] = content
+            for sk in pos["side_keys"]:
+                if sk == "star":
+                    star_ability = content
+                else:
+                    extracted_abilities[sk] = content
 
         result = {s["key"]: extracted_abilities.get(s["key"], "") for s in sides_info}
         return result, star_ability
