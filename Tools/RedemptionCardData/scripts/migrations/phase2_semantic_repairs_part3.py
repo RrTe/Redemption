@@ -845,7 +845,7 @@ SEMANTIC_REPAIRS_PART3: Dict[str, Dict[str, Any]] = {
                     duration="permanent",
                     target=sel(
                         "automatic_all", "both", ["in_play", "battle"], "evil_character", "evil",
-                        identifiers=["Demon", "block"],
+                        identifiers=["Demon"],
                     ),
                 ),
             ],

@@ -39659,7 +39659,7 @@
           {
             "ability_id": "star_ab_1_protect",
             "is_star": true,
-            "activation_mode": "static",
+            "activation_mode": "triggered",
             "is_optional": false,
             "is_preventable": true,
             "is_interruptible": true,
@@ -68600,8 +68600,8 @@
                   ],
                   "target_type": "enhancement",
                   "brigades": [
-                    "Green",
-                    "White"
+                    "White",
+                    "Green"
                   ],
                   "alignment": null,
                   "gender": null,
@@ -81714,7 +81714,7 @@
           {
             "ability_id": "star_ab_1_protect",
             "is_star": true,
-            "activation_mode": "static",
+            "activation_mode": "triggered",
             "is_optional": false,
             "is_preventable": true,
             "is_interruptible": true,
@@ -95233,7 +95233,7 @@
           {
             "ability_id": "star_ab_1_protect",
             "is_star": true,
-            "activation_mode": "static",
+            "activation_mode": "triggered",
             "is_optional": false,
             "is_preventable": true,
             "is_interruptible": true,
@@ -113390,7 +113390,7 @@
           {
             "ability_id": "star_ab_1_protect",
             "is_star": true,
-            "activation_mode": "static",
+            "activation_mode": "triggered",
             "is_optional": false,
             "is_preventable": true,
             "is_interruptible": true,

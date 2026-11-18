@@ -82,6 +82,6 @@ class Ability(BaseModel):
                 self.trigger_event = "star_phase"
             if not self.ability_id.lower().startswith("star_"):
                 self.ability_id = f"star_{self.ability_id}"
-            if self.activation_mode == ActivationMode.IMMEDIATE:
+            if self.activation_mode != ActivationMode.TRIGGERED:
                 self.activation_mode = ActivationMode.TRIGGERED
         return self

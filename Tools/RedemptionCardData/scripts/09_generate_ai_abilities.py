@@ -236,7 +236,7 @@ def _ensure_star_ast_dict(ast_dict: Dict[str, Any], side: str, raw_ability: str)
         ab_id = ab.get("ability_id") or "ability"
         if not ab_id.lower().startswith("star_"):
             ab["ability_id"] = f"star_{ab_id}"
-        if ab.get("activation_mode") == "immediate":
+        if ab.get("activation_mode") != "triggered":
             ab["activation_mode"] = "triggered"
     return ast_dict
 

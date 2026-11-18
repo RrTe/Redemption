@@ -549,7 +549,8 @@ PROTECT_REPAIRS_PART2: Dict[str, Dict[str, Any]] = {
         ab(
             "star_protect_out_of_play",
             is_star=True,
-            activation_mode="static",
+            activation_mode="triggered",
+            trigger_event="star_phase",
             effects=[
                 eff(
                     1,

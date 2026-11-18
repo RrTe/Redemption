@@ -20,7 +20,11 @@ sys.path.append(str(Path(__file__).resolve().parent))
 sys.path.append(str(BASE_DIR))
 
 from models.logic.card_logic import CardLogic, CardSideLogic
-from models.logic.target_selector import TargetSelector
+from models.logic.target_selector import (
+    AUTOMATIC_SELF_IDENTIFIER_WHITELIST,
+    TargetSelector,
+    VERB_ACTION_IDENTIFIER_NOISE,
+)
 from models.logic.stat_filter import parse_stat_filters, StatFilter
 from models.logic.target_decomposer import (
     CANONICAL_CARD_TYPES, PLURAL_CARD_TYPE_MAP, SUBTYPE_MAP, HUMAN_MAP, CLASS_MAP,
@@ -55,12 +59,22 @@ _UNMIGRATED_CLASS_TOKENS = {
 } | set(CLASS_MAP.keys())
 
 
-def _audit_selector_invariants(sel: TargetSelector, ab_id: str, side_key: str, issues: List[str]) -> None:
+def _audit_selector_invariants(
+    sel: TargetSelector,
+    ab_id: str,
+    side_key: str,
+    issues: List[str],
+    enforce_self_whitelist: bool = False,
+) -> None:
     """Checks that a TargetSelector adheres to canonical CardType, singular identifier, and testament rules."""
     if sel.target_type and sel.target_type not in CANONICAL_CARD_TYPES:
         issues.append(f"Non-canonical target_type '{sel.target_type}' in '{ab_id}' ({side_key})")
     for ident in sel.identifiers:
         low = ident.strip().lower()
+        if low in VERB_ACTION_IDENTIFIER_NOISE:
+            issues.append(f"Verb/action fragment '{ident}' in identifiers of '{ab_id}' ({side_key})")
+        if enforce_self_whitelist and sel.selection_mode == SelectionMode.AUTOMATIC_SELF and low not in AUTOMATIC_SELF_IDENTIFIER_WHITELIST:
+            issues.append(f"Non-whitelist automatic_self identifier '{ident}' in '{ab_id}' ({side_key})")
         if low in ("o.t.", "n.t.", "ot", "nt", "old testament", "new testament"):
             issues.append(f"Unextracted testament '{ident}' in identifiers of '{ab_id}' ({side_key})")
         if low in ("male", "female"):
@@ -118,7 +132,7 @@ def merge_side_ast(
             ab_id = ab.get("ability_id") or "ability"
             if not ab_id.lower().startswith("star_"):
                 ab["ability_id"] = f"star_{ab_id}"
-            if ab.get("activation_mode") == "immediate":
+            if ab.get("activation_mode") != "triggered":
                 ab["activation_mode"] = "triggered"
 
     if not existing_side:
@@ -501,7 +515,7 @@ def verify_card_logic(
                     ability.trigger_event = "star_phase"
                 if not ability.ability_id.lower().startswith("star_"):
                     ability.ability_id = f"star_{ability.ability_id}"
-                if ability.activation_mode == ActivationMode.IMMEDIATE:
+                if ability.activation_mode != ActivationMode.TRIGGERED:
                     ability.activation_mode = ActivationMode.TRIGGERED
             # Check sequential integrity within costs
             seen_cost_steps = set()
@@ -604,10 +618,10 @@ def verify_card_logic(
                     if cost.target.scope in ([Zone.IN_PLAY], [Zone.BATTLE]) and not _BAND_ZONE_RESTRICTION_RE.search(raw_text_for_side):
                         cost.target.scope = [Zone.IN_PLAY, Zone.HAND]
                 if cost.target:
-                    _audit_selector_invariants(cost.target, ability.ability_id, side_key, issues)
+                    _audit_selector_invariants(cost.target, ability.ability_id, side_key, issues, enforce_self_whitelist=True)
             for eff in ability.effects:
                 if eff.target:
-                    _audit_selector_invariants(eff.target, ability.ability_id, side_key, issues)
+                    _audit_selector_invariants(eff.target, ability.ability_id, side_key, issues, enforce_self_whitelist=True)
                 if eff.protection_filter:
                     for cs in eff.protection_filter.card_sources:
                         _audit_selector_invariants(cs, ability.ability_id, side_key, issues)

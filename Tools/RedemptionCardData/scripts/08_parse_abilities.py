@@ -18,6 +18,8 @@ sys.path.append(str(Path(__file__).resolve().parent))
 sys.path.append(str(BASE_DIR))
 
 from utils.card_helpers import get_card_name, get_side_field, get_star_ability
+from utils.card_linker import CardLinker
+from scripts.migrations.migrate_ordir_71_and_card_titles import _migrate_side_dict
 from utils.ability_patterns import (
     extract_conditional_protection_abilities,
     extract_modifiers_from_text,
@@ -1400,6 +1402,7 @@ def run_ability_parser() -> None:
         data = json.load(f)
 
     cards = data if isinstance(data, list) else data.get("cards", [])
+    linker = CardLinker(cards)
     total_sides = 0
     parsed_sides = 0
     unparsed_records: List[Dict[str, Any]] = []
@@ -1412,6 +1415,19 @@ def run_ability_parser() -> None:
         parsed_sides += card_parsed
         unparsed_records.extend(card_unparsed)
         if serialized is not None:
+            cname = get_card_name(card)
+            raw_parts = [
+                get_star_ability(card),
+                get_side_field(card, "top", "SpecialAbility") or "",
+                get_side_field(card, "bottom", "SpecialAbility") or "",
+                card.get("SpecialAbility") or "",
+            ]
+            ext_raw = " ".join(p for p in raw_parts if p)
+            for s_key, s_dict in list((serialized.get("sides") or {}).items()):
+                if isinstance(s_dict, dict):
+                    cleaned_side, changed = _migrate_side_dict(s_dict, cname, ext_raw, linker=linker)
+                    if changed:
+                        serialized["sides"][s_key] = cleaned_side
             output_logic_map[card_id] = serialized
 
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)

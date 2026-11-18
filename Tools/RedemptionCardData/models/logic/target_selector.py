@@ -42,6 +42,31 @@ _ZONE_ALIAS_MAP: Dict[str, Zone] = {
     "set_aside_area": Zone.SET_ASIDE,
 }
 
+# Only atomic self-referential ORDIR traits/locations/tokens are allowed in
+# target.identifiers when selection_mode is automatic_self.
+AUTOMATIC_SELF_IDENTIFIER_WHITELIST = frozenset({
+    "meek",
+    "royalty",
+    "philistine",
+    "demon",
+    "angel",
+    "idol",
+    "cloud",
+    "gideon in the title",
+    "token",
+    "king",
+    "animal",
+    "jerusalem",
+    "egypt",
+    "disease",
+})
+
+# Verb/syntax artifacts leaked into target.identifiers (e.g. "may block" / "to block")
+# must never persist as nominal target identifiers.
+VERB_ACTION_IDENTIFIER_NOISE = frozenset({
+    "block",
+})
+
 
 def _normalize_single_zone(item: Any) -> Any:
     """Normalizes a single zone enum or unambiguous zone alias string.
@@ -314,7 +339,7 @@ class TargetSelector(BaseModel):
         title_lower_set = {x.lower() for x in clean_titles}
         for ident in raw_idents:
             i_str = str(ident).strip()
-            if not i_str:
+            if not i_str or i_str.lower() in VERB_ACTION_IDENTIFIER_NOISE:
                 continue
             parsed_sf = parse_stat_filters(i_str)
             if parsed_sf:

@@ -5,11 +5,12 @@ targets, destinations, durations, context scope creators, and dependencies.
 """
 
 from typing import Optional, Literal, Any
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 from models.enums.action_verb import ActionVerb
 from models.enums.duration import Duration
+from models.enums.selection_mode import SelectionMode
 from models.enums.zone import Zone
-from models.logic.target_selector import TargetSelector
+from models.logic.target_selector import AUTOMATIC_SELF_IDENTIFIER_WHITELIST, TargetSelector
 from models.logic.protection_filter import ProtectionFilter
 
 
@@ -97,3 +98,17 @@ class ActionEffect(BaseModel):
             if clean in ("move", "move card", "relocate", "put"):
                 return ActionVerb.PLACE
         return v
+
+    @model_validator(mode="after")
+    def normalize_automatic_self_identifiers(self) -> "ActionEffect":
+        """Strips non-whitelist clause/verb fragments from automatic_self effect/cost targets."""
+        if (
+            self.target
+            and self.target.selection_mode == SelectionMode.AUTOMATIC_SELF
+            and self.target.identifiers
+        ):
+            self.target.identifiers = [
+                ident for ident in self.target.identifiers
+                if ident.strip().lower() in AUTOMATIC_SELF_IDENTIFIER_WHITELIST
+            ]
+        return self
