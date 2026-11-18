@@ -13,6 +13,7 @@ class MoveCardCommand extends BaseCommand {
     this.preMoveSnapshot = null;
     this.preBattleFlags = null;
     this.divertedSnapshots = [];
+    this._trackedTurnEnhancementsCount = 0;
   }
 
   execute(message) {
@@ -165,6 +166,24 @@ class MoveCardCommand extends BaseCommand {
         this.room.broadcastGameLog(result.logEntry);
       }
 
+      // Track non-schema Enhancements played during the active turn (e.g. Proud Pharisee play_advantage)
+      const isPlayedToField =
+        [ZONES.BATTLEFIELD, ZONES.TERRITORY].includes(message.to) &&
+        ![ZONES.BATTLEFIELD, ZONES.TERRITORY].includes(message.from);
+      if (isPlayedToField && movedCards.length > 0) {
+        const enhPlayed = movedCards.filter(
+          (c) => BattleTriggerService.isGoodEnhancement(c) || BattleTriggerService.isEvilEnhancement(c)
+        ).length;
+        if (enhPlayed > 0) {
+          if (!this.room._turnPlayedEnhancements) {
+            this.room._turnPlayedEnhancements = {};
+          }
+          this.room._turnPlayedEnhancements[player.sessionId] =
+            (this.room._turnPlayedEnhancements[player.sessionId] || 0) + enhPlayed;
+          this._trackedTurnEnhancementsCount = enhPlayed;
+        }
+      }
+
       // ✨ Phase 3: Battlefield & Battle Entry Triggers
       if (!result.error) {
         if (this.state.battle?.specialInitiativePlayerId === player.sessionId && movedCards.length > 0) {
@@ -214,6 +233,15 @@ class MoveCardCommand extends BaseCommand {
       for (let i = this.divertedSnapshots.length - 1; i >= 0; i--) {
         MoveCardSnapshotHelper.undoSingleCard(this.room, this.state, this.divertedSnapshots[i], player);
       }
+    }
+
+    if (this._trackedTurnEnhancementsCount > 0 && this.room._turnPlayedEnhancements) {
+      const current = this.room._turnPlayedEnhancements[player.sessionId] || 0;
+      this.room._turnPlayedEnhancements[player.sessionId] = Math.max(
+        0,
+        current - this._trackedTurnEnhancementsCount
+      );
+      this._trackedTurnEnhancementsCount = 0;
     }
 
     if (this.preMoveSnapshot?.fromZone === ZONES.BATTLEFIELD || this.preMoveSnapshot?.toZone === ZONES.BATTLEFIELD) {

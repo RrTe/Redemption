@@ -81,34 +81,12 @@ class BattleTriggerService {
       actionType = ActionType.PLAY_EVIL_ENHANCEMENT;
     }
     const controllerId = card.controllerId || player?.sessionId;
+    card._lastCostPaid = false;
 
-    // 1. Try finding an automated AST battle entrance ability
-    const astAbility = this.findBattleEntryAstAbility(room, player, card, actionType);
-    if (astAbility) {
-      logger.info(
-        `[BattleTriggerService] Enqueueing AST '${card.Name}' (${astAbility.ability_id}) for '${actionType}'.`
-      );
-
-      const { isSupported, isChoice, isOptional } = this._resolveAbilityFlags(card, astAbility);
-
-      EffectChronicleService.enqueueCards(
-        room,
-        [card],
-        controllerId,
-        actionType,
-        {
-          autoExecute: true,
-          autoExecuteSupported: true,
-          abilityId: isChoice ? "" : astAbility.ability_id,
-          isOptional,
-        }
-      );
-      return {
-        triggered: true,
-        actionType,
-        cardId: card.id,
-        abilityId: astAbility.ability_id,
-      };
+    // 1. Try finding automated AST battle entrance abilities in printed order
+    const astEntries = this.findBattleEntryAstAbilities(room, player, card, actionType);
+    if (astEntries.length > 0) {
+      return this._enqueueBattleAbilities(room, card, controllerId, actionType, astEntries);
     }
 
     // 2. Tabletop fallback: Check for non-star special abilities on the card
@@ -157,17 +135,18 @@ class BattleTriggerService {
   }
 
   /**
-   * Finds a matching, conditional AST entrance ability for a card.
+   * Finds all matching, conditional AST entrance abilities for a card in printed order,
+   * preserving choice_groups as unified single entries.
    *
    * @param {import('../rooms/GameRoom').GameRoom} room Game room.
    * @param {object} player Acting player.
    * @param {object} card In-game card.
    * @param {string} actionType Battle action type.
-   * @returns {object | null} Valid AST ability or null.
+   * @returns {Array<{ ability: object, abilityId: string, choiceGroup: string, isSupported: boolean, isChoice: boolean, isOptional: boolean }>} Ordered enqueue descriptors.
    */
-  static findBattleEntryAstAbility(room, player, card, actionType) {
-    const templateId = card.templateId;
-    if (!templateId || !AbilityLookup.hasLogic(templateId)) return null;
+  static findBattleEntryAstAbilities(room, player, card, actionType) {
+    const templateId = card?.templateId;
+    if (!templateId || !AbilityLookup.hasLogic(templateId)) return [];
 
     const abilities = AbilityLookup.resolveAbilities(templateId, {
       actionType,
@@ -176,22 +155,81 @@ class BattleTriggerService {
       isStarCard: card.IsStarCard,
       card,
     });
-    if (!abilities || abilities.length === 0) return null;
+    if (!abilities || abilities.length === 0) return [];
 
     const matching = abilities.filter((a) =>
       this.isAbilityTriggeredOnBattleEntry(a, actionType, card)
     );
-    if (matching.length === 0) return null;
+    if (matching.length === 0) return [];
 
-    const validAbilities = matching.filter((ability) => {
+    const entries = [];
+    const seenChoiceGroups = new Set();
+    const isMultiAbilityCard = matching.length > 1;
+
+    for (const ability of matching) {
+      if (ability.choice_group) {
+        if (seenChoiceGroups.has(ability.choice_group)) continue;
+        seenChoiceGroups.add(ability.choice_group);
+
+        const groupAbilities = matching.filter(
+          (a) => a.choice_group === ability.choice_group
+        );
+        const anyConditionMet = groupAbilities.some(
+          (a) => ConditionEvaluator.evaluate(a.conditions, { room, player, card }).valid
+        );
+        if (!anyConditionMet) continue;
+
+        entries.push({
+          ability: groupAbilities[0],
+          abilityId: "",
+          choiceGroup: ability.choice_group,
+          isSupported: groupAbilities.some((a) => this._isSupportedAstAbility(a)),
+          isChoice: true,
+          isOptional: true,
+        });
+        continue;
+      }
+
       const evalResult = ConditionEvaluator.evaluate(ability.conditions, {
         room,
         player,
         card,
       });
-      return evalResult.valid;
-    });
-    if (validAbilities.length === 0) return null;
+      if (!evalResult.valid) {
+        // Defer was_cost_paid evaluation to execution time if an earlier ability on this card may fulfill the cost
+        const failedCostCheck =
+          evalResult.failedCondition?.condition_type === "was_cost_paid" && entries.length > 0;
+        if (!failedCostCheck) continue;
+      }
+
+      const flags = this._resolveAbilityFlags(card, ability, {
+        ignoreTextMayFallback: isMultiAbilityCard,
+      });
+      entries.push({
+        ability,
+        abilityId: flags.isChoice ? "" : ability.ability_id,
+        choiceGroup: "",
+        ...flags,
+      });
+    }
+
+    return entries;
+  }
+
+  /**
+   * Finds a matching, conditional AST entrance ability for a card (backwards-compatible single selector).
+   *
+   * @param {import('../rooms/GameRoom').GameRoom} room Game room.
+   * @param {object} player Acting player.
+   * @param {object} card In-game card.
+   * @param {string} actionType Battle action type.
+   * @returns {object | null} Valid AST ability or null.
+   */
+  static findBattleEntryAstAbility(room, player, card, actionType) {
+    const entries = this.findBattleEntryAstAbilities(room, player, card, actionType);
+    if (entries.length === 0) return null;
+
+    const validAbilities = entries.map((e) => e.ability);
 
     // Prioritize supported AST abilities (e.g. Draw) and optional abilities
     const supportedOptional = validAbilities.find(
@@ -206,6 +244,46 @@ class BattleTriggerService {
     if (optional) return optional;
 
     return validAbilities[0];
+  }
+
+  /**
+   * Enqueues one or more resolved AST battle-entry descriptors for a card in order.
+   *
+   * @private
+   */
+  static _enqueueBattleAbilities(room, card, controllerId, actionType, entries) {
+    const firstAbilityId = entries[0]?.ability?.ability_id || "";
+    const abilityIds = entries.map((e) => e.ability?.ability_id).filter(Boolean);
+
+    logger.info(
+      `[BattleTriggerService] Enqueueing ${entries.length} AST ability/abilities for '${card.Name}' (${abilityIds.join(", ")}) for '${actionType}'.`
+    );
+
+    const queueItems = entries.map((entry) => ({
+      card,
+      abilityId: entry.abilityId,
+      isOptional: entry.isOptional,
+      choiceGroup: entry.choiceGroup,
+    }));
+
+    EffectChronicleService.enqueueCards(
+      room,
+      queueItems,
+      controllerId,
+      actionType,
+      {
+        autoExecute: true,
+        autoExecuteSupported: true,
+      }
+    );
+
+    return {
+      triggered: true,
+      actionType,
+      cardId: card.id,
+      abilityId: firstAbilityId,
+      abilityIds,
+    };
   }
 
   static _isSupportedAstAbility(ability) {
@@ -233,34 +311,12 @@ class BattleTriggerService {
 
     const actionType = ActionType.ACTIVATE_ABILITY;
     const controllerId = card.controllerId || player?.sessionId;
+    card._lastCostPaid = false;
 
-    // 1. Try finding an automated AST ability for the Dominant
-    const astAbility = this.findBattleEntryAstAbility(room, player, card, actionType);
-    if (astAbility) {
-      logger.info(
-        `[BattleTriggerService] Enqueueing AST Dominant '${card.Name}' (${astAbility.ability_id}) for '${actionType}'.`
-      );
-
-      const { isSupported, isChoice, isOptional } = this._resolveAbilityFlags(card, astAbility);
-
-      EffectChronicleService.enqueueCards(
-        room,
-        [card],
-        controllerId,
-        actionType,
-        {
-          autoExecute: true,
-          autoExecuteSupported: true,
-          abilityId: isChoice ? "" : astAbility.ability_id,
-          isOptional,
-        }
-      );
-      return {
-        triggered: true,
-        actionType,
-        cardId: card.id,
-        abilityId: astAbility.ability_id,
-      };
+    // 1. Try finding automated AST abilities for the Dominant
+    const astEntries = this.findBattleEntryAstAbilities(room, player, card, actionType);
+    if (astEntries.length > 0) {
+      return this._enqueueBattleAbilities(room, card, controllerId, actionType, astEntries);
     }
 
     // 2. Tabletop fallback for Dominants with abilities
@@ -295,13 +351,16 @@ class BattleTriggerService {
   /**
    * Resolves ability support, choice-group membership, and optionality.
    * Excludes negative "may not" prohibitions from triggering the "may" optionality heuristic.
+   *
    * @param {Object} card
    * @param {Object} astAbility
+   * @param {Object} [options={}]
+   * @param {boolean} [options.ignoreTextMayFallback=false] Skip whole-card text "may" heuristic on multi-ability cards.
    * @returns {{ isSupported: boolean, isChoice: boolean, isOptional: boolean }}
    */
-  static _resolveAbilityFlags(card, astAbility) {
+  static _resolveAbilityFlags(card, astAbility, { ignoreTextMayFallback = false } = {}) {
     const specialAbilityText = card.SpecialAbility || card.specialAbility || "";
-    const hasMayKeyword = /\bmay\b(?!\s+not\b)/i.test(specialAbilityText);
+    const hasMayKeyword = !ignoreTextMayFallback && /\bmay\b(?!\s+not\b)/i.test(specialAbilityText);
     const isSupported = this._isSupportedAstAbility(astAbility);
     const isChoice = Boolean(astAbility.choice_group);
     const isStaticMandatory =

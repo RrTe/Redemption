@@ -207,18 +207,18 @@ describe("Sequential Battle Resolution: AST Abilities & Tabletop Fallbacks", () 
     const moveEli = new MoveCardCommand(room, client1);
     moveEli.execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: eli.id });
 
-    // Eli must pick the optional ability (ab_2_band) and prompt the player
+    // Eli must enqueue ab_1_search (tabletop fallback) followed by ab_2_band in printed order
     expect(client1.send).toHaveBeenCalledWith(
       AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
       expect.objectContaining({
+        abilityId: "ab_1_search",
         cardId: eli.id,
         cardTitle: "Eli the Priest (RoA)",
-        promptText: "Band with Samuel?",
       })
     );
-    expect(state.effectChronicle.items.length).toBe(1);
+    expect(state.effectChronicle.items.length).toBe(2);
 
-    // Accept Eli's prompt -> logs tabletop execution
+    // Accept Eli's search fallback -> logs tabletop execution and resolves ab_2_band (no Samuel in play)
     const eliItemId = state.effectChronicle.items[0].id;
     const optCmdEli = new RespondOptionalAbilityCommand(room, client1);
     optCmdEli.execute({ itemId: eliItemId, accepted: true });

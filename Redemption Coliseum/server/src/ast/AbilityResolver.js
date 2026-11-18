@@ -64,6 +64,7 @@ class AbilityResolver {
     let firstEffect = null;
     let resolvedAbilitiesList = [];
     let isChoiceGroup = false;
+    let isParentAbilityId = false;
 
     if (hasLogic) {
       const abilities = AbilityLookup.resolveAbilities(templateId, {
@@ -77,13 +78,15 @@ class AbilityResolver {
         // Choice Group support: prompt player to select between multiple effects (e.g. "Choose One")
         const matchedAbility = item.abilityId
           ? abilities.find((a) => a.ability_id === item.abilityId)
-          : abilities.find((a) => Boolean(a?.choice_group));
+          : (item._choiceGroup
+            ? abilities.find((a) => a?.choice_group === item._choiceGroup)
+            : abilities.find((a) => Boolean(a?.choice_group)));
         const choiceGroup = matchedAbility?.choice_group;
         const choiceAbilities = choiceGroup
           ? abilities.filter((a) => a.choice_group === choiceGroup)
           : [];
         isChoiceGroup = choiceAbilities.length > 1;
-        const isParentAbilityId = Boolean(
+        isParentAbilityId = Boolean(
           item.abilityId &&
           choiceAbilities.some((a) => a.parent_ability_id === item.abilityId)
         );
@@ -174,7 +177,7 @@ class AbilityResolver {
       item.actionType === ActionType.BLOCK_RESCUE;
 
     if (
-      (!targetAbility || !firstEffect || !AstEffectRunner._handlers[firstEffect.action]) &&
+      (!targetAbility || (!item.abilityId && (!firstEffect || !AstEffectRunner._handlers[firstEffect.action]))) &&
       isBattleContext &&
       fallbackBand
     ) {
@@ -195,9 +198,10 @@ class AbilityResolver {
         resolvedAbilitiesList.length > 0
           ? resolvedAbilitiesList.some((a) => this._evaluateAbilityViability(a, player, card).viable)
           : targetViability.viable;
+      const hasExplicitSingleAbility = Boolean(item.abilityId && !isChoiceGroup && !isParentAbilityId);
 
-      if (!targetViability.viable && (!anyCardAbilityViable || isChoiceGroup)) {
-        return this._handleNoValidTargets(player, card, item);
+      if (!targetViability.viable && (hasExplicitSingleAbility || !anyCardAbilityViable || isChoiceGroup)) {
+        return this._handleNoValidTargets(player, card, item, targetAbility);
       }
     }
 
@@ -430,7 +434,7 @@ class AbilityResolver {
           const targetClient = this.room.clients?.find((c) => c.sessionId === targetSessionId);
           if (targetClient && typeof targetClient.send === "function") {
             const canCancelSelection = isOpponentSelecting
-              ? Boolean(currentEffect.target?.can_cancel)
+              ? Boolean(currentEffect.target?.can_cancel || (targetAbility.is_optional && stepIdx === 0))
               : Boolean(
                 eligible.canCancel ||
                 ((targetAbility.is_optional || item.isOptional) && stepIdx === 0)
@@ -514,6 +518,13 @@ class AbilityResolver {
     item._accumulatedLogs = [];
     item._previousSnapshot = null;
 
+    if (card && this._isCostOrOpponentChoiceAbility(targetAbility)) {
+      const movedAny = finalSnapshots.some(
+        (s) => (s?.movedCards?.length || 0) > 0 || (s?.discardedCards?.length || 0) > 0
+      );
+      card._lastCostPaid = movedAny;
+    }
+
     return {
       handled: true,
       snapshots: finalSnapshots,
@@ -540,15 +551,32 @@ class AbilityResolver {
   }
 
   /**
+   * Returns true if an ability acts as a cost or opponent-choice cost (e.g. Judith's manual_opponent banish).
+   *
+   * @private
+   */
+  _isCostOrOpponentChoiceAbility(ability) {
+    if (!ability) return false;
+    if (Array.isArray(ability.costs) && ability.costs.length > 0) return true;
+    return Array.isArray(ability.effects)
+      ? ability.effects.some((e) => e?.target?.selection_mode === AST_SELECTION_MODES.MANUAL_OPPONENT)
+      : false;
+  }
+
+  /**
    * Emits a "No valid targets." toast to the acting player and returns a completed result.
    *
    * @private
    * @param {object} player Acting player.
    * @param {object} card Card instance.
    * @param {object} item Chronicle item.
+   * @param {object|null} [targetAbility=null] Resolved AST ability.
    * @returns {{ handled: boolean, noValidTargets: boolean, snapshots: object[], logEntries: string[] }}
    */
-  _handleNoValidTargets(player, card, item) {
+  _handleNoValidTargets(player, card, item, targetAbility = null) {
+    if (card && this._isCostOrOpponentChoiceAbility(targetAbility)) {
+      card._lastCostPaid = false;
+    }
     const cardTitle = card?.Name || item?.title || "Card";
     const logTarget = card ? formatCardLink(card) : cardTitle;
     const client = this.room?.clients?.find((c) => c.sessionId === player.sessionId);
@@ -875,7 +903,11 @@ class AbilityResolver {
     const targetType = iden
       ? (ADJECTIVE_IDENT_REGEX.test(iden) ? `${iden} ${baseNoun}` : iden)
       : baseNoun;
-    const alignStr = target.alignment ? `${target.alignment} ` : "";
+    const alignLower = String(target.alignment || "").toLowerCase();
+    const alignStr =
+      alignLower && !targetType.toLowerCase().startsWith(alignLower)
+        ? `${target.alignment} `
+        : "";
     return `${alignStr}${quals.genericStr}${quals.brigadeStr}${quals.testStr}${quals.refStr}${quals.genderStr}${quals.humanStr}${targetType}`.trim();
   }
 
@@ -961,8 +993,18 @@ class AbilityResolver {
         const verb = effect.action === AST_ACTIONS.IMMUNE ? "Grant immunity to" : "Protect";
         return `${verb} ${phrase}${clause ? ` ${clause}` : ""}?`;
       }
-      default:
+      default: {
+        if (!AstEffectRunner.isActionSupported(effect.action) && effect.target) {
+          const actLabel = effect.action
+            ? effect.action.charAt(0).toUpperCase() + effect.action.slice(1)
+            : "Activate";
+          const phrase = this._formatTargetPhrase(effect.target);
+          if (phrase) {
+            return `${actLabel} ${phrase}?`;
+          }
+        }
         return `Activate ${cardName}'s optional ability?`;
+      }
     }
   }
 

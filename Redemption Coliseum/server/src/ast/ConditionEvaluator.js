@@ -1,6 +1,8 @@
 // server/src/ast/ConditionEvaluator.js
 const { ZONES } = require("../../../shared/zones");
+const { PHASES } = require("../../../shared/phases");
 const { TargetSelectionService } = require("./TargetSelectionService");
+const { AdvantageEvaluator } = require("./AdvantageEvaluator");
 const logger = require("../utils/logger");
 
 /**
@@ -117,7 +119,7 @@ class ConditionEvaluator {
             room,
             actingPlayer,
             selector,
-            { actionType: "condition_check", card }
+            { room, actionType: "condition_check", card }
           );
           const matchCount = eligible?.eligibleCardIds ? eligible.eligibleCardIds.length : 0;
           const targetValue =
@@ -202,7 +204,7 @@ class ConditionEvaluator {
           room,
           actingPlayer,
           selector,
-          { actionType: "condition_check", card }
+          { room, actionType: "condition_check", card }
         );
         const matchCount = eligible?.eligibleCardIds ? eligible.eligibleCardIds.length : 0;
         const targetValue =
@@ -232,7 +234,7 @@ class ConditionEvaluator {
             room,
             actingPlayer,
             selector,
-            { actionType: "condition_check", card }
+            { room, actionType: "condition_check", card }
           );
           const count = eligible?.eligibleCardIds ? eligible.eligibleCardIds.length : 0;
           const valid = this._compareNumbers(count, operator || ">", value);
@@ -255,6 +257,158 @@ class ConditionEvaluator {
           };
         }
         return { valid: true };
+      }
+
+      case "board_advantage": {
+        const { selector } = condition;
+        const { actingPlayer, opponentPlayer } = this._resolvePlayers(room, card, context);
+        if (!actingPlayer || !opponentPlayer) {
+          return { valid: false, reason: "Missing controller or opponent for board advantage comparison" };
+        }
+        const controllerCount = AdvantageEvaluator.countPlayerCards(room, actingPlayer, {
+          includeOutOfPlayBoard: true,
+          selector: selector || null,
+        });
+        const opponentCount = AdvantageEvaluator.countPlayerCards(room, opponentPlayer, {
+          includeOutOfPlayBoard: true,
+          selector: selector || null,
+        });
+        const valid = AdvantageEvaluator.evaluateAdvantageComparison(
+          controllerCount,
+          opponentCount,
+          condition,
+          this._compareNumbers.bind(this),
+          { allowUndefinedAsOpponent: true }
+        );
+        return valid
+          ? { valid: true }
+          : { valid: false, reason: `Board advantage check failed (controller=${controllerCount}, opponent=${opponentCount})` };
+      }
+
+      case "play_advantage": {
+        const { selector, value } = condition;
+        const { actingPlayer, opponentPlayer } = this._resolvePlayers(room, card, context);
+        if (!actingPlayer) {
+          return { valid: false, reason: "Missing controller for play advantage check" };
+        }
+
+        // Upstream AST encodes "if you have initiative" as play_advantage == true without a selector
+        const inBattleContext =
+          room?.state?.currentPhase === PHASES.BATTLE ||
+          Boolean(room?.state?.battle?.initiativePlayerId) ||
+          Boolean(room?.state?.battle?.rescueAttemptOccurred) ||
+          Boolean(room?.state?.battle?.blockOccurred);
+        if (!selector && typeof value === "boolean" && inBattleContext) {
+          const hasInitiative = Boolean(
+            actingPlayer.sessionId &&
+            room?.state?.battle?.initiativePlayerId === actingPlayer.sessionId
+          );
+          const expected = operator === "!=" ? !value : value;
+          return hasInitiative === expected
+            ? { valid: true }
+            : { valid: false, reason: `Initiative check failed (initiative=${room?.state?.battle?.initiativePlayerId || "none"})` };
+        }
+
+        // Proud Pharisee variant: "If you have played no Enhancements this turn"
+        if (
+          selector?.target_type === "enhancement" &&
+          selector?.zone_owner === "controller" &&
+          typeof value === "number"
+        ) {
+          const enhCount = AdvantageEvaluator.countEnhancementsPlayedThisTurn(room, actingPlayer);
+          const valid = this._compareNumbers(enhCount, operator || "==", value);
+          return valid
+            ? { valid: true }
+            : { valid: false, reason: `Enhancements played check failed (count=${enhCount}, required ${operator || "=="} ${value})` };
+        }
+
+        if (!opponentPlayer) {
+          return { valid: false, reason: "Missing opponent for play advantage comparison" };
+        }
+        const controllerCount = AdvantageEvaluator.countPlayerCards(room, actingPlayer, {
+          includeOutOfPlayBoard: false,
+          selector: selector || null,
+        });
+        const opponentCount = AdvantageEvaluator.countPlayerCards(room, opponentPlayer, {
+          includeOutOfPlayBoard: false,
+          selector: selector || null,
+        });
+        const valid = AdvantageEvaluator.evaluateAdvantageComparison(
+          controllerCount,
+          opponentCount,
+          condition,
+          this._compareNumbers.bind(this)
+        );
+        return valid
+          ? { valid: true }
+          : { valid: false, reason: `Play advantage check failed (controller=${controllerCount}, opponent=${opponentCount})` };
+      }
+
+      case "redeemed_soul_advantage": {
+        const { actingPlayer, opponentPlayer } = this._resolvePlayers(room, card, context);
+        if (!actingPlayer || !opponentPlayer) {
+          return { valid: false, reason: "Missing controller or opponent for redeemed soul advantage comparison" };
+        }
+        const controllerSouls = AdvantageEvaluator.countRedeemedSouls(actingPlayer);
+        const opponentSouls = AdvantageEvaluator.countRedeemedSouls(opponentPlayer);
+        const valid = AdvantageEvaluator.evaluateAdvantageComparison(
+          controllerSouls,
+          opponentSouls,
+          condition,
+          this._compareNumbers.bind(this)
+        );
+        return valid
+          ? { valid: true }
+          : { valid: false, reason: `Redeemed soul advantage check failed (controller=${controllerSouls}, opponent=${opponentSouls})` };
+      }
+
+      case "lost_soul_advantage": {
+        const { actingPlayer, opponentPlayer } = this._resolvePlayers(room, card, context);
+        if (!actingPlayer || !opponentPlayer) {
+          return { valid: false, reason: "Missing controller or opponent for lost soul advantage comparison" };
+        }
+        const controllerLostSouls = AdvantageEvaluator.countLostSouls(room, actingPlayer);
+        const opponentLostSouls = AdvantageEvaluator.countLostSouls(room, opponentPlayer);
+        const valid = AdvantageEvaluator.evaluateAdvantageComparison(
+          controllerLostSouls,
+          opponentLostSouls,
+          condition,
+          this._compareNumbers.bind(this)
+        );
+        return valid
+          ? { valid: true }
+          : { valid: false, reason: `Lost soul advantage check failed (controller=${controllerLostSouls}, opponent=${opponentLostSouls})` };
+      }
+
+      case "is_turn_of": {
+        const { actingPlayer, opponentPlayer } = this._resolvePlayers(room, card, context);
+        const activePlayerId = room?.state?.activePlayer || "";
+        const targetOwner = condition.selector?.zone_owner;
+        const targetPlayerId =
+          targetOwner === "opponent" || condition.value === "opponent"
+            ? opponentPlayer?.sessionId
+            : actingPlayer?.sessionId;
+        const expected = condition.value === false || condition.value === 0 ? false : true;
+        const isTargetTurn = Boolean(activePlayerId && targetPlayerId && activePlayerId === targetPlayerId);
+        const valid = operator === "!=" ? isTargetTurn !== expected : isTargetTurn === expected;
+        return valid
+          ? { valid: true }
+          : { valid: false, reason: `Turn check failed (active=${activePlayerId || "none"}, expected=${targetPlayerId || "unknown"}:${expected})` };
+      }
+
+      case "was_cost_paid": {
+        const actualPaid = Boolean(
+          context.wasCostPaid ??
+          context.costPaid ??
+          context.item?.wasCostPaid ??
+          card?._lastCostPaid ??
+          false
+        );
+        const expected = condition.value === undefined ? true : Boolean(condition.value);
+        const valid = operator === "!=" ? actualPaid !== expected : actualPaid === expected;
+        return valid
+          ? { valid: true }
+          : { valid: false, reason: `Cost payment check failed (actual=${actualPaid}, expected=${expected})` };
       }
 
       default:

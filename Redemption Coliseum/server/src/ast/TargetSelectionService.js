@@ -580,8 +580,10 @@ class TargetSelectionService {
           return true;
         });
 
-        const CONSTRAINT_IDENT_REGEX = /^(?:non-warrior(?:\s+class)?|non-weapon(?:\s+class)?|except\s+(?:(?:a|an)\s+)?(?:human|non-human|warrior(?:\s+class)?|weapon(?:\s+class)?|good\s+warriors?|good\s+weapons?))$/i;
+        const CONSTRAINT_IDENT_REGEX = /^(?:non-warrior(?:\s+class)?|non-weapon(?:\s+class)?|except\s+(?:(?:a|an)\s+)?(?:human|non-human|warrior(?:\s+class)?|weapon(?:\s+class)?|good\s+warriors?|good\s+weapons?|lost\s+souls?))$/i;
+        const STATE_IDENT_REGEX = /^(?:blocking|attacking)$/i;
         const constraintIdents = [];
+        const stateIdents = [];
         const standardIdents = [];
 
         for (const id of normalizedIdents) {
@@ -598,6 +600,8 @@ class TargetSelectionService {
             }
           } else if (CONSTRAINT_IDENT_REGEX.test(low)) {
             constraintIdents.push(low);
+          } else if (STATE_IDENT_REGEX.test(low)) {
+            stateIdents.push(low);
           } else if (trimmed) {
             standardIdents.push(trimmed);
           }
@@ -605,6 +609,12 @@ class TargetSelectionService {
 
         for (const constraint of constraintIdents) {
           if (!this._matchesConstraintIdentifier(card, constraint, targetDef)) {
+            return false;
+          }
+        }
+
+        for (const stateIdent of stateIdents) {
+          if (!this._matchesBattleStateIdentifier(card, stateIdent, context)) {
             return false;
           }
         }
@@ -686,6 +696,36 @@ class TargetSelectionService {
     }
     if (/^except\s+good\s+weapons?$/.test(constraint)) {
       return !(cardAlign.includes("good") && SideAttributeEvaluator.matchesClasses(card, [weaponClass], { targetDef }));
+    }
+    if (/^except\s+lost\s+souls?$/.test(constraint)) {
+      const activeType = card.inGameType || card.Type || "";
+      return !(matchesTargetType(card, "lost_soul", activeType) || card.zone === ZONES.LAND_OF_BONDAGE || card.isLostSoul);
+    }
+    return true;
+  }
+
+  /**
+   * Evaluates runtime battlefield role identifiers (e.g. "blocking", "attacking").
+   *
+   * @private
+   * @param {object} card Candidate card instance.
+   * @param {string} stateIdent Lowercased battle-state identifier.
+   * @param {object} [context={}] Filter context containing room state when available.
+   * @returns {boolean} True if candidate card is currently in that battle role.
+   */
+  static _matchesBattleStateIdentifier(card, stateIdent, context = {}) {
+    if (!card || card.zone !== ZONES.BATTLEFIELD) return false;
+    const activePlayer = context?.room?.state?.activePlayer;
+    const cardController = card.controllerId || card.ownerId;
+    if (stateIdent === "blocking") {
+      return activePlayer
+        ? Boolean(cardController && cardController !== activePlayer)
+        : BattleCharacterClassifier.isEvilCharacter(card);
+    }
+    if (stateIdent === "attacking") {
+      return activePlayer
+        ? Boolean(cardController && cardController === activePlayer)
+        : BattleCharacterClassifier.isHero(card);
     }
     return true;
   }

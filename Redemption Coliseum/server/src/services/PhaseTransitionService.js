@@ -53,6 +53,9 @@ class PhaseTransitionService {
         });
       });
 
+      const prevActivePlayer = state.activePlayer;
+      const prevPhase = state.currentPhase;
+
       // Delegate phase calculation to room phaseService
       result = room.phaseService.advancePhase(
         state,
@@ -60,6 +63,13 @@ class PhaseTransitionService {
         room.clients,
         room.cardLookup,
       );
+
+      if (
+        state.activePlayer !== prevActivePlayer ||
+        (state.currentPhase === PHASES.DRAW && prevPhase !== PHASES.DRAW)
+      ) {
+        room._turnPlayedEnhancements = {};
+      }
 
       // Reset undo stack and archive chronicle history
       if (room.undoManager) {

@@ -13,8 +13,10 @@ const logger = require("../utils/logger");
  * Fully decoupled from specific phase engines via completion callbacks.
  */
 class EffectChronicleService {
+  static _nextItemSeq = 0;
+
   /**
-   * Enqueues cards into the Effect Chronicle.
+   * Enqueues cards or ability descriptors into the Effect Chronicle.
    * @param {import('../rooms/GameRoom').GameRoom} room
    * @param {Array<object>} cards
    * @param {string} controllerId
@@ -36,19 +38,31 @@ class EffectChronicleService {
     }
 
     if (Array.isArray(cards)) {
-      cards.forEach((card, index) => {
+      cards.forEach((entry, index) => {
+        const card = entry?.card || entry;
+        const resolvedAbilityId =
+          entry?.abilityId !== undefined ? entry.abilityId : (card.abilityId || options.abilityId || "");
+        const resolvedOptional =
+          entry?.isOptional !== undefined ? entry.isOptional : (card.isOptional || options.isOptional || false);
+        const resolvedDescription =
+          entry?.description !== undefined ? entry.description : (card.SpecialAbility || card.specialAbility || "");
+        const seq = ++this._nextItemSeq;
+
         const item = new ChronicleItem({
-          id: `chronicle_${Date.now()}_${index}_${card.id || "card"}`,
+          id: `chronicle_${Date.now()}_${seq}_${index}_${card.id || "card"}`,
           cardId: card.id || "",
           controllerId: controllerId,
           actionType: actionType || "",
           title: card.Name || card.name || "Card",
-          description: card.SpecialAbility || card.specialAbility || "",
+          description: resolvedDescription,
           status: CHRONICLE_STATUS.PENDING,
           order: chronicle.items.length + 1,
-          abilityId: card.abilityId || options.abilityId || "",
-          isOptional: Boolean(card.isOptional || options.isOptional || false),
+          abilityId: resolvedAbilityId,
+          isOptional: Boolean(resolvedOptional),
         });
+        if (entry?.choiceGroup) {
+          item._choiceGroup = entry.choiceGroup;
+        }
         if (options.isDeclared || options.accepted || actionType === ActionType.ACTIVATE_STAR_ABILITY) {
           item.isConfirmed = true;
           item.isDeclared = true;
@@ -125,12 +139,18 @@ class EffectChronicleService {
       } else {
         this._log(room, `${playerName} executes ${sourceTitle}${abilityText}.`);
       }
+    } else if (astResult?.reason === "CONDITIONS_UNMET") {
+      logger.debug(`[EffectChronicleService] Skipping '${item.title}' (${item.abilityId || "default"}): conditions no longer met.`);
     } else {
       // Graceful Fallback: transparent chronicle log
       this._log(room, `${playerName} executes ${sourceTitle}${abilityText}.`);
     }
 
-    ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
+    const historyStatus =
+      astResult?.reason === "CONDITIONS_UNMET"
+        ? CHRONICLE_STATUS.PASSED
+        : CHRONICLE_STATUS.COMPLETED;
+    ChronicleHistoryService.recordHistory(chronicle, item, historyStatus);
     chronicle.items.splice(index, 1);
     this._reindexOrders(chronicle);
 

@@ -50,11 +50,18 @@ class SelectTargetCommand extends BaseCommand {
     if (!player) return;
 
     if (cancelled) {
+      const cancelledCard = item?.cardId ? this.room.cardLookup?.get(item.cardId) : null;
+      if (cancelledCard) {
+        cancelledCard._lastCostPaid = false;
+      }
       if (Array.isArray(item._accumulatedLogs) && item._accumulatedLogs.length > 0) {
         item._accumulatedLogs.forEach((msg) => this.room.broadcastGameLog(msg));
         item._accumulatedLogs = [];
       }
       EffectChronicleService.passItem(this.room, this.client, item.id);
+      if (chronicle.items.length > 0) {
+        EffectChronicleService.advanceChronicle(this.room);
+      }
       return;
     }
 

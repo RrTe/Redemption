@@ -60,21 +60,21 @@ describe("Battle Trigger Unsupported AST Graceful Fallback & Sequence", () => {
 
     BattleTriggerService.handleCardBattleEntry(room, p1, eli, { to: "battlefield", from: "territory" });
 
-    // Eli prompts Player 1 with optional ability
+    // Eli prompts Player 1 with its first battle-entry ability (unsupported 'search' tabletop fallback)
     expect(client1.send).toHaveBeenCalledWith(
       AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
-      expect.objectContaining({ abilityId: "ab_2_band" })
+      expect.objectContaining({ abilityId: "ab_1_search" })
     );
-    expect(state.effectChronicle.items.length).toBe(1);
+    expect(state.effectChronicle.items.length).toBe(2);
 
-    // Player 1 confirms Eli's prompt
+    // Player 1 confirms Eli's prompt -> search resolves as tabletop fallback and ab_2_band finds no Samuel targets
     const respondEli = new RespondOptionalAbilityCommand(room, client1);
     respondEli.execute({ itemId: state.effectChronicle.items[0].id, accepted: true });
 
-    // Eli completes gracefully and records history
+    // Eli completes gracefully and records history for both enqueued abilities
     expect(state.effectChronicle.items.length).toBe(0);
     expect(state.effectChronicle.isResolving).toBe(false);
-    expect(state.effectChronicle.history.length).toBe(1);
+    expect(state.effectChronicle.history.length).toBe(2);
     expect(state.effectChronicle.history[0].title).toBe("Eli the Priest (RoA)");
     expect(state.effectChronicle.history[0].status).toBe(CHRONICLE_STATUS.COMPLETED);
 
