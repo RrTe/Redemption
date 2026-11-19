@@ -1,5 +1,6 @@
 // server/src/ast/handlers/DrawHandler.js
 const { moveCard } = require("../../services/cardService");
+const { MoveCardSnapshotHelper } = require("../../commands/MoveCardSnapshotHelper");
 const { ZONES } = require("../../../../shared/zones");
 const { AST_ACTIONS } = require("../../../../shared/astConstants");
 const { parseTargetCount } = require("../TargetCountResolver");
@@ -65,23 +66,24 @@ class DrawHandler {
       }
     }
 
-    // Construct atomic mutation snapshot for generic and legacy rollbacks
-    const movedCardsList = [
-      ...movedCards.map((c) => ({
-        cardId: c.id,
-        name: c.Name,
-        fromZone: ZONES.DECK,
-        toZone: destination,
-        ownerId: player.sessionId,
-      })),
-      ...divertedCards.map((c) => ({
-        cardId: c.id,
-        name: c.Name,
-        fromZone: ZONES.DECK,
-        toZone: ZONES.LAND_OF_BONDAGE,
-        ownerId: player.sessionId,
-      })),
-    ];
+    // Construct atomic mutation snapshot preserving exact chronological drawOrder
+    const drawOrder = Array.isArray(result?.drawOrder) && result.drawOrder.length > 0
+      ? result.drawOrder
+      : [
+          ...movedCards.map((c) => ({ card: c, toZone: destination, isDiverted: false })),
+          ...divertedCards.map((c) => ({ card: c, toZone: ZONES.LAND_OF_BONDAGE, isDiverted: true })),
+        ];
+
+    const movedCardsList = drawOrder.map((entry) => ({
+      cardId: entry.card.id,
+      name: entry.card.Name,
+      fromZone: ZONES.DECK,
+      toZone: entry.toZone,
+      ownerId: player.sessionId,
+      wasLostSoulDiversion: Boolean(entry.isDiverted),
+      fromIndex: 0,
+      cardSnapshot: MoveCardSnapshotHelper.createDeckSnapshot(entry.card, player),
+    }));
 
     const snapshot = {
       action: AST_ACTIONS.DRAW,

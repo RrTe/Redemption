@@ -27,6 +27,7 @@ export const GameEvents = {
   NET_OPTIONAL_ABILITY_REQUESTED: "net:optionalAbilityRequested",
   NET_ACTION_TELEGRAPH: "net:actionTelegraph",
   NET_CLEAR_ACTION_TELEGRAPH: "net:clearActionTelegraph",
+  NET_CANCEL_INTERACTION: "net:cancelInteraction",
   NET_PHASE_TRANSITION_WAITING: "net:phaseTransitionWaiting",
   NET_PHASE_TRANSITION_PROMPT: "net:phaseTransitionPrompt",
   NET_PHASE_TRANSITION_RESOLVED: "net:phaseTransitionResolved",

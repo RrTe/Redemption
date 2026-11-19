@@ -4,6 +4,10 @@ const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants")
 const { ActionType } = require("../../../shared/actions");
 const { DRAW_STEPS } = require("../../../shared/phases");
 const { ChronicleHistoryService } = require("./ChronicleHistoryService");
+const { ChronicleRollbackService } = require("./ChronicleRollbackService");
+const { AbilityLookup } = require("../ast/AbilityLookup");
+const { EffectLabelFormatter } = require("../ast/EffectLabelFormatter");
+const { replaceArraySchemaOrder } = require("./cardService");
 const GameLogService = require("./GameLogService");
 const { formatCardLink } = require("../utils/gameLogFormatter");
 const logger = require("../utils/logger");
@@ -16,7 +20,7 @@ class EffectChronicleService {
   static _nextItemSeq = 0;
 
   /**
-   * Enqueues cards or ability descriptors into the Effect Chronicle.
+   * Enqueues cards or per-effect ability descriptors into the Effect Chronicle.
    * @param {import('../rooms/GameRoom').GameRoom} room
    * @param {Array<object>} cards
    * @param {string} controllerId
@@ -37,6 +41,7 @@ class EffectChronicleService {
       room._chronicleOnComplete = null;
     }
 
+    const enqueuedIds = [];
     if (Array.isArray(cards)) {
       cards.forEach((entry, index) => {
         const card = entry?.card || entry;
@@ -46,15 +51,27 @@ class EffectChronicleService {
           entry?.isOptional !== undefined ? entry.isOptional : (card.isOptional || options.isOptional || false);
         const resolvedDescription =
           entry?.description !== undefined ? entry.description : (card.SpecialAbility || card.specialAbility || "");
+        const resolvedEffectLabel =
+          entry?.effectLabel !== undefined ? entry.effectLabel : (options.effectLabel || "");
+        const resolvedStepIdx =
+          typeof entry?.effectStepIndex === "number"
+            ? entry.effectStepIndex
+            : (typeof options.effectStepIndex === "number" ? options.effectStepIndex : -1);
+        const resolvedTemplateId =
+          entry?.templateId !== undefined ? entry.templateId : (card.templateId || "");
         const seq = ++this._nextItemSeq;
 
         const item = new ChronicleItem({
           id: `chronicle_${Date.now()}_${seq}_${index}_${card.id || "card"}`,
           cardId: card.id || "",
+          templateId: resolvedTemplateId,
           controllerId: controllerId,
           actionType: actionType || "",
           title: card.Name || card.name || "Card",
           description: resolvedDescription,
+          effectLabel: resolvedEffectLabel,
+          resultSummary: entry?.resultSummary || "",
+          effectStepIndex: resolvedStepIdx,
           status: CHRONICLE_STATUS.PENDING,
           order: chronicle.items.length + 1,
           abilityId: resolvedAbilityId,
@@ -63,12 +80,20 @@ class EffectChronicleService {
         if (entry?.choiceGroup) {
           item._choiceGroup = entry.choiceGroup;
         }
+        if (entry?.abilityGroupId) {
+          item._abilityGroupId = entry.abilityGroupId;
+        }
         if (options.isDeclared || options.accepted || actionType === ActionType.ACTIVATE_STAR_ABILITY) {
           item.isConfirmed = true;
           item.isDeclared = true;
         }
         chronicle.items.push(item);
+        enqueuedIds.push(item.id);
       });
+    }
+
+    if (enqueuedIds.length > 0) {
+      ChronicleRollbackService.recordEnqueue(room, enqueuedIds);
     }
 
     const isFirstActive = !chronicle.isResolving || chronicle.items.length === (cards?.length || 0);
@@ -80,7 +105,7 @@ class EffectChronicleService {
 
     if ((options.autoExecute || options.autoExecuteSupported) && chronicle.items.length > 0 && isFirstActive) {
       const client = room.clients?.find((c) => c.sessionId === controllerId) || { sessionId: controllerId };
-      this.executeItem(room, client, chronicle.items[0].id, options);
+      this.executeItem(room, client, chronicle.items[0].id, { ...options, _isInteractiveRoot: false });
     }
   }
 
@@ -105,6 +130,7 @@ class EffectChronicleService {
     if (index === -1) return null;
 
     const item = chronicle.items[index];
+    const preItemData = ChronicleRollbackService.cloneChronicleItemData(item);
     const player = room.state.players.get(client.sessionId);
     const playerName = player ? player.name : "Player";
     const abilityText = item.description ? `: "${item.description}"` : "";
@@ -150,9 +176,40 @@ class EffectChronicleService {
       astResult?.reason === "CONDITIONS_UNMET"
         ? CHRONICLE_STATUS.PASSED
         : CHRONICLE_STATUS.COMPLETED;
-    ChronicleHistoryService.recordHistory(chronicle, item, historyStatus);
+    const resultSummary = this.buildResultSummary(astResult, historyStatus, item);
+    const historyRec = ChronicleHistoryService.recordHistory(chronicle, item, historyStatus, resultSummary);
     chronicle.items.splice(index, 1);
     this._reindexOrders(chronicle);
+
+    let removedSiblingItems = [];
+    if (item._abilityGroupId) {
+      if (astResult?.reason === "CONDITIONS_UNMET") {
+        removedSiblingItems = this.skipSiblingGroupItems(
+          room,
+          chronicle,
+          item._abilityGroupId,
+          "Skipped (condition unmet)"
+        );
+      } else if (astResult?.noValidTargets) {
+        removedSiblingItems = this.skipSiblingGroupItems(
+          room,
+          chronicle,
+          item._abilityGroupId,
+          "Skipped (no cost/target)",
+          true
+        );
+      }
+    }
+
+    ChronicleRollbackService.recordResolution(room, {
+      itemData: preItemData,
+      historyItemId: historyRec?.id || item.id,
+      snapshots: astResult?.snapshots || [],
+      wasInteractiveRoot: Boolean(options._isInteractiveRoot),
+      removedSiblingItems,
+      action: astResult?.snapshots?.[0]?.action || item.actionType,
+      targetCardIds: this.extractTargetCardIds(astResult?.snapshots),
+    });
 
     if (chronicle.items.length === 0) {
       this.finishChronicle(room);
@@ -160,7 +217,7 @@ class EffectChronicleService {
       const nextItem = chronicle.items[0];
       chronicle.priorityPlayerId = nextItem.controllerId;
       const nextClient = room.clients?.find(c => c.sessionId === nextItem.controllerId) || { sessionId: nextItem.controllerId };
-      this.executeItem(room, nextClient, nextItem.id, options);
+      this.executeItem(room, nextClient, nextItem.id, { ...options, _isInteractiveRoot: false });
     }
 
     return { item, astResult, index };
@@ -171,8 +228,9 @@ class EffectChronicleService {
    * @param {import('../rooms/GameRoom').GameRoom} room
    * @param {import('colyseus').Client} client
    * @param {string} [itemId]
+   * @param {object} [options={}]
    */
-  static passItem(room, client, itemId) {
+  static passItem(room, client, itemId, options = {}) {
     const chronicle = room.state.effectChronicle;
     if (!chronicle || chronicle.items.length === 0) return;
 
@@ -185,15 +243,31 @@ class EffectChronicleService {
     if (index === -1) return;
 
     const item = chronicle.items[index];
+    const preItemData = options.preItemData || ChronicleRollbackService.cloneChronicleItemData(item);
     const player = room.state.players.get(client.sessionId);
     const playerName = player ? player.name : "Player";
     const sourceCard = item?.cardId ? room.cardLookup?.get(item.cardId) : null;
     const sourceTitle = sourceCard ? formatCardLink(sourceCard) : item.title;
 
     this._log(room, `${playerName} passes on ${sourceTitle}.`);
-    ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.PASSED);
+    const historyRec = ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.PASSED, "Passed");
     chronicle.items.splice(index, 1);
     this._reindexOrders(chronicle);
+
+    let removedSiblingItems = [];
+    if (item._abilityGroupId && options.skipGroupSiblings !== false) {
+      removedSiblingItems = this.skipSiblingGroupItems(room, chronicle, item._abilityGroupId, "Passed");
+    }
+
+    ChronicleRollbackService.recordResolution(room, {
+      itemData: preItemData,
+      historyItemId: historyRec?.id || item.id,
+      snapshots: [],
+      wasInteractiveRoot: Boolean(options._isInteractiveRoot),
+      removedSiblingItems,
+      action: item.actionType,
+      targetCardIds: [],
+    });
 
     if (chronicle.items.length === 0) {
       this.finishChronicle(room);
@@ -207,8 +281,9 @@ class EffectChronicleService {
    * Passes on all remaining items for the priority player.
    * @param {import('../rooms/GameRoom').GameRoom} room
    * @param {import('colyseus').Client} client
+   * @param {object} [options={}]
    */
-  static passAllItems(room, client) {
+  static passAllItems(room, client, options = {}) {
     const chronicle = room.state.effectChronicle;
     if (!chronicle || chronicle.items.length === 0) return;
 
@@ -225,9 +300,191 @@ class EffectChronicleService {
       `${playerName} passes on all remaining Chronicle effects.`
     );
 
-    chronicle.items.forEach(i => ChronicleHistoryService.recordHistory(chronicle, i, CHRONICLE_STATUS.PASSED));
+    const itemsCopy = Array.from(chronicle.items);
+    itemsCopy.forEach((it) => {
+      const preItemData = ChronicleRollbackService.cloneChronicleItemData(it);
+      const historyRec = ChronicleHistoryService.recordHistory(chronicle, it, CHRONICLE_STATUS.PASSED, "Passed");
+      ChronicleRollbackService.recordResolution(room, {
+        itemData: preItemData,
+        historyItemId: historyRec?.id || it.id,
+        snapshots: [],
+        wasInteractiveRoot: Boolean(options._isInteractiveRoot),
+        action: it.actionType,
+        targetCardIds: [],
+      });
+    });
+
     chronicle.items.splice(0, chronicle.items.length);
     this.finishChronicle(room);
+  }
+
+  /**
+   * Expands a resolved choice_group item into per-effect-step items when the chosen ability
+   * contains multiple effects, updating the active item to step 0 and inserting remaining steps after it.
+   *
+   * @param {import('../rooms/GameRoom').GameRoom} room
+   * @param {import('../state/EffectChronicleState').EffectChronicleState} chronicle
+   * @param {number} itemIndex
+   * @param {object} chosenAbility
+   * @param {object} card
+   * @returns {{ groupId: string, insertedSiblingIds: string[] }}
+   */
+  static expandChoiceItemSteps(room, chronicle, itemIndex, chosenAbility, card) {
+    const item = chronicle?.items?.[itemIndex];
+    if (!item || !chosenAbility) {
+      return { groupId: "", insertedSiblingIds: [] };
+    }
+
+    const groupId = item._abilityGroupId || `grp_${Date.now()}_${++this._nextItemSeq}`;
+    item.abilityId = chosenAbility.ability_id || item.abilityId;
+    item._abilityGroupId = groupId;
+
+    const sortedEffects = Array.isArray(chosenAbility.effects)
+      ? [...chosenAbility.effects].sort((a, b) => (a.step || 1) - (b.step || 1))
+      : [];
+
+    if (sortedEffects.length === 0) {
+      return { groupId, insertedSiblingIds: [] };
+    }
+
+    item.effectStepIndex = 0;
+    item.effectLabel = EffectLabelFormatter.formatSingleEffectLabel(sortedEffects[0], card);
+
+    const insertedSiblingIds = [];
+    if (sortedEffects.length > 1) {
+      const newSiblings = [];
+      for (let s = 1; s < sortedEffects.length; s++) {
+        const seq = ++this._nextItemSeq;
+        const sib = new ChronicleItem({
+          id: `chronicle_${Date.now()}_${seq}_${s}_${item.cardId || "card"}`,
+          cardId: item.cardId,
+          templateId: item.templateId || card?.templateId || "",
+          controllerId: item.controllerId,
+          actionType: item.actionType,
+          title: item.title,
+          description: item.description,
+          effectLabel: EffectLabelFormatter.formatSingleEffectLabel(sortedEffects[s], card),
+          resultSummary: "",
+          effectStepIndex: s,
+          status: CHRONICLE_STATUS.PENDING,
+          order: itemIndex + 1 + s,
+          abilityId: chosenAbility.ability_id || "",
+          isOptional: false,
+        });
+        sib._abilityGroupId = groupId;
+        sib.isConfirmed = true;
+        newSiblings.push(sib);
+        insertedSiblingIds.push(sib.id);
+      }
+
+      if (typeof chronicle.items.clear === "function") {
+        const current = Array.from(chronicle.items);
+        current.splice(itemIndex + 1, 0, ...newSiblings);
+        replaceArraySchemaOrder(chronicle.items, current);
+      } else {
+        chronicle.items.splice(itemIndex + 1, 0, ...newSiblings);
+      }
+      this._reindexOrders(chronicle);
+    }
+
+    return { groupId, insertedSiblingIds };
+  }
+
+  /**
+   * Removes pending sibling items belonging to `_abilityGroupId` when step 0 is declined, cancelled, or failed.
+   *
+   * @param {import('../rooms/GameRoom').GameRoom} room
+   * @param {import('../state/EffectChronicleState').EffectChronicleState} chronicle
+   * @param {string} groupId
+   * @param {string} [reasonSummary="Skipped"]
+   * @param {boolean} [onlyDependent=false] If true, skip only chained_target or cost-dependent siblings.
+   * @returns {Array<object>} Cloned item descriptors of removed siblings (for Undo restoration).
+   */
+  static skipSiblingGroupItems(room, chronicle, groupId, reasonSummary = "Skipped", onlyDependent = false) {
+    if (!chronicle || !chronicle.items || !groupId) return [];
+    const removedSiblingItems = [];
+
+    for (let i = 0; i < chronicle.items.length; i++) {
+      const sib = chronicle.items[i];
+      if (!sib || sib._abilityGroupId !== groupId) continue;
+
+      if (onlyDependent && !this._isDependentStep(room, sib)) {
+        continue;
+      }
+
+      removedSiblingItems.push(ChronicleRollbackService.cloneChronicleItemData(sib));
+      ChronicleHistoryService.recordHistory(chronicle, sib, CHRONICLE_STATUS.PASSED, reasonSummary);
+      chronicle.items.splice(i, 1);
+      i--;
+    }
+
+    if (removedSiblingItems.length > 0) {
+      this._reindexOrders(chronicle);
+    }
+    return removedSiblingItems;
+  }
+
+  /**
+   * Builds a clean plain-text result summary for Phase History display.
+   *
+   * @param {object | null} astResult Resolver result object.
+   * @param {string} status Recorded history status.
+   * @param {object} [item] Source ChronicleItem.
+   * @returns {string} Clean summary without card-link markup.
+   */
+  static buildResultSummary(astResult, status, item = null) {
+    if (astResult?.reason === "CONDITIONS_UNMET") {
+      return "Skipped (condition unmet)";
+    }
+    if (status === CHRONICLE_STATUS.PASSED) {
+      return "Passed";
+    }
+    if (Array.isArray(astResult?.logEntries) && astResult.logEntries.length > 0) {
+      const clean = EffectLabelFormatter.stripCardLinks(astResult.logEntries.join(" "));
+      if (clean) return clean;
+    }
+    if (item?.effectLabel) {
+      return "Resolved";
+    }
+    return "Executed";
+  }
+
+  /**
+   * Extracts target card IDs touched across a sequence of execution snapshots.
+   *
+   * @param {Array<object>} [snapshots=[]] Mutation snapshots.
+   * @returns {string[]} Deduplicated target card IDs.
+   */
+  static extractTargetCardIds(snapshots = []) {
+    if (!Array.isArray(snapshots) || snapshots.length === 0) return [];
+    const ids = new Set();
+    for (const snap of snapshots) {
+      for (const m of snap?.movedCards || []) if (m?.cardId) ids.add(m.cardId);
+      for (const d of snap?.discardedCards || []) if (d?.cardId) ids.add(d.cardId);
+      for (const mod of snap?.modifications || []) if (mod?.cardId) ids.add(mod.cardId);
+      for (const imm of snap?.immunityChanges || []) if (imm?.cardId) ids.add(imm.cardId);
+    }
+    return Array.from(ids);
+  }
+
+  /** @private */
+  static _isDependentStep(room, sib) {
+    const card = sib?.cardId ? room?.cardLookup?.get(sib.cardId) : null;
+    if (!card?.templateId || typeof sib.effectStepIndex !== "number" || sib.effectStepIndex < 0) {
+      return false;
+    }
+    const abilities = AbilityLookup.resolveAbilities(card.templateId, {
+      actionType: sib.actionType,
+      inGameType: card.inGameType,
+      inGameAlignment: card.inGameAlignment,
+    });
+    const ab = (sib.abilityId && abilities.find((a) => a.ability_id === sib.abilityId)) || abilities[0];
+    if (!ab) return false;
+    const sorted = Array.isArray(ab.effects) ? [...ab.effects].sort((a, b) => (a.step || 1) - (b.step || 1)) : [];
+    const stepEffect = sorted[sib.effectStepIndex];
+    if (!stepEffect) return false;
+    if (stepEffect.target?.selection_mode === "chained_target") return true;
+    return Array.isArray(ab.costs) && ab.costs.length > 0;
   }
 
   /**
@@ -314,6 +571,7 @@ class EffectChronicleService {
 
     this.executeItem(room, nextClient, nextItem.id, {
       ...options,
+      _isInteractiveRoot: false,
       autoExecute: options.autoExecute !== undefined ? options.autoExecute : !isDrawSequenceActive,
       autoExecuteSupported: true,
     });

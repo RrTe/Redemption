@@ -42,6 +42,8 @@ export class TargetingManager {
   private arrowEffect: TargetingArrowEffect | null = null;
   private elevatedSourceCard: CardUI | null = null;
   private originalSourceDepth: number = 0;
+  private isPileSelectionOpen = false;
+  private onCancelInteraction = (): void => this.cancelFromServer();
 
   constructor(
     scene: Phaser.Scene,
@@ -86,6 +88,24 @@ export class TargetingManager {
       "ui:cardTargetClicked",
       (card: CardUI) => this.handleCardClicked(card),
     );
+
+    this.scene.events.on(
+      GameEvents.NET_CANCEL_INTERACTION,
+      this.onCancelInteraction,
+    );
+  }
+
+  private cancelFromServer(): void {
+    if (this.isPileSelectionOpen) {
+      this.isPileSelectionOpen = false;
+      if (this.scene.scene.isActive("SelectionDialogScene")) {
+        this.scene.scene.stop("SelectionDialogScene");
+      }
+      if (this.scene.scene.isPaused("CardGame")) {
+        this.scene.scene.resume("CardGame");
+      }
+    }
+    this.stopTargeting(false);
   }
 
   public startTargeting(request: RequestTargetSelectionMessage): void {
@@ -164,6 +184,7 @@ export class TargetingManager {
       }
 
       const maxSelectionTargets = request.maxTargets ?? 1;
+      this.isPileSelectionOpen = true;
       this.scene.scene.pause("CardGame");
       this.scene.scene.launch("SelectionDialogScene", {
         title: request.promptText || `Select card from ${primaryZone}`,
@@ -182,6 +203,7 @@ export class TargetingManager {
           max: maxSelectionTargets,
         },
         onComplete: (result: any) => {
+          this.isPileSelectionOpen = false;
           const selectedIds = (result?.selectedCards || []).map((c: any) => c.id);
           this.networkManager.sendSelectTarget({
             abilityId: request.abilityId,
@@ -191,6 +213,7 @@ export class TargetingManager {
           this.stopTargeting(true);
         },
         onCancel: () => {
+          this.isPileSelectionOpen = false;
           this.networkManager.sendSelectTarget({
             abilityId: request.abilityId,
             itemId: request.itemId,
@@ -439,6 +462,7 @@ export class TargetingManager {
     this.activeRequest = null;
     this.selectedCardIds.clear();
     this.selectedPileId = null;
+    this.isPileSelectionOpen = false;
   }
 
   public destroy(): void {
@@ -448,5 +472,6 @@ export class TargetingManager {
     this.scene.events.off(GameEvents.NET_TARGET_SELECTION_REQUESTED);
     this.scene.events.off("ui:pileTargetClicked");
     this.scene.events.off("ui:cardTargetClicked");
+    this.scene.events.off(GameEvents.NET_CANCEL_INTERACTION, this.onCancelInteraction);
   }
 }

@@ -8,6 +8,7 @@ import type {
   RequestOptionalAbilityMessage,
   ActionTelegraphMessage,
   ClearActionTelegraphMessage,
+  CancelInteractionMessage,
 } from "../../../shared/messages.js";
 
 /**
@@ -155,6 +156,13 @@ export class GameEventCoordinator {
       this.room.onMessage(AST_MESSAGES.CLEAR_ACTION_TELEGRAPH, (msg: ClearActionTelegraphMessage) => {
         log("GameEventCoordinator", "[NET] clearActionTelegraph received:", msg);
         this.scene.events.emit(GameEvents.NET_CLEAR_ACTION_TELEGRAPH, msg);
+      }),
+    );
+
+    this.roomListeners.push(
+      this.room.onMessage(AST_MESSAGES.CANCEL_INTERACTION, (msg: CancelInteractionMessage) => {
+        log("GameEventCoordinator", "[NET] cancelInteraction received:", msg);
+        this.scene.events.emit(GameEvents.NET_CANCEL_INTERACTION, msg);
       }),
     );
 

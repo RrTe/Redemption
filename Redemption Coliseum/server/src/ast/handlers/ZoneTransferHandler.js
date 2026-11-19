@@ -1,5 +1,6 @@
 // server/src/ast/handlers/ZoneTransferHandler.js
-const { moveCard } = require("../../services/cardService");
+const { moveCard, getZoneCollection } = require("../../services/cardService");
+const { MoveCardSnapshotHelper } = require("../../commands/MoveCardSnapshotHelper");
 const { ZONES } = require("../../../../shared/zones");
 const { MAX_HAND_SIZE } = require("../../../../shared/card-constants");
 const {
@@ -112,6 +113,13 @@ class ZoneTransferHandler {
     // Execute zone transfers for each resolved target
     for (const { card, owner } of targets) {
       const fromZone = card.zone;
+      const previousControllerId = card.controllerId || owner?.sessionId;
+      const currentCollection = getZoneCollection(owner, room.state, fromZone);
+      const fromIndex = currentCollection?.findIndex
+        ? currentCollection.findIndex((c) => c.id === card.id)
+        : -1;
+      const cardSnapshot = MoveCardSnapshotHelper.createSnapshot(card, fromZone, owner, fromIndex);
+
       const trueOwnerId = card.originalOwnerId || card.ownerId;
       const trueOwner = (trueOwnerId && room.state.players.get(trueOwnerId)) || owner;
 
@@ -165,6 +173,9 @@ class ZoneTransferHandler {
           fromZone,
           toZone: movedOrDiverted.zone || effectiveToZone,
           ownerId: trueOwner.sessionId,
+          previousControllerId,
+          fromIndex,
+          cardSnapshot,
           position: position || "as_is",
         });
         if (result.logEntry) logEntries.push(result.logEntry);

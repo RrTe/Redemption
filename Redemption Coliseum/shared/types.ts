@@ -58,10 +58,14 @@ export type ChronicleItemStatus = "pending" | "resolving" | "completed" | "passe
 export interface ChronicleItemData {
   id: string;
   cardId: string;
+  templateId?: string;
   controllerId: string;
   actionType: string;
   title: string;
   description: string;
+  effectLabel?: string;
+  resultSummary?: string;
+  effectStepIndex?: number;
   status: ChronicleItemStatus;
   order: number;
   abilityId?: string;

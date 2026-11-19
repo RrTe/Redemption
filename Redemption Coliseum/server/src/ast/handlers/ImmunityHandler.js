@@ -41,7 +41,12 @@ class ImmunityHandler {
     // Handle zone/pile protection on source card if scopes cover piles or discrete zones
     const scopes = Array.isArray(targetDef.scope) ? targetDef.scope : (targetDef.scope ? [targetDef.scope] : []);
     const hasPileOrZoneScope = scopes.some((s) => ["deck", "hand", "reserve_pile", "discard_pile", "banish_pile"].includes(s));
+    let zoneProtectionChange = null;
     if (sourceCard && hasPileOrZoneScope) {
+      zoneProtectionChange = {
+        cardId: sourceCard.id,
+        prevZoneProtection: sourceCard._zoneProtection ? { ...sourceCard._zoneProtection } : null,
+      };
       sourceCard._zoneProtection = {
         ...protectionDef,
         sourceCardId: item?.cardId || "",
@@ -59,6 +64,8 @@ class ImmunityHandler {
           playerId: player.sessionId,
           cardId: item?.cardId || "",
           protectedCardIds: [],
+          immunityChanges: [],
+          zoneProtectionChange,
           protectionDef,
         },
         logEntry: `${player.name} activates protection.`,
@@ -75,9 +82,18 @@ class ImmunityHandler {
 
     let battleRecalculateNeeded = false;
     const protectedCardIds = [];
+    const immunityChanges = [];
     const logEntries = [];
 
     for (const { card } of targets) {
+      immunityChanges.push({
+        cardId: card.id,
+        prevIsImmune: Boolean(card.isImmune),
+        prevIsProtected: Boolean(card.isProtected),
+        prevProtectionReason: card.protectionReason || "",
+        prevProtection: card._protection ? { ...card._protection } : null,
+      });
+
       card.isImmune = true;
       card.isProtected = true;
       card.protectionReason = effect.action || "immune";
@@ -104,6 +120,8 @@ class ImmunityHandler {
       playerId: player.sessionId,
       cardId: item?.cardId || "",
       protectedCardIds,
+      immunityChanges,
+      zoneProtectionChange,
       protectionDef,
     };
 

@@ -5,6 +5,7 @@ const { AST_ACTIVATION_MODES } = require("../../../shared/astConstants");
 const { AbilityLookup } = require("../ast/AbilityLookup");
 const { AstEffectRunner } = require("../ast/AstEffectRunner");
 const { ConditionEvaluator } = require("../ast/ConditionEvaluator");
+const { EffectLabelFormatter } = require("../ast/EffectLabelFormatter");
 const { EffectChronicleService } = require("./EffectChronicleService");
 const { BattleCharacterClassifier } = require("./BattleCharacterClassifier");
 const logger = require("../utils/logger");
@@ -122,6 +123,7 @@ class BattleTriggerService {
         autoExecute: true,
         autoExecuteSupported: true,
         abilityId: "",
+        effectLabel: EffectLabelFormatter.formatTabletopFallbackLabel(card, actionType),
         isOptional: true,
       }
     );
@@ -181,6 +183,7 @@ class BattleTriggerService {
 
         entries.push({
           ability: groupAbilities[0],
+          groupAbilities,
           abilityId: "",
           choiceGroup: ability.choice_group,
           isSupported: groupAbilities.some((a) => this._isSupportedAstAbility(a)),
@@ -259,12 +262,52 @@ class BattleTriggerService {
       `[BattleTriggerService] Enqueueing ${entries.length} AST ability/abilities for '${card.Name}' (${abilityIds.join(", ")}) for '${actionType}'.`
     );
 
-    const queueItems = entries.map((entry) => ({
-      card,
-      abilityId: entry.abilityId,
-      isOptional: entry.isOptional,
-      choiceGroup: entry.choiceGroup,
-    }));
+    const queueItems = [];
+    const timestamp = Date.now();
+    for (let idx = 0; idx < entries.length; idx++) {
+      const entry = entries[idx];
+      if (entry.isChoice) {
+        queueItems.push({
+          card,
+          abilityId: entry.abilityId,
+          effectStepIndex: -1,
+          effectLabel: EffectLabelFormatter.formatChoiceGroupLabel(
+            entry.groupAbilities || (entry.ability ? [entry.ability] : []),
+            card
+          ),
+          isOptional: entry.isOptional,
+          choiceGroup: entry.choiceGroup,
+        });
+        continue;
+      }
+
+      const sortedEffects = Array.isArray(entry.ability?.effects)
+        ? [...entry.ability.effects].sort((a, b) => (a.step || 1) - (b.step || 1))
+        : [];
+      if (sortedEffects.length > 0) {
+        const groupId = `grp_${timestamp}_${idx}_${card.id || "c"}_${entry.abilityId || "ab"}`;
+        for (let stepIdx = 0; stepIdx < sortedEffects.length; stepIdx++) {
+          queueItems.push({
+            card,
+            abilityId: entry.abilityId,
+            effectStepIndex: stepIdx,
+            effectLabel: EffectLabelFormatter.formatSingleEffectLabel(sortedEffects[stepIdx], card),
+            isOptional: stepIdx === 0 ? entry.isOptional : false,
+            choiceGroup: "",
+            abilityGroupId: groupId,
+          });
+        }
+      } else {
+        queueItems.push({
+          card,
+          abilityId: entry.abilityId,
+          effectStepIndex: -1,
+          effectLabel: EffectLabelFormatter.formatTabletopFallbackLabel(card, actionType),
+          isOptional: entry.isOptional,
+          choiceGroup: entry.choiceGroup,
+        });
+      }
+    }
 
     EffectChronicleService.enqueueCards(
       room,
@@ -334,6 +377,7 @@ class BattleTriggerService {
           autoExecute: true,
           autoExecuteSupported: false,
           abilityId: "",
+          effectLabel: EffectLabelFormatter.formatTabletopFallbackLabel(card, actionType),
           isOptional: true,
         }
       );

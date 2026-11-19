@@ -14,9 +14,15 @@ class MoveCardSnapshotHelper {
    * @param {object} card Card instance.
    * @param {string} fromZone Origin zone.
    * @param {object} player Acting player.
+   * @param {number} [fromIndex=-1] Original index inside origin zone collection.
    * @returns {object} State snapshot.
    */
-  static createSnapshot(card, fromZone, player) {
+  static createSnapshot(card, fromZone, player, fromIndex = -1) {
+    const counters = card.counters
+      ? (typeof card.counters.entries === "function"
+        ? Object.fromEntries(card.counters.entries())
+        : { ...card.counters })
+      : {};
     return {
       cardId: card.id,
       templateId: card.templateId || card.ImageFile,
@@ -24,11 +30,14 @@ class MoveCardSnapshotHelper {
       imageFile: card.ImageFile,
       set: card.Set,
       fromZone: fromZone || card.zone,
+      fromIndex: typeof fromIndex === "number" ? fromIndex : -1,
       fromCoords: { x: card.x, y: card.y },
       controllerId: card.controllerId || player?.sessionId,
       originalOwnerId: card.originalOwnerId || player?.sessionId,
       isFaceUp: card.isFaceUp,
       isFaceDown: Boolean(card.isFaceDown),
+      isTapped: Boolean(card.isTapped),
+      isFlipped: Boolean(card.isFlipped),
       rotation: card.rotation,
       isParalyzed: card.isParalyzed,
       paralyzeRounds: card.paralyzeRounds,
@@ -37,7 +46,14 @@ class MoveCardSnapshotHelper {
       attachedTo: card.attachedTo,
       inGameType: card.inGameType,
       inGameAlignment: card.inGameAlignment,
-      counters: card.counters ? Object.fromEntries(card.counters.entries()) : {},
+      isBanded: Boolean(card.isBanded),
+      bandedTo: card.bandedTo || "",
+      isImmune: Boolean(card.isImmune),
+      isProtected: Boolean(card.isProtected),
+      protectionReason: card.protectionReason || "",
+      protection: card._protection ? { ...card._protection } : null,
+      zoneProtection: card._zoneProtection ? { ...card._zoneProtection } : null,
+      counters,
     };
   }
 
@@ -56,10 +72,14 @@ class MoveCardSnapshotHelper {
       imageFile: card.ImageFile,
       set: card.Set,
       fromZone: ZONES.DECK,
+      fromIndex: 0,
       fromCoords: { x: 0, y: 0 },
       controllerId: card.controllerId || player?.sessionId,
       originalOwnerId: card.originalOwnerId || player?.sessionId,
       isFaceUp: false,
+      isFaceDown: false,
+      isTapped: false,
+      isFlipped: false,
       rotation: 0,
       isParalyzed: false,
       paralyzeRounds: 0,
@@ -68,6 +88,13 @@ class MoveCardSnapshotHelper {
       attachedTo: null,
       inGameType: "",
       inGameAlignment: "",
+      isBanded: false,
+      bandedTo: "",
+      isImmune: false,
+      isProtected: false,
+      protectionReason: "",
+      protection: null,
+      zoneProtection: null,
       counters: {},
     };
   }

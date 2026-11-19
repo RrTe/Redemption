@@ -1,9 +1,10 @@
 const { BaseCommand } = require("./BaseCommand");
-const { moveCard } = require("../services/cardService");
+const { moveCard, getZoneCollection } = require("../services/cardService");
 const { MoveCardSnapshotHelper } = require("./MoveCardSnapshotHelper");
 const { BattleTriggerService } = require("../services/BattleTriggerService");
 const { BattleService } = require("../services/BattleService");
 const { SpecialInitiativeService } = require("../services/SpecialInitiativeService");
+const { ChronicleRollbackService } = require("../services/ChronicleRollbackService");
 const { ZONES } = require("../../../shared/zones");
 const logger = require("../utils/logger");
 
@@ -14,6 +15,9 @@ class MoveCardCommand extends BaseCommand {
     this.preBattleFlags = null;
     this.divertedSnapshots = [];
     this._trackedTurnEnhancementsCount = 0;
+    this.movedToZone = "";
+    this.chronicleTx = null;
+    this._undone = false;
   }
 
   execute(message) {
@@ -29,10 +33,12 @@ class MoveCardCommand extends BaseCommand {
       // 1. Capture snapshot before execution for undo support
       this.preBattleFlags = this.state.battle
         ? {
-            rescueAttemptOccurred: Boolean(this.state.battle.rescueAttemptOccurred),
-            blockOccurred: Boolean(this.state.battle.blockOccurred),
-            lastBattleCardPlayerId: this.state.lastBattleCardPlayerId || "",
-          }
+          rescueAttemptOccurred: Boolean(this.state.battle.rescueAttemptOccurred),
+          blockOccurred: Boolean(this.state.battle.blockOccurred),
+          lastBattleCardPlayerId: this.state.lastBattleCardPlayerId || "",
+          initiativeOverridePlayerId: this.state.battle.initiativeOverridePlayerId || "",
+          specialInitiativePlayerId: this.state.battle.specialInitiativePlayerId || "",
+        }
         : null;
       const targetCardId =
         message.cardId ??
@@ -41,7 +47,17 @@ class MoveCardCommand extends BaseCommand {
         const targetCard = this.room.cardLookup.get(targetCardId);
         if (targetCard) {
           const zoneName = targetCard.zone || message.from;
-          this.preMoveSnapshot = MoveCardSnapshotHelper.createSnapshot(targetCard, zoneName, player);
+          let fromIndex = -1;
+          try {
+            const zoneOwner = this.state.players.get(targetCard.controllerId) || player;
+            const col = getZoneCollection(zoneOwner, this.state, zoneName);
+            if (col && typeof col.findIndex === "function") {
+              fromIndex = col.findIndex((c) => c.id === targetCard.id);
+            }
+          } catch (_e) {
+            // Ignore unknown zone fallback
+          }
+          this.preMoveSnapshot = MoveCardSnapshotHelper.createSnapshot(targetCard, zoneName, player, fromIndex);
         }
       }
 
@@ -51,6 +67,7 @@ class MoveCardCommand extends BaseCommand {
           message.to = ZONES.TERRITORY;
         }
       }
+      this.movedToZone = message.to;
 
       const result = moveCard(
         player,
@@ -184,27 +201,32 @@ class MoveCardCommand extends BaseCommand {
         }
       }
 
-      // ✨ Phase 3: Battlefield & Battle Entry Triggers
+      // ✨ Phase 3: Battlefield & Battle Entry Triggers (wrapped in Undo transaction)
       if (!result.error) {
-        if (this.state.battle?.specialInitiativePlayerId === player.sessionId && movedCards.length > 0) {
-          SpecialInitiativeService.consumeSpecialInitiativeOnPlay(this.room, player, movedCards[0]);
-        }
-        if (message.to === ZONES.BATTLEFIELD && message.from !== ZONES.BATTLEFIELD) {
-          BattleTriggerService.onCardEnteredBattlefield(this.room, player, movedCards, message);
-          for (const card of movedCards) {
-            BattleService.onCardEnteredBattle(this.room, player, card, message.to);
+        const tx = ChronicleRollbackService.beginTransaction(this.room, { command: "MoveCardCommand" });
+        try {
+          if (this.state.battle?.specialInitiativePlayerId === player.sessionId && movedCards.length > 0) {
+            SpecialInitiativeService.consumeSpecialInitiativeOnPlay(this.room, player, movedCards[0]);
           }
-        } else if (message.from === ZONES.BATTLEFIELD || message.to === ZONES.BATTLEFIELD) {
-          BattleService.recalculate(this.room);
-        }
+          if (message.to === ZONES.BATTLEFIELD && message.from !== ZONES.BATTLEFIELD) {
+            BattleTriggerService.onCardEnteredBattlefield(this.room, player, movedCards, message);
+            for (const card of movedCards) {
+              BattleService.onCardEnteredBattle(this.room, player, card, message.to);
+            }
+          } else if (message.from === ZONES.BATTLEFIELD || message.to === ZONES.BATTLEFIELD) {
+            BattleService.recalculate(this.room);
+          }
 
-        // Dominant play trigger from HAND to any zone (Territory, Discard, etc.)
-        if (message.from === ZONES.HAND && movedCards.length > 0) {
-          for (const card of movedCards) {
-            if (BattleTriggerService.isDominant(card)) {
-              BattleTriggerService.onDominantPlayed(this.room, player, card, message);
+          // Dominant play trigger from HAND to any zone (Territory, Discard, etc.)
+          if (message.from === ZONES.HAND && movedCards.length > 0) {
+            for (const card of movedCards) {
+              if (BattleTriggerService.isDominant(card)) {
+                BattleTriggerService.onDominantPlayed(this.room, player, card, message);
+              }
             }
           }
+        } finally {
+          this.chronicleTx = ChronicleRollbackService.endTransaction(this.room, tx);
         }
       }
     } catch (err) {
@@ -222,8 +244,19 @@ class MoveCardCommand extends BaseCommand {
   }
 
   undo() {
+    if (this._undone) return;
+    this._undone = true;
+
     const player = this.state.players.get(this.client.sessionId);
     if (!player) return;
+
+    if (this.chronicleTx) {
+      ChronicleRollbackService.rollbackTransaction(this.room, this.chronicleTx, player, {
+        restoreBattleState: false,
+        skipBattleRecalc: true,
+        reprompt: false,
+      });
+    }
 
     if (this.preMoveSnapshot) {
       MoveCardSnapshotHelper.undoSingleCard(this.room, this.state, this.preMoveSnapshot, player);
@@ -244,13 +277,27 @@ class MoveCardCommand extends BaseCommand {
       this._trackedTurnEnhancementsCount = 0;
     }
 
-    if (this.preMoveSnapshot?.fromZone === ZONES.BATTLEFIELD || this.preMoveSnapshot?.toZone === ZONES.BATTLEFIELD) {
+    const touchedBattlefield =
+      this.preMoveSnapshot?.fromZone === ZONES.BATTLEFIELD ||
+      this.movedToZone === ZONES.BATTLEFIELD ||
+      Boolean(this.chronicleTx?.entries?.length);
+
+    if (touchedBattlefield) {
       if (this.preBattleFlags && this.state.battle) {
         this.state.battle.rescueAttemptOccurred = this.preBattleFlags.rescueAttemptOccurred;
         this.state.battle.blockOccurred = this.preBattleFlags.blockOccurred;
         this.state.lastBattleCardPlayerId = this.preBattleFlags.lastBattleCardPlayerId;
+        this.state.battle.initiativeOverridePlayerId = this.preBattleFlags.initiativeOverridePlayerId;
+        this.state.battle.specialInitiativePlayerId = this.preBattleFlags.specialInitiativePlayerId;
+        if (!this.state.battle.specialInitiativePlayerId) {
+          this.room._pendingSpecialInitiativeItem = null;
+        }
       }
       BattleService.recalculate(this.room);
+    }
+
+    if (this.room.state?.effectChronicle?.items?.length > 0 && this.room.abilityResolver?.repromptItem) {
+      this.room.abilityResolver.repromptItem(this.room.state.effectChronicle.items[0]);
     }
   }
 }

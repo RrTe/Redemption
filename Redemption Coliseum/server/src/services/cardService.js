@@ -295,6 +295,7 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup, allowRepla
   const landOfBondage = getZoneCollection(player, state, ZONES.LAND_OF_BONDAGE);
   const validCards = [];
   const divertedCards = [];
+  const drawOrder = [];
   let drawnCount = 0;
 
   while (drawnCount < count && deck.length > 0) {
@@ -314,6 +315,7 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup, allowRepla
       card.counters.clear();
       landOfBondage.push(card);
       divertedCards.push(card);
+      drawOrder.push({ card, toZone: ZONES.LAND_OF_BONDAGE, isDiverted: true });
 
       // Add available action for Lost Soul moved to Land of Bondage
       const action = new CardAction();
@@ -343,13 +345,62 @@ function _drawCardsWithLostSoulRule(player, state, count, cardLookup, allowRepla
       }
     } else {
       validCards.push(card);
+      drawOrder.push({ card, toZone: null, isDiverted: false });
       drawnCount++;
     }
   }
 
   _syncParentIndexes(deck);
 
-  return { validCards, divertedCards };
+  return { validCards, divertedCards, drawOrder };
+}
+
+/**
+ * Applies captured pre-move snapshot attributes onto a card instance.
+ *
+ * @param {Card} card - Card instance being restored.
+ * @param {object} snap - Captured snapshot descriptor.
+ */
+function _applySnapshotToCard(card, snap) {
+  if (!card || !snap) return;
+  if (snap.fromCoords) {
+    if (typeof snap.fromCoords.x === "number") card.x = snap.fromCoords.x;
+    if (typeof snap.fromCoords.y === "number") card.y = snap.fromCoords.y;
+  }
+  if (snap.controllerId) card.controllerId = snap.controllerId;
+  if (snap.isFaceUp !== undefined) card.isFaceUp = snap.isFaceUp;
+  if (snap.isFaceDown !== undefined) card.isFaceDown = snap.isFaceDown;
+  if (snap.isTapped !== undefined) card.isTapped = Boolean(snap.isTapped);
+  if (snap.isFlipped !== undefined) card.isFlipped = Boolean(snap.isFlipped);
+  if (snap.rotation !== undefined) card.rotation = snap.rotation;
+  if (snap.isParalyzed !== undefined) card.isParalyzed = snap.isParalyzed;
+  if (snap.paralyzeRounds !== undefined) card.paralyzeRounds = snap.paralyzeRounds;
+  if (snap.isSetAside !== undefined) card.isSetAside = snap.isSetAside;
+  if (snap.setAsideRounds !== undefined) card.setAsideRounds = snap.setAsideRounds;
+  if (snap.attachedTo !== undefined) card.attachedTo = snap.attachedTo;
+  if (snap.inGameType !== undefined) card.inGameType = snap.inGameType;
+  if (snap.inGameAlignment !== undefined) card.inGameAlignment = snap.inGameAlignment;
+  if (snap.isBanded !== undefined) card.isBanded = Boolean(snap.isBanded);
+  if (snap.bandedTo !== undefined) card.bandedTo = snap.bandedTo || "";
+  if (snap.isImmune !== undefined) card.isImmune = Boolean(snap.isImmune);
+  if (snap.isProtected !== undefined) card.isProtected = Boolean(snap.isProtected);
+  if (snap.protectionReason !== undefined) card.protectionReason = snap.protectionReason || "";
+  if (snap.protection !== undefined) {
+    card._protection = snap.protection ? { ...snap.protection } : null;
+  }
+  if (snap.zoneProtection !== undefined) {
+    card._zoneProtection = snap.zoneProtection ? { ...snap.zoneProtection } : null;
+  }
+  if (snap.counters && typeof snap.counters === "object") {
+    if (typeof card.counters?.clear === "function") {
+      card.counters.clear();
+      for (const [k, v] of Object.entries(snap.counters)) {
+        card.counters.set(k, v);
+      }
+    } else if (card.counters) {
+      card.counters = { ...snap.counters };
+    }
+  }
 }
 
 /**
@@ -523,8 +574,8 @@ function _moveCardById(
   }
 
   if (coords) {
-    movedCard.x = coords.x;
-    movedCard.y = coords.y;
+    if (typeof coords.x === "number") movedCard.x = coords.x;
+    if (typeof coords.y === "number") movedCard.y = coords.y;
   }
 
   const toArr = getZoneCollection(targetPlayer, state, effectiveTo);
@@ -553,23 +604,7 @@ function _moveCardById(
 
   // Restore snapshot properties if undoing
   if (options?.snapshot) {
-    const snap = options.snapshot;
-    if (snap.isFaceUp !== undefined) movedCard.isFaceUp = snap.isFaceUp;
-    if (snap.isFaceDown !== undefined) movedCard.isFaceDown = snap.isFaceDown;
-    if (snap.rotation !== undefined) movedCard.rotation = snap.rotation;
-    if (snap.isParalyzed !== undefined) movedCard.isParalyzed = snap.isParalyzed;
-    if (snap.paralyzeRounds !== undefined) movedCard.paralyzeRounds = snap.paralyzeRounds;
-    if (snap.isSetAside !== undefined) movedCard.isSetAside = snap.isSetAside;
-    if (snap.setAsideRounds !== undefined) movedCard.setAsideRounds = snap.setAsideRounds;
-    if (snap.attachedTo !== undefined) movedCard.attachedTo = snap.attachedTo;
-    if (snap.inGameType !== undefined) movedCard.inGameType = snap.inGameType;
-    if (snap.inGameAlignment !== undefined) movedCard.inGameAlignment = snap.inGameAlignment;
-    if (snap.counters && typeof snap.counters === "object") {
-      movedCard.counters.clear();
-      for (const [k, v] of Object.entries(snap.counters)) {
-        movedCard.counters.set(k, v);
-      }
-    }
+    _applySnapshotToCard(movedCard, options.snapshot);
   }
 
   let logEntry = "";
@@ -672,6 +707,7 @@ function _drawCardsFromDeck(
       );
       return {
         movedCards: [],
+        drawOrder: [],
         logEntry: `${player.name} cannot draw: Deck is empty.`,
         error: "Deck is empty!",
       };
@@ -685,6 +721,7 @@ function _drawCardsFromDeck(
       );
       return {
         movedCards: [],
+        drawOrder: [],
         logEntry: `${player.name} cannot draw: Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE}).`,
         error: `Hand limit reached (${MAX_HAND_SIZE}/${MAX_HAND_SIZE})!`,
       };
@@ -694,7 +731,7 @@ function _drawCardsFromDeck(
   logger.debug(
     `[DRAW_FROM_DECK] Player '${player.sessionId}' drawing ${effectiveCount} cards to '${to}'.`,
   );
-  const { validCards, divertedCards } = _drawCardsWithLostSoulRule(
+  const { validCards, divertedCards, drawOrder } = _drawCardsWithLostSoulRule(
     player,
     state,
     effectiveCount,
@@ -738,7 +775,154 @@ function _drawCardsFromDeck(
   if (to === ZONES.HAND && validCards.length < count) {
     logEntry += ` (Hand limit reached: ${player[ZONES.HAND]?.length}/${MAX_HAND_SIZE})`;
   }
-  return { movedCards: validCards, divertedCards: divertedCards || [], logEntry: logEntry };
+  return {
+    movedCards: validCards,
+    divertedCards: divertedCards || [],
+    drawOrder: (drawOrder || []).map((entry) => ({
+      card: entry.card,
+      toZone: entry.isDiverted ? ZONES.LAND_OF_BONDAGE : to,
+      isDiverted: entry.isDiverted,
+    })),
+    logEntry: logEntry,
+  };
+}
+
+/**
+ * Restores a card to an exact zone and collection index using an optional pre-mutation snapshot.
+ * Supports both cross-zone moves and same-zone reordering (e.g. topdeck/underdeck rollback)
+ * without triggering MoveValidator blocks or Colyseus ArraySchema index corruption.
+ *
+ * @param {PlayerState} player - Acting or target player fallback.
+ * @param {RoomState} state - Global room state.
+ * @param {Map<string, Card>} cardLookup - Central lookup map.
+ * @param {string} cardId - ID of the card to restore.
+ * @param {string} fromZone - Expected current zone.
+ * @param {string} targetZone - Zone to restore the card into.
+ * @param {number} [targetIndex=-1] - Target index within targetZone (-1 uses zone default).
+ * @param {object|null} [snapshot=null] - Captured pre-mutation snapshot.
+ * @param {object} [options={}] - Restoration flags.
+ * @param {boolean} [options.clearLostSoulActions=false] - Strip temporary draw-phase Lost Soul actions.
+ * @returns {{ movedCards: Card[], restored: boolean }}
+ */
+function restoreCardAtIndex(
+  player,
+  state,
+  cardLookup,
+  cardId,
+  fromZone,
+  targetZone,
+  targetIndex = -1,
+  snapshot = null,
+  options = {},
+) {
+  const findResult = _findCardAndOwner(cardLookup, state, cardId, fromZone);
+  if (!findResult) {
+    logger.warn(`[RESTORE_CARD] Card '${cardId}' not found from '${fromZone}'.`);
+    return { movedCards: [], restored: false };
+  }
+
+  const { fromArr: actualFromArr, controllerId, cardIndex, card } = findResult;
+  const trueOwnerId = card.originalOwnerId || card.ownerId || snapshot?.originalOwnerId;
+  const targetPlayerId =
+    snapshot?.controllerId ||
+    (PILE_ZONES.includes(targetZone) ? trueOwnerId : null) ||
+    player?.sessionId ||
+    controllerId;
+  const targetPlayer =
+    (targetPlayerId && state.players.get(targetPlayerId)) ||
+    player ||
+    state.players.get(controllerId);
+
+  const toArr = getZoneCollection(targetPlayer, state, targetZone);
+  const restoredControllerId =
+    snapshot?.controllerId ||
+    (targetZone === ZONES.BATTLEFIELD || targetZone === ZONES.SET_ASIDE
+      ? (player?.sessionId || controllerId)
+      : (targetPlayer?.sessionId || controllerId));
+
+  const [splicedCard] = actualFromArr.splice(cardIndex, 1);
+  _syncParentIndexes(actualFromArr);
+
+  const restoredCard = typeof splicedCard.clone === "function" ? splicedCard.clone() : splicedCard;
+  cardLookup.set(cardId, restoredCard);
+
+  restoredCard.zone = targetZone;
+  restoredCard.lastMoved = Date.now();
+  restoredCard.controllerId = restoredControllerId;
+
+  if (targetZone === ZONES.HAND || targetZone === ZONES.TERRITORY || targetZone === ZONES.LAND_OF_BONDAGE) {
+    restoredCard.isFaceUp = true;
+  } else if (targetZone === ZONES.DECK && !snapshot) {
+    restoredCard.isFaceUp = false;
+    restoredCard.isFaceDown = false;
+  }
+
+  if (targetZone !== ZONES.BATTLEFIELD) {
+    restoredCard.isBanded = false;
+    restoredCard.bandedTo = "";
+  }
+
+  if (typeof restoredCard.counters?.clear === "function") {
+    restoredCard.counters.clear();
+  }
+
+  const isLeavingField = [
+    ZONES.DECK,
+    ZONES.DISCARD,
+    ZONES.HAND,
+    ZONES.BANISH,
+    ZONES.RESERVE,
+  ].includes(targetZone);
+  if (isLeavingField && !snapshot) {
+    restoredCard.inGameType = "";
+    restoredCard.inGameAlignment = "";
+  }
+
+  if (snapshot) {
+    _applySnapshotToCard(restoredCard, snapshot);
+  }
+
+  if (options.clearLostSoulActions && restoredCard.availableActions?.length > 0) {
+    restoredCard.availableActions.splice(0, restoredCard.availableActions.length);
+  }
+
+  let insertIdx;
+  if (typeof targetIndex === "number" && targetIndex >= 0) {
+    insertIdx = Math.min(targetIndex, toArr.length);
+  } else {
+    insertIdx = targetZone === ZONES.DECK ? 0 : toArr.length;
+  }
+
+  if (insertIdx === toArr.length) {
+    toArr.push(restoredCard);
+  } else if (toArr instanceof ArraySchema) {
+    const ordered = Array.from(toArr);
+    ordered.splice(insertIdx, 0, restoredCard);
+    _replaceArraySchemaOrder(toArr, ordered);
+  } else {
+    toArr.splice(insertIdx, 0, restoredCard);
+  }
+
+  if (state._clientViews) {
+    const oldView = state._clientViews.get(controllerId);
+    if (oldView) {
+      try {
+        oldView.remove(splicedCard);
+      } catch (_e) {
+        // Ignore if card was not in view
+      }
+    }
+    const newView = state._clientViews.get(restoredCard.controllerId);
+    if (newView) {
+      try {
+        newView.add(restoredCard);
+      } catch (_e) {
+        // Ignore if already tracked
+      }
+    }
+  }
+
+  return { movedCards: [restoredCard], restored: true };
 }
 
 /**
@@ -873,6 +1057,8 @@ function addAvailableAction(state, card, action) {
 
 module.exports = {
   moveCard,
+  restoreCardAtIndex,
+  replaceArraySchemaOrder: _replaceArraySchemaOrder,
   getZoneCollection,
   shuffle,
   findCardById,

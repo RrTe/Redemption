@@ -2,11 +2,11 @@
 const { BaseCommand } = require("./BaseCommand");
 const { EffectChronicleService } = require("../services/EffectChronicleService");
 const { ChronicleHistoryService } = require("../services/ChronicleHistoryService");
-const { ChronicleItem } = require("../state/EffectChronicleState");
+const { ChronicleRollbackService } = require("../services/ChronicleRollbackService");
+const { AbilityLookup } = require("../ast/AbilityLookup");
 const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants");
-const { AST_MESSAGES, AST_ACTIONS } = require("../../../shared/astConstants");
+const { AST_ACTIONS } = require("../../../shared/astConstants");
 const { ActionTelegraphService } = require("../services/ActionTelegraphService");
-const { moveCard } = require("../services/cardService");
 const {
   formatCardLink,
   formatChronicleUndoLog,
@@ -24,14 +24,15 @@ class RespondOptionalAbilityCommand extends BaseCommand {
   constructor(room, client) {
     super(room, client);
     this.executedItem = null;
-    this.astResult = null;
+    this.chronicleTx = null;
     this.canUndo = false;
+    this._undone = false;
   }
 
   /**
    * Executes response to an optional ability prompt.
    *
-   * @param {{ itemId?: string, accepted?: boolean }} message Client payload.
+   * @param {{ itemId?: string, accepted?: boolean, chosenAbilityId?: string }} message Client payload.
    */
   execute(message) {
     const { itemId, accepted } = message || {};
@@ -68,6 +69,9 @@ class RespondOptionalAbilityCommand extends BaseCommand {
     const item = chronicle.items[index];
     const player = this.state.players.get(this.client.sessionId);
     if (!player) return;
+
+    const preItemData = ChronicleRollbackService.cloneChronicleItemData(item);
+    const tx = ChronicleRollbackService.beginTransaction(this.room, { command: "RespondOptionalAbilityCommand" });
 
     try {
       if (item.pendingSpecialInitiative) {
@@ -109,16 +113,32 @@ class RespondOptionalAbilityCommand extends BaseCommand {
               resumeResult.awaitingSpecialInitiative ||
               resumeResult.awaitingConfirmation)
           ) {
+            ChronicleRollbackService.recordItemMutation(this.room, { itemData: preItemData });
+            this.executedItem = preItemData;
+            this.canUndo = true;
             return;
           }
           if (resumeResult?.logEntries?.length) {
             resumeResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
           }
 
-          ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
+          const resultSummary = EffectChronicleService.buildResultSummary(resumeResult, CHRONICLE_STATUS.COMPLETED, item);
+          const historyRec = ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED, resultSummary);
           chronicle.items.splice(index, 1);
           EffectChronicleService._reindexOrders(chronicle);
+
+          ChronicleRollbackService.recordResolution(this.room, {
+            itemData: preItemData,
+            historyItemId: historyRec?.id || item.id,
+            snapshots: resumeResult?.snapshots || [],
+            wasInteractiveRoot: true,
+            action: resumeResult?.snapshots?.[0]?.action || item.actionType,
+            targetCardIds: EffectChronicleService.extractTargetCardIds(resumeResult?.snapshots),
+          });
+
           EffectChronicleService.advanceChronicle(this.room);
+          this.executedItem = preItemData;
+          this.canUndo = true;
           return;
         }
 
@@ -134,10 +154,27 @@ class RespondOptionalAbilityCommand extends BaseCommand {
           this.state.battle.specialInitiativePlayerId = this.client.sessionId;
         }
 
-        ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
+        const historyRec = ChronicleHistoryService.recordHistory(
+          chronicle,
+          item,
+          CHRONICLE_STATUS.COMPLETED,
+          "Declared Special Initiative"
+        );
         chronicle.items.splice(index, 1);
         EffectChronicleService._reindexOrders(chronicle);
+
+        ChronicleRollbackService.recordResolution(this.room, {
+          itemData: preItemData,
+          historyItemId: historyRec?.id || item.id,
+          snapshots: [],
+          wasInteractiveRoot: true,
+          action: "special_initiative",
+          targetCardIds: [],
+        });
+
         EffectChronicleService.advanceChronicle(this.room);
+        this.executedItem = preItemData;
+        this.canUndo = true;
         return;
       }
 
@@ -155,11 +192,48 @@ class RespondOptionalAbilityCommand extends BaseCommand {
           this.room.broadcastGameLog(`${player.name} chooses not to activate ${sourceTitle}.`);
         }
 
-        ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.PASSED);
+        const historyRec = ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.PASSED, "Passed");
         chronicle.items.splice(index, 1);
         EffectChronicleService._reindexOrders(chronicle);
+
+        const removedSiblingItems = item._abilityGroupId
+          ? EffectChronicleService.skipSiblingGroupItems(this.room, chronicle, item._abilityGroupId, "Passed")
+          : [];
+
+        ChronicleRollbackService.recordResolution(this.room, {
+          itemData: preItemData,
+          historyItemId: historyRec?.id || item.id,
+          snapshots: [],
+          wasInteractiveRoot: true,
+          removedSiblingItems,
+          action: item.actionType,
+          targetCardIds: [],
+        });
+
         EffectChronicleService.advanceChronicle(this.room);
+        this.executedItem = preItemData;
+        this.canUndo = true;
         return;
+      }
+
+      let insertedSiblingIds = [];
+      if (message?.chosenAbilityId && sourceCard?.templateId && (item._choiceGroup || !item.abilityId)) {
+        const abilities = AbilityLookup.resolveAbilities(sourceCard.templateId, {
+          actionType: item.actionType,
+          inGameType: sourceCard.inGameType,
+          inGameAlignment: sourceCard.inGameAlignment,
+        });
+        const chosenAbility = abilities.find((a) => a.ability_id === message.chosenAbilityId);
+        if (chosenAbility) {
+          const expanded = EffectChronicleService.expandChoiceItemSteps(
+            this.room,
+            chronicle,
+            index,
+            chosenAbility,
+            sourceCard
+          );
+          insertedSiblingIds = expanded.insertedSiblingIds;
+        }
       }
 
       item.isConfirmed = true;
@@ -178,6 +252,12 @@ class RespondOptionalAbilityCommand extends BaseCommand {
           astResult.awaitingConfirmation)
       ) {
         logger.info(`[RespondOptionalAbilityCommand] Item '${item.title}' now awaiting further response.`);
+        ChronicleRollbackService.recordItemMutation(this.room, {
+          itemData: preItemData,
+          insertedSiblingIds,
+        });
+        this.executedItem = preItemData;
+        this.canUndo = true;
         return;
       }
 
@@ -188,112 +268,68 @@ class RespondOptionalAbilityCommand extends BaseCommand {
         this.room.broadcastGameLog(`${player.name} activates ${sourceTitle}${abilityText}.`);
       }
 
-      ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
+      const resultSummary = EffectChronicleService.buildResultSummary(astResult, CHRONICLE_STATUS.COMPLETED, item);
+      const historyRec = ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED, resultSummary);
       chronicle.items.splice(index, 1);
       EffectChronicleService._reindexOrders(chronicle);
+
+      const removedSiblingItems =
+        astResult?.noValidTargets && item._abilityGroupId
+          ? EffectChronicleService.skipSiblingGroupItems(
+              this.room,
+              chronicle,
+              item._abilityGroupId,
+              "Skipped (no cost/target)",
+              true
+            )
+          : [];
+
+      ChronicleRollbackService.recordResolution(this.room, {
+        itemData: preItemData,
+        historyItemId: historyRec?.id || item.id,
+        snapshots: astResult?.snapshots || [],
+        wasInteractiveRoot: true,
+        insertedSiblingIds,
+        removedSiblingItems,
+        action: astResult?.snapshots?.[0]?.action || item.actionType,
+        targetCardIds: EffectChronicleService.extractTargetCardIds(astResult?.snapshots),
+      });
+
       EffectChronicleService.advanceChronicle(this.room);
 
-      this.executedItem = item;
-      this.astResult = astResult;
-      this.canUndo = Boolean(astResult?.handled);
+      this.executedItem = preItemData;
+      this.canUndo = true;
     } catch (err) {
       logger.error(`[RespondOptionalAbilityCommand] Fatal error resolving chronicle item '${item.title}':`, err);
       chronicle.items.splice(index, 1);
       EffectChronicleService._reindexOrders(chronicle);
       EffectChronicleService.advanceChronicle(this.room);
+    } finally {
+      this.chronicleTx = ChronicleRollbackService.endTransaction(this.room, tx);
     }
   }
 
   /**
-   * Undoes the accepted optional ability resolution and restores state.
+   * Undoes the optional ability or Special Initiative response and re-prompts cleanly.
    */
   undo() {
-    if (!this.executedItem) return;
+    if (this._undone || !this.executedItem || !this.chronicleTx) return;
+    this._undone = true;
 
     const player = this.state.players.get(this.client.sessionId);
     if (!player) return;
 
-    const allReversedMovements = [];
-    if (this.astResult && Array.isArray(this.astResult.snapshots)) {
-      for (const snapshot of this.astResult.snapshots) {
-        const moves = this._rollbackSnapshot(snapshot, player);
-        if (Array.isArray(moves)) {
-          allReversedMovements.push(...moves);
-        }
-      }
-    }
+    const { reversedMovements, extraDetails } = ChronicleRollbackService.rollbackTransaction(
+      this.room,
+      this.chronicleTx,
+      player,
+      { reprompt: true }
+    );
 
-    const chronicle = this.room.state.effectChronicle;
-    if (chronicle) {
-      const alreadyExists = chronicle.items.some((i) => i.id === this.executedItem.id);
-      if (!alreadyExists) {
-        const restoredItem = new ChronicleItem({
-          id: this.executedItem.id,
-          cardId: this.executedItem.cardId,
-          controllerId: this.executedItem.controllerId,
-          actionType: this.executedItem.actionType,
-          title: this.executedItem.title,
-          description: this.executedItem.description,
-          status: CHRONICLE_STATUS.PENDING,
-          order: chronicle.items.length + 1,
-          abilityId: this.executedItem.abilityId,
-          isOptional: this.executedItem.isOptional,
-        });
-
-        chronicle.items.push(restoredItem);
-        chronicle.priorityPlayerId = this.executedItem.controllerId;
-        chronicle.isResolving = true;
-        EffectChronicleService._reindexOrders(chronicle);
-      }
-    }
-
-    const sourceCard = this.room.cardLookup.get(this.executedItem.cardId);
+    const sourceCard = this.room.cardLookup?.get(this.executedItem.cardId);
     const source = sourceCard || this.executedItem.title;
-    const logMsg = formatChronicleUndoLog(player.name, source, allReversedMovements);
+    const logMsg = formatChronicleUndoLog(player.name, source, reversedMovements, extraDetails);
     this.room.broadcastGameLog(logMsg);
-  }
-
-  /**
-   * Reverses card movements from a single MutationSnapshot.
-   *
-   * @private
-   * @param {object} snapshot AST execution snapshot.
-   * @param {object} player Active player.
-   * @returns {object[]} Executed reversed movement logs.
-   */
-  _rollbackSnapshot(snapshot, player) {
-    if (!snapshot) return [];
-    const movements = snapshot.movedCards || snapshot.discardedCards || [];
-    const executedMovements = [];
-
-    for (let i = movements.length - 1; i >= 0; i--) {
-      const move = movements[i];
-      const owner = this.state.players.get(move.ownerId) || player;
-      const card = this.room.cardLookup.get(move.cardId);
-
-      moveCard(
-        owner,
-        this.state,
-        this.room.cardLookup,
-        move.toZone,
-        move.fromZone,
-        move.cardId,
-        1,
-        {},
-        "",
-        "",
-        { isUndo: true }
-      );
-
-      executedMovements.push({
-        cardOrName: card || move,
-        fromZone: move.toZone,
-        toZone: move.fromZone,
-        isOpponent: owner.sessionId !== player.sessionId,
-      });
-    }
-
-    return executedMovements;
   }
 }
 

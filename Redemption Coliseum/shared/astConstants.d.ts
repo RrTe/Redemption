@@ -87,6 +87,7 @@ export declare const AST_MESSAGES: {
   readonly RESPOND_OPTIONAL_ABILITY: "respondOptionalAbility";
   readonly ACTION_TELEGRAPH: "actionTelegraph";
   readonly CLEAR_ACTION_TELEGRAPH: "clearActionTelegraph";
+  readonly CANCEL_INTERACTION: "cancelInteraction";
 };
 
 export declare const AST_STAT_FILTER_STATS: {

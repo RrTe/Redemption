@@ -10,10 +10,14 @@ class ChronicleItem extends Schema {
     super();
     this.id = options.id || "";
     this.cardId = options.cardId || "";
+    this.templateId = options.templateId || "";
     this.controllerId = options.controllerId || "";
     this.actionType = options.actionType || "";
     this.title = options.title || "";
     this.description = options.description || "";
+    this.effectLabel = options.effectLabel || "";
+    this.resultSummary = options.resultSummary || "";
+    this.effectStepIndex = typeof options.effectStepIndex === "number" ? options.effectStepIndex : -1;
     this.status = options.status || CHRONICLE_STATUS.PENDING;
     this.order = typeof options.order === "number" ? options.order : 1;
     this.abilityId = options.abilityId || "";
@@ -24,10 +28,14 @@ class ChronicleItem extends Schema {
 defineTypes(ChronicleItem, {
   id: "string",
   cardId: "string",
+  templateId: "string",
   controllerId: "string",
   actionType: "string",
   title: "string",
   description: "string",
+  effectLabel: "string",
+  resultSummary: "string",
+  effectStepIndex: "number",
   status: "string",
   order: "number",
   abilityId: "string",

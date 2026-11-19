@@ -111,6 +111,7 @@ export const AST_MESSAGES = /** @type {const} */ ({
   RESPOND_OPTIONAL_ABILITY: "respondOptionalAbility",
   ACTION_TELEGRAPH: "actionTelegraph",
   CLEAR_ACTION_TELEGRAPH: "clearActionTelegraph",
+  CANCEL_INTERACTION: "cancelInteraction",
 });
 
 /**

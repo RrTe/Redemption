@@ -1,5 +1,6 @@
 // server/src/ast/handlers/DiscardHandler.js
-const { moveCard } = require("../../services/cardService");
+const { moveCard, getZoneCollection } = require("../../services/cardService");
+const { MoveCardSnapshotHelper } = require("../../commands/MoveCardSnapshotHelper");
 const { ZONES } = require("../../../../shared/zones");
 const { PHASES } = require("../../../../shared/phases");
 const {
@@ -96,6 +97,13 @@ class DiscardHandler {
     // Execute discard moves for each resolved target
     for (const { card, owner } of targets) {
       const fromZone = card.zone;
+      const previousControllerId = card.controllerId || owner?.sessionId;
+      const currentCollection = getZoneCollection(owner, room.state, fromZone);
+      const fromIndex = currentCollection?.findIndex
+        ? currentCollection.findIndex((c) => c.id === card.id)
+        : -1;
+      const cardSnapshot = MoveCardSnapshotHelper.createSnapshot(card, fromZone, owner, fromIndex);
+
       const trueOwnerId = card.originalOwnerId || card.ownerId;
       const trueOwner = (trueOwnerId && room.state.players.get(trueOwnerId)) || owner;
       const result = moveCard(
@@ -123,6 +131,9 @@ class DiscardHandler {
           fromZone,
           toZone: movedOrDiverted.zone || ZONES.DISCARD,
           ownerId: trueOwner.sessionId,
+          previousControllerId,
+          fromIndex,
+          cardSnapshot,
         });
         if (result.logEntry) logEntries.push(result.logEntry);
       }

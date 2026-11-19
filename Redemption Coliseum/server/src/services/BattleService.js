@@ -5,6 +5,7 @@ const { BATTLE_STATE_REASON } = require("../../../shared/battleConstants");
 const { ZONES } = require("../../../shared/zones");
 const { PHASES } = require("../../../shared/phases");
 const { formatCardLink } = require("../utils/gameLogFormatter");
+const { MoveCardSnapshotHelper } = require("../commands/MoveCardSnapshotHelper");
 const logger = require("../utils/logger");
 
 /**
@@ -159,6 +160,28 @@ class BattleService {
       if (!hasMatchingChar) {
         const ownerId = card.originalOwnerId || card.ownerId || card.controllerId;
         const owner = state.players?.get ? state.players.get(ownerId) : state.players?.[ownerId];
+        const previousControllerId = card.controllerId || ownerId;
+        const fromIndex = state.battlefield.findIndex((c) => c.id === card.id);
+        const cardSnapshot = MoveCardSnapshotHelper.createSnapshot(
+          card,
+          ZONES.BATTLEFIELD,
+          owner || { sessionId: previousControllerId },
+          fromIndex
+        );
+
+        if (room?._undoTxStack?.length > 0) {
+          const { ChronicleRollbackService } = require("./ChronicleRollbackService");
+          ChronicleRollbackService.recordOrphanedDiscard(room, {
+            cardId: card.id,
+            name: card.Name,
+            fromZone: ZONES.BATTLEFIELD,
+            toZone: ZONES.DISCARD,
+            ownerId,
+            previousControllerId,
+            fromIndex,
+            cardSnapshot,
+          });
+        }
 
         if (owner && room?.cardLookup) {
           moveCard(

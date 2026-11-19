@@ -1,5 +1,6 @@
 // server/src/ast/handlers/ModifyNumbersHandler.js
-const { moveCard } = require("../../services/cardService");
+const { moveCard, getZoneCollection } = require("../../services/cardService");
+const { MoveCardSnapshotHelper } = require("../../commands/MoveCardSnapshotHelper");
 const { ZONES } = require("../../../../shared/zones");
 const { AST_ACTIONS, AST_MESSAGES, AST_SELECTION_MODES } = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
@@ -77,20 +78,8 @@ class ModifyNumbersHandler {
       });
 
       for (const { card, owner } of defeatedTargets) {
-        moveCard(
-          owner,
-          room.state,
-          room.cardLookup,
-          card.zone,
-          ZONES.DISCARD,
-          card.id,
-          1,
-          {},
-          "",
-          "",
-          { isAbilityAction: true }
-        );
-        discardedSnapshots.push({ cardId: card.id, name: card.Name });
+        const snapEntry = this._discardDefeatedCard(room, card, owner);
+        if (snapEntry) discardedSnapshots.push(snapEntry);
         logEntries.push(`${formatCardLink(card)} was defeated due to zero toughness and discarded.`);
         battlefieldAffected = true;
       }
@@ -106,6 +95,7 @@ class ModifyNumbersHandler {
           timestamp: Date.now(),
           playerId: player.sessionId,
           cardId: item?.cardId || "",
+          movedCards: discardedSnapshots,
           discardedCards: discardedSnapshots,
         },
         logEntry: logEntries.join(" ") || "Defeated characters discarded.",
@@ -140,6 +130,12 @@ class ModifyNumbersHandler {
     let battlefieldAffected = false;
 
     for (const { card, owner } of targets) {
+      const hadStrengthMod = typeof card.counters?.has === "function"
+        ? card.counters.has("strength_mod")
+        : Object.prototype.hasOwnProperty.call(card.counters || {}, "strength_mod");
+      const hadToughnessMod = typeof card.counters?.has === "function"
+        ? card.counters.has("toughness_mod")
+        : Object.prototype.hasOwnProperty.call(card.counters || {}, "toughness_mod");
       const prevStrMod = typeof card.counters?.get === "function"
         ? (card.counters.get("strength_mod") || 0)
         : (card.counters?.strength_mod || 0);
@@ -163,6 +159,8 @@ class ModifyNumbersHandler {
         name: card.Name,
         strengthDelta: sDelta,
         toughnessDelta: tDelta,
+        hadStrengthMod,
+        hadToughnessMod,
         prevStrengthMod: prevStrMod,
         prevToughnessMod: prevToughMod,
         newStrengthMod: newStrMod,
@@ -180,6 +178,7 @@ class ModifyNumbersHandler {
 
     // REG line 1815: Check characters whose toughness drops to 0 or less
     const defeatedCombatants = [];
+    const defeatedDiscards = [];
     for (const { card, owner } of targets) {
       if (BattleCalculator.isCharacter(card)) {
         const stats = BattleCalculator.getCardStats(card);
@@ -188,7 +187,8 @@ class ModifyNumbersHandler {
             defeatedCombatants.push({ card, owner });
           } else {
             // Discard immediately if outside battlefield (e.g. territory)
-            moveCard(owner, room.state, room.cardLookup, card.zone, ZONES.DISCARD, card.id);
+            const snapEntry = this._discardDefeatedCard(room, card, owner);
+            if (snapEntry) defeatedDiscards.push(snapEntry);
             logEntries.push(`${formatCardLink(card)} was defeated due to zero toughness and discarded.`);
           }
         }
@@ -206,6 +206,18 @@ class ModifyNumbersHandler {
         "defeated due to zero toughness"
       );
       if (siResult) {
+        if (room._undoTxStack?.length > 0) {
+          const { ChronicleRollbackService } = require("../../services/ChronicleRollbackService");
+          ChronicleRollbackService.recordPartialSnapshot(room, {
+            action: AST_ACTIONS.MODIFY_NUMBERS,
+            timestamp: Date.now(),
+            playerId: player.sessionId,
+            cardId: item?.cardId || "",
+            modifications,
+            movedCards: defeatedDiscards,
+            discardedCards: defeatedDiscards,
+          });
+        }
         if (battlefieldAffected) {
           BattleService.recalculate(room);
         }
@@ -215,7 +227,8 @@ class ModifyNumbersHandler {
       // If Special Initiative did not trigger (not last characters or not opponent), discard now:
       for (const { card, owner } of defeatedCombatants) {
         logger.info(`[ModifyNumbersHandler] ${card.Name} reduced to <= 0 toughness. Discarding.`);
-        moveCard(owner, room.state, room.cardLookup, card.zone, ZONES.DISCARD, card.id);
+        const snapEntry = this._discardDefeatedCard(room, card, owner);
+        if (snapEntry) defeatedDiscards.push(snapEntry);
         logEntries.push(`${formatCardLink(card)} was defeated due to zero toughness and discarded.`);
         battlefieldAffected = true;
       }
@@ -231,12 +244,64 @@ class ModifyNumbersHandler {
       playerId: player.sessionId,
       cardId: item?.cardId || "",
       modifications,
+      movedCards: defeatedDiscards,
+      discardedCards: defeatedDiscards,
     };
 
     return {
       success: true,
       snapshot,
       logEntry: logEntries.join(" "),
+    };
+  }
+
+  /**
+   * Captures a pre-discard snapshot and moves a zero-toughness character to Discard.
+   *
+   * @private
+   * @param {import('../../rooms/GameRoom').GameRoom} room Active room.
+   * @param {object} card Defeated character card.
+   * @param {object} owner Controlling player fallback.
+   * @returns {object | null} Movement snapshot descriptor.
+   */
+  static _discardDefeatedCard(room, card, owner) {
+    if (!card) return null;
+    const fromZone = card.zone;
+    const previousControllerId = card.controllerId || owner?.sessionId;
+    const currentCollection = getZoneCollection(owner, room.state, fromZone);
+    const fromIndex = currentCollection?.findIndex
+      ? currentCollection.findIndex((c) => c.id === card.id)
+      : -1;
+    const cardSnapshot = MoveCardSnapshotHelper.createSnapshot(card, fromZone, owner, fromIndex);
+
+    const trueOwnerId = card.originalOwnerId || card.ownerId;
+    const trueOwner = (trueOwnerId && room.state.players.get(trueOwnerId)) || owner;
+    const result = moveCard(
+      trueOwner,
+      room.state,
+      room.cardLookup,
+      fromZone,
+      ZONES.DISCARD,
+      card.id,
+      1,
+      {},
+      "",
+      "",
+      { isAbilityAction: true }
+    );
+    const movedOrDiverted =
+      (result?.movedCards && result.movedCards[0]) ||
+      (result?.divertedCards && result.divertedCards[0]);
+
+    return {
+      cardId: card.id,
+      name: card.Name,
+      fromZone,
+      toZone: movedOrDiverted?.zone || ZONES.DISCARD,
+      ownerId: trueOwner?.sessionId || previousControllerId,
+      previousControllerId,
+      fromIndex,
+      cardSnapshot,
     };
   }
 

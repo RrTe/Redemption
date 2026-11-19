@@ -25,6 +25,8 @@ export class AbilityPromptManager {
   private banner: AbilityPromptBanner;
   private activeGlowingCard: CardUI | null = null;
   private activePromptMsg: RequestOptionalAbilityMessage | null = null;
+  private isAbilityDialogOpen = false;
+  private onCancelInteraction = (): void => this.cancelActivePrompt();
 
   constructor(
     scene: Phaser.Scene,
@@ -47,6 +49,21 @@ export class AbilityPromptManager {
       (msg: RequestOptionalAbilityMessage) => this.handleOptionalAbilityRequest(msg),
     );
     this.scene.events.on("ui:autoPassOptionalPrompt", () => this.autoPassActivePrompt());
+    this.scene.events.on(GameEvents.NET_CANCEL_INTERACTION, this.onCancelInteraction);
+  }
+
+  /**
+   * Cancels any open optional/choice ability prompt or banner (e.g. after Undo).
+   */
+  public cancelActivePrompt(): void {
+    this.activePromptMsg = null;
+    this.cleanupHighlight();
+    if (this.isAbilityDialogOpen) {
+      this.isAbilityDialogOpen = false;
+      if (this.scene.scene.isActive("ConfirmationDialogScene")) {
+        this.scene.scene.stop("ConfirmationDialogScene");
+      }
+    }
   }
 
   /**
@@ -92,6 +109,7 @@ export class AbilityPromptManager {
     }
 
     const onConfirmAction = () => {
+      this.isAbilityDialogOpen = false;
       this.activePromptMsg = null;
       this.cleanupHighlight();
       this.networkManager.sendRespondOptionalAbility({
@@ -101,6 +119,7 @@ export class AbilityPromptManager {
     };
 
     const onSelectChoiceAction = (choice: { abilityId: string; label: string }) => {
+      this.isAbilityDialogOpen = false;
       this.activePromptMsg = null;
       this.cleanupHighlight();
       this.networkManager.sendRespondOptionalAbility({
@@ -111,6 +130,7 @@ export class AbilityPromptManager {
     };
 
     const onDeclineAction = () => {
+      this.isAbilityDialogOpen = false;
       this.activePromptMsg = null;
       this.cleanupHighlight();
       this.networkManager.sendRespondOptionalAbility({
@@ -153,6 +173,7 @@ export class AbilityPromptManager {
       if (this.scene.scene.isActive("ConfirmationDialogScene")) {
         this.scene.scene.stop("ConfirmationDialogScene");
       }
+      this.isAbilityDialogOpen = true;
       this.scene.scene.launch("ConfirmationDialogScene", dialogData);
     } else {
       // Pro mode: Non-intrusive floating top HUD banner without full-screen dimming
@@ -178,8 +199,10 @@ export class AbilityPromptManager {
   public destroy(): void {
     this.cleanupHighlight();
     this.activePromptMsg = null;
+    this.isAbilityDialogOpen = false;
     this.banner.destroy();
     this.scene.events.off(GameEvents.NET_OPTIONAL_ABILITY_REQUESTED);
     this.scene.events.off("ui:autoPassOptionalPrompt");
+    this.scene.events.off(GameEvents.NET_CANCEL_INTERACTION, this.onCancelInteraction);
   }
 }

@@ -73,6 +73,11 @@ export interface ClearActionTelegraphMessage {
   sourceCardId?: string;
 }
 
+export interface CancelInteractionMessage {
+  reason?: string;
+  itemId?: string;
+}
+
 export interface SelectTargetMessage {
   abilityId: string;
   itemId?: string;

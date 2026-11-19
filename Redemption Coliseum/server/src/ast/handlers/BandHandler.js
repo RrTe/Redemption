@@ -1,5 +1,6 @@
 // server/src/ast/handlers/BandHandler.js
-const { moveCard } = require("../../services/cardService");
+const { moveCard, getZoneCollection } = require("../../services/cardService");
+const { MoveCardSnapshotHelper } = require("../../commands/MoveCardSnapshotHelper");
 const { ZONES } = require("../../../../shared/zones");
 const { AST_ACTIONS, AST_MESSAGES, AST_SELECTION_MODES } = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
@@ -105,6 +106,12 @@ class BandHandler {
       const fromZone = targetCard.zone;
       const previousControllerId = targetCard.controllerId;
       const isAllyFromOpponent = previousControllerId !== player.sessionId;
+      const prevOwner = room.state.players.get(previousControllerId) || player;
+      const currentCollection = getZoneCollection(prevOwner, room.state, fromZone);
+      const fromIndex = currentCollection?.findIndex
+        ? currentCollection.findIndex((c) => c.id === targetCard.id)
+        : -1;
+      const cardSnapshot = MoveCardSnapshotHelper.createSnapshot(targetCard, fromZone, prevOwner, fromIndex);
 
       logger.info(
         `[BandHandler] Banding '${targetCard.Name}' (${targetCard.id}) with leader '${effectiveLeader?.Name || "leader"}' ` +
@@ -146,8 +153,14 @@ class BandHandler {
       });
       movedCardEntries.push({
         cardId: actualCard.id,
+        name: actualCard.Name,
         fromZone,
         toZone: ZONES.BATTLEFIELD,
+        ownerId: previousControllerId,
+        previousControllerId,
+        originalOwnerId: actualCard.originalOwnerId,
+        fromIndex,
+        cardSnapshot,
       });
 
       const allyText = isAllyFromOpponent ? " (allied character from opponent)" : "";

@@ -98,23 +98,33 @@ export class EffectChronicleFlyoutUI {
 
   private _createItemRow(item: ChronicleItemData, isActive: boolean, isHistory: boolean): HTMLDivElement {
     const row = document.createElement("div");
+    const isPassed = isHistory && item.status === "passed";
     const activeBorder = isActive
       ? "border:2px solid #ffd700;box-shadow:0 0 10px rgba(255,215,0,0.4);"
+      : isPassed
+      ? "border:1px solid #334155;"
       : isHistory
       ? "border:1px solid #1e3a2f;"
       : "border:1px solid #334155;";
-    const rowBg = isHistory ? "#0f2027;" : "#1e293b;";
-    row.style.cssText = `display:flex;gap:10px;padding:8px;margin-bottom:8px;border-radius:6px;background:${rowBg}align-items:center;${activeBorder}`;
+    const rowBg = isPassed ? "#161e2e;" : isHistory ? "#0f2027;" : "#1e293b;";
+    const rowOpacity = isPassed ? "opacity:0.85;" : "";
+    row.style.cssText = `display:flex;gap:10px;padding:8px;margin-bottom:8px;border-radius:6px;background:${rowBg}${rowOpacity}align-items:center;${activeBorder}`;
 
-    // Order or Checkmark Badge
+    // Order, Checkmark (completed), or Dash (passed) Badge
     const badgeSpan = document.createElement("span");
-    badgeSpan.style.cssText = `font-weight:bold;color:${isHistory ? "#10b981" : "#f59e0b"};font-size:13px;min-width:24px;`;
-    badgeSpan.textContent = isHistory ? "✓" : `#${item.order}`;
+    const badgeColor = isPassed ? "#94a3b8" : isHistory ? "#10b981" : "#f59e0b";
+    badgeSpan.style.cssText = `font-weight:bold;color:${badgeColor};font-size:13px;min-width:24px;text-align:center;`;
+    badgeSpan.textContent = isPassed ? "–" : isHistory ? "✓" : `#${item.order}`;
 
-    // Thumbnail with unified CardDetailOverlay zoom
+    // Thumbnail with unified CardDetailOverlay zoom (prefer templateId lookup over name)
     const thumb = document.createElement("img");
     thumb.style.cssText = "width:42px;height:58px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid #475569;";
-    const cardData = CardRepository.getByName(item.title) || { Name: item.title, SpecialAbility: item.description };
+    const cardData =
+      (item.templateId ? CardRepository.getById(item.templateId) : null) ||
+      CardRepository.getByName(item.title) || {
+        Name: item.title,
+        SpecialAbility: item.description,
+      };
     const imagePath = cardData.ImageFile ? `assets/cards/${cardData.ImageFile}.jpg` : "assets/cards/cardback.jpg";
     thumb.src = imagePath;
     thumb.onmouseenter = (e) => CardDetailOverlay.show(cardData, { imageSrc: imagePath, globalX: e.clientX, globalY: e.clientY });
@@ -124,15 +134,25 @@ export class EffectChronicleFlyoutUI {
       CardDetailOverlay.show(cardData, { isModal: true, imageSrc: imagePath });
     };
 
-    // Text details (Card name prefix + Effect description)
+    // Primary line: "Card Name — Effect", Secondary line: Status / Result summary
     const textCol = document.createElement("div");
-    textCol.style.cssText = "flex:1;overflow:hidden;";
+    textCol.style.cssText = "flex:1;min-width:0;";
+
+    const primaryText = item.effectLabel ? `${item.title} — ${item.effectLabel}` : item.title;
     const title = document.createElement("div");
-    title.style.cssText = "font-weight:bold;color:#f8fafc;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;";
-    title.textContent = item.title;
+    title.style.cssText =
+      "font-weight:bold;color:#f8fafc;font-size:12.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.25;";
+    title.textContent = primaryText;
+    title.title = primaryText;
+
+    const secondaryText = isHistory
+      ? (item.resultSummary || (isPassed ? "Passed" : (item.description || "Resolved")))
+      : (item.resultSummary || (item.effectLabel ? (item.isOptional ? "Optional" : "Mandatory") : (item.description || "Pending effect")));
     const desc = document.createElement("div");
-    desc.style.cssText = "color:#cbd5e1;font-size:11px;max-height:36px;overflow:hidden;line-height:1.2;margin-top:2px;";
-    desc.textContent = item.description || "Active effect";
+    desc.style.cssText = `color:${isPassed ? "#94a3b8" : "#cbd5e1"};font-size:11px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.25;margin-top:3px;`;
+    desc.textContent = secondaryText;
+    desc.title = secondaryText;
+
     textCol.appendChild(title);
     textCol.appendChild(desc);
 

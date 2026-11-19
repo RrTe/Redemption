@@ -6,6 +6,7 @@ const { CHRONICLE_STATUS } = require("../../../shared/effectChronicleConstants")
 const { ActionTelegraphService } = require("./ActionTelegraphService");
 const { BattleCharacterClassifier } = require("./BattleCharacterClassifier");
 const { ChronicleHistoryService } = require("./ChronicleHistoryService");
+const { ChronicleRollbackService } = require("./ChronicleRollbackService");
 const { EffectChronicleService } = require("./EffectChronicleService");
 const { BattleService } = require("./BattleService");
 const { formatCardLink } = require("../utils/gameLogFormatter");
@@ -167,6 +168,7 @@ class SpecialInitiativeService {
     }
 
     if (item && item.pendingSpecialInitiative) {
+      const preItemData = ChronicleRollbackService.cloneChronicleItemData(item);
       const psi = item.pendingSpecialInitiative;
       item.pendingSpecialInitiative = null;
 
@@ -194,8 +196,9 @@ class SpecialInitiativeService {
         durationMs: 500,
       });
 
+      let resumeResult = null;
       if (room.abilityResolver && typeof room.abilityResolver.resolve === "function") {
-        const resumeResult = room.abilityResolver.resolve(item, {
+        resumeResult = room.abilityResolver.resolve(item, {
           ...psi.options,
           specialInitiativeDeclined: true,
           targetCardIds: targetIds,
@@ -206,6 +209,7 @@ class SpecialInitiativeService {
             resumeResult.awaitingSpecialInitiative ||
             resumeResult.awaitingConfirmation)
         ) {
+          ChronicleRollbackService.recordItemMutation(room, { itemData: preItemData });
           BattleService.recalculate(room);
           return;
         }
@@ -215,9 +219,29 @@ class SpecialInitiativeService {
       }
 
       if (chronicle && index !== -1) {
-        ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
+        const resultSummary = EffectChronicleService.buildResultSummary(
+          resumeResult,
+          CHRONICLE_STATUS.COMPLETED,
+          item
+        );
+        const historyRec = ChronicleHistoryService.recordHistory(
+          chronicle,
+          item,
+          CHRONICLE_STATUS.COMPLETED,
+          resultSummary
+        );
         chronicle.items.splice(index, 1);
         EffectChronicleService._reindexOrders(chronicle);
+
+        ChronicleRollbackService.recordResolution(room, {
+          itemData: preItemData,
+          historyItemId: historyRec?.id || item.id,
+          snapshots: resumeResult?.snapshots || [],
+          wasInteractiveRoot: true,
+          action: resumeResult?.snapshots?.[0]?.action || item.actionType,
+          targetCardIds: EffectChronicleService.extractTargetCardIds(resumeResult?.snapshots),
+        });
+
         EffectChronicleService.advanceChronicle(room);
       }
     }
@@ -237,6 +261,7 @@ class SpecialInitiativeService {
     if (!room || !room.state?.battle) return;
     if (room.state.battle.specialInitiativePlayerId !== player?.sessionId) return;
 
+    const prevSpecialInitiativePlayerId = room.state.battle.specialInitiativePlayerId;
     room.state.battle.specialInitiativePlayerId = "";
     const chronicle = room.state.effectChronicle;
     let index = -1;
@@ -254,13 +279,26 @@ class SpecialInitiativeService {
     room._pendingSpecialInitiativeItem = null;
 
     if (item) {
+      const preItemData = ChronicleRollbackService.cloneChronicleItemData(item);
       item.pendingSpecialInitiative = null;
       ActionTelegraphService.clear(room, { sourceCardId: item?.cardId });
 
       if (chronicle && index !== -1) {
-        ChronicleHistoryService.recordHistory(chronicle, item, CHRONICLE_STATUS.COMPLETED);
+        const historyRec = ChronicleHistoryService.recordHistory(
+          chronicle,
+          item,
+          CHRONICLE_STATUS.COMPLETED,
+          "Interrupted by Special Initiative"
+        );
         chronicle.items.splice(index, 1);
         EffectChronicleService._reindexOrders(chronicle);
+
+        ChronicleRollbackService.recordConsumeSi(room, {
+          itemData: preItemData,
+          historyItemId: historyRec?.id || item.id,
+          prevSpecialInitiativePlayerId,
+        });
+
         if (chronicle.items.length === 0) {
           EffectChronicleService.finishChronicle(room);
         }

@@ -41,42 +41,50 @@ function formatCardUndoLog(playerName, card, fromZone, toZone, isOpponent = fals
 
 /**
  * Formats a consolidated undo log entry for an executed chronicle ability.
- * Combines the ability rewind and all reversed card movements into a single log entry.
+ * Combines the ability rewind and all reversed card movements/mutations into a single log entry.
  *
  * @param {string} playerName Acting player's name.
  * @param {object|string} sourceCard The card that triggered the ability.
  * @param {Array<{ cardOrName: any, fromZone: string, toZone: string, isOpponent: boolean }>} [movements=[]] Reverted movements.
+ * @param {string[]} [extraDetails=[]] Non-movement mutation reversal descriptions (e.g. stat or immunity rollbacks).
  * @returns {string} Single combined log entry.
  */
-function formatChronicleUndoLog(playerName, sourceCard, movements = []) {
+function formatChronicleUndoLog(playerName, sourceCard, movements = [], extraDetails = []) {
   const sourceLink = formatCardLink(sourceCard);
+  const hasMovements = Array.isArray(movements) && movements.length > 0;
+  const hasExtra = Array.isArray(extraDetails) && extraDetails.length > 0;
 
-  if (!movements || movements.length === 0) {
+  if (!hasMovements && !hasExtra) {
     return `[UNDO] ${playerName} rewound ability of ${sourceLink}.`;
   }
 
-  // Check if all reversed movements share the same fromZone and toZone
-  const first = movements[0];
-  const sameZones = movements.every(
-    (m) => m.fromZone === first.fromZone && m.toZone === first.toZone && m.isOpponent === first.isOpponent
-  );
+  if (hasMovements && !hasExtra) {
+    // Check if all reversed movements share the same fromZone and toZone
+    const first = movements[0];
+    const sameZones = movements.every(
+      (m) => m.fromZone === first.fromZone && m.toZone === first.toZone && m.isOpponent === first.isOpponent
+    );
 
-  if (sameZones) {
-    const cardLinks = movements.map((m) => formatCardLink(m.cardOrName)).join(", ");
-    const fromDisplay = getZoneDisplayName(first.fromZone, first.isOpponent);
-    const toDisplay = getZoneDisplayName(first.toZone, first.isOpponent);
-    return `[UNDO] ${playerName} rewound ability of ${sourceLink} and returned ${cardLinks} from ${fromDisplay} to ${toDisplay}.`;
+    if (sameZones) {
+      const cardLinks = movements.map((m) => formatCardLink(m.cardOrName)).join(", ");
+      const fromDisplay = getZoneDisplayName(first.fromZone, first.isOpponent);
+      const toDisplay = getZoneDisplayName(first.toZone, first.isOpponent);
+      return `[UNDO] ${playerName} rewound ability of ${sourceLink} and returned ${cardLinks} from ${fromDisplay} to ${toDisplay}.`;
+    }
   }
 
-  // If movements cross different zones, format each distinctly
-  const details = movements.map((m) => {
+  // Format movements across mixed zones and/or non-movement mutation details
+  const details = (movements || []).map((m) => {
     const link = formatCardLink(m.cardOrName);
     const fromDisplay = getZoneDisplayName(m.fromZone, m.isOpponent);
     const toDisplay = getZoneDisplayName(m.toZone, m.isOpponent);
     return `returned ${link} from ${fromDisplay} to ${toDisplay}`;
-  }).join("; ");
+  });
+  if (hasExtra) {
+    details.push(...extraDetails);
+  }
 
-  return `[UNDO] ${playerName} rewound ability of ${sourceLink} (${details}).`;
+  return `[UNDO] ${playerName} rewound ability of ${sourceLink} (${details.join("; ")}).`;
 }
 
 module.exports = {
