@@ -2516,7 +2516,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "star_topdeck_from_reserve",
@@ -2564,7 +2565,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -9351,7 +9353,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_discard_for_dust_ashes",
@@ -9423,7 +9426,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     },
@@ -11044,7 +11048,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_discard_for_dust_ashes",
@@ -11137,7 +11142,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     },
@@ -18492,7 +18498,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "play_gospel_angel_deck_if_hand_advantage",
@@ -18557,7 +18564,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "hero_band_to_angel",
@@ -25438,7 +25446,7 @@
               "applies_to": "this_ability"
             }
           ],
-          "choice_group": "choice_1"
+          "choice_group": null
         },
         {
           "ability_id": "band_to_drusilla",
@@ -33360,7 +33368,8 @@
               "modifier_type": "cannot_be_negated",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "assyrian_siege_army_negate_discard_enhancement",
@@ -33456,7 +33465,8 @@
               "modifier_type": "cannot_be_negated",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -41770,7 +41780,8 @@
               "modifier_type": "cannot_be_negated",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "reveal_dominant_take_enhancement_reserve",
@@ -41851,7 +41862,8 @@
               "modifier_type": "cannot_be_negated",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -46858,7 +46870,8 @@
               "modifier_type": "cannot_be_prevented",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "exchange_with_son_of_jacob_territory",
@@ -46904,7 +46917,8 @@
               "modifier_type": "cannot_be_prevented",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -53806,7 +53820,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_discard_for_ruth",
@@ -53889,7 +53904,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "add_ruth_to_battle",
@@ -56845,7 +56861,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "ability_2",
@@ -56908,7 +56925,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "ability_3",
@@ -57612,7 +57630,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "broken_covenant_cost_evilhand_discard_goodenh",
@@ -57683,7 +57702,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "broken_covenant_cost_evilhand_drawx",
@@ -57753,7 +57773,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "broken_covenant_cost_deckrandom_discard_covenant",
@@ -57879,7 +57900,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "broken_covenant_cost_deckrandom_discard_goodenh",
@@ -57948,7 +57970,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "broken_covenant_cost_deckrandom_drawx",
@@ -58016,7 +58039,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -66407,7 +66431,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "capture_evil_human_extra",
@@ -66480,7 +66505,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -86140,7 +86166,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "take_canaanite_site_from_deck",
@@ -86190,7 +86217,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "curse_conditional_give_and_take",
@@ -95434,7 +95462,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "take_from_reserve",
@@ -95480,7 +95509,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "draw_when_lone_attacks",
@@ -106328,7 +106358,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "take_evil_negate_from_reserve",
@@ -106371,7 +106402,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "underdeck_hero",
@@ -108725,7 +108757,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "dragons_minions_search_reserve",
@@ -108766,7 +108799,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "ab_3_cannot_be_negated",
@@ -108863,7 +108897,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_reserve_for_evil_revelation_enhancement",
@@ -108908,7 +108943,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "ab_3_cannot_be_negated",
@@ -113717,7 +113753,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "take_from_reserve_if_egyptians",
@@ -113792,7 +113829,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -117594,7 +117632,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "draw_three_if_rebekah_or_isaac",
@@ -117675,7 +117714,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "band_to_patriarch",
@@ -118073,7 +118113,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_discard_pile_put_wall_or_jerusalem",
@@ -118148,7 +118189,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -119792,7 +119834,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "elishama_place_from_discard",
@@ -119861,7 +119904,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "elishama_enhancement_activate_discard",
@@ -124763,7 +124807,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "reveal_add_battle",
@@ -124834,7 +124879,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "band_egyptian",
@@ -130039,7 +130085,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_discard_for_colossae_hero",
@@ -130083,7 +130130,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "band_to_colossae_hero",
@@ -134899,7 +134947,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "discard_silver_hero_set_aside_6orless",
@@ -134949,7 +134998,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -135059,7 +135109,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "band_demon_from_hand",
@@ -135103,7 +135154,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "band_demon_from_pit",
@@ -135147,7 +135199,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -135223,7 +135276,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "discard_silver_hero_set_aside",
@@ -135287,7 +135341,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -136905,7 +136960,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "examining_the_scriptures_human_evil_character",
@@ -137007,7 +137063,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -148310,7 +148367,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "used_by_prophet_take_from_reserve",
@@ -148355,7 +148413,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "played_in_battle_take_from_deck",
@@ -148400,7 +148459,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "played_in_battle_take_from_reserve",
@@ -148445,7 +148505,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "used_by_blocking_prophet_reserve_this_card",
@@ -149204,7 +149265,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "false_leaders_play_from_discard_if_hand_advantage",
@@ -149249,7 +149311,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -150506,7 +150569,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "negate_neutral",
@@ -150546,7 +150610,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "banish_resurrect_band",
@@ -152701,7 +152766,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "negate_discard_evil_character_set_aside",
@@ -152771,7 +152837,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "negate_discard_evil_fortress_in_play",
@@ -152841,7 +152908,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "negate_discard_evil_fortress_set_aside",
@@ -152911,7 +152979,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -153112,7 +153181,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_reserve_good_nt_enhancement",
@@ -153155,7 +153225,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -163340,7 +163411,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_discard_for_Abraham",
@@ -163447,7 +163519,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "abraham_blocked_play_enhancement",
@@ -164406,7 +164479,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_reserve_for_human_king",
@@ -164451,7 +164525,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "band_to_revelation_evil_character",
@@ -165270,7 +165345,7 @@
               "applies_to": "this_ability"
             }
           ],
-          "choice_group": "take_choice"
+          "choice_group": null
         },
         {
           "ability_id": "band_to_gospel_hero",
@@ -167149,7 +167224,7 @@
               "applies_to": "this_ability"
             }
           ],
-          "choice_group": "take_choice"
+          "choice_group": null
         },
         {
           "ability_id": "band_to_gospel_hero",
@@ -171389,7 +171464,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_good_judges_enhancement",
@@ -171436,7 +171512,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -171899,7 +171976,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "play_tabernacle_from_discard",
@@ -172043,7 +172121,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -172948,7 +173027,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_discard_pile_for_promised_land",
@@ -173020,7 +173100,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -174378,7 +174459,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "take_golden_calf_from_reserve",
@@ -174425,7 +174507,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "place_this_card_in_territory",
@@ -174584,7 +174667,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "negate_neutral_in_play",
@@ -174630,7 +174714,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "negate_evil_set_aside",
@@ -174676,7 +174761,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "negate_neutral_set_aside",
@@ -174722,7 +174808,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -184015,7 +184102,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_2"
         },
         {
           "ability_id": "play_good_ot_fortress_from_discard",
@@ -184082,7 +184170,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_2"
         },
         {
           "ability_id": "band_to_ezra_haggai_zechariah",
@@ -184274,7 +184363,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "take_evil_persian",
@@ -184319,7 +184409,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "battle_interrupt_draw_play",
@@ -191390,7 +191481,8 @@
               "modifier_type": "cannot_be_prevented",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "take_josephs_silver_cup_from_reserve",
@@ -191498,7 +191590,8 @@
               "modifier_type": "cannot_be_prevented",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -207017,7 +207110,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "negate_set_aside",
@@ -207062,7 +207156,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -207120,7 +207215,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "negate_good_set_aside",
@@ -207166,7 +207262,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "negate_neutral_in_play",
@@ -207212,7 +207309,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "negate_neutral_set_aside",
@@ -207258,7 +207356,8 @@
               "modifier_type": "cannot_be_interrupted",
               "applies_to": "this_ability"
             }
-          ]
+          ],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -217735,7 +217834,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "underdeck_evil_enhancement",
@@ -217779,7 +217879,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "underdeck_evil_fortress",
@@ -217823,7 +217924,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "band_to_egyptian_magician",
@@ -226731,7 +226833,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "search_discard_for_ruth",
@@ -226814,7 +226917,8 @@
               "dependency": "if_previous_successful"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "add_ruth_to_battle",
@@ -316279,7 +316383,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "capture_single_character_default",
@@ -316347,7 +316452,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -408099,7 +408205,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "supercilious_scribes_exchange_with_reserve",
@@ -408142,7 +408249,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -426207,7 +426315,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "fallen_king_play",
@@ -426254,7 +426363,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -427537,7 +427647,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "forgiven_woman_bottom_take",
@@ -427582,7 +427693,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -438451,7 +438563,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "prodigal_returns_lost_souls",
@@ -438515,7 +438628,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -438749,7 +438863,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "prophet_of_god_draw",
@@ -438790,7 +438905,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -438848,7 +438964,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "prophet_of_god_k_draw",
@@ -438889,7 +439006,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -441349,7 +441467,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "sea_of_glass_underdeck_and_draw",
@@ -441438,7 +441557,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -465605,7 +465725,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "victory_ignore_beast",
@@ -465646,7 +465767,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -481998,7 +482120,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "zerubbabel_play_postexilic",
@@ -482043,7 +482166,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -482620,7 +482744,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "zimri_son_of_salu_ir_reserve_multi_brigade",
@@ -482666,7 +482791,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "zimri_son_of_salu_ir_reserve_ot_curse",
@@ -482894,7 +483020,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "zipporah_opponent_discard_reserve",
@@ -482937,7 +483064,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "zipporah_band_moses",
@@ -485196,7 +485324,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "summoned_curse_take_evil_moabite",
@@ -485242,7 +485371,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -495878,7 +496008,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "not_among_you_negate_all_other",
@@ -495940,7 +496071,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -496062,7 +496194,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "scraps_under_the_table_capture_standard",
@@ -496129,7 +496262,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -538455,7 +538589,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "buying_grain_take",
@@ -538522,7 +538657,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         }
       ]
     }
@@ -540633,7 +540769,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "elhanan_discard_deck_if_equipped",
@@ -540699,7 +540836,8 @@
               "dependency": "always"
             }
           ],
-          "modifiers": []
+          "modifiers": [],
+          "choice_group": "choice_1"
         },
         {
           "ability_id": "elhanan_discard_giant",

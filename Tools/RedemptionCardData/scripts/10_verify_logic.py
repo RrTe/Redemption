@@ -36,6 +36,7 @@ from models.enums import (
 )
 from utils.card_linker import CardLinker, normalize_chained_targets
 from utils.card_helpers import check_is_star_card, get_card_name, get_side_field, get_star_ability
+from utils.choice_group_helper import find_missing_choice_groups
 from utils.ast_constants_exporter import export_ast_constants
 from utils.card_hierarchy_exporter import export_card_hierarchy
 from fact_matrix import extract_ast_facts, verify_fact_matrix
@@ -651,6 +652,20 @@ def verify_card_logic(
                         for ident in eff.target.identifiers:
                             if ident.lower() in ("harm", "rescue", "discard abilities", "capture abilities", "convert abilities"):
                                 issues.append(f"Leaked protection cause in target.identifiers: '{ident}' in '{ability.ability_id}'")
+
+        # Verify choice_group structural integrity (no singletons, no missing modal/split groups)
+        for cg_name, cg_ab_ids in side_logic.find_singleton_choice_groups().items():
+            issues.append(
+                f"Singleton choice_group '{cg_name}' on '{cg_ab_ids[0]}' ({side_key}): must link >= 2 abilities"
+            )
+        if raw_abilities:
+            reg_raw_cg = (raw_abilities.get(side_key) or raw_abilities.get("shared") or "").strip()
+            star_raw_cg = (raw_abilities.get("star") or "").strip() if side_key in ("top", "shared") else ""
+            for cg_match in find_missing_choice_groups(side_logic, reg_raw_cg, star_raw_cg):
+                ab_ids = [side_logic.abilities[i].ability_id for i in cg_match.ability_indices]
+                issues.append(
+                    f"Missing choice_group ({side_key}, {cg_match.kind}) for abilities {ab_ids}: {cg_match.sentence!r}"
+                )
 
         # Audit against raw ability text via factual game-mechanic matrix
         if raw_abilities:

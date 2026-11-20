@@ -53,6 +53,7 @@ UNPARSED_CLAUSE_GUARD = re.compile(
     r"(?:and|or)\s+(?:you\s+may\s+|holder\s+may\s+|opponent\s+may\s+|each\s+player\s+must\s+|Hero\s+may\s+|character\s+may\s+)?(?:discard|draw|take|underdeck|topdeck|"
     r"negate|interrupt|withdraw|protect|prevent|restrict|convert|shuffle|release|give|capture|banish|"
     r"remove|add|play|search|exchange|activate|rescue|heal|band|present|bounce|return|reveal|look|cause|place|put|choose|paralyze|set\s+aside)\b|"
+    r"(?:and|or)\s+(?:you\s+may\s+|holder\s+may\s+|opponent\s+may\s+)?reserve\s+(?:a|an|the|this|that|these|those|one|two|three|up\s+to|x|all|any|your|his|her|their)\b|"
     r"(?:and|or)\s+(?:an?|one|two|three|both|all|any|other|each|up\s+to|the\s+top|the\s+last|his|her|your|opponent's|opponents'|their|holder's)\b|"
     r"one\s+or\s+both\b|"
     r"for\s+(?:each|\d+\s+turns?)\b|"

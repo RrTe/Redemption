@@ -30,6 +30,7 @@ from utils.ability_patterns import (
     protect_abbreviations,
     restore_abbreviations,
 )
+from utils.choice_group_helper import split_modal_or_clauses
 from utils.target_parser import UNPARSED_CLAUSE_GUARD, _map_zone_token, parse_protection_filter
 
 from mappings.special_ability_overrides import SPECIAL_ABILITY_OVERRIDES
@@ -1265,11 +1266,13 @@ def parse_side_ability(
     # 6. Extract Condition Prefix (e.g. "If used by a Hero,")
     clause_text, leading_condition = extract_condition_prefix(masked_text)
 
-    # Split into sentences / major clauses
+    # Split into sentences / major clauses (and deterministic modal-OR branches)
     raw_sentences = [s.strip() for s in re.split(r"\.\s+", clause_text) if s.strip()]
     parsed_abilities: List[Ability] = []
+    next_ab_idx = 1
+    next_choice_idx = 1
 
-    # Strict all-or-nothing: every single sentence must parse successfully
+    # Strict all-or-nothing: every single sentence (and modal branch) must parse successfully
     for idx, raw_sentence in enumerate(raw_sentences, start=1):
         sentence_masked = raw_sentence
         cond_for_clause = leading_condition if idx == 1 else None
@@ -1279,17 +1282,32 @@ def parse_side_ability(
         if not clean_sentence:
             continue
 
-        ability = parse_deterministic_clause(clean_sentence, idx, cond_for_clause, activation_mode)
-        if not ability:
-            return None, f"Unmatched clause: '{clean_sentence}'"
+        modal_clauses = split_modal_or_clauses(clean_sentence)
+        is_modal_split = len(modal_clauses) >= 2
+        branch_group = f"choice_{next_choice_idx}" if is_modal_split else None
+        if is_modal_split:
+            next_choice_idx += 1
+        inherited_optional = is_modal_split and bool(
+            re.match(r"^(?:(?:you|holder)\s+)?may\b(?!\s+not\b)", modal_clauses[0], re.IGNORECASE)
+        )
 
-        if is_star:
-            ability.is_star = True
-            ability.trigger_event = "star_phase"
-            if not ability.ability_id.startswith("star_"):
-                ability.ability_id = f"star_{ability.ability_id}"
+        for branch in modal_clauses:
+            ability = parse_deterministic_clause(branch, next_ab_idx, cond_for_clause, activation_mode)
+            if not ability:
+                return None, f"Unmatched clause: '{clean_sentence}'"
 
-        parsed_abilities.append(ability)
+            if inherited_optional and not ability.is_optional:
+                ability.is_optional = True
+            if branch_group:
+                ability.choice_group = branch_group
+            if is_star:
+                ability.is_star = True
+                ability.trigger_event = "star_phase"
+                if not ability.ability_id.startswith("star_"):
+                    ability.ability_id = f"star_{ability.ability_id}"
+
+            parsed_abilities.append(ability)
+            next_ab_idx += 1
 
     next_idx = len(parsed_abilities) + 1
     for offset, prot_ab in enumerate(cond_prot_abilities):
@@ -1370,6 +1388,16 @@ def parse_card_record(
                     if sig not in seen_mods:
                         existing_side.modifiers.append(mod)
                         seen_mods.add(sig)
+                existing_groups = {ab.choice_group for ab in existing_side.abilities if ab.choice_group}
+                group_remap: Dict[str, str] = {}
+                next_cg = 1
+                for ab in side_logic.abilities:
+                    if ab.choice_group and ab.choice_group in existing_groups:
+                        if ab.choice_group not in group_remap:
+                            while f"choice_{next_cg}" in existing_groups or f"choice_{next_cg}" in group_remap.values():
+                                next_cg += 1
+                            group_remap[ab.choice_group] = f"choice_{next_cg}"
+                        ab.choice_group = group_remap[ab.choice_group]
                 existing_side.abilities.extend(side_logic.abilities)
             else:
                 card_logic_entry.sides[side_key] = side_logic

@@ -25,6 +25,7 @@ from ability_prompt import build_system_prompt
 from ai_client import load_env, query_llm_messages, QuotaExhaustedError, sanitize_error_message
 from utils.finding_logger import log_finding, resolve_card_findings, get_findings_summary, FINDINGS_FILE
 from utils.card_linker import CardLinker, link_side_logic_targets, normalize_chained_targets
+from utils.choice_group_helper import reconcile_side_choice_groups
 
 _config = json.loads((BASE_DIR / "config.json").read_text(encoding="utf-8")) if (BASE_DIR / "config.json").exists() else {}
 
@@ -241,6 +242,27 @@ def _ensure_star_ast_dict(ast_dict: Dict[str, Any], side: str, raw_ability: str)
     return ast_dict
 
 
+def _normalize_side_ast_dict(ast_dict: Dict[str, Any], side: str, raw_ability: str) -> Dict[str, Any]:
+    """Normalizes Star flags and choice_groups on serialized CardSideLogic dictionaries.
+
+    Args:
+        ast_dict: Serialized CardSideLogic dictionary.
+        side: Entry side key from Stage 8 unparsed log.
+        raw_ability: Raw ability text for this side.
+
+    Returns:
+        Normalized CardSideLogic dictionary.
+    """
+    normalized = _ensure_star_ast_dict(ast_dict, side, raw_ability)
+    is_star = side == "star" or bool(_STAR_PREFIX_RE.match(raw_ability.strip()))
+    reconcile_side_choice_groups(
+        normalized,
+        raw_text="" if is_star else raw_ability,
+        star_text=raw_ability if is_star else "",
+    )
+    return normalized
+
+
 def load_unparsed_sample(
     offset: int = 0,
     max_items: int = 10,
@@ -363,7 +385,7 @@ def _worker_task(
     # Instant resolution if another worker just completed the identical text
     with lock:
         if raw_clean in text_cache:
-            cached_ast = _ensure_star_ast_dict(copy.deepcopy(text_cache[raw_clean]), side, raw_clean)
+            cached_ast = _normalize_side_ast_dict(copy.deepcopy(text_cache[raw_clean]), side, raw_clean)
             results[card_key] = {
                 "card_id": cid,
                 "card_name": name,
@@ -389,6 +411,12 @@ def _worker_task(
                     if ab.activation_mode == "immediate":
                         ab.activation_mode = "triggered"
             normalize_chained_targets(validated)
+            is_star_entry = side == "star" or bool(_STAR_PREFIX_RE.match(raw_clean))
+            reconcile_side_choice_groups(
+                validated,
+                raw_text="" if is_star_entry else raw_clean,
+                star_text=raw_clean if is_star_entry else "",
+            )
             if linker:
                 link_side_logic_targets(validated, linker)
             with lock:
@@ -449,7 +477,7 @@ def auto_resolve_exact_text_matches(
         if is_entry_done(cid, side, existing=existing_keys, star_done_cids=star_done_cids, results=results):
             continue
         if raw in text_cache:
-            cached_ast = _ensure_star_ast_dict(copy.deepcopy(text_cache[raw]), side, raw)
+            cached_ast = _normalize_side_ast_dict(copy.deepcopy(text_cache[raw]), side, raw)
             results[card_key] = {
                 "card_id": cid,
                 "card_name": item["card_name"],

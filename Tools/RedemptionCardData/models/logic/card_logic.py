@@ -47,6 +47,21 @@ class CardSideLogic(BaseModel):
                     for ab in self.abilities:
                         ab.is_preventable = False
 
+    def find_singleton_choice_groups(self) -> Dict[str, List[str]]:
+        """Returns any choice_group labels on this side assigned to fewer than 2 abilities.
+
+        Args:
+            None
+
+        Returns:
+            Mapping from invalid singleton choice_group label to its ability_id list.
+        """
+        groups: Dict[str, List[str]] = {}
+        for ab in self.abilities:
+            if ab.choice_group:
+                groups.setdefault(ab.choice_group, []).append(ab.ability_id)
+        return {cg: ids for cg, ids in groups.items() if len(ids) < 2}
+
 
 class CardLogic(BaseModel):
     """Top-level logic entry for an individual physical Redemption card.

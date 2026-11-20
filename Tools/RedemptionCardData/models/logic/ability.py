@@ -46,6 +46,24 @@ class Ability(BaseModel):
     modifiers: List[Modifier] = Field(default_factory=list)
     choice_group: Optional[str] = Field(default=None, description="Groups mutually exclusive modal choices.")
 
+    @field_validator("choice_group", mode="before")
+    @classmethod
+    def normalize_choice_group(cls, value: Any) -> Optional[str]:
+        """Normalizes empty or whitespace-only choice_group values to None.
+
+        Args:
+            value: Raw choice_group input value.
+
+        Returns:
+            Stripped non-empty group identifier or None.
+        """
+        if value is None:
+            return None
+        if isinstance(value, str):
+            stripped = value.strip()
+            return stripped or None
+        return str(value).strip() or None
+
     @field_validator("activation_mode", mode="before")
     @classmethod
     def normalize_activation_mode(cls, value: Any) -> Any:
