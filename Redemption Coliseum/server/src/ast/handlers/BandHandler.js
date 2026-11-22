@@ -2,6 +2,7 @@
 const { moveCard, getZoneCollection } = require("../../services/cardService");
 const { MoveCardSnapshotHelper } = require("../../commands/MoveCardSnapshotHelper");
 const { ZONES } = require("../../../../shared/zones");
+const { CARD_TYPES, ALIGNMENTS } = require("../../../../shared/card-constants");
 const { AST_ACTIONS, AST_MESSAGES, AST_SELECTION_MODES } = require("../../../../shared/astConstants");
 const { TargetSelectionService } = require("../TargetSelectionService");
 const { parseTargetCount } = require("../TargetCountResolver");
@@ -118,6 +119,21 @@ class BandHandler {
         `by player '${player.name}' (isAllyFromOpponent=${isAllyFromOpponent}).`
       );
 
+      let inGameType = targetCard.inGameType || "";
+      let inGameAlignment = targetCard.inGameAlignment || "";
+      if (
+        !inGameType &&
+        !inGameAlignment &&
+        BattleCharacterClassifier.isHero(targetCard) &&
+        BattleCharacterClassifier.isEvilCharacter(targetCard)
+      ) {
+        const isHeroSide =
+          (BattleCharacterClassifier.isHero(effectiveLeader) && !BattleCharacterClassifier.isEvilCharacter(effectiveLeader)) ||
+          player.sessionId === room.state?.activePlayer;
+        inGameType = isHeroSide ? CARD_TYPES.HERO : CARD_TYPES.EVIL_CHARACTER;
+        inGameAlignment = isHeroSide ? ALIGNMENTS.GOOD : ALIGNMENTS.EVIL;
+      }
+
       const moveResult = moveCard(
         player,
         room.state,
@@ -127,12 +143,19 @@ class BandHandler {
         targetCard.id,
         1,
         {},
-        "",
-        "",
+        inGameType,
+        inGameAlignment,
         { isAbilityAction: true, isBanded: true }
       );
 
-      const actualCard = (moveResult?.movedCards && moveResult.movedCards[0]) || targetCard;
+      if (!moveResult?.movedCards || moveResult.movedCards.length === 0) {
+        logger.warn(
+          `[BandHandler] Failed to band '${targetCard.Name}' (${targetCard.id}) to battlefield: ${moveResult?.error || "move rejected"}.`
+        );
+        continue;
+      }
+
+      const actualCard = moveResult.movedCards[0];
 
       // Set Banding flags
       actualCard.isBanded = true;
@@ -165,6 +188,20 @@ class BandHandler {
 
       const allyText = isAllyFromOpponent ? " (allied character from opponent)" : "";
       logNames.push(`${formatCardLink(actualCard)}${allyText}`);
+    }
+
+    if (movedBandedCards.length === 0) {
+      return {
+        success: true,
+        snapshot: {
+          action: AST_ACTIONS.BAND,
+          timestamp: Date.now(),
+          playerId: player.sessionId,
+          cardId: item?.cardId || "",
+          bandedCards: [],
+        },
+        logEntry: `${player.name} attempts to band, but no character could enter battle.`,
+      };
     }
 
     // Broadcast action telegraph for all banded characters

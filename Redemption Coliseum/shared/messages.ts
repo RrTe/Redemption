@@ -103,6 +103,7 @@ export interface RequestOptionalAbilityMessage {
   cardImageFile?: string;
   templateId?: string;
   choices?: AbilityChoiceOption[];
+  allowDecline?: boolean;
 }
 
 export interface RespondOptionalAbilityMessage {

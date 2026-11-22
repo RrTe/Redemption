@@ -232,7 +232,8 @@ export class TargetingManager {
       isMultiTarget ||
       isOptionalUpTo ||
       Boolean(request.canCancel) ||
-      request.targetZone === ZONES.HAND;
+      request.targetZone === ZONES.HAND ||
+      request.targetType === "pile";
 
     this.scene.input.keyboard?.on("keydown-ESC", this.handleEscKey, this);
     if (shouldShowHUD) {

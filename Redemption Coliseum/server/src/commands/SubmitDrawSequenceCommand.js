@@ -145,7 +145,7 @@ class SubmitDrawSequenceCommand extends BaseCommand {
             autoExecuteSupported: true,
             isDeclared: isStarStep,
             isConfirmed: isStarStep,
-            accepted: isStarStep,
+            accepted: isStarStep ? true : undefined,
             onComplete: room => {
               DrawPhaseStepService.advanceStep(room);
             },
@@ -184,8 +184,27 @@ class SubmitDrawSequenceCommand extends BaseCommand {
           card,
         });
         if (abilities.length > 0) {
+          const seenChoiceGroups = new Set();
           for (let aIdx = 0; aIdx < abilities.length; aIdx++) {
             const ab = abilities[aIdx];
+            if (ab.choice_group) {
+              if (seenChoiceGroups.has(ab.choice_group)) continue;
+              seenChoiceGroups.add(ab.choice_group);
+
+              const groupAbilities = abilities.filter((a) => a.choice_group === ab.choice_group);
+              if (groupAbilities.length > 1) {
+                queueDescriptors.push({
+                  card,
+                  abilityId: "",
+                  effectStepIndex: -1,
+                  effectLabel: EffectLabelFormatter.formatChoiceGroupLabel(groupAbilities, card),
+                  isOptional: groupAbilities.some((a) => Boolean(a.is_optional)),
+                  choiceGroup: ab.choice_group,
+                });
+                continue;
+              }
+            }
+
             const sorted = Array.isArray(ab.effects)
               ? [...ab.effects].sort((a, b) => (a.step || 1) - (b.step || 1))
               : [];

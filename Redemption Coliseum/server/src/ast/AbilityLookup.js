@@ -245,11 +245,12 @@ class AbilityLookup {
    */
   static isStarAbility(ability, _context = {}) {
     if (!ability) return false;
-    if (ability.is_star === true || ability.isStar === true) return true;
+    if (typeof ability.is_star === "boolean") return ability.is_star;
+    if (typeof ability.isStar === "boolean") return ability.isStar;
     const event = (ability.trigger_event || "").toLowerCase();
-    if (event === "star_phase" || event.includes("star")) return true;
+    if (event === "star_phase") return true;
     const id = (ability.ability_id || "").toLowerCase();
-    if (id.includes("star")) return true;
+    if (/^star(?:_|$)/.test(id)) return true;
     return false;
   }
 

@@ -453,6 +453,16 @@ describe("REG v11.1.0 & ORDIR 7.1.0 Compatibility (Durchgang 1)", () => {
         IsCharacter: true,
         Brigade: "Silver",
       });
+      createCard("opp_terr_hero", "102", "Territory Hero", ZONES.TERRITORY, "p1", {
+        Type: "Hero",
+        Alignment: "Good",
+        IsCharacter: true,
+      });
+      createCard("opp_terr_hero_2", "103", "Territory Hero 2", ZONES.TERRITORY, "p1", {
+        Type: "Hero",
+        Alignment: "Good",
+        IsCharacter: true,
+      });
 
       const simon = createCard("c_simon", "1461788434", "Simon the Host (GoC)", ZONES.HAND, "p2", {
         Type: "Evil Character",
@@ -506,7 +516,7 @@ describe("REG v11.1.0 & ORDIR 7.1.0 Compatibility (Durchgang 1)", () => {
         })
       );
 
-      // 3. Band Repudiating Rulers (GoC) and Pharisees (GoC) -> #1 Repudiating Rulers must prompt (not deadlock!)
+      // 3. Band Repudiating Rulers (GoC) and Pharisees (GoC) -> Simon's remaining ability, Repudiating Rulers (AST bounce + choice), and Pharisees chain cleanly
       client2.send.mockClear();
       new SelectTargetCommand(room, client2).execute({
         itemId: state.effectChronicle.items[0].id,
@@ -517,22 +527,42 @@ describe("REG v11.1.0 & ORDIR 7.1.0 Compatibility (Durchgang 1)", () => {
       expect(state.battlefield.map((c) => c.id)).toEqual(
         expect.arrayContaining(["atk_hero", simon.id, repudiating.id, phariseesGoC.id])
       );
-      expect(state.effectChronicle.items.map((i) => i.cardId)).toEqual([repudiating.id, phariseesGoC.id]);
-      expect(client2.send).toHaveBeenCalledWith(
-        AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
-        expect.objectContaining({
-          cardId: repudiating.id,
-          promptText: "Activate the special ability of Repudiating Rulers (GoC)?",
-        })
-      );
+      expect(state.effectChronicle.items.map((i) => i.cardId)).toEqual([
+        simon.id,
+        repudiating.id,
+        repudiating.id,
+        phariseesGoC.id,
+      ]);
 
-      // 4. Confirm #1 Repudiating Rulers -> resolves cleanly and immediately prompts #2 Pharisees (GoC)
+      // Pass Simon's second optional ability -> advances to #1 Repudiating Rulers bounce (Star ability skipped!)
       client2.send.mockClear();
       new RespondOptionalAbilityCommand(room, client2).execute({
         itemId: state.effectChronicle.items[0].id,
-        accepted: true,
+        accepted: false,
+      });
+      expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual([
+        "repudiating_rulers_bounce",
+        "",
+        "ab_1_band",
+      ]);
+      expect(client2.send).toHaveBeenCalledWith(
+        AST_MESSAGES.REQUEST_TARGET_SELECTION,
+        expect.objectContaining({
+          sourceCardId: repudiating.id,
+          abilityId: "repudiating_rulers_bounce",
+          eligibleCardIds: ["opp_terr_hero", "opp_terr_hero_2"],
+        })
+      );
+
+      // 4. Bounce territory Hero -> advances to Repudiating Rulers' take choice_group (or auto-completes if empty -> Pharisees)
+      client2.send.mockClear();
+      new SelectTargetCommand(room, client2).execute({
+        itemId: state.effectChronicle.items[0].id,
+        abilityId: "repudiating_rulers_bounce",
+        selectedCardIds: ["opp_terr_hero"],
       });
 
+      expect(room.cardLookup.get("opp_terr_hero").zone).toBe(ZONES.HAND);
       expect(state.effectChronicle.items.map((i) => i.cardId)).toEqual([phariseesGoC.id]);
       expect(client2.send).toHaveBeenCalledWith(
         AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
@@ -548,13 +578,18 @@ describe("REG v11.1.0 & ORDIR 7.1.0 Compatibility (Durchgang 1)", () => {
       expect(state.effectChronicle.isResolving).toBe(false);
     });
 
-    test("Pharaoh, Ramses II [K] applies static protection without erroneous prompt and formats protect labels cleanly", () => {
+    test("Pharaoh, Ramses II [K] applies static protection without prompt and prompts look_at_hand cleanly", () => {
       state.battle.initiativePlayerId = "p2";
       createCard("atk_hero_2", "101", "Attacking Hero", ZONES.BATTLEFIELD, "p1", {
         Type: "Hero",
         Alignment: "Good",
         IsCharacter: true,
         Brigade: "Silver",
+      });
+      createCard("opp_hand_1", "103", "Hidden Hero", ZONES.HAND, "p1", {
+        Type: "Hero",
+        Alignment: "Good",
+        IsCharacter: true,
       });
 
       const ramses = createCard("c_ramses", "-422285470", "Pharaoh, Ramses II [K]", ZONES.HAND, "p2", {
@@ -567,9 +602,26 @@ describe("REG v11.1.0 & ORDIR 7.1.0 Compatibility (Durchgang 1)", () => {
       new MoveCardCommand(room, client2).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: ramses.id });
 
       const activeRamses = room.cardLookup.get(ramses.id);
-      expect(client2.send).not.toHaveBeenCalledWith(AST_MESSAGES.REQUEST_OPTIONAL_ABILITY, expect.anything());
       expect(activeRamses.isProtected).toBe(true);
       expect(activeRamses._protection?.card_sources?.[0]?.identifiers).toEqual(["lone"]);
+      // Protect auto-applied silently; only look_at_hand (immediate, optional) emits a single optional prompt
+      expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual(["look_at_hand"]);
+      const optionalPromptCalls = client2.send.mock.calls.filter(
+        ([msgType]) => msgType === AST_MESSAGES.REQUEST_OPTIONAL_ABILITY
+      );
+      expect(optionalPromptCalls).toHaveLength(1);
+      expect(optionalPromptCalls[0][1]).toEqual(
+        expect.objectContaining({
+          abilityId: "look_at_hand",
+          action: "look",
+          promptText: "Look at opponent's hand?",
+        })
+      );
+
+      new RespondOptionalAbilityCommand(room, client2).execute({
+        itemId: state.effectChronicle.items[0].id,
+        accepted: false,
+      });
       expect(state.effectChronicle.items.length).toBe(0);
       expect(state.effectChronicle.isResolving).toBe(false);
 

@@ -2,7 +2,7 @@
 const { moveCard, getZoneCollection } = require("../../services/cardService");
 const { MoveCardSnapshotHelper } = require("../../commands/MoveCardSnapshotHelper");
 const { ZONES } = require("../../../../shared/zones");
-const { MAX_HAND_SIZE } = require("../../../../shared/card-constants");
+const { CARD_TYPES, ALIGNMENTS, MAX_HAND_SIZE } = require("../../../../shared/card-constants");
 const {
   AST_ACTIONS,
   AST_SELECTION_MODES,
@@ -148,6 +148,21 @@ class ZoneTransferHandler {
         targetPlayerId: trueOwner.sessionId,
       };
 
+      let inGameType = "";
+      let inGameAlignment = "";
+      if (
+        effectiveToZone === ZONES.BATTLEFIELD &&
+        !card.inGameType &&
+        !card.inGameAlignment &&
+        BattleCharacterClassifier.isHero(card) &&
+        BattleCharacterClassifier.isEvilCharacter(card)
+      ) {
+        const controllerSession = card.controllerId || player.sessionId;
+        const isAttacker = controllerSession === room.state?.activePlayer;
+        inGameType = isAttacker ? CARD_TYPES.HERO : CARD_TYPES.EVIL_CHARACTER;
+        inGameAlignment = isAttacker ? ALIGNMENTS.GOOD : ALIGNMENTS.EVIL;
+      }
+
       const result = moveCard(
         trueOwner,
         room.state,
@@ -157,8 +172,8 @@ class ZoneTransferHandler {
         card.id,
         1,
         moveCoords,
-        "",
-        "",
+        inGameType,
+        inGameAlignment,
         { isAbilityAction: true }
       );
 

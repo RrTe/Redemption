@@ -567,4 +567,446 @@ describe("Multi-Ability Battle Entry Resolution & Tabletop Fallbacks", () => {
     expect(edomite2.isProtected).toBe(false);
     expect(state.effectChronicle.history.some((h) => h.abilityId === "protect_edomites" && h.status === CHRONICLE_STATUS.PASSED)).toBe(true);
   });
+
+  test("mixed ungrouped -> choice_group cards (-627605698, -888694675, 278813735) execute ungrouped first then choice modal", () => {
+    // 1. -627605698 Supercilious Scribes (GoC): ungrouped protect executes automatically, then choice_1 modal
+    createCard("h_atk_1", "101", "Attacking Hero", ZONES.BATTLEFIELD, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+    });
+    const phariseeTerr = createCard("ec_phar", "202", "Territory Pharisee", ZONES.TERRITORY, "p2", {
+      Type: "Evil Character",
+      Alignment: "Evil",
+      IsCharacter: true,
+      Identifier: "Pharisee",
+    });
+    createCard("good_hand_1", "102", "Good Hand Card", ZONES.HAND, "p2", {
+      Type: "GE",
+      Alignment: "Good",
+    });
+    const scribes = createCard("scribes_1", "-627605698", "Supercilious Scribes (GoC)", ZONES.HAND, "p2", {
+      Type: "Evil Character",
+      Alignment: "Evil",
+      IsCharacter: true,
+    });
+
+    state.battle.initiativePlayerId = "p2";
+    new MoveCardCommand(room, client2).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: scribes.id });
+
+    expect(room.cardLookup.get(scribes.id).isProtected).toBe(true);
+    expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual([""]);
+    expect(client2.send).toHaveBeenCalledWith(
+      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
+      expect.objectContaining({
+        action: "choose",
+        allowDecline: true,
+        choices: expect.arrayContaining([
+          expect.objectContaining({ abilityId: "supercilious_scribes_band_pharisee_sadducee", disabled: false }),
+          expect.objectContaining({ abilityId: "supercilious_scribes_exchange_with_reserve", disabled: false }),
+        ]),
+      })
+    );
+    new RespondOptionalAbilityCommand(room, client2).execute({
+      itemId: state.effectChronicle.items[0].id,
+      accepted: true,
+      chosenAbilityId: "supercilious_scribes_band_pharisee_sadducee",
+    });
+    expect(room.cardLookup.get(phariseeTerr.id).zone).toBe(ZONES.BATTLEFIELD);
+    expect(state.effectChronicle.items.length).toBe(0);
+
+    // 2. -888694675 Zerubbabel, the Chosen (LoC): ungrouped optional draw first, then choice_1 modal (star skipped)
+    state.battlefield.splice(0, state.battlefield.length);
+    state.battle.rescueAttemptOccurred = false;
+    state.battle.blockOccurred = false;
+    state.lastBattleCardPlayerId = "";
+    createCard("d_z1", "103", "Deck 1", ZONES.DECK, "p1");
+    createCard("d_z2", "104", "Deck 2", ZONES.DECK, "p1");
+    const postexilicHero = createCard("h_post", "105", "Postexilic Ally", ZONES.TERRITORY, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+      Identifier: "Postexilic",
+    });
+    const zerubbabel = createCard("zerub_1", "-888694675", "Zerubbabel, the Chosen (LoC)", ZONES.HAND, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+      IsStarCard: true,
+    });
+    state.battle.initiativePlayerId = "p1";
+    client1.send.mockClear();
+
+    new MoveCardCommand(room, client1).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: zerubbabel.id });
+    expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual(["zerubbabel_convert_to_meek_draw", ""]);
+    expect(client1.send).toHaveBeenCalledWith(
+      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
+      expect.objectContaining({ abilityId: "zerubbabel_convert_to_meek_draw" })
+    );
+
+    client1.send.mockClear();
+    new RespondOptionalAbilityCommand(room, client1).execute({
+      itemId: state.effectChronicle.items[0].id,
+      accepted: true,
+    });
+    expect(p1.hand.length).toBe(2);
+    expect(client1.send).toHaveBeenCalledWith(
+      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
+      expect.objectContaining({
+        action: "choose",
+        allowDecline: true,
+        choices: expect.arrayContaining([
+          expect.objectContaining({ abilityId: "zerubbabel_band_postexilic", disabled: false }),
+          expect.objectContaining({ abilityId: "zerubbabel_play_postexilic" }),
+        ]),
+      })
+    );
+    new RespondOptionalAbilityCommand(room, client1).execute({
+      itemId: state.effectChronicle.items[0].id,
+      accepted: true,
+      chosenAbilityId: "zerubbabel_band_postexilic",
+    });
+    expect(room.cardLookup.get(postexilicHero.id).zone).toBe(ZONES.BATTLEFIELD);
+    expect(state.effectChronicle.items.length).toBe(0);
+
+    // 3. 278813735 Stricken: star ability skipped in battle, mandatory choice_1 modal with allowDecline: false
+    const stricken = createCard("stricken_1", "278813735", "Stricken", ZONES.HAND, "p2", {
+      Type: "EE",
+      Alignment: "Evil",
+      IsEnhancement: true,
+      IsStarCard: true,
+    });
+    createCard("ec_blk_str", "209", "Blocking EC", ZONES.BATTLEFIELD, "p2", {
+      Type: "Evil Character",
+      Alignment: "Evil",
+      IsCharacter: true,
+    });
+    state.battle.initiativePlayerId = "p2";
+    client2.send.mockClear();
+    new MoveCardCommand(room, client2).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: stricken.id });
+    expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual([""]);
+    expect(client2.send).toHaveBeenCalledWith(
+      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
+      expect.objectContaining({
+        action: "choose",
+        allowDecline: false,
+        choices: [
+          expect.objectContaining({ abilityId: "ab_1_negate" }),
+          expect.objectContaining({ abilityId: "ab_2_reserve" }),
+        ],
+      })
+    );
+  });
+
+  test("mixed choice_group -> ungrouped cards (-1834781300 Zimri, 1501337366 Elhanan) prompt choice first then ungrouped", () => {
+    createCard("h_atk_z", "100", "Battle Hero", ZONES.BATTLEFIELD, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+    });
+    createCard("h_opp_terr", "101", "Target Good", ZONES.TERRITORY, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+    });
+    const otCurseDisc = createCard("curse_disc", "202", "OT Curse", ZONES.DISCARD, "p2", {
+      Type: "Curse",
+      Alignment: "Evil",
+      Testament: "OT",
+    });
+    const zimri = createCard("zimri_1", "-1834781300", "Zimri, Son of Salu [IR]", ZONES.HAND, "p2", {
+      Type: "Evil Character",
+      Alignment: "Evil",
+      IsCharacter: true,
+    });
+
+    state.battle.initiativePlayerId = "p2";
+    client2.send.mockClear();
+    new MoveCardCommand(room, client2).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: zimri.id });
+
+    expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual(["", "zimri_son_of_salu_ir_reserve_ot_curse"]);
+    expect(client2.send).toHaveBeenCalledWith(
+      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
+      expect.objectContaining({
+        action: "choose",
+        choices: expect.arrayContaining([
+          expect.objectContaining({ abilityId: "zimri_son_of_salu_ir_negate_good" }),
+          expect.objectContaining({ abilityId: "zimri_son_of_salu_ir_reserve_multi_brigade" }),
+        ]),
+      })
+    );
+    new RespondOptionalAbilityCommand(room, client2).execute({
+      itemId: state.effectChronicle.items[0].id,
+      accepted: false,
+    });
+    expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual(["zimri_son_of_salu_ir_reserve_ot_curse"]);
+    new RespondOptionalAbilityCommand(room, client2).execute({
+      itemId: state.effectChronicle.items[0].id,
+      accepted: false,
+    });
+    expect(state.effectChronicle.items.length).toBe(0);
+    expect(room.cardLookup.get(otCurseDisc.id).zone).toBe(ZONES.DISCARD);
+
+    // 1501337366 Elhanan, Son of Dodo [RR2]: unequipped -> deck option disabled with Condition not met, followed by giant discard
+    state.battlefield.splice(0, state.battlefield.length);
+    state.battle.rescueAttemptOccurred = false;
+    state.battle.blockOccurred = false;
+    state.lastBattleCardPlayerId = "";
+    const evilResCard = createCard("ec_res", "203", "Evil Reserve", ZONES.RESERVE, "p2", {
+      Type: "Evil Character",
+      Alignment: "Evil",
+      IsCharacter: true,
+    });
+    createCard("ec_deck", "204", "Evil Deck", ZONES.DECK, "p2", {
+      Type: "Evil Character",
+      Alignment: "Evil",
+      IsCharacter: true,
+    });
+    const giant = createCard("ec_giant", "205", "Goliath Giant", ZONES.BATTLEFIELD, "p2", {
+      Type: "Evil Character",
+      Alignment: "Evil",
+      IsCharacter: true,
+      Identifier: "Giant",
+    });
+    const elhanan = createCard("elhanan_1", "1501337366", "Elhanan, Son of Dodo [RR2]", ZONES.HAND, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+    });
+
+    state.battle.initiativePlayerId = "p1";
+    client1.send.mockClear();
+    new MoveCardCommand(room, client1).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: elhanan.id });
+
+    expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual(["", "elhanan_discard_giant"]);
+    expect(client1.send).toHaveBeenCalledWith(
+      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
+      expect.objectContaining({
+        action: "choose",
+        choices: [
+          expect.objectContaining({ abilityId: "elhanan_discard_reserve", disabled: false }),
+          expect.objectContaining({
+            abilityId: "elhanan_discard_deck_if_equipped",
+            disabled: true,
+            label: expect.stringContaining("(Condition not met)"),
+          }),
+        ],
+      })
+    );
+    new RespondOptionalAbilityCommand(room, client1).execute({
+      itemId: state.effectChronicle.items[0].id,
+      accepted: true,
+      chosenAbilityId: "elhanan_discard_reserve",
+    });
+    new SelectTargetCommand(room, client1).execute({
+      itemId: state.effectChronicle.items[0].id,
+      abilityId: "elhanan_discard_reserve",
+      selectedCardIds: [evilResCard.id],
+    });
+    expect(room.cardLookup.get(evilResCard.id).zone).toBe(ZONES.DISCARD);
+
+    expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual(["elhanan_discard_giant"]);
+    new RespondOptionalAbilityCommand(room, client1).execute({
+      itemId: state.effectChronicle.items[0].id,
+      accepted: true,
+    });
+    new SelectTargetCommand(room, client1).execute({
+      itemId: state.effectChronicle.items[0].id,
+      abilityId: "elhanan_discard_giant",
+      selectedCardIds: [giant.id],
+    });
+    // Giant is last EC in battle -> Special Initiative triggers; defender p2 declines -> Giant discarded
+    expect(state.effectChronicle.items[0].pendingSpecialInitiative).toBeTruthy();
+    new RespondOptionalAbilityCommand(room, client2).execute({
+      itemId: state.effectChronicle.items[0].id,
+      accepted: false,
+    });
+    expect(room.cardLookup.get(giant.id).zone).toBe(ZONES.DISCARD);
+    expect(state.effectChronicle.items.length).toBe(0);
+  });
+
+  test("pure modal pairs (1830061607, -1542044403, 848128688) execute exclusively the chosen option", () => {
+    const prophetAlly = createCard("h_gen_proph", "101", "Generic Prophet", ZONES.TERRITORY, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+      IsGeneric: true,
+      Identifier: "Generic, Prophet",
+    });
+    const d1 = createCard("d_p1", "102", "Deck 1", ZONES.DECK, "p1");
+    const d2 = createCard("d_p2", "103", "Deck 2", ZONES.DECK, "p1");
+
+    const prophetK = createCard("pog_k", "1830061607", "The Prophet of God [K]", ZONES.HAND, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+    });
+    state.battle.initiativePlayerId = "p1";
+    new MoveCardCommand(room, client1).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: prophetK.id });
+    expect(state.effectChronicle.items.length).toBe(1);
+    expect(client1.send).toHaveBeenCalledWith(
+      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
+      expect.objectContaining({
+        action: "choose",
+        choices: [
+          expect.objectContaining({ abilityId: "prophet_of_god_k_band" }),
+          expect.objectContaining({ abilityId: "prophet_of_god_k_draw" }),
+        ],
+      })
+    );
+    // Pick draw -> band MUST NOT happen
+    new RespondOptionalAbilityCommand(room, client1).execute({
+      itemId: state.effectChronicle.items[0].id,
+      accepted: true,
+      chosenAbilityId: "prophet_of_god_k_draw",
+    });
+    expect(p1.hand.map((c) => c.id)).toEqual(expect.arrayContaining([d1.id, d2.id]));
+    expect(room.cardLookup.get(prophetAlly.id).zone).toBe(ZONES.TERRITORY);
+    expect(state.effectChronicle.items.length).toBe(0);
+
+    // -1542044403 The Prophet of God (1st Print - K): pick band -> draw does not happen
+    state.battlefield.splice(0, state.battlefield.length);
+    state.battle.rescueAttemptOccurred = false;
+    state.battle.blockOccurred = false;
+    state.lastBattleCardPlayerId = "";
+    state.battle.initiativePlayerId = "p1";
+    const prophet1st = createCard("pog_1st", "-1542044403", "The Prophet of God (1st Print - K)", ZONES.HAND, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+    });
+    new MoveCardCommand(room, client1).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: prophet1st.id });
+    expect(state.effectChronicle.items.length).toBe(1);
+    new RespondOptionalAbilityCommand(room, client1).execute({
+      itemId: state.effectChronicle.items[0].id,
+      accepted: true,
+      chosenAbilityId: "prophet_of_god_band",
+    });
+    expect(room.cardLookup.get(prophetAlly.id).zone).toBe(ZONES.BATTLEFIELD);
+    expect(p1.deck.length).toBe(0);
+    expect(state.effectChronicle.items.length).toBe(0);
+
+    // 848128688 The Fallen King: single modal choice_1 with distinct Play Deck vs Play Reserve labels
+    const royalFemale = createCard("ec_rf", "201", "Queen Athaliah", ZONES.TERRITORY, "p2", {
+      Type: "Evil Character",
+      Alignment: "Evil",
+      IsCharacter: true,
+      Testament: "OT",
+      Gender: "Female",
+      Identifier: "Royal",
+    });
+    const fallenKing = createCard("fk_1", "848128688", "The Fallen King", ZONES.HAND, "p2", {
+      Type: "Evil Character",
+      Alignment: "Evil",
+      IsCharacter: true,
+    });
+    state.battle.initiativePlayerId = "p2";
+    client2.send.mockClear();
+    new MoveCardCommand(room, client2).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: fallenKing.id });
+    expect(state.effectChronicle.items.length).toBe(1);
+    expect(client2.send).toHaveBeenCalledWith(
+      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
+      expect.objectContaining({
+        action: "choose",
+        choices: expect.arrayContaining([
+          expect.objectContaining({ abilityId: "fallen_king_band", disabled: false }),
+          expect.objectContaining({ abilityId: "fallen_king_play__scope_deck" }),
+          expect.objectContaining({ abilityId: "fallen_king_play__scope_reserve_pile" }),
+        ]),
+      })
+    );
+    const fkPayload = client2.send.mock.calls.find((c) => c[0] === AST_MESSAGES.REQUEST_OPTIONAL_ABILITY)[1];
+    const labels = fkPayload.choices.map((c) => c.label);
+    expect(new Set(labels).size).toBe(labels.length);
+
+    new RespondOptionalAbilityCommand(room, client2).execute({
+      itemId: state.effectChronicle.items[0].id,
+      accepted: true,
+      chosenAbilityId: "fallen_king_band",
+    });
+    expect(room.cardLookup.get(royalFemale.id).zone).toBe(ZONES.BATTLEFIELD);
+    expect(state.effectChronicle.items.length).toBe(0);
+  });
+
+  test("and/or (-1777999383, 1693574528) and additive (-1206252778) abilities run sequentially without modal prompts", () => {
+    // 1. -1777999383 Abishai (Wa): band_with_joab and band_with_asahel queued sequentially
+    const joab = createCard("h_joab", "65394445", "Joab", ZONES.TERRITORY, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+    });
+    const asahel = createCard("h_asahel", "78123623", "Asahel", ZONES.HAND, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+    });
+    const abishai = createCard("h_abishai", "-1777999383", "Abishai (Wa)", ZONES.HAND, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+    });
+    state.battle.initiativePlayerId = "p1";
+    client1.send.mockClear();
+    new MoveCardCommand(room, client1).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: abishai.id });
+
+    expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual(["band_with_joab", "band_with_asahel"]);
+    expect(client1.send).toHaveBeenCalledWith(
+      AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
+      expect.objectContaining({ abilityId: "band_with_joab" })
+    );
+    new RespondOptionalAbilityCommand(room, client1).execute({ itemId: state.effectChronicle.items[0].id, accepted: true });
+    new RespondOptionalAbilityCommand(room, client1).execute({ itemId: state.effectChronicle.items[0].id, accepted: true });
+    expect(room.cardLookup.get(joab.id).zone).toBe(ZONES.BATTLEFIELD);
+    expect(room.cardLookup.get(asahel.id).zone).toBe(ZONES.BATTLEFIELD);
+    expect(state.effectChronicle.items.length).toBe(0);
+
+    // 2. 1693574528 Tamar, the Widow (LoC): tamar_band_judah and tamar_play_perez queued sequentially (after_battle & star excluded)
+    state.battlefield.splice(0, state.battlefield.length);
+    state.battle.rescueAttemptOccurred = false;
+    state.battle.blockOccurred = false;
+    state.lastBattleCardPlayerId = "";
+    state.battle.initiativePlayerId = "p1";
+    createCard("h_judah", "234399770", "Judah", ZONES.TERRITORY, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+    });
+    const tamar = createCard("h_tamar", "1693574528", "Tamar, the Widow (LoC)", ZONES.HAND, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+      IsStarCard: true,
+    });
+    new MoveCardCommand(room, client1).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: tamar.id });
+    expect(state.effectChronicle.items.map((i) => i._choiceGroup || i.abilityId)).toEqual([
+      "tamar_band_judah",
+      "tamar_play_perez_pile_choice",
+    ]);
+    state.effectChronicle.items.splice(0, state.effectChronicle.items.length);
+
+    // 3. -1206252778 Captured by Assyria: additive condition appends capture_extra_human_if_assyrian sequentially
+    const assyrian = createCard("ec_assyr", "201", "Assyrian Archer", ZONES.BATTLEFIELD, "p2", {
+      Type: "Evil Character",
+      Alignment: "Evil",
+      IsCharacter: true,
+      Identifier: "Assyrian",
+    });
+    createCard("h_cap_battle", "109", "Attacking Hero", ZONES.BATTLEFIELD, "p1", {
+      Type: "Hero",
+      Alignment: "Good",
+      IsCharacter: true,
+    });
+    const captured = createCard("ee_cap", "-1206252778", "Captured by Assyria", ZONES.HAND, "p2", {
+      Type: "EE",
+      Alignment: "Evil",
+      IsEnhancement: true,
+    });
+    state.battle.initiativePlayerId = "p2";
+    new MoveCardCommand(room, client2).execute({ from: ZONES.HAND, to: ZONES.BATTLEFIELD, cardId: captured.id });
+    expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual([
+      "capture_one_human",
+      "capture_extra_human_if_assyrian",
+    ]);
+    expect(assyrian.zone).toBe(ZONES.BATTLEFIELD);
+  });
 });

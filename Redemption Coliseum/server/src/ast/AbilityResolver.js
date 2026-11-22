@@ -73,6 +73,8 @@ class AbilityResolver {
         actionType: item.actionType,
         inGameType: card.inGameType,
         inGameAlignment: card.inGameAlignment,
+        isStarCard: card.IsStarCard,
+        card,
       });
       resolvedAbilitiesList = abilities;
 
@@ -82,7 +84,7 @@ class AbilityResolver {
           ? abilities.find((a) => a.ability_id === item.abilityId)
           : (item._choiceGroup
             ? abilities.find((a) => a?.choice_group === item._choiceGroup)
-            : abilities.find((a) => Boolean(a?.choice_group)));
+            : abilities[0]);
         const choiceGroup = matchedAbility?.choice_group;
         const choiceAbilities = choiceGroup
           ? abilities.filter((a) => a.choice_group === choiceGroup)
@@ -94,31 +96,13 @@ class AbilityResolver {
         );
 
         if (isChoiceGroup && !options.chosenAbilityId && (!item.abilityId || isParentAbilityId)) {
-          const evaluatedChoices = choiceAbilities.map((a) => {
-            const viability = this._evaluateAbilityViability(a, player, card);
-            const baseLabel = this._formatAbilityChoiceLabel(a, card);
-            const isDisabled = !viability.viable;
-            const suffix = isDisabled
-              ? (viability.blockedByRound1Reserve ? " (Round 1)" : " (No valid targets)")
-              : "";
-            return {
-              abilityId: a.ability_id,
-              label: `${baseLabel}${suffix}`,
-              action: a.effects?.[0]?.action || "activate",
-              disabled: isDisabled,
-              viability,
-            };
-          });
+          const { evaluatedChoices, allowDecline } = this._evaluateChoiceOptions(choiceAbilities, player, card);
 
           if (evaluatedChoices.every((c) => c.disabled)) {
             return this._handleNoValidTargets(player, card, item);
           }
 
-          if (options.accepted === true) {
-            // Player already accepted generically or auto-executed: default to first viable choice
-            const firstViableChoice = evaluatedChoices.find((c) => !c.disabled) || evaluatedChoices[0];
-            options.chosenAbilityId = firstViableChoice.abilityId;
-          } else if (options.accepted !== false) {
+          if (options.accepted !== false) {
             const choices = evaluatedChoices.map(({ abilityId, label, action, disabled }) => ({
               abilityId,
               label,
@@ -138,6 +122,7 @@ class AbilityResolver {
                 cardImageFile: card.ImageFile || "",
                 templateId: card.templateId || "",
                 choices,
+                allowDecline,
               });
             }
             return {
@@ -293,6 +278,18 @@ class AbilityResolver {
         continue;
       }
 
+      if (
+        stepOptions.targetPileId &&
+        !stepOptions.targetCardIds &&
+        TargetSelectionService.isTwoStepPileSearch(currentEffect.target, {
+          sourceCard: card,
+          actionType: currentEffect.action,
+        })
+      ) {
+        item._selectedPileId = stepOptions.targetPileId;
+        stepOptions = { ...stepOptions, targetPileId: undefined };
+      }
+
       const hasExplicitTargets = Boolean(
         stepOptions.targetCardIds ||
         stepOptions.targetPileId ||
@@ -311,6 +308,7 @@ class AbilityResolver {
             sourceCard: card,
             actionType: currentEffect.action,
             isOptional: Boolean((targetAbility.is_optional || item.isOptional) && stepIdx === 0),
+            selectedPileId: item._selectedPileId || undefined,
           }
         );
 
@@ -323,6 +321,24 @@ class AbilityResolver {
           item._inspectedOpponentReserve = true;
           this._flushAccumulatedLogs(item);
           this._sendReserveInspectPrompt(player, card, item, targetAbility, eligible);
+          return {
+            handled: true,
+            awaitingTargetSelection: true,
+            eligible,
+          };
+        }
+
+        // Empty searched pile after explicit Step 1 owner selection: open read-only view instead of failing silently
+        if (
+          item._selectedPileId &&
+          eligible.targetType === "card" &&
+          eligible.eligibleCardIds.length === 0 &&
+          eligible.searchedPiles.length > 0 &&
+          !item._inspectedEmptyPile
+        ) {
+          item._inspectedEmptyPile = true;
+          this._flushAccumulatedLogs(item);
+          this._sendEmptyPileInspectPrompt(player, card, item, targetAbility, eligible);
           return {
             handled: true,
             awaitingTargetSelection: true,
@@ -395,6 +411,8 @@ class AbilityResolver {
       }
 
       stepOptions = {};
+      item._selectedPileId = "";
+      item._inspectedEmptyPile = false;
     }
 
     const finalSnapshots = [...item._accumulatedSnapshots];
@@ -403,6 +421,8 @@ class AbilityResolver {
     item._accumulatedSnapshots = [];
     item._accumulatedLogs = [];
     item._previousSnapshot = null;
+    item._selectedPileId = "";
+    item._inspectedEmptyPile = false;
 
     if (card && this._isCostOrOpponentChoiceAbility(targetAbility)) {
       const movedAny = finalSnapshots.some(
@@ -479,13 +499,15 @@ class AbilityResolver {
         actionType: item.actionType,
         inGameType: card.inGameType,
         inGameAlignment: card.inGameAlignment,
+        isStarCard: card.IsStarCard,
+        card,
       });
       if (abilities.length > 0) {
         const matchedAbility = item.abilityId
           ? abilities.find((a) => a.ability_id === item.abilityId)
           : (item._choiceGroup
             ? abilities.find((a) => a?.choice_group === item._choiceGroup)
-            : abilities.find((a) => Boolean(a?.choice_group)));
+            : abilities[0]);
         const choiceGroup = matchedAbility?.choice_group;
         const choiceAbilities = choiceGroup ? abilities.filter((a) => a.choice_group === choiceGroup) : [];
         isChoiceGroup = choiceAbilities.length > 1;
@@ -494,20 +516,13 @@ class AbilityResolver {
         );
 
         if (isChoiceGroup && (!item.abilityId || isParentAbilityId)) {
-          const evaluatedChoices = choiceAbilities.map((a) => {
-            const viability = this._evaluateAbilityViability(a, player, card);
-            const baseLabel = this._formatAbilityChoiceLabel(a, card);
-            const isDisabled = !viability.viable;
-            const suffix = isDisabled
-              ? (viability.blockedByRound1Reserve ? " (Round 1)" : " (No valid targets)")
-              : "";
-            return {
-              abilityId: a.ability_id,
-              label: `${baseLabel}${suffix}`,
-              action: a.effects?.[0]?.action || "activate",
-              disabled: isDisabled,
-            };
-          });
+          const { evaluatedChoices, allowDecline } = this._evaluateChoiceOptions(choiceAbilities, player, card);
+          const choices = evaluatedChoices.map(({ abilityId, label, action, disabled }) => ({
+            abilityId,
+            label,
+            action,
+            disabled,
+          }));
           if (chronicle) chronicle.priorityPlayerId = item.controllerId;
           const client = this.room.clients?.find((c) => c.sessionId === player.sessionId);
           if (client && typeof client.send === "function") {
@@ -520,7 +535,8 @@ class AbilityResolver {
               action: "choose",
               cardImageFile: card.ImageFile || "",
               templateId: card.templateId || "",
-              choices: evaluatedChoices,
+              choices,
+              allowDecline,
             });
           }
           return { reprompted: true, kind: "choice" };
@@ -581,11 +597,22 @@ class AbilityResolver {
             sourceCard: card,
             actionType: activeEffect.action,
             isOptional: Boolean((targetAbility?.is_optional || item.isOptional) && stepIdx === 0),
+            selectedPileId: item._selectedPileId || undefined,
           }
         );
 
         if (eligible.eligibleCardIds.length === 0 && eligible.canInspectOpponentReserve) {
           this._sendReserveInspectPrompt(player, card, item, targetAbility, eligible);
+          return { reprompted: true, kind: "target" };
+        }
+
+        if (
+          item._selectedPileId &&
+          eligible.targetType === "card" &&
+          eligible.eligibleCardIds.length === 0 &&
+          eligible.searchedPiles.length > 0
+        ) {
+          this._sendEmptyPileInspectPrompt(player, card, item, targetAbility, eligible);
           return { reprompted: true, kind: "target" };
         }
 
@@ -698,10 +725,23 @@ class AbilityResolver {
         promptText,
         action: promptEffect?.action || "activate",
         choices: singleAbilityChoices,
+        allowDecline: true,
         cardImageFile: card.ImageFile || "",
         templateId: card.templateId || "",
       });
     }
+  }
+
+  /** @private */
+  _formatSearchedPileOwnerLabel(actingPlayer, selectedPileId) {
+    if (!selectedPileId || typeof selectedPileId !== "string") return "";
+    const [ownerId, zoneName] = selectedPileId.split(":");
+    const pileLabel = TargetSelectionService._getPileDisplayLabel(zoneName);
+    if (ownerId === actingPlayer?.sessionId) {
+      return `your ${pileLabel}`;
+    }
+    const owner = this.room?.state?.players?.get(ownerId);
+    return `${owner?.name || "Opponent"}'s ${pileLabel}`;
   }
 
   /** @private */
@@ -715,6 +755,31 @@ class AbilityResolver {
         promptText: `${card.Name || item.title}: View Opponent's Reserve (Round 1 - Read Only)`,
         targetType: "card",
         targetZone: ZONES.RESERVE,
+        isPileTarget: true,
+        searchedPiles: eligible.searchedPiles,
+        eligibleCardIds: [],
+        eligiblePiles: [],
+        minTargets: 0,
+        maxTargets: 0,
+        canCancel: true,
+      });
+    }
+  }
+
+  /** @private */
+  _sendEmptyPileInspectPrompt(player, card, item, targetAbility, eligible) {
+    const pileDisplayLabel =
+      this._formatSearchedPileOwnerLabel(player, item?._selectedPileId) ||
+      TargetSelectionService._getPileDisplayLabel(eligible.targetZone);
+    const client = this.room.clients?.find((c) => c.sessionId === player.sessionId);
+    if (client && typeof client.send === "function") {
+      client.send(AST_MESSAGES.REQUEST_TARGET_SELECTION, {
+        abilityId: targetAbility?.ability_id || item.abilityId || "",
+        itemId: item.id,
+        sourceCardId: card?.id || item?.cardId,
+        promptText: `${card.Name || item.title}: No matching cards in ${pileDisplayLabel} (View Only)`,
+        targetType: "card",
+        targetZone: eligible.targetZone || ZONES.RESERVE,
         isPileTarget: true,
         searchedPiles: eligible.searchedPiles,
         eligibleCardIds: [],
@@ -748,6 +813,12 @@ class AbilityResolver {
           message: `Waiting for ${opponentPlayer?.name || "Opponent"} to select a card...`,
           type: "info",
         });
+      }
+    } else if (item?._selectedPileId && !currentEffect.target?.prompt_text && eligible.targetType === "card") {
+      const pileDisplayLabel = this._formatSearchedPileOwnerLabel(player, item._selectedPileId);
+      const countText = (eligible.maxTargets ?? 1) > 1 ? `${eligible.maxTargets} card(s)` : "card";
+      if (pileDisplayLabel) {
+        promptToSend = `${card.Name || item.title}: Select ${countText} from ${pileDisplayLabel}`;
       }
     }
 
@@ -840,6 +911,81 @@ class AbilityResolver {
   }
 
   /**
+   * Evaluates and formats choice_group options including label disambiguation,
+   * viability suffixes, and mandatory vs. optional decline policy.
+   *
+   * @private
+   * @param {Array<object>} choiceAbilities Abilities sharing a choice_group.
+   * @param {object} player Acting player.
+   * @param {object} card Source card instance.
+   * @returns {{ evaluatedChoices: Array<object>, allowDecline: boolean }}
+   */
+  _evaluateChoiceOptions(choiceAbilities, player, card) {
+    const rawEntries = choiceAbilities.map((a) => ({
+      ability: a,
+      viability: this._evaluateAbilityViability(a, player, card),
+      baseLabel: this._formatAbilityChoiceLabel(a, card),
+    }));
+
+    const labelCounts = new Map();
+    for (const entry of rawEntries) {
+      labelCounts.set(entry.baseLabel, (labelCounts.get(entry.baseLabel) || 0) + 1);
+    }
+
+    const disambiguatedByLabel = new Map();
+    for (const entry of rawEntries) {
+      if ((labelCounts.get(entry.baseLabel) || 0) <= 1) continue;
+      if (!disambiguatedByLabel.has(entry.baseLabel)) {
+        disambiguatedByLabel.set(entry.baseLabel, []);
+      }
+      disambiguatedByLabel.get(entry.baseLabel).push(entry);
+    }
+
+    for (const [baseLabel, group] of disambiguatedByLabel.entries()) {
+      const tokenLists = group.map((g) =>
+        String(g.ability.ability_id || "")
+          .split("_")
+          .filter(Boolean)
+      );
+      let commonPrefixLen = 0;
+      const minLen = Math.min(...tokenLists.map((t) => t.length));
+      while (
+        commonPrefixLen < minLen &&
+        tokenLists.every((t) => t[commonPrefixLen] === tokenLists[0][commonPrefixLen])
+      ) {
+        commonPrefixLen++;
+      }
+      group.forEach((g, idx) => {
+        const tailTokens = tokenLists[idx].slice(commonPrefixLen);
+        const detail = (tailTokens.length > 0 ? tailTokens : tokenLists[idx]).join(" ").trim();
+        g.baseLabel = detail ? `${baseLabel} (${detail})` : baseLabel;
+      });
+    }
+
+    const evaluatedChoices = rawEntries.map(({ ability, viability, baseLabel }) => {
+      const isDisabled = !viability.viable;
+      let suffix = "";
+      if (isDisabled) {
+        if (viability.conditionUnmet) suffix = " (Condition not met)";
+        else if (viability.blockedByRound1Reserve) suffix = " (Round 1)";
+        else suffix = " (No valid targets)";
+      } else if (viability.blockedByRound1Reserve && viability.canInspectOpponentReserve) {
+        suffix = " (Round 1 - View Only)";
+      }
+      return {
+        abilityId: ability.ability_id,
+        label: `${baseLabel}${suffix}`,
+        action: ability.effects?.[0]?.action || "activate",
+        disabled: isDisabled,
+        viability,
+      };
+    });
+
+    const allowDecline = choiceAbilities.some((a) => Boolean(a.is_optional));
+    return { evaluatedChoices, allowDecline };
+  }
+
+  /**
    * Evaluates whether an AST ability or specific effect step has viable targets or inspectable opponent zone.
    *
    * @private
@@ -851,6 +997,7 @@ class AbilityResolver {
    *   viable: boolean,
    *   hasSupportedTargets: boolean,
    *   hasUnsupportedEffect: boolean,
+   *   conditionUnmet: boolean,
    *   blockedByRound1Reserve: boolean,
    *   canInspectOpponentReserve: boolean,
    *   searchedPiles: string[]
@@ -862,6 +1009,7 @@ class AbilityResolver {
         viable: false,
         hasSupportedTargets: false,
         hasUnsupportedEffect: false,
+        conditionUnmet: false,
         blockedByRound1Reserve: false,
         canInspectOpponentReserve: false,
         searchedPiles: [],
@@ -879,6 +1027,7 @@ class AbilityResolver {
           viable: false,
           hasSupportedTargets: false,
           hasUnsupportedEffect: false,
+          conditionUnmet: true,
           blockedByRound1Reserve: false,
           canInspectOpponentReserve: false,
           searchedPiles: [],
@@ -894,6 +1043,7 @@ class AbilityResolver {
         viable: false,
         hasSupportedTargets: false,
         hasUnsupportedEffect: false,
+        conditionUnmet: false,
         blockedByRound1Reserve: false,
         canInspectOpponentReserve: false,
         searchedPiles: [],
@@ -912,7 +1062,12 @@ class AbilityResolver {
       const isSupported = AstEffectRunner.isActionSupported(effect.action);
 
       if (!isSupported) {
-        if (!effect.target || UNMODELED_INSPECTION_ACTIONS.includes(effect.action)) {
+        if (
+          !effect.target ||
+          effect.target.selection_mode === "automatic_self" ||
+          effect.target.selection_mode === "chained_target" ||
+          UNMODELED_INSPECTION_ACTIONS.includes(effect.action)
+        ) {
           hasUnsupportedEffect = true;
           continue;
         }
@@ -979,6 +1134,7 @@ class AbilityResolver {
       viable: hasSupportedTargets || hasUnsupportedEffect || canInspectOpponentReserve,
       hasSupportedTargets,
       hasUnsupportedEffect,
+      conditionUnmet: false,
       blockedByRound1Reserve,
       canInspectOpponentReserve,
       searchedPiles,

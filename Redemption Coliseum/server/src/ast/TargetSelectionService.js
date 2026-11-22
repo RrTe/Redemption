@@ -29,6 +29,19 @@ const RESERVE_REMOVAL_ACTIONS = [
   AST_ACTIONS.ADD_TO_BATTLE,
 ];
 
+const SEARCHABLE_PILE_ZONES = [
+  ZONES.RESERVE,
+  ZONES.DECK,
+  ZONES.DISCARD,
+  ZONES.BANISH,
+  ZONES.ARTIFACT,
+];
+
+const CONSTRAINT_IDENT_REGEX = /^(?:non-warrior(?:\s+class)?|non-weapon(?:\s+class)?|except\s+(?:(?:a|an)\s+)?(?:human|non-human|warrior(?:\s+class)?|weapon(?:\s+class)?|good\s+warriors?|good\s+weapons?|lost\s+souls?))$/i;
+const STATE_IDENT_REGEX = /^(?:blocking|attacking)$/i;
+const NON_DISJUNCTIVE_IDENT_REGEX = /^(?:activated|captured|target|half|contents|and\s+its\s+contents|enter\s+battle|cannot\s+enter\s+battle|battle|protect|protect\s+abilities|play|special\s+abilities|withdraw|face\s+down|300|blocking|attacking|opposite\s+gender|or|from\s+hand.*)$/i;
+const CLAUSE_IDENT_REGEX = /\b(?:in\s+the\s+title|used\s+by|played\s+on|placed\s+onto|from\s+hand|in\s+discard\s+pile)\b/i;
+
 /**
  * Service for querying and evaluating valid targets according to card AST rules.
  * Pure and deterministic: inspects RoomState and returns eligible targets without direct mutation.
@@ -130,21 +143,98 @@ class TargetSelectionService {
     const effectiveScope = isBand && (!targetDef.scope || (Array.isArray(targetDef.scope) && targetDef.scope.length === 0))
       ? [AST_SCOPES.IN_PLAY, AST_SCOPES.HAND]
       : scope;
-    const defaultZoneNames = this._resolveTargetZones(effectiveScope);
+
+    let effectivePlayersToScan = playersToScan;
+    let selectedZoneOverride = null;
+    let allowSelectedOpponentDeck = targetDef.zone_owner === AST_ZONE_OWNERS.OPPONENT;
+
+    if (context.selectedPileId && typeof context.selectedPileId === "string") {
+      const [selectedOwnerId, selectedZoneName] = context.selectedPileId.split(":");
+      effectivePlayersToScan = playersToScan.filter((p) => p.sessionId === selectedOwnerId);
+      if (selectedZoneName) {
+        selectedZoneOverride = selectedZoneName;
+      }
+      allowSelectedOpponentDeck = true;
+    } else if (this.isTwoStepPileSearch(targetDef, context)) {
+      const targetZones = this._resolveTargetZones(targetDef.scope);
+      const pileZone = targetZones[0];
+      const isRound1BlockedReserve =
+        pileZone === ZONES.RESERVE &&
+        action &&
+        RESERVE_REMOVAL_ACTIONS.includes(action) &&
+        typeof room?.state?.round === "number" &&
+        !MovementRules.reserveFirstRoundRule({
+          fromZone: ZONES.RESERVE,
+          toZone: ZONES.HAND,
+          state: room?.state,
+        }).valid;
+
+      if (!isRound1BlockedReserve) {
+        const pileLabel = this._getPileDisplayLabel(pileZone);
+        const eligiblePiles = [];
+        for (const p of playersToScan) {
+          const cardsInPile = p[pileZone] || [];
+          if (cardsInPile.length === 0) continue;
+          if (
+            context.sourceCard &&
+            ProtectionService.isZoneProtected(room, p, pileZone, context.sourceCard, action)
+          ) {
+            continue;
+          }
+          const isSelf = p.sessionId === actingPlayer?.sessionId;
+          eligiblePiles.push({
+            id: `${p.sessionId}:${pileZone}`,
+            label: isSelf ? `My ${pileLabel}` : `${p.name}'s ${pileLabel}`,
+            ownerId: p.sessionId,
+            zone: pileZone,
+          });
+        }
+
+        if (eligiblePiles.length > 1) {
+          return {
+            targetType: "pile",
+            targetZone: pileZone,
+            isPileTarget: false,
+            isTwoStepPileChoice: true,
+            selectingPlayerId,
+            searchedPiles: [],
+            blockedByRound1Reserve: false,
+            canInspectOpponentReserve: false,
+            eligibleCardIds: [],
+            eligiblePiles,
+            requiresSelection: true,
+            minTargets: 1,
+            maxTargets: 1,
+            canCancel: Boolean(targetDef.can_cancel || context.isOptional),
+            promptText: targetDef.prompt_text || `Select a ${pileLabel} to search`,
+          };
+        }
+
+        if (eligiblePiles.length === 1) {
+          const onlyOwnerId = eligiblePiles[0].ownerId;
+          effectivePlayersToScan = playersToScan.filter((p) => p.sessionId === onlyOwnerId);
+          allowSelectedOpponentDeck = true;
+        }
+      }
+    }
+
+    const defaultZoneNames = selectedZoneOverride
+      ? [selectedZoneOverride]
+      : this._resolveTargetZones(effectiveScope);
     const eligibleCardIds = [];
     const searchedPiles = [];
     let blockedByRound1Reserve = false;
     let canInspectOpponentReserve = false;
 
-    for (const p of playersToScan) {
+    for (const p of effectivePlayersToScan) {
       const isSelf = p.sessionId === actingPlayer.sessionId;
       const zoneNames = isBand
         ? defaultZoneNames.filter((z) => z !== ZONES.BATTLEFIELD && (isSelf || z !== ZONES.HAND))
         : defaultZoneNames;
 
       for (const zName of zoneNames) {
-        // Concealed opponent draw deck is never scanned unless explicitly targeted via zone_owner: "opponent"
-        if (zName === ZONES.DECK && !isSelf && targetDef.zone_owner !== AST_ZONE_OWNERS.OPPONENT) {
+        // Concealed opponent draw deck is never scanned unless explicitly targeted via zone_owner: "opponent" or chosen in step 1
+        if (zName === ZONES.DECK && !isSelf && !allowSelectedOpponentDeck) {
           continue;
         }
 
@@ -388,25 +478,183 @@ class TargetSelectionService {
     return true;
   }
 
+  /**
+   * Returns true when a card-search target targets a single pile zone with zone_owner: "either"
+   * and manual_controller selection, requiring the acting player to pick whose pile first.
+   *
+   * @param {object} [targetDef={}] AST target definition.
+   * @param {object} [context={}] Resolution context.
+   * @returns {boolean} True when two-step pile ownership selection applies.
+   */
+  static isTwoStepPileSearch(targetDef = {}, context = {}) {
+    if (!targetDef || targetDef.zone_owner !== AST_ZONE_OWNERS.EITHER) return false;
+    if (targetDef.selection_mode !== AST_SELECTION_MODES.MANUAL_CONTROLLER) return false;
+    const scope = targetDef.scope || AST_SCOPES.IN_PLAY;
+    const targetType = targetDef.target_type || "";
+    if (this._isPileTargeting(scope, targetType, targetDef, context)) return false;
+    const zones = this._resolveTargetZones(scope);
+    return zones.length === 1 && SEARCHABLE_PILE_ZONES.includes(zones[0]);
+  }
+
+  /**
+   * Maps a pile zone constant to a human-readable pile label.
+   *
+   * @private
+   * @param {string} zone Zone constant from ZONES.
+   * @returns {string} Display label.
+   */
+  static _getPileDisplayLabel(zone) {
+    switch (zone) {
+      case ZONES.RESERVE: return "Reserve";
+      case ZONES.DECK: return "Deck";
+      case ZONES.DISCARD: return "Discard Pile";
+      case ZONES.BANISH: return "Banish Zone";
+      case ZONES.ARTIFACT: return "Artifact Pile";
+      default: return "Pile";
+    }
+  }
+
+  /**
+   * Returns entity identifiers that act as disjunctive ("Title or <Identifier>")
+   * alternatives alongside card_titles on a non-convert target selector.
+   *
+   * @private
+   * @param {object} [targetDef={}] AST target definition.
+   * @param {string} [action=""] AST action name.
+   * @returns {string[]} Filtered disjunctive identifier tokens.
+   */
+  static _getDisjunctiveIdentifiers(targetDef = {}, action = "") {
+    if (String(action || "").toLowerCase() === "convert") return [];
+    if (!Array.isArray(targetDef.card_titles) || targetDef.card_titles.length === 0) return [];
+    if (!Array.isArray(targetDef.identifiers) || targetDef.identifiers.length === 0) return [];
+
+    return targetDef.identifiers
+      .map((id) => String(id || "").trim())
+      .filter((trimmed) => {
+        if (!trimmed) return false;
+        const low = trimmed.toLowerCase();
+        if (CONSTRAINT_IDENT_REGEX.test(low)) return false;
+        if (NON_DISJUNCTIVE_IDENT_REGEX.test(low)) return false;
+        if (CLAUSE_IDENT_REGEX.test(low)) return false;
+        return true;
+      });
+  }
+
+  /**
+   * Evaluates card_titles matching including ORDIR/metadata fallback for category titles.
+   *
+   * @private
+   * @param {object} card Candidate card instance.
+   * @param {string[]} cardTitles Target card_titles list.
+   * @returns {boolean} True if any title matches.
+   */
+  static _matchesCardTitles(card, cardTitles) {
+    const cardName = String(card.Name || card.card_name || "").toLowerCase();
+    return cardTitles.some((t) => {
+      const titleLower = String(t).toLowerCase().trim();
+      if (!titleLower) return false;
+      if (cardName && (cardName.includes(titleLower) || titleLower.includes(cardName))) {
+        return true;
+      }
+      let ordirList = card.ORDIR;
+      let cardIdent = card.Identifier;
+      if ((!ordirList || ordirList.length === 0) && card.templateId) {
+        try {
+          const { CardRepository } = require("../../../shared/CardRepository");
+          const dbCard = CardRepository.getById(card.templateId) || CardRepository.get(card.templateId);
+          if (dbCard) {
+            if (!ordirList || ordirList.length === 0) ordirList = dbCard.ORDIR;
+            if (!cardIdent) cardIdent = dbCard.Identifier;
+          }
+        } catch (_e) { }
+      }
+      const ordirStr = (Array.isArray(ordirList) ? ordirList.join(" ") : "").toLowerCase();
+      const identStr = String(cardIdent || "").toLowerCase();
+      const classStr = String(card.Class || "").toLowerCase();
+      const combinedMeta = `${cardName} ${ordirStr} ${identStr} ${classStr}`;
+      const tokens = titleLower.split(/\s+/).filter(Boolean);
+      return tokens.length > 0 && tokens.every((token) => {
+        const esc = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        return new RegExp(`(^|[^a-zA-Z0-9])${esc}([^a-zA-Z0-9]|$)`, "i").test(combinedMeta);
+      });
+    });
+  }
+
+  /**
+   * Evaluates the "Temple" identifier against Fortresses/Sites (e.g. Herod's Temple)
+   * while preserving ORDIR/Identifier matching when target_type specifies artifact or character.
+   *
+   * @private
+   * @param {object} card Candidate card instance.
+   * @param {string} rawType Normalized target_type.
+   * @param {string} cardIdentStr Lowercased card Identifier.
+   * @param {string} cardClassStr Lowercased card Class.
+   * @param {string} ordirStr Joined lowercased card ORDIR list.
+   * @param {string[]} ordirList Raw ORDIR array.
+   * @returns {boolean} True if candidate qualifies as a Temple target.
+   */
+  static _matchesTempleIdentifier(card, rawType, cardIdentStr, cardClassStr, ordirStr, ordirList) {
+    if (
+      rawType === "artifact" ||
+      rawType === "hero" ||
+      rawType === "character" ||
+      rawType === "evil_character"
+    ) {
+      const regex = /(^|[^a-zA-Z0-9])temple([^a-zA-Z0-9]|$)/i;
+      return regex.test(cardIdentStr) || regex.test(cardClassStr) || regex.test(ordirStr) ||
+        (Array.isArray(ordirList) && ordirList.some((item) => String(item).trim().toLowerCase() === "temple"));
+    }
+
+    let cardName = String(card.Name || card.card_name || "");
+    let rawCardType = String(card.inGameType || card.Type || "");
+    let rawCardAlign = String(card.inGameAlignment || card.Alignment || "");
+    if ((!cardName || !rawCardType) && card.templateId) {
+      try {
+        const { CardRepository } = require("../../../shared/CardRepository");
+        const dbCard = CardRepository.getById(card.templateId) || CardRepository.get(card.templateId);
+        if (dbCard) {
+          if (!cardName) cardName = String(dbCard.Name || "");
+          if (!rawCardType) rawCardType = String(dbCard.Type || "");
+          if (!rawCardAlign) rawCardAlign = String(dbCard.Alignment || "");
+        }
+      } catch (_e) { }
+    }
+
+    const typeStr = rawCardType.toLowerCase();
+    const alignStr = rawCardAlign.toLowerCase();
+    const isFortressOrSite = typeStr.includes("fortress") || typeStr.includes("site");
+    if (!isFortressOrSite) return false;
+
+    const isNamedTemple = /\b(?:solomon'?s|zerubbabel'?s|herod'?s|heavenly)\s+temple\b/i.test(cardName);
+    const isGoodTempleFortress = typeStr.includes("fortress") && !alignStr.includes("evil") && /\btemple\b/i.test(cardName);
+    return isNamedTemple || isGoodTempleFortress;
+  }
+
   static matchesFilter(card, targetDef = {}, context = {}) {
     if (!card) return false;
+
+    const act = context.actionType || targetDef.action || "";
+    const disjunctiveIdents = this._getDisjunctiveIdentifiers(targetDef, act);
+    const hasDisjunctiveAlt = disjunctiveIdents.length > 0;
 
     // 1. Fast-Path: Explicit target_card_ids filter (O(1))
     if (Array.isArray(targetDef.target_card_ids) && targetDef.target_card_ids.length > 0) {
       const cardId = String(card.templateId || card.id || "");
-      if (!targetDef.target_card_ids.some((id) => String(id) === cardId)) {
-        return false;
-      }
-      if (!this._matchesStructuredConstraints(card, targetDef, context)) {
-        return false;
-      }
-      // Protection check applies even to specifically targeted cards
-      if (context && context.sourceCard) {
-        if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action)) {
+      if (targetDef.target_card_ids.some((id) => String(id) === cardId)) {
+        if (!this._matchesStructuredConstraints(card, targetDef, context)) {
           return false;
         }
+        // Protection check applies even to specifically targeted cards
+        if (context && context.sourceCard) {
+          if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action)) {
+            return false;
+          }
+        }
+        return true;
       }
-      return true;
+      if (!hasDisjunctiveAlt) {
+        return false;
+      }
     }
 
     // 2. Check alignment filter
@@ -500,43 +748,24 @@ class TargetSelectionService {
     }
 
     // 7. Check card titles filter (Bucket 6: Specifically named titles & IDs)
+    let matchedTitleFallback = false;
     if (Array.isArray(targetDef.card_titles) && targetDef.card_titles.length > 0) {
-      const cardName = String(card.Name || card.card_name || "").toLowerCase();
-      const hasTitleMatch = targetDef.card_titles.some((t) => {
-        const titleLower = String(t).toLowerCase().trim();
-        if (cardName.includes(titleLower) || titleLower.includes(cardName)) {
-          return true;
+      const hasExplicitIds = Array.isArray(targetDef.target_card_ids) && targetDef.target_card_ids.length > 0;
+      if (hasDisjunctiveAlt && hasExplicitIds) {
+        // Explicit target_card_ids already did not match in Step 1; fall through to disjunctive identifiers in Step 8
+      } else {
+        const hasTitleMatch = this._matchesCardTitles(card, targetDef.card_titles);
+        if (hasTitleMatch) {
+          matchedTitleFallback = true;
+        } else if (!hasDisjunctiveAlt) {
+          return false;
         }
-        // Fallback for uncompiled category titles (e.g. "Genesis Philistine", "Joshua Hero")
-        let ordirList = card.ORDIR;
-        let cardIdent = card.Identifier;
-        if ((!ordirList || ordirList.length === 0) && card.templateId) {
-          try {
-            const { CardRepository } = require("../../../shared/CardRepository");
-            const dbCard = CardRepository.getById(card.templateId) || CardRepository.get(card.templateId);
-            if (dbCard) {
-              if (!ordirList || ordirList.length === 0) ordirList = dbCard.ORDIR;
-              if (!cardIdent) cardIdent = dbCard.Identifier;
-            }
-          } catch (_e) { }
-        }
-        const ordirStr = (Array.isArray(ordirList) ? ordirList.join(" ") : "").toLowerCase();
-        const identStr = String(cardIdent || "").toLowerCase();
-        const classStr = String(card.Class || "").toLowerCase();
-        const combinedMeta = `${cardName} ${ordirStr} ${identStr} ${classStr}`;
-        const tokens = titleLower.split(/\s+/).filter(Boolean);
-        return tokens.length > 0 && tokens.every((token) => {
-          const esc = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          return new RegExp(`(^|[^a-zA-Z0-9])${esc}([^a-zA-Z0-9]|$)`, "i").test(combinedMeta);
-        });
-      });
-      if (!hasTitleMatch) return false;
+      }
     }
 
     // 8. Check identifiers & ORDIR filter (Bucket 2: Subtypes, Nationalities, Roles & Composites)
     if (Array.isArray(targetDef.identifiers) && targetDef.identifiers.length > 0) {
       let idents = targetDef.identifiers;
-      const act = context.actionType || targetDef.action || "";
       if (act === AST_ACTIONS.SET_IMMUNITY || act === AST_ACTIONS.PROTECT || act === AST_ACTIONS.IMMUNE || act.includes("protect") || act.includes("immune")) {
         idents = idents.filter((id) => {
           const l = String(id).toLowerCase();
@@ -580,8 +809,6 @@ class TargetSelectionService {
           return true;
         });
 
-        const CONSTRAINT_IDENT_REGEX = /^(?:non-warrior(?:\s+class)?|non-weapon(?:\s+class)?|except\s+(?:(?:a|an)\s+)?(?:human|non-human|warrior(?:\s+class)?|weapon(?:\s+class)?|good\s+warriors?|good\s+weapons?|lost\s+souls?))$/i;
-        const STATE_IDENT_REGEX = /^(?:blocking|attacking)$/i;
         const constraintIdents = [];
         const stateIdents = [];
         const standardIdents = [];
@@ -619,17 +846,25 @@ class TargetSelectionService {
           }
         }
 
-        if (standardIdents.length > 0) {
+        const effectiveStandardIdents = hasDisjunctiveAlt
+          ? (matchedTitleFallback ? [] : disjunctiveIdents)
+          : standardIdents;
+
+        if (effectiveStandardIdents.length > 0) {
           const cardIdentStr = String(cardIdent || "").toLowerCase();
           const ordirStr = Array.isArray(ordirList) ? ordirList.join(" ").toLowerCase() : "";
           const cardClassStr = String(cardClass || "").toLowerCase();
-          const hasIdentMatch = standardIdents.some((id) => {
+          const hasIdentMatch = effectiveStandardIdents.some((id) => {
             const needle = String(id).trim().toLowerCase();
             if (!needle) return false;
 
             // Official ORDIR 7.0.0 Rule: Character humanity via IsHuman / descriptor fallback
             if (needle === "human" || needle === "humans") {
               return SideAttributeEvaluator.resolveIsHuman(card, { targetDef }) === true;
+            }
+
+            if (needle === "temple") {
+              return this._matchesTempleIdentifier(card, rawType, cardIdentStr, cardClassStr, ordirStr, ordirList);
             }
 
             const esc = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

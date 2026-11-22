@@ -433,7 +433,7 @@ describe("Typed Gender Attribute Integration (ORDIR 7.0.0 & AST)", () => {
       // Assyrian Camp (LoC) has top (Evil Character) and bottom (Fortress)
       const topAbilities = AbilityLookup.resolveAbilities("-1270964017", { inGameType: "Evil Character", inGameAlignment: "Evil" });
       const bottomAbilities = AbilityLookup.resolveAbilities("-1270964017", { inGameType: "Fortress", inGameAlignment: "Evil" });
-      expect(topAbilities[0].ability_id).toBe("prevent_multi_brigade_enhancements_used_by_heroes");
+      expect(topAbilities[0].ability_id).toBe("assyrian_camp_prevent_multi");
       expect(bottomAbilities[0].ability_id).toBe("assyrian_camp_negate_effect");
 
       expect(AbilityLookup.getSideGender("-1270964017", { inGameType: "Evil Character", inGameAlignment: "Evil" })).toBe("male");

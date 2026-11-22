@@ -19,6 +19,7 @@ export interface ConfirmationDialogData {
   onConfirm: () => void;
   onDecline: () => void;
   choices?: ConfirmationDialogChoice[];
+  allowDecline?: boolean;
   onSelectChoice?: (choice: ConfirmationDialogChoice) => void;
   cardImageFile?: string;
   templateId?: string;
@@ -58,8 +59,20 @@ export class ConfirmationDialogScene extends Phaser.Scene {
 
     const hasCard = Boolean(this.dialogData.cardImageFile);
     const hasChoices = Boolean(this.dialogData.choices && this.dialogData.choices.length > 0);
+    const allowDecline = this.dialogData.allowDecline !== false;
+    const choiceCount = hasChoices ? this.dialogData.choices!.length : 0;
+    const rawChoiceBtnH = choiceCount >= 5 ? 30 : 36;
+    const rawChoiceGap = choiceCount >= 5 ? 5 : 6;
+    const buttonsTopOffsetRaw = hasCard ? 248 : 136;
+    const declineExtraRaw = allowDecline ? (rawChoiceBtnH + rawChoiceGap) : 0;
+    const buttonsBlockRawH = hasChoices
+      ? choiceCount * (rawChoiceBtnH + rawChoiceGap) - rawChoiceGap + declineExtraRaw
+      : 0;
+
     const baseW = hasCard ? 520 : 480;
-    const baseH = hasChoices ? (hasCard ? 410 : 330) : (hasCard ? 320 : 240);
+    const baseH = hasChoices
+      ? Math.max(hasCard ? 410 : 330, buttonsTopOffsetRaw + buttonsBlockRawH + 24)
+      : (hasCard ? 320 : 240);
     const totalVisualH = hasCard ? (baseH + 90) : baseH;
 
     // Responsive scaling factor based on current viewport
@@ -75,6 +88,7 @@ export class ConfirmationDialogScene extends Phaser.Scene {
     const cy = hasCard
       ? this.scale.height / 2 + Math.round(45 * scaleFactor)
       : this.scale.height / 2;
+    const panelTop = cy - height / 2;
 
     // Overlay (dimmed background absorbing pointer input)
     this.add
@@ -92,11 +106,15 @@ export class ConfirmationDialogScene extends Phaser.Scene {
     bg.strokeRoundedRect(cx - width / 2 + 5, cy - height / 2 + 5, width - 10, height - 10, 10);
 
     if (hasCard && this.dialogData.cardImageFile) {
-      this.renderCardThumbnail(cx, cy - height / 2 + Math.round(15 * scaleFactor), scaleFactor);
+      this.renderCardThumbnail(cx, panelTop + Math.round(15 * scaleFactor), scaleFactor);
     }
 
-    const titleY = hasCard ? cy - Math.round(8 * scaleFactor) : cy - height / 2 + Math.round(45 * scaleFactor);
-    const messageY = hasCard ? cy + Math.round(48 * scaleFactor) : cy + Math.round(12 * scaleFactor);
+    const titleY = hasChoices
+      ? (hasCard ? panelTop + Math.round(148 * scaleFactor) : panelTop + Math.round(42 * scaleFactor))
+      : (hasCard ? cy - Math.round(8 * scaleFactor) : panelTop + Math.round(45 * scaleFactor));
+    const messageY = hasChoices
+      ? (hasCard ? panelTop + Math.round(190 * scaleFactor) : panelTop + Math.round(88 * scaleFactor))
+      : (hasCard ? cy + Math.round(48 * scaleFactor) : cy + Math.round(12 * scaleFactor));
     const buttonY = cy + height / 2 - Math.max(26, Math.round(38 * scaleFactor));
     const wrapW = width - Math.round(40 * scaleFactor);
 
@@ -133,13 +151,13 @@ export class ConfirmationDialogScene extends Phaser.Scene {
 
     if (hasChoices && this.dialogData.choices && this.dialogData.choices.length > 0) {
       const choices = this.dialogData.choices;
-      const choiceBtnH = Math.max(30, Math.round(36 * scaleFactor));
+      const choiceBtnH = Math.max(24, Math.round(rawChoiceBtnH * scaleFactor));
+      const gap = Math.max(4, Math.round(rawChoiceGap * scaleFactor));
       const choiceBtnW = Math.min(width - 30, Math.round(430 * scaleFactor));
-      const totalButtonsH = choices.length * (choiceBtnH + 6) + choiceBtnH;
-      const startY = buttonY - totalButtonsH / 2 + choiceBtnH / 2;
+      const startY = panelTop + Math.round(buttonsTopOffsetRaw * scaleFactor) + choiceBtnH / 2;
 
       choices.forEach((choice, idx) => {
-        const bY = startY + idx * (choiceBtnH + 6);
+        const bY = startY + idx * (choiceBtnH + gap);
         const isDisabled = Boolean(choice.disabled);
         this.createHudButton(
           cx,
@@ -161,13 +179,15 @@ export class ConfirmationDialogScene extends Phaser.Scene {
         );
       });
 
-      const declineY = startY + choices.length * (choiceBtnH + 6);
-      this.createHudButton(cx, declineY, Math.round(140 * scaleFactor), choiceBtnH - 4, declineLabel, 0x334155, 0x475569, scaleFactor, () => {
-        this.soundManager?.playSound("UI_CLICK");
-        this.previewManager?.hide();
-        this.dialogData.onDecline();
-        this.scene.stop();
-      });
+      if (allowDecline) {
+        const declineY = startY + choices.length * (choiceBtnH + gap);
+        this.createHudButton(cx, declineY, Math.round(140 * scaleFactor), Math.max(24, choiceBtnH - 4), declineLabel, 0x334155, 0x475569, scaleFactor, () => {
+          this.soundManager?.playSound("UI_CLICK");
+          this.previewManager?.hide();
+          this.dialogData.onDecline();
+          this.scene.stop();
+        });
+      }
       return;
     }
 

@@ -72,7 +72,7 @@ export class AbilityPromptManager {
    */
   public autoPassActivePrompt(): void {
     const isHelpEnabled = this.settingsManager?.isInGameSupportEnabled() ?? true;
-    if (isHelpEnabled || !this.activePromptMsg) {
+    if (isHelpEnabled || !this.activePromptMsg || this.activePromptMsg.allowDecline === false) {
       return;
     }
 
@@ -142,7 +142,7 @@ export class AbilityPromptManager {
     const isHelpEnabled = this.settingsManager?.isInGameSupportEnabled() ?? true;
 
     // 2. Branch according to In-Game Help setting
-    if (isHelpEnabled || (msg.choices && msg.choices.length > 1)) {
+    if (isHelpEnabled || (msg.choices && msg.choices.length > 1) || msg.allowDecline === false) {
       const cardData = cardUI?.cardData || {
         cardId: msg.cardId,
         ImageFile: msg.cardImageFile,
@@ -162,6 +162,7 @@ export class AbilityPromptManager {
         confirmLabel: "Activate",
         declineLabel: "Pass",
         choices: msg.choices,
+        allowDecline: msg.allowDecline !== false,
         onSelectChoice: onSelectChoiceAction,
         cardImageFile: msg.cardImageFile,
         templateId: msg.templateId,

@@ -89,6 +89,8 @@ class SelectTargetCommand extends BaseCommand {
           actionType: item.actionType,
           inGameType: card.inGameType,
           inGameAlignment: card.inGameAlignment,
+          isStarCard: card.IsStarCard,
+          card,
         })
         : [];
       let targetAbility = (abilityId && abilities.find((a) => a.ability_id === abilityId)) || abilities[0];
@@ -120,7 +122,11 @@ class SelectTargetCommand extends BaseCommand {
         this.room,
         controllerPlayer,
         targetDef,
-        { sourceCard: card, actionType: targetEffect?.action }
+        {
+          sourceCard: card,
+          actionType: targetEffect?.action,
+          selectedPileId: item._selectedPileId || undefined,
+        }
       );
       const validation = TargetSelectionService.validateSelection(
         { selectedCardIds, selectedPileId },

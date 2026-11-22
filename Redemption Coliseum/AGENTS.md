@@ -29,6 +29,7 @@
 
 ## Verification & Quality Gates
 - **Unified verification command**: Run `node scripts/verify.js` from `Redemption Coliseum/` after edits (`--server` for Jest only during iteration, `--client` for client `tsc --noEmit` + Vite `build` only; full `node scripts/verify.js` after shared changes or before wrapping up).
+- Organize Jest tests by rule/mechanic class inside the matching module test file (`server/tests/<feature>.test.js`) instead of per-card or catch-all bugfix files (e.g., `playtestBugfixes.test.js`); keep at most one real card sample per mechanic class.
 - Never claim checks passed without running them after the final edit. Report exact commands run and exact counts/failures observed.
 - Do not leave unused imports, commented-out blocks, or dead helpers behind.
 

@@ -123,18 +123,23 @@ describe("Phase 3: Multi-Step Attack & Block Resolution (Abiathar & Egyptian Hor
     expect(abiatharItem.cardId).toBe(abiathar.id);
     expect(abiatharItem.actionType).toBe(ActionType.RESCUE_ATTEMPT);
 
-    // Player 1 received the prompt
+    // Player 1 received the choice modal prompt
     expect(client1.send).toHaveBeenCalledWith(
       AST_MESSAGES.REQUEST_OPTIONAL_ABILITY,
       expect.objectContaining({
         cardTitle: expect.stringContaining("Abiathar"),
         itemId: abiatharItem.id,
+        action: "choose",
+        choices: [
+          expect.objectContaining({ abilityId: "look_at_hand", disabled: false }),
+          expect.objectContaining({ abilityId: "take_good_ot_card_from_reserve", disabled: true }),
+        ],
       })
     );
 
-    // 3. Player 1 accepts Abiathar's prompt
+    // 3. Player 1 selects Abiathar's look_at_hand choice
     const optCmd1 = new RespondOptionalAbilityCommand(room, client1);
-    optCmd1.execute({ itemId: abiatharItem.id, accepted: true });
+    optCmd1.execute({ itemId: abiatharItem.id, accepted: true, chosenAbilityId: "look_at_hand" });
 
     // Graceful fallback: unsupported action 'look' finishes cleanly and clears queue
     expect(state.effectChronicle.items.length).toBe(0);

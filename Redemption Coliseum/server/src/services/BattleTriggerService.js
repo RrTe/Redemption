@@ -173,7 +173,7 @@ class BattleTriggerService {
         if (seenChoiceGroups.has(ability.choice_group)) continue;
         seenChoiceGroups.add(ability.choice_group);
 
-        const groupAbilities = matching.filter(
+        const groupAbilities = abilities.filter(
           (a) => a.choice_group === ability.choice_group
         );
         const anyConditionMet = groupAbilities.some(
@@ -188,7 +188,7 @@ class BattleTriggerService {
           choiceGroup: ability.choice_group,
           isSupported: groupAbilities.some((a) => this._isSupportedAstAbility(a)),
           isChoice: true,
-          isOptional: true,
+          isOptional: groupAbilities.some((a) => Boolean(a.is_optional)),
         });
         continue;
       }

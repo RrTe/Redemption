@@ -3,6 +3,18 @@ const { AST_ACTIONS, AST_SELECTION_MODES } = require("../../../shared/astConstan
 const { ActionType } = require("../../../shared/actions");
 const { parseTargetCount } = require("./TargetCountResolver");
 
+const PILE_SCOPES = new Set([
+  "deck",
+  "discard_pile",
+  "discard",
+  "reserve_pile",
+  "reserve",
+  "banish_pile",
+  "banish",
+  "artifact_pile",
+  "artifact",
+]);
+
 /**
  * Formats AST abilities, individual effect steps, choice groups, and optional prompts
  * into human-readable labels and strips markup tokens for Effect Chronicle display.
@@ -93,6 +105,10 @@ class EffectLabelFormatter {
 
     const rawType = (target.target_type || (isBand ? "character" : "card")).replace(/_/g, " ");
     const quals = this.formatTargetQualifiers(target);
+    if (!isBand && !target.target_type && Array.isArray(target.card_titles) && target.card_titles.length === 1 && quals.idents.length === 1) {
+      const iden = quals.idents[0].replace(/_/g, " ").toLowerCase();
+      return `${target.card_titles[0]} or ${iden}`;
+    }
     const classStr = quals.classes.length > 0 ? quals.classes.map((c) => String(c).toLowerCase()).join(" or ") : "";
 
     if (isBand) {
@@ -188,6 +204,13 @@ class EffectLabelFormatter {
     return parts.length > 0 ? `from ${parts.join(", ")}` : "";
   }
 
+  static _formatPileScopeSuffix(target = {}) {
+    if (!Array.isArray(target?.scope) || target.scope.length === 0) return "";
+    if (!target.scope.every((s) => PILE_SCOPES.has(String(s).toLowerCase()))) return "";
+    const scope = this.formatScopeText(target.scope, { excludeInPlay: true });
+    return scope ? ` from ${scope}` : "";
+  }
+
   /**
    * Formats a single AST effect step into a concise, human-readable label.
    *
@@ -201,6 +224,7 @@ class EffectLabelFormatter {
     const target = effect.target || {};
     const phrase = this.formatTargetPhrase(target);
     const scope = this.formatScopeText(target.scope, { excludeInPlay: true });
+    const pileSuffix = this._formatPileScopeSuffix(target);
 
     switch (action) {
       case AST_ACTIONS.TOPDECK:
@@ -212,9 +236,9 @@ class EffectLabelFormatter {
         return `Return ${phrase} to hand`;
       case AST_ACTIONS.BANISH:
       case AST_ACTIONS.REMOVE_FROM_THE_GAME:
-        return `Banish ${phrase}`;
+        return `Banish ${phrase}${pileSuffix}`;
       case AST_ACTIONS.DISCARD:
-        return `Discard ${phrase}`;
+        return `Discard ${phrase}${pileSuffix}`;
       case AST_ACTIONS.DRAW: {
         const count = target.count?.fixed_value || effect.count?.fixed_value || 1;
         return `Draw ${count} card(s)`;
@@ -224,6 +248,20 @@ class EffectLabelFormatter {
         const countStr = count && count > 1 ? `${count} ` : "";
         const takeScope = this.formatScopeText(target.scope);
         return `Take ${countStr}${phrase}${takeScope ? ` from ${takeScope}` : ""}`;
+      }
+      case AST_ACTIONS.PLAY:
+        return `Play ${phrase}${pileSuffix}`;
+      case "reserve":
+        if (target.selection_mode === AST_SELECTION_MODES.AUTOMATIC_SELF) {
+          return "Reserve this card";
+        }
+        return `Reserve ${phrase}${pileSuffix}`;
+      case AST_ACTIONS.SEARCH:
+        return `Search ${phrase}${pileSuffix}`;
+      case "look": {
+        const lookScope = this.formatScopeText(target.scope) || "cards";
+        const ownerPrefix = target.zone_owner === "opponent" ? "opponent's " : "";
+        return `Look at ${ownerPrefix}${lookScope}`;
       }
       case AST_ACTIONS.PLACE: {
         const dest = effect.destination ? String(effect.destination).replace(/_pile/g, "").replace(/_/g, " ") : "play";
@@ -281,10 +319,22 @@ class EffectLabelFormatter {
       return ability.ability_id ? String(ability.ability_id).replace(/_/g, " ") : "Activate Ability";
     }
     const sorted = [...ability.effects].sort((a, b) => (a.step || 1) - (b.step || 1));
-    if (sorted.length === 1) {
-      return this.formatSingleEffectLabel(sorted[0], card);
+    const effectText = sorted.length === 1
+      ? this.formatSingleEffectLabel(sorted[0], card)
+      : sorted.map((e) => this.formatSingleEffectLabel(e, card)).join(" -> ");
+    if (Array.isArray(ability.costs) && ability.costs.length > 0) {
+      const costText = ability.costs
+        .map((c) => {
+          const base = this.formatSingleEffectLabel(c, card);
+          const sc = this.formatScopeText(c?.target?.scope, { excludeInPlay: true });
+          return sc && !base.toLowerCase().includes(`from ${sc.toLowerCase()}`)
+            ? `${base} from ${sc}`
+            : base;
+        })
+        .join(" & ");
+      return `${costText} -> ${effectText}`;
     }
-    return sorted.map((e) => this.formatSingleEffectLabel(e, card)).join(" -> ");
+    return effectText;
   }
 
   /**
@@ -325,8 +375,39 @@ class EffectLabelFormatter {
     switch (effect.action) {
       case AST_ACTIONS.DRAW:
         return `Draw ${count} card${count > 1 ? "s" : ""}?`;
-      case AST_ACTIONS.DISCARD:
-        return `Discard ${count} card${count > 1 ? "s" : ""}?`;
+      case AST_ACTIONS.DISCARD: {
+        const phrase = this.formatTargetPhrase(effect.target);
+        const pileSuffix = this._formatPileScopeSuffix(effect.target);
+        const { isAll } = parseTargetCount(effect.target, effect.count);
+        if (isAll) {
+          return `Discard all ${this.pluralizeNoun(phrase)}${pileSuffix}?`;
+        }
+        if (count > 1) {
+          return `Discard ${count} ${this.pluralizeNoun(phrase)}${pileSuffix}?`;
+        }
+        if (phrase && phrase !== "card") {
+          return `Discard ${phrase}${pileSuffix}?`;
+        }
+        return `Discard ${count} card${pileSuffix}?`;
+      }
+      case AST_ACTIONS.BANISH:
+      case AST_ACTIONS.REMOVE_FROM_THE_GAME: {
+        const phrase = this.formatTargetPhrase(effect.target);
+        const pileSuffix = this._formatPileScopeSuffix(effect.target);
+        const { isAll } = parseTargetCount(effect.target, effect.count);
+        if (isAll) {
+          return `Banish all ${this.pluralizeNoun(phrase)}${pileSuffix}?`;
+        }
+        if (count > 1) {
+          return `Banish ${count} ${this.pluralizeNoun(phrase)}${pileSuffix}?`;
+        }
+        if (phrase && phrase !== "card") {
+          return `Banish ${phrase}${pileSuffix}?`;
+        }
+        return `Banish ${count} card${pileSuffix}?`;
+      }
+      case "look":
+        return `${this.formatSingleEffectLabel(effect, card)}?`;
       case "look_and_choose":
         return "Search and choose from cards?";
       case AST_ACTIONS.BAND:

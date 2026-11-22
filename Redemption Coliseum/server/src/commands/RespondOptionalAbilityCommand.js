@@ -185,6 +185,38 @@ class RespondOptionalAbilityCommand extends BaseCommand {
       const sourceTitle = sourceCard ? formatCardLink(sourceCard) : item.title;
 
       if (!accepted) {
+        if (sourceCard?.templateId && (item._choiceGroup || !item.abilityId)) {
+          const abilities = AbilityLookup.resolveAbilities(sourceCard.templateId, {
+            actionType: item.actionType,
+            inGameType: sourceCard.inGameType,
+            inGameAlignment: sourceCard.inGameAlignment,
+            isStarCard: sourceCard.IsStarCard,
+            card: sourceCard,
+          });
+          const choiceGroup = item._choiceGroup || abilities[0]?.choice_group;
+          const choiceAbilities = choiceGroup
+            ? abilities.filter((a) => a.choice_group === choiceGroup)
+            : [];
+          const isMandatoryGroup =
+            choiceAbilities.length > 1 &&
+            !choiceAbilities.some((a) => Boolean(a.is_optional));
+          if (isMandatoryGroup && this.room.abilityResolver?._evaluateChoiceOptions) {
+            const { evaluatedChoices } = this.room.abilityResolver._evaluateChoiceOptions(
+              choiceAbilities,
+              player,
+              sourceCard
+            );
+            if (evaluatedChoices.some((c) => !c.disabled)) {
+              logger.warn(
+                `[RespondOptionalAbilityCommand] Client '${this.client.sessionId}' attempted to decline mandatory choice group '${choiceGroup}' on '${item.title}'. Re-prompting.`
+              );
+              this.room.abilityResolver.repromptItem(item);
+              this.canUndo = false;
+              return;
+            }
+          }
+        }
+
         const declineResult = this.room.abilityResolver.resolve(item, { accepted: false });
         if (declineResult?.logEntries?.length) {
           declineResult.logEntries.forEach((msg) => this.room.broadcastGameLog(msg));
@@ -222,6 +254,8 @@ class RespondOptionalAbilityCommand extends BaseCommand {
           actionType: item.actionType,
           inGameType: sourceCard.inGameType,
           inGameAlignment: sourceCard.inGameAlignment,
+          isStarCard: sourceCard.IsStarCard,
+          card: sourceCard,
         });
         const chosenAbility = abilities.find((a) => a.ability_id === message.chosenAbilityId);
         if (chosenAbility) {

@@ -183,6 +183,10 @@ export class TargetingFocusManager {
     if (ze?.opponentDeckPile) entries.push({ pile: ze.opponentDeckPile, id: `${oppId}:${ZONES.DECK}` });
     if (ze?.playerDiscardPile) entries.push({ pile: ze.playerDiscardPile, id: `${myId}:${ZONES.DISCARD}` });
     if (ze?.opponentDiscardPile) entries.push({ pile: ze.opponentDiscardPile, id: `${oppId}:${ZONES.DISCARD}` });
+    if (ze?.playerReservePile) entries.push({ pile: ze.playerReservePile, id: `${myId}:${ZONES.RESERVE}` });
+    if (ze?.opponentReservePile) entries.push({ pile: ze.opponentReservePile, id: `${oppId}:${ZONES.RESERVE}` });
+    if (ze?.playerBanishPile) entries.push({ pile: ze.playerBanishPile, id: `${myId}:${ZONES.BANISH}` });
+    if (ze?.opponentBanishPile) entries.push({ pile: ze.opponentBanishPile, id: `${oppId}:${ZONES.BANISH}` });
     return entries;
   }
 

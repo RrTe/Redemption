@@ -130,6 +130,8 @@ class ChronicleRollbackService {
       _abilityGroupId: item._abilityGroupId || "",
       _previousSnapshot: item._previousSnapshot || null,
       _inspectedOpponentReserve: Boolean(item._inspectedOpponentReserve),
+      _selectedPileId: item._selectedPileId || "",
+      _inspectedEmptyPile: Boolean(item._inspectedEmptyPile),
       isConfirmed: Boolean(item.isConfirmed),
       isDeclared: Boolean(item.isDeclared),
       pendingSpecialInitiative: psi,
@@ -163,6 +165,8 @@ class ChronicleRollbackService {
     if (data._abilityGroupId) item._abilityGroupId = data._abilityGroupId;
     if (data._previousSnapshot) item._previousSnapshot = data._previousSnapshot;
     if (data._inspectedOpponentReserve) item._inspectedOpponentReserve = true;
+    if (data._selectedPileId) item._selectedPileId = data._selectedPileId;
+    if (data._inspectedEmptyPile) item._inspectedEmptyPile = true;
     if (data.isConfirmed) item.isConfirmed = true;
     if (data.isDeclared) item.isDeclared = true;
     if (data.pendingSpecialInitiative) {

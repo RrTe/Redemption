@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { ZONES, type Zone } from "../../../shared/zones";
 import { type TypedRoom } from "./gameUI";
 import { type GameNetworkManager } from "../network/GameNetworkManager"; // ✨ NEU
+import { TargetBorderEffect } from "./effects/TargetBorderEffect";
 import { DEBUG } from "../utils/logger";
 
 const SHADOW_CONFIG = {
@@ -20,6 +21,7 @@ export class PileUI extends Phaser.GameObjects.Container {
   private badgeBg: Phaser.GameObjects.Graphics; // ✨ NEU: Badge Hintergrund
   private badgeContainer: Phaser.GameObjects.Container; // ✨ NEU: Container auf Szenen-Ebene für den Z-Index
   private cardCount: number = 0;
+  private targetBorderEffect: TargetBorderEffect;
 
   // ✨ HIER KANNST DU DIE SCHRIFTGRÖSSE FÜR DEN HANDY-ZÄHLER ANPASSEN
   private getCountFontSize(width: number, height: number): number {
@@ -127,7 +129,10 @@ export class PileUI extends Phaser.GameObjects.Container {
     // Cleanup bei Zerstörung des Piles
     this.on('destroy', () => {
       this.badgeContainer.destroy();
+      this.targetBorderEffect?.destroy();
     });
+
+    this.targetBorderEffect = new TargetBorderEffect(scene, this, width, height, 8);
 
     // ✨ FINALE KORREKTUR: Mache JEDEN Stapel von Anfang an interaktiv.
     // 1. Definiere eine klickbare Fläche (Hit Area), die der Größe des Stapels entspricht.
@@ -146,6 +151,16 @@ export class PileUI extends Phaser.GameObjects.Container {
       // ✨ FIX: Ignoriere Events, wenn die Maus bewegt wurde (Drag & Drop Operation).
       if (pointer.getDistance() > 20) return;
 
+      // Targeting selection: emit pile target click when highlighted as an eligible target pile
+      if (this.isTargetingActive() && pointer.leftButtonReleased() && room) {
+        const ownerId = isOpponent
+          ? Array.from(room.state.players.keys()).find((id) => id !== room.sessionId) || ""
+          : room.sessionId;
+        const pileId = `${ownerId}:${zoneName}`;
+        this.scene.events.emit("ui:pileTargetClicked", { pileId, zoneName, ownerId });
+        return;
+      }
+
       // Die Logik zum Kartenziehen wird weiterhin nur für das Deck bei einem Linksklick ausgeführt.
       // ✨ FIX: Verhindere Ziehen vom Gegner-Deck per Linksklick.
       if (
@@ -162,6 +177,16 @@ export class PileUI extends Phaser.GameObjects.Container {
     });
 
     scene.add.existing(this);
+  }
+
+  public showTargetingBorder(active: boolean): void {
+    if (this.targetBorderEffect) {
+      this.targetBorderEffect.show(active);
+    }
+  }
+
+  public isTargetingActive(): boolean {
+    return (this.targetBorderEffect as any)?.isActive || false;
   }
 
   public updateCount(newCount: number) {
@@ -239,6 +264,9 @@ export class PileUI extends Phaser.GameObjects.Container {
     // Ohne dies behält der Klickbereich seine ursprüngliche Größe und überlappt andere Elemente.
     if (this.input) {
       this.input.hitArea.setSize(width, height); // ✨ KORREKTUR: Fehlendes Semikolon war hier, entfernt.
+    }
+    if (this.targetBorderEffect) {
+      this.targetBorderEffect.setSize(width, height);
     }
   }
 }
