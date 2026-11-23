@@ -21,7 +21,6 @@ from models.logic.card_logic import CardSideLogic
 from models.logic.protection_filter import ProtectionFilter
 from models.logic.target_selector import TargetSelector
 from scripts.fact_matrix import extract_ast_facts, verify_fact_matrix
-from scripts.migrations.migrate_phase2_star_and_semantics import _migrate_star_entries
 from scripts.utils.ability_splitter import split_card_abilities
 
 STAGE09 = importlib.import_module("scripts.09_generate_ai_abilities")
@@ -90,29 +89,6 @@ class TestPhase2Repairs(unittest.TestCase):
         results["1864837258_top"] = regular_top
         done_keys = STAGE09.compute_done_entry_keys(results)
         self.assertTrue(STAGE09.is_entry_done("1864837258", "top", done_keys, star_done_cids, results))
-
-    def test_legacy_star_migration_is_idempotent(self) -> None:
-        """Verifies pure STAR entries move cleanly from _top/_shared to _star without loss on repeat."""
-        synthetic: Dict[str, Any] = {
-            "1864837258_top": {
-                "card_id": "1864837258",
-                "card_name": "Repudiating Rulers (GoC)",
-                "side": "top",
-                "raw_ability": "STAR: Play a Lost Soul from each opponent's deck.",
-                "ast": {"classes": [], "modifiers": [], "abilities": [{"ability_id": "star_ls", "is_star": True, "effects": []}]},
-            },
-        }
-        touched: set[str] = set()
-        first = _migrate_star_entries(synthetic, self.ext_by_id, touched)
-        self.assertEqual(first["moved_pure_star"], 1)
-        self.assertNotIn("1864837258_top", synthetic)
-        self.assertIn("1864837258_star", synthetic)
-        self.assertEqual(synthetic["1864837258_star"]["side"], "star")
-
-        second = _migrate_star_entries(synthetic, self.ext_by_id, touched)
-        self.assertEqual(second["moved_pure_star"], 0)
-        self.assertEqual(second["removed_dup_star"], 0)
-        self.assertIn("1864837258_star", synthetic)
 
     def test_fact_matrix_capture_and_protect_rules(self) -> None:
         """Verifies new fact_matrix checks catch protect/capture misclassified as restrict."""

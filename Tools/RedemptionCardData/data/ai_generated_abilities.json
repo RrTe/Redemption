@@ -32073,7 +32073,7 @@
             },
             {
               "step": 3,
-              "action": "prevent",
+              "action": "protect",
               "effect_type": "ongoing",
               "duration": "permanent",
               "target": {
@@ -32097,6 +32097,62 @@
                 "ability_target_actions": [],
                 "exclude_ability_actions": [],
                 "any_of": []
+              },
+              "protection_filter": {
+                "from_harm": false,
+                "actions": [
+                  "rescue"
+                ],
+                "except_actions": [],
+                "card_sources": [
+                  {
+                    "selection_mode": "automatic_all",
+                    "zone_owner": "both",
+                    "scope": [
+                      "in_play"
+                    ],
+                    "target_type": "card",
+                    "brigades": [],
+                    "classes": [],
+                    "references": [],
+                    "identifiers": [],
+                    "card_titles": [],
+                    "target_card_ids": [],
+                    "stat_filters": [],
+                    "exclude_self": false,
+                    "state_filters": [],
+                    "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "in_play"
+                      ],
+                      "target_type": "hero",
+                      "brigades": [],
+                      "alignment": "good",
+                      "is_human": true,
+                      "classes": [],
+                      "references": [],
+                      "identifiers": [],
+                      "card_titles": [],
+                      "target_card_ids": [],
+                      "stat_filters": [],
+                      "exclude_self": false,
+                      "state_filters": [],
+                      "relative_filters": [],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": []
+                    },
+                    "targets_abilities": false,
+                    "ability_target_actions": [],
+                    "exclude_ability_actions": [],
+                    "any_of": []
+                  }
+                ],
+                "qualifiers": []
               },
               "destination_position": "as_is",
               "creates_context_scope": false,
@@ -114364,7 +114420,7 @@
                 "scope": [
                   "in_play"
                 ],
-                "target_type": "artifact",
+                "target_type": "card",
                 "brigades": [],
                 "classes": [],
                 "references": [],
@@ -114377,6 +114433,28 @@
                 "exclude_self": false,
                 "state_filters": [],
                 "relative_filters": [],
+                "exclude": {
+                  "selection_mode": "automatic_all",
+                  "zone_owner": "both",
+                  "scope": [
+                    "in_play"
+                  ],
+                  "target_type": "character",
+                  "brigades": [],
+                  "classes": [],
+                  "references": [],
+                  "identifiers": [],
+                  "card_titles": [],
+                  "target_card_ids": [],
+                  "stat_filters": [],
+                  "exclude_self": false,
+                  "state_filters": [],
+                  "relative_filters": [],
+                  "targets_abilities": false,
+                  "ability_target_actions": [],
+                  "exclude_ability_actions": [],
+                  "any_of": []
+                },
                 "targets_abilities": false,
                 "ability_target_actions": [],
                 "exclude_ability_actions": [],
@@ -114384,56 +114462,11 @@
               },
               "protection_filter": {
                 "from_harm": false,
-                "actions": [],
-                "except_actions": [
+                "actions": [
                   "discard"
                 ],
-                "card_sources": [
-                  {
-                    "selection_mode": "automatic_all",
-                    "zone_owner": "both",
-                    "scope": [
-                      "in_play"
-                    ],
-                    "target_type": "card",
-                    "brigades": [],
-                    "classes": [],
-                    "references": [],
-                    "identifiers": [],
-                    "card_titles": [],
-                    "target_card_ids": [],
-                    "stat_filters": [],
-                    "exclude_self": false,
-                    "state_filters": [],
-                    "relative_filters": [],
-                    "exclude": {
-                      "selection_mode": "automatic_all",
-                      "zone_owner": "controller",
-                      "scope": [
-                        "battle"
-                      ],
-                      "target_type": "character",
-                      "brigades": [],
-                      "classes": [],
-                      "references": [],
-                      "identifiers": [],
-                      "card_titles": [],
-                      "target_card_ids": [],
-                      "stat_filters": [],
-                      "exclude_self": false,
-                      "state_filters": [],
-                      "relative_filters": [],
-                      "targets_abilities": false,
-                      "ability_target_actions": [],
-                      "exclude_ability_actions": [],
-                      "any_of": []
-                    },
-                    "targets_abilities": false,
-                    "ability_target_actions": [],
-                    "exclude_ability_actions": [],
-                    "any_of": []
-                  }
-                ],
+                "except_actions": [],
+                "card_sources": [],
                 "qualifiers": []
               },
               "destination_position": "as_is",
@@ -320718,37 +320751,57 @@
                 "card_sources": [
                   {
                     "selection_mode": "automatic_all",
-                    "zone_owner": "controller",
+                    "zone_owner": "both",
                     "scope": [
-                      "battle"
+                      "in_play"
                     ],
-                    "target_type": "hero",
+                    "target_type": "card",
                     "brigades": [],
-                    "alignment": "good",
                     "classes": [],
                     "references": [],
                     "identifiers": [],
                     "card_titles": [],
                     "target_card_ids": [],
-                    "stat_filters": [
-                      {
-                        "stat": "strength",
-                        "operator": "<=",
-                        "value": 6
-                      }
-                    ],
+                    "stat_filters": [],
                     "exclude_self": false,
                     "state_filters": [],
                     "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "in_play"
+                      ],
+                      "target_type": "hero",
+                      "brigades": [],
+                      "alignment": "good",
+                      "classes": [],
+                      "references": [],
+                      "identifiers": [],
+                      "card_titles": [],
+                      "target_card_ids": [],
+                      "stat_filters": [
+                        {
+                          "stat": "strength",
+                          "operator": "<=",
+                          "value": 6
+                        }
+                      ],
+                      "exclude_self": false,
+                      "state_filters": [],
+                      "relative_filters": [],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": []
+                    },
                     "targets_abilities": false,
                     "ability_target_actions": [],
                     "exclude_ability_actions": [],
                     "any_of": []
                   }
                 ],
-                "qualifiers": [
-                  "except by a Hero with strength 6 or less"
-                ]
+                "qualifiers": []
               },
               "destination_position": "as_is",
               "creates_context_scope": false,
@@ -325761,13 +325814,12 @@
                 "card_sources": [
                   {
                     "selection_mode": "automatic_all",
-                    "zone_owner": "opponent",
+                    "zone_owner": "both",
                     "scope": [
-                      "battle"
+                      "in_play"
                     ],
-                    "target_type": "hero",
+                    "target_type": "card",
                     "brigades": [],
-                    "alignment": "good",
                     "classes": [],
                     "references": [],
                     "identifiers": [],
@@ -325775,19 +325827,40 @@
                     "target_card_ids": [],
                     "stat_filters": [],
                     "exclude_self": false,
-                    "state_filters": [
-                      "lone"
-                    ],
+                    "state_filters": [],
                     "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "in_play"
+                      ],
+                      "target_type": "hero",
+                      "brigades": [],
+                      "alignment": "good",
+                      "classes": [],
+                      "references": [],
+                      "identifiers": [],
+                      "card_titles": [],
+                      "target_card_ids": [],
+                      "stat_filters": [],
+                      "exclude_self": false,
+                      "state_filters": [
+                        "lone"
+                      ],
+                      "relative_filters": [],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": []
+                    },
                     "targets_abilities": false,
                     "ability_target_actions": [],
                     "exclude_ability_actions": [],
                     "any_of": []
                   }
                 ],
-                "qualifiers": [
-                  "except by a lone Hero"
-                ]
+                "qualifiers": []
               },
               "destination_position": "as_is",
               "creates_context_scope": false,
@@ -329462,7 +329535,7 @@
                     "scope": [
                       "in_play"
                     ],
-                    "target_type": "hero",
+                    "target_type": "card",
                     "brigades": [],
                     "alignment": "good",
                     "classes": [],
@@ -329476,9 +329549,9 @@
                     "relative_filters": [],
                     "exclude": {
                       "selection_mode": "automatic_all",
-                      "zone_owner": "controller",
+                      "zone_owner": "both",
                       "scope": [
-                        "battle"
+                        "in_play"
                       ],
                       "target_type": "hero",
                       "brigades": [],
@@ -331024,6 +331097,7 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
@@ -331034,49 +331108,42 @@
                     "exclude_self": false,
                     "state_filters": [],
                     "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "in_play"
+                      ],
+                      "brigades": [],
+                      "classes": [],
+                      "references": [],
+                      "identifiers": [],
+                      "card_titles": [],
+                      "target_card_ids": [],
+                      "stat_filters": [],
+                      "exclude_self": false,
+                      "state_filters": [],
+                      "relative_filters": [],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": [
+                        {
+                          "target_type": "hero",
+                          "alignment": "good",
+                          "gender": "female"
+                        },
+                        {
+                          "card_titles": [
+                            "Son of God"
+                          ]
+                        }
+                      ]
+                    },
                     "targets_abilities": false,
                     "ability_target_actions": [],
                     "exclude_ability_actions": [],
-                    "any_of": [
-                      {
-                        "target_type": "hero",
-                        "alignment": "good",
-                        "gender": "female"
-                      },
-                      {
-                        "card_titles": [
-                          "Son of God"
-                        ],
-                        "target_card_ids": [
-                          "-1070125806",
-                          "-1072582524",
-                          "-1097267364",
-                          "-1187194766",
-                          "-1358097793",
-                          "-1455627120",
-                          "-1617119586",
-                          "-1625391299",
-                          "-1683702224",
-                          "-1765513461",
-                          "-1855071772",
-                          "-2011239494",
-                          "-234768175",
-                          "-499479134",
-                          "-54050793",
-                          "-609480835",
-                          "-850773991",
-                          "111547180",
-                          "1358449777",
-                          "1544314945",
-                          "1723556744",
-                          "1772326106",
-                          "271160703",
-                          "289450985",
-                          "549499149",
-                          "699843105"
-                        ]
-                      }
-                    ]
+                    "any_of": []
                   }
                 ],
                 "qualifiers": []
@@ -331151,6 +331218,7 @@
                     "scope": [
                       "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
@@ -331161,49 +331229,42 @@
                     "exclude_self": false,
                     "state_filters": [],
                     "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "in_play"
+                      ],
+                      "brigades": [],
+                      "classes": [],
+                      "references": [],
+                      "identifiers": [],
+                      "card_titles": [],
+                      "target_card_ids": [],
+                      "stat_filters": [],
+                      "exclude_self": false,
+                      "state_filters": [],
+                      "relative_filters": [],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": [
+                        {
+                          "target_type": "hero",
+                          "alignment": "good",
+                          "gender": "female"
+                        },
+                        {
+                          "card_titles": [
+                            "Son of God"
+                          ]
+                        }
+                      ]
+                    },
                     "targets_abilities": false,
                     "ability_target_actions": [],
                     "exclude_ability_actions": [],
-                    "any_of": [
-                      {
-                        "target_type": "hero",
-                        "alignment": "good",
-                        "gender": "female"
-                      },
-                      {
-                        "card_titles": [
-                          "Son of God"
-                        ],
-                        "target_card_ids": [
-                          "-1070125806",
-                          "-1072582524",
-                          "-1097267364",
-                          "-1187194766",
-                          "-1358097793",
-                          "-1455627120",
-                          "-1617119586",
-                          "-1625391299",
-                          "-1683702224",
-                          "-1765513461",
-                          "-1855071772",
-                          "-2011239494",
-                          "-234768175",
-                          "-499479134",
-                          "-54050793",
-                          "-609480835",
-                          "-850773991",
-                          "111547180",
-                          "1358449777",
-                          "1544314945",
-                          "1723556744",
-                          "1772326106",
-                          "271160703",
-                          "289450985",
-                          "549499149",
-                          "699843105"
-                        ]
-                      }
-                    ]
+                    "any_of": []
                   }
                 ],
                 "qualifiers": []
@@ -331825,8 +331886,9 @@
                     "selection_mode": "automatic_all",
                     "zone_owner": "both",
                     "scope": [
-                      "battle"
+                      "in_play"
                     ],
+                    "target_type": "card",
                     "brigades": [],
                     "classes": [],
                     "references": [],
@@ -331839,9 +331901,9 @@
                     "relative_filters": [],
                     "exclude": {
                       "selection_mode": "automatic_all",
-                      "zone_owner": "controller",
+                      "zone_owner": "both",
                       "scope": [
-                        "battle"
+                        "in_play"
                       ],
                       "brigades": [],
                       "classes": [],
@@ -351275,7 +351337,7 @@
                 "any_of": []
               },
               "protection_filter": {
-                "from_harm": true,
+                "from_harm": false,
                 "actions": [
                   "capture",
                   "convert"
@@ -351284,18 +351346,14 @@
                 "card_sources": [
                   {
                     "selection_mode": "automatic_all",
-                    "zone_owner": "opponent",
+                    "zone_owner": "both",
                     "scope": [
-                      "battle"
+                      "in_play"
                     ],
-                    "target_type": "hero",
+                    "target_type": "card",
                     "brigades": [],
-                    "alignment": "good",
-                    "is_human": true,
                     "classes": [],
-                    "references": [
-                      "Daniel"
-                    ],
+                    "references": [],
                     "identifiers": [],
                     "card_titles": [],
                     "target_card_ids": [],
@@ -351303,6 +351361,31 @@
                     "exclude_self": false,
                     "state_filters": [],
                     "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "in_play"
+                      ],
+                      "target_type": "character",
+                      "brigades": [],
+                      "is_human": true,
+                      "classes": [],
+                      "references": [
+                        "Daniel"
+                      ],
+                      "identifiers": [],
+                      "card_titles": [],
+                      "target_card_ids": [],
+                      "stat_filters": [],
+                      "exclude_self": false,
+                      "state_filters": [],
+                      "relative_filters": [],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": []
+                    },
                     "targets_abilities": false,
                     "ability_target_actions": [],
                     "exclude_ability_actions": [],
@@ -396443,10 +396526,62 @@
                   "rescue"
                 ],
                 "except_actions": [],
-                "card_sources": [],
-                "qualifiers": [
-                  "except by a Hero with matching brigade"
-                ]
+                "card_sources": [
+                  {
+                    "selection_mode": "automatic_all",
+                    "zone_owner": "both",
+                    "scope": [
+                      "in_play"
+                    ],
+                    "target_type": "card",
+                    "brigades": [],
+                    "classes": [],
+                    "references": [],
+                    "identifiers": [],
+                    "card_titles": [],
+                    "target_card_ids": [],
+                    "stat_filters": [],
+                    "exclude_self": false,
+                    "state_filters": [],
+                    "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "in_play"
+                      ],
+                      "target_type": "hero",
+                      "brigades": [],
+                      "alignment": "good",
+                      "classes": [],
+                      "references": [],
+                      "identifiers": [],
+                      "card_titles": [],
+                      "target_card_ids": [],
+                      "stat_filters": [],
+                      "exclude_self": false,
+                      "state_filters": [],
+                      "relative_filters": [
+                        {
+                          "attribute": "brigade",
+                          "relation": "same",
+                          "reference": {
+                            "ref_step": 1
+                          }
+                        }
+                      ],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": []
+                    },
+                    "targets_abilities": false,
+                    "ability_target_actions": [],
+                    "exclude_ability_actions": [],
+                    "any_of": []
+                  }
+                ],
+                "qualifiers": []
               },
               "destination_position": "as_is",
               "creates_context_scope": false,
@@ -414560,9 +414695,9 @@
                 "card_sources": [
                   {
                     "selection_mode": "automatic_all",
-                    "zone_owner": "opponent",
+                    "zone_owner": "both",
                     "scope": [
-                      "battle"
+                      "in_play"
                     ],
                     "target_type": "card",
                     "brigades": [],
@@ -414575,6 +414710,28 @@
                     "exclude_self": false,
                     "state_filters": [],
                     "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "battle"
+                      ],
+                      "target_type": "card",
+                      "brigades": [],
+                      "classes": [],
+                      "references": [],
+                      "identifiers": [],
+                      "card_titles": [],
+                      "target_card_ids": [],
+                      "stat_filters": [],
+                      "exclude_self": false,
+                      "state_filters": [],
+                      "relative_filters": [],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": []
+                    },
                     "targets_abilities": false,
                     "ability_target_actions": [],
                     "exclude_ability_actions": [],
@@ -415668,15 +415825,38 @@
                     "exclude_self": false,
                     "state_filters": [],
                     "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "in_play"
+                      ],
+                      "brigades": [],
+                      "classes": [],
+                      "references": [],
+                      "identifiers": [],
+                      "card_titles": [
+                        "Michael",
+                        "Gabriel",
+                        "Captain of the Host"
+                      ],
+                      "target_card_ids": [],
+                      "stat_filters": [],
+                      "exclude_self": false,
+                      "state_filters": [],
+                      "relative_filters": [],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": []
+                    },
                     "targets_abilities": false,
                     "ability_target_actions": [],
                     "exclude_ability_actions": [],
                     "any_of": []
                   }
                 ],
-                "qualifiers": [
-                  "except Michael, Gabriel, and Captain of the Host"
-                ]
+                "qualifiers": []
               },
               "destination_position": "as_is",
               "creates_context_scope": false,
@@ -416012,15 +416192,37 @@
                     "exclude_self": false,
                     "state_filters": [],
                     "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "in_play"
+                      ],
+                      "brigades": [],
+                      "classes": [],
+                      "references": [],
+                      "identifiers": [],
+                      "card_titles": [
+                        "Michael",
+                        "Gabriel"
+                      ],
+                      "target_card_ids": [],
+                      "stat_filters": [],
+                      "exclude_self": false,
+                      "state_filters": [],
+                      "relative_filters": [],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": []
+                    },
                     "targets_abilities": false,
                     "ability_target_actions": [],
                     "exclude_ability_actions": [],
                     "any_of": []
                   }
                 ],
-                "qualifiers": [
-                  "except Michael and Gabriel"
-                ]
+                "qualifiers": []
               },
               "destination_position": "as_is",
               "creates_context_scope": false,
@@ -449616,25 +449818,28 @@
                 "exclude_self": false,
                 "state_filters": [],
                 "relative_filters": [],
-                "targets_abilities": false,
-                "ability_target_actions": [],
-                "exclude_ability_actions": [],
-                "any_of": [],
-                "count": {
-                  "fixed_value": 1
-                }
-              },
-              "protection_filter": {
-                "from_harm": false,
-                "actions": [],
-                "except_actions": [],
-                "card_sources": [
-                  {
+                "exclude": {
+                  "selection_mode": "automatic_all",
+                  "zone_owner": "both",
+                  "scope": [
+                    "in_play"
+                  ],
+                  "target_type": "enhancement",
+                  "brigades": [],
+                  "classes": [],
+                  "references": [],
+                  "identifiers": [],
+                  "card_titles": [],
+                  "target_card_ids": [],
+                  "stat_filters": [],
+                  "exclude_self": false,
+                  "state_filters": [],
+                  "relative_filters": [],
+                  "used_by": {
                     "selection_mode": "automatic_all",
-                    "zone_owner": "opponent",
+                    "zone_owner": "both",
                     "scope": [
-                      "in_play",
-                      "battle"
+                      "in_play"
                     ],
                     "target_type": "character",
                     "brigades": [],
@@ -449652,9 +449857,19 @@
                     "ability_target_actions": [],
                     "exclude_ability_actions": [],
                     "any_of": []
-                  }
-                ],
-                "qualifiers": []
+                  },
+                  "targets_abilities": false,
+                  "ability_target_actions": [],
+                  "exclude_ability_actions": [],
+                  "any_of": []
+                },
+                "targets_abilities": false,
+                "ability_target_actions": [],
+                "exclude_ability_actions": [],
+                "any_of": [],
+                "count": {
+                  "fixed_value": 1
+                }
               },
               "destination_position": "as_is",
               "creates_context_scope": false,
@@ -450172,6 +450387,30 @@
                 "exclude_self": false,
                 "state_filters": [],
                 "relative_filters": [],
+                "exclude": {
+                  "selection_mode": "automatic_all",
+                  "zone_owner": "both",
+                  "scope": [
+                    "battle"
+                  ],
+                  "target_type": "hero",
+                  "brigades": [],
+                  "alignment": "good",
+                  "is_meek": true,
+                  "classes": [],
+                  "references": [],
+                  "identifiers": [],
+                  "card_titles": [],
+                  "target_card_ids": [],
+                  "stat_filters": [],
+                  "exclude_self": false,
+                  "state_filters": [],
+                  "relative_filters": [],
+                  "targets_abilities": false,
+                  "ability_target_actions": [],
+                  "exclude_ability_actions": [],
+                  "any_of": []
+                },
                 "targets_abilities": false,
                 "ability_target_actions": [],
                 "exclude_ability_actions": [],
@@ -450179,38 +450418,6 @@
                 "count": {
                   "fixed_value": 1
                 }
-              },
-              "protection_filter": {
-                "from_harm": false,
-                "actions": [],
-                "except_actions": [],
-                "card_sources": [
-                  {
-                    "selection_mode": "automatic_all",
-                    "zone_owner": "opponent",
-                    "scope": [
-                      "battle"
-                    ],
-                    "target_type": "hero",
-                    "brigades": [],
-                    "alignment": "good",
-                    "is_meek": true,
-                    "classes": [],
-                    "references": [],
-                    "identifiers": [],
-                    "card_titles": [],
-                    "target_card_ids": [],
-                    "stat_filters": [],
-                    "exclude_self": false,
-                    "state_filters": [],
-                    "relative_filters": [],
-                    "targets_abilities": false,
-                    "ability_target_actions": [],
-                    "exclude_ability_actions": [],
-                    "any_of": []
-                  }
-                ],
-                "qualifiers": []
               },
               "destination": "territory",
               "destination_position": "as_is",
@@ -507207,55 +507414,46 @@
                 "card_sources": [
                   {
                     "selection_mode": "automatic_all",
-                    "zone_owner": "opponent",
+                    "zone_owner": "both",
                     "scope": [
                       "battle"
                     ],
-                    "target_type": "hero",
+                    "target_type": "card",
                     "brigades": [],
-                    "alignment": "good",
                     "classes": [],
-                    "testament": "OT",
                     "references": [],
                     "identifiers": [],
-                    "card_titles": [
-                      "Joseph"
-                    ],
-                    "target_card_ids": [
-                      "-1815379056",
-                      "-1817737330",
-                      "-1894779722",
-                      "-1917555023",
-                      "-1935837151",
-                      "-221631095",
-                      "-472428285",
-                      "-603501058",
-                      "-638801332",
-                      "-643503792",
-                      "-745068395",
-                      "-793924482",
-                      "1055251986",
-                      "1118083613",
-                      "1193950242",
-                      "1454809162",
-                      "1860187166",
-                      "1872157418",
-                      "2051743783",
-                      "2116749409",
-                      "270687798",
-                      "426772250",
-                      "487874156",
-                      "661595233",
-                      "670939039",
-                      "686497646",
-                      "753799573",
-                      "811827617",
-                      "836521380"
-                    ],
+                    "card_titles": [],
+                    "target_card_ids": [],
                     "stat_filters": [],
                     "exclude_self": false,
                     "state_filters": [],
                     "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "battle"
+                      ],
+                      "target_type": "character",
+                      "brigades": [],
+                      "classes": [],
+                      "testament": "OT",
+                      "references": [],
+                      "identifiers": [],
+                      "card_titles": [
+                        "Joseph"
+                      ],
+                      "target_card_ids": [],
+                      "stat_filters": [],
+                      "exclude_self": false,
+                      "state_filters": [],
+                      "relative_filters": [],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": []
+                    },
                     "targets_abilities": false,
                     "ability_target_actions": [],
                     "exclude_ability_actions": [],
@@ -525123,6 +525321,30 @@
                 "exclude_self": false,
                 "state_filters": [],
                 "relative_filters": [],
+                "exclude": {
+                  "selection_mode": "automatic_all",
+                  "zone_owner": "both",
+                  "scope": [
+                    "in_play"
+                  ],
+                  "target_type": "character",
+                  "brigades": [],
+                  "classes": [],
+                  "references": [],
+                  "identifiers": [
+                    "Roman"
+                  ],
+                  "card_titles": [],
+                  "target_card_ids": [],
+                  "stat_filters": [],
+                  "exclude_self": false,
+                  "state_filters": [],
+                  "relative_filters": [],
+                  "targets_abilities": false,
+                  "ability_target_actions": [],
+                  "exclude_ability_actions": [],
+                  "any_of": []
+                },
                 "targets_abilities": false,
                 "ability_target_actions": [],
                 "exclude_ability_actions": [],
@@ -525130,38 +525352,6 @@
                 "count": {
                   "fixed_value": 1
                 }
-              },
-              "protection_filter": {
-                "from_harm": false,
-                "actions": [],
-                "except_actions": [],
-                "card_sources": [
-                  {
-                    "selection_mode": "automatic_all",
-                    "zone_owner": "either",
-                    "scope": [
-                      "in_play"
-                    ],
-                    "target_type": "character",
-                    "brigades": [],
-                    "classes": [],
-                    "references": [],
-                    "identifiers": [
-                      "Roman"
-                    ],
-                    "card_titles": [],
-                    "target_card_ids": [],
-                    "stat_filters": [],
-                    "exclude_self": false,
-                    "state_filters": [],
-                    "relative_filters": [],
-                    "targets_abilities": false,
-                    "ability_target_actions": [],
-                    "exclude_ability_actions": [],
-                    "any_of": []
-                  }
-                ],
-                "qualifiers": []
               },
               "destination": "discard_pile",
               "destination_position": "as_is",
@@ -539343,14 +539533,12 @@
                 "card_sources": [
                   {
                     "selection_mode": "automatic_all",
-                    "zone_owner": "opponent",
+                    "zone_owner": "both",
                     "scope": [
-                      "battle"
+                      "in_play"
                     ],
-                    "target_type": "hero",
+                    "target_type": "card",
                     "brigades": [],
-                    "alignment": "good",
-                    "is_meek": true,
                     "classes": [],
                     "references": [],
                     "identifiers": [],
@@ -539360,15 +539548,37 @@
                     "exclude_self": false,
                     "state_filters": [],
                     "relative_filters": [],
+                    "exclude": {
+                      "selection_mode": "automatic_all",
+                      "zone_owner": "both",
+                      "scope": [
+                        "in_play"
+                      ],
+                      "target_type": "hero",
+                      "brigades": [],
+                      "alignment": "good",
+                      "is_meek": true,
+                      "classes": [],
+                      "references": [],
+                      "identifiers": [],
+                      "card_titles": [],
+                      "target_card_ids": [],
+                      "stat_filters": [],
+                      "exclude_self": false,
+                      "state_filters": [],
+                      "relative_filters": [],
+                      "targets_abilities": false,
+                      "ability_target_actions": [],
+                      "exclude_ability_actions": [],
+                      "any_of": []
+                    },
                     "targets_abilities": false,
                     "ability_target_actions": [],
                     "exclude_ability_actions": [],
                     "any_of": []
                   }
                 ],
-                "qualifiers": [
-                  "except by meek Heroes"
-                ]
+                "qualifiers": []
               },
               "destination_position": "as_is",
               "creates_context_scope": false,

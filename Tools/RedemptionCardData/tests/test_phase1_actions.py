@@ -21,13 +21,11 @@ from models.logic.dynamic_value import DynamicValue, DynamicValueCalculation
 from models.logic.protection_filter import ProtectionFilter
 from models.logic.target_selector import TargetSelector
 from scripts.fact_matrix import extract_ast_facts, verify_fact_matrix
-from scripts.migrations.migrate_phase1_actions import migrate_ai_data
 from scripts.utils.card_linker import CardLinker, link_side_logic_targets
 
 STAGE10 = importlib.import_module("scripts.10_verify_logic")
 
 EXT_PATH = ROOT_DIR / "data" / "cards_extended_with_ordir_fuzzy.json"
-AI_PATH = ROOT_DIR / "data" / "ai_generated_abilities.json"
 DIST_LOGIC_PATH = ROOT_DIR / "data" / "dist" / "cards_logic.json"
 DIST_CONSTANTS_PATH = ROOT_DIR / "data" / "dist" / "ast_constants.json"
 
@@ -308,15 +306,6 @@ class TestPhase1DistExports(unittest.TestCase):
             if e.get("protection_filter")
         )
         self.assertEqual(jair_pf["actions"], ["decrease"])
-
-    def test_phase1_migration_is_idempotent(self) -> None:
-        """Running Phase 1 migration a second time produces zero modified entries."""
-        ext_cards = json.loads(EXT_PATH.read_text(encoding="utf-8"))["cards"]
-        ext_by_id = {str(c.get("Id") or c.get("id")): c for c in ext_cards}
-        ai_data = json.loads(AI_PATH.read_text(encoding="utf-8"))
-        _, counts, errors = migrate_ai_data(ai_data, ext_by_id)
-        self.assertEqual(errors, [])
-        self.assertEqual(counts["modified_entries"], 0)
 
 
 if __name__ == "__main__":

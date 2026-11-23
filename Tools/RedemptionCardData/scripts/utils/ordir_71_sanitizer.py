@@ -1,34 +1,24 @@
-"""Idempotent deterministic migration for ORDIR 7.1.0 terminology and unresolved card_titles.
+"""Runtime sanitizer for ORDIR 7.1.0 selector identifiers and legacy card titles.
 
-Sanitizes legacy ORDIR 7.0.0 phrases (while preserving explicit 'Musician'/'music' text),
-splits unambiguous multi-title selectors, fixes known spelling/edition variants, clears
-self-referential card_titles, and structurally relocates non-title zone/owner/trait tokens
-into canonical AST selector fields across both Stage 8 raw and Stage 9 AI datasets.
+Extracted from the retired ORDIR 7.1.0 migration so Stage 08 deterministic
+parsing applies the exact same identifier normalization, self-title stripping,
+zone/owner promotion, and CardLinker resolution without importing migrations.
 """
 
 from __future__ import annotations
 
-import argparse
 import copy
 import json
 import re
-import sys
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(BASE_DIR))
-sys.path.insert(0, str(BASE_DIR / "scripts"))
-
 from models.logic.card_logic import CardSideLogic
-from utils.card_helpers import get_card_name, get_side_field, get_star_ability
-from utils.card_linker import CardLinker, link_side_logic_targets
 
-AI_FILE = BASE_DIR / "data" / "ai_generated_abilities.json"
-RAW_FILE = BASE_DIR / "data" / "card_abilities_raw.json"
-EXT_FILE = BASE_DIR / "data" / "cards_extended_with_ordir_fuzzy.json"
+try:
+    from utils.card_linker import CardLinker, link_side_logic_targets
+except ImportError:
+    from scripts.utils.card_linker import CardLinker, link_side_logic_targets
 
-_GHOST_KEYS = ("-1587655157_shared_top", "-1587655157_top_top")
 _SET_TAG_RE = re.compile(r"(?:\s*[\(\[].*?[\)\]])+$")
 
 _MULTI_TITLE_SPLITS: Dict[str, List[str]] = {
@@ -59,9 +49,16 @@ _SELF_TITLE_ALIAS_FIXES: Set[str] = {
 
 
 def _dedupe_str_list(items: List[str]) -> List[str]:
-    """Preserves order while deduplicating non-empty strings."""
+    """Preserves order while deduplicating non-empty strings case-insensitively.
+
+    Args:
+        items: Raw list of strings.
+
+    Returns:
+        Deduplicated list preserving first-seen casing.
+    """
     out: List[str] = []
-    seen = set()
+    seen: Set[str] = set()
     for item in items:
         s = str(item).strip()
         if s and s.lower() not in seen:
@@ -71,25 +68,40 @@ def _dedupe_str_list(items: List[str]) -> List[str]:
 
 
 def _append_unique(target_list: List[str], value: str) -> None:
-    """Appends value case-insensitively if not already present."""
+    """Appends a trimmed string to target_list if not present case-insensitively.
+
+    Args:
+        target_list: Mutable string list.
+        value: Candidate string to append.
+
+    Returns:
+        None.
+    """
     v = value.strip()
     if v and v.lower() not in {x.lower() for x in target_list}:
         target_list.append(v)
 
 
 def _strip_set_tags(name: str) -> str:
-    """Removes trailing edition/set tags like '(GoC)' or '[IR]' for self-comparison."""
+    """Removes trailing edition/set tags like '(GoC)' or '[IR]' for self-comparison.
+
+    Args:
+        name: Card title or name string.
+
+    Returns:
+        Lowercased base name without trailing bracketed set tags.
+    """
     return _SET_TAG_RE.sub("", name or "").strip().lower()
 
 
-def _migrate_selector(
+def _sanitize_selector(
     sel: Dict[str, Any],
     card_name: str,
     raw_text: str,
     parent_pf: Optional[Dict[str, Any]] = None,
     is_card_source: bool = False,
 ) -> bool:
-    """Migrates ORDIR 7.1.0 terminology and unresolved card_titles inside one TargetSelector dict.
+    """Sanitizes ORDIR 7.1.0 terminology and unresolved card_titles in a selector dict.
 
     Args:
         sel: Mutable TargetSelector dictionary.
@@ -101,7 +113,6 @@ def _migrate_selector(
     Returns:
         True if any field in ``sel`` or ``parent_pf`` was modified.
     """
-    changed = False
     raw_low = raw_text.lower()
     before_snapshot = json.dumps(sel, sort_keys=True) + json.dumps(parent_pf or {}, sort_keys=True)
 
@@ -142,7 +153,6 @@ def _migrate_selector(
             if "Orange" not in brigades:
                 brigades.append("Orange")
             sel["brigades"] = brigades
-            # Drop companion hallucinated "Demon" token on enhancement selector
             new_idents = [x for x in new_idents if x.lower() != "demon"]
         elif ilow == "spiritual gift":
             _append_unique(new_idents, "Fruit of the Spirit")
@@ -151,7 +161,6 @@ def _migrate_selector(
                 sel["target_type"] = "evil_character"
             _append_unique(new_idents, "False Prophet")
         else:
-            # Guard: skip stray 'Demon' when connected with demons also appeared in orig_idents
             if ilow == "demon" and "connected with demons" in [x.lower() for x in orig_idents]:
                 continue
             _append_unique(new_idents, ident)
@@ -172,17 +181,14 @@ def _migrate_selector(
             t_low = t_strip.lower()
             t_base = _strip_set_tags(t_strip)
 
-            # 2a. Explicit multi-title splits
             if t_low in _MULTI_TITLE_SPLITS:
                 new_titles.extend(_MULTI_TITLE_SPLITS[t_low])
                 continue
 
-            # 2b. Canonical DB title spellings
             if t_low in _CANONICAL_TITLE_FIXES:
                 new_titles.append(_CANONICAL_TITLE_FIXES[t_low])
                 continue
 
-            # 2c. Self-references (automatic_self or card's own name not explicitly referenced in raw)
             is_self_mode = sel.get("selection_mode") == "automatic_self"
             is_self_name = bool(base_card_name and t_base == base_card_name) or (t_low in _SELF_TITLE_ALIAS_FIXES)
             if is_self_mode and (is_self_name or t_base in base_card_name):
@@ -196,7 +202,6 @@ def _migrate_selector(
                 sel["selection_mode"] = "automatic_self"
                 continue
 
-            # 2d. ORDIR category & trait nouns misplaced in card_titles
             if t_low == "antediluvian human":
                 sel["is_human"] = True
                 _append_unique(sel["identifiers"], "Antediluvian")
@@ -259,7 +264,6 @@ def _migrate_selector(
                 sel["target_type"] = sel.get("target_type") or "character"
                 continue
 
-            # 2e. Board zones, pronouns, chained refs, ability words & protection sources
             if t_low == "land of redemption":
                 sel["scope"] = ["land_of_redemption"]
                 sel["target_type"] = "card"
@@ -396,18 +400,29 @@ def _migrate_selector(
                 sel["target_card_ids"] = []
 
     after_snapshot = json.dumps(sel, sort_keys=True) + json.dumps(parent_pf or {}, sort_keys=True)
-    if after_snapshot != before_snapshot:
-        changed = True
-    return changed
+    return side_snapshot_changed(before_snapshot, after_snapshot)
 
 
-def _migrate_side_dict(
+def side_snapshot_changed(before_snapshot: str, after_snapshot: str) -> bool:
+    """Compares serialized selector snapshots to detect mutations.
+
+    Args:
+        before_snapshot: JSON snapshot string prior to sanitization.
+        after_snapshot: JSON snapshot string after sanitization.
+
+    Returns:
+        True when snapshots differ.
+    """
+    return after_snapshot != before_snapshot
+
+
+def sanitize_side_dict(
     side_dict: Dict[str, Any],
     card_name: str,
     raw_text: str,
     linker: Optional[CardLinker] = None,
 ) -> Tuple[Dict[str, Any], bool]:
-    """Runs idempotent selector migrations and re-validates a CardSideLogic payload.
+    """Sanitizes selectors and re-validates a CardSideLogic payload.
 
     Args:
         side_dict: Serialized CardSideLogic dictionary.
@@ -423,21 +438,21 @@ def _migrate_side_dict(
 
     for ab in working.get("abilities", []):
         if isinstance(ab.get("trigger_filter"), dict):
-            changed |= _migrate_selector(ab["trigger_filter"], card_name, raw_text)
+            changed |= _sanitize_selector(ab["trigger_filter"], card_name, raw_text)
         for cond in ab.get("conditions", []):
             if isinstance(cond.get("selector"), dict):
-                changed |= _migrate_selector(cond["selector"], card_name, raw_text)
+                changed |= _sanitize_selector(cond["selector"], card_name, raw_text)
         for cost in ab.get("costs", []):
             if isinstance(cost.get("target"), dict):
-                changed |= _migrate_selector(cost["target"], card_name, raw_text)
+                changed |= _sanitize_selector(cost["target"], card_name, raw_text)
         for eff in ab.get("effects", []):
             pf = eff.get("protection_filter") if isinstance(eff.get("protection_filter"), dict) else None
             if isinstance(eff.get("target"), dict):
-                changed |= _migrate_selector(eff["target"], card_name, raw_text, parent_pf=None)
+                changed |= _sanitize_selector(eff["target"], card_name, raw_text, parent_pf=None)
             if pf:
                 for cs in pf.get("card_sources", []):
                     if isinstance(cs, dict):
-                        changed |= _migrate_selector(cs, card_name, raw_text, parent_pf=pf, is_card_source=True)
+                        changed |= _sanitize_selector(cs, card_name, raw_text, parent_pf=pf, is_card_source=True)
 
     if changed:
         validated = CardSideLogic.model_validate(working)
@@ -445,90 +460,3 @@ def _migrate_side_dict(
             link_side_logic_targets(validated, linker)
         return validated.model_dump(exclude_none=True), True
     return side_dict, False
-
-
-def _build_ext_lookup() -> Tuple[Dict[str, Tuple[str, str]], Optional[CardLinker]]:
-    """Loads extended cards database and builds raw-text lookup and CardLinker."""
-    if not EXT_FILE.exists():
-        return {}, None
-    ext_cards = json.loads(EXT_FILE.read_text(encoding="utf-8")).get("cards", [])
-    linker = CardLinker(ext_cards)
-    lookup: Dict[str, Tuple[str, str]] = {}
-    for c in ext_cards:
-        cid = str(c.get("Id", "")).strip()
-        if not cid:
-            continue
-        name = get_card_name(c)
-        raw_parts = [
-            get_star_ability(c),
-            get_side_field(c, "top", "SpecialAbility") or "",
-            get_side_field(c, "bottom", "SpecialAbility") or "",
-            c.get("SpecialAbility") or "",
-        ]
-        lookup[cid] = (name, " ".join(p for p in raw_parts if p))
-    return lookup, linker
-
-
-def migrate_all(dry_run: bool = False) -> Dict[str, int]:
-    """Executes the idempotent ORDIR 7.1.0 & card_titles migration on raw and AI AST files.
-
-    Args:
-        dry_run: If True, computes all changes without writing modified JSON files to disk.
-
-    Returns:
-        Summary metrics dictionary.
-    """
-    ext_lookup, linker = _build_ext_lookup()
-    stats = {"ghost_keys_removed": 0, "ai_entries_updated": 0, "raw_sides_updated": 0}
-
-    if AI_FILE.exists():
-        ai_data = json.loads(AI_FILE.read_text(encoding="utf-8"))
-        for gk in _GHOST_KEYS:
-            if gk in ai_data:
-                ai_data.pop(gk)
-                stats["ghost_keys_removed"] += 1
-
-        for key, entry in ai_data.items():
-            cid = str(entry.get("card_id", "")).strip()
-            ext_name, ext_raw = ext_lookup.get(cid, ("", ""))
-            cname = entry.get("card_name") or ext_name or key
-            raw_text = entry.get("raw_ability") or ext_raw
-            ast = entry.get("ast")
-            if isinstance(ast, dict):
-                updated_ast, was_changed = _migrate_side_dict(ast, cname, raw_text, linker=linker)
-                if was_changed:
-                    entry["ast"] = updated_ast
-                    stats["ai_entries_updated"] += 1
-
-        if not dry_run and (stats["ghost_keys_removed"] > 0 or stats["ai_entries_updated"] > 0):
-            AI_FILE.write_text(json.dumps(ai_data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-
-    if RAW_FILE.exists():
-        raw_data = json.loads(RAW_FILE.read_text(encoding="utf-8"))
-        for cid, card_entry in raw_data.items():
-            ext_name, ext_raw = ext_lookup.get(cid, ("", ""))
-            sides = card_entry.get("sides", {})
-            for side_key, side_ast in list(sides.items()):
-                if isinstance(side_ast, dict):
-                    updated_side, was_changed = _migrate_side_dict(side_ast, ext_name, ext_raw, linker=linker)
-                    if was_changed:
-                        sides[side_key] = updated_side
-                        stats["raw_sides_updated"] += 1
-
-        if not dry_run and stats["raw_sides_updated"] > 0:
-            RAW_FILE.write_text(json.dumps(raw_data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-
-    return stats
-
-
-def _parse_args() -> argparse.Namespace:
-    """Parses CLI arguments."""
-    parser = argparse.ArgumentParser(description="Migrate ORDIR 7.1.0 terms and unresolved card_titles.")
-    parser.add_argument("--dry-run", action="store_true", help="Compute changes without writing files.")
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    args = _parse_args()
-    res = migrate_all(dry_run=args.dry_run)
-    print(f"ORDIR 7.1.0 & card_titles migration complete (dry_run={args.dry_run}): {res}")

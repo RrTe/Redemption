@@ -19,7 +19,7 @@ sys.path.append(str(BASE_DIR))
 
 from utils.card_helpers import get_card_name, get_side_field, get_star_ability
 from utils.card_linker import CardLinker
-from scripts.migrations.migrate_ordir_71_and_card_titles import _migrate_side_dict
+from utils.ordir_71_sanitizer import sanitize_side_dict
 from utils.ability_patterns import (
     extract_conditional_protection_abilities,
     extract_modifiers_from_text,
@@ -1488,7 +1488,7 @@ def run_ability_parser() -> None:
             ext_raw = " ".join(p for p in raw_parts if p)
             for s_key, s_dict in list((serialized.get("sides") or {}).items()):
                 if isinstance(s_dict, dict):
-                    cleaned_side, changed = _migrate_side_dict(s_dict, cname, ext_raw, linker=linker)
+                    cleaned_side, changed = sanitize_side_dict(s_dict, cname, ext_raw, linker=linker)
                     if changed:
                         serialized["sides"][s_key] = cleaned_side
             output_logic_map[card_id] = serialized

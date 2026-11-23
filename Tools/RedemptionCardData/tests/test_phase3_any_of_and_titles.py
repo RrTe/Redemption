@@ -270,12 +270,13 @@ class TestPhase3ExportedDatasetInvariants(unittest.TestCase):
         self.assertEqual(deliv_t["card_titles"], [])
         self.assertEqual(deliv_t["target_card_ids"], [])
 
-        # Lost Soul Jeremiah 7:18 (Female Only) -> female Hero vs Son of God (no gender=female on Son of God)
+        # Lost Soul Jeremiah 7:18 (Female Only) -> female Hero vs Son of God inside exclude (no gender=female on Son of God)
         lsj_cs = self.logic["1163275753"]["sides"]["top"]["abilities"][0]["effects"][0]["protection_filter"]["card_sources"][0]
-        self.assertEqual(len(lsj_cs["any_of"]), 2)
-        self.assertEqual(lsj_cs["any_of"][0]["gender"], "female")
-        self.assertIsNone(lsj_cs["any_of"][1].get("gender"))
-        self.assertEqual(lsj_cs["any_of"][1]["card_titles"], ["Son of God"])
+        lsj_excl = lsj_cs["exclude"]
+        self.assertEqual(len(lsj_excl["any_of"]), 2)
+        self.assertEqual(lsj_excl["any_of"][0]["gender"], "female")
+        self.assertIsNone(lsj_excl["any_of"][1].get("gender"))
+        self.assertEqual(lsj_excl["any_of"][1]["card_titles"], ["Son of God"])
 
         # Conjurers -> Pale Green / Crimson Enhancement OR Babylonian Character
         conj_t = self.logic["1161413925"]["sides"]["top"]["abilities"][0]["effects"][0]["target"]

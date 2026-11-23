@@ -19,7 +19,6 @@ from models.enums import ActionVerb, ActivationMode
 from models.logic.ability import Ability
 from models.logic.action_effect import ActionEffect
 from models.logic.card_logic import CardSideLogic
-from scripts.migrations.migrate_phase4_choice_groups import migrate_ai_data
 from scripts.utils.card_helpers import get_side_field, get_star_ability
 from scripts.utils.choice_group_helper import find_missing_choice_groups, split_modal_or_clauses
 
@@ -28,7 +27,6 @@ STAGE09 = importlib.import_module("scripts.09_generate_ai_abilities")
 STAGE10 = importlib.import_module("scripts.10_verify_logic")
 
 EXT_PATH = ROOT_DIR / "data" / "cards_extended_with_ordir_fuzzy.json"
-AI_PATH = ROOT_DIR / "data" / "ai_generated_abilities.json"
 DIST_PATH = ROOT_DIR / "data" / "dist" / "cards_logic.json"
 
 
@@ -184,13 +182,6 @@ class TestPhase4ChoiceGroups(unittest.TestCase):
                 cid, {"card_identifier": cid, "sides": self.cards_logic[cid]["sides"]}, raw_abilities={"top": raw_top}
             )
             self.assertEqual(issues_ok, [], msg=f"Unexpected Stage 10 issues on {cid}: {issues_ok}")
-
-    def test_phase4_migration_is_idempotent(self) -> None:
-        """Re-running Phase 4 migration on migrated ai_generated_abilities.json changes 0 entries."""
-        ai_data = json.loads(AI_PATH.read_text(encoding="utf-8"))
-        _, counts, errors = migrate_ai_data(ai_data, self.ext_by_id)
-        self.assertEqual(errors, [])
-        self.assertEqual(counts["modified_entries"], 0)
 
 
 if __name__ == "__main__":

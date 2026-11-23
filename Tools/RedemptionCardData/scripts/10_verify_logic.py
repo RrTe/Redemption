@@ -909,6 +909,41 @@ def verify_card_logic(
                             allowed_identifiers=allowed_idents,
                             finding_ctx=finding_ctx,
                         )
+                    quals = eff.protection_filter.qualifiers or []
+                    for q in quals:
+                        if re.search(r"^\s*except\b", q, re.I) and not re.search(r"\bplayer\s+with\b", q, re.I):
+                            issues.append(
+                                f"Unstructured card-source exception qualifier '{q}' in protection_filter of '{ability.ability_id}' ({side_key}); model via card_sources[].exclude"
+                            )
+                    if (
+                        eff.action in (ActionVerb.PROTECT, ActionVerb.IMMUNE)
+                        and raw_text_for_side
+                        and ActionVerb.RESCUE in eff.protection_filter.actions
+                        and re.search(
+                            r"\b(?:may\s+only\s+be\s+rescued\s+by|protected\s+from\s+rescue[^.]*\bexcept\s+by|protect\b[^.]*\bfrom\s+rescue[^.]*\bexcept\s+by)\b",
+                            raw_text_for_side,
+                            re.I,
+                        )
+                    ):
+                        has_player_qual = any(re.search(r"\bplayer\s+with\b", q, re.I) for q in quals)
+                        has_src_exclude = any(cs.exclude is not None for cs in eff.protection_filter.card_sources)
+                        if not has_player_qual and (not eff.protection_filter.card_sources or not has_src_exclude):
+                            issues.append(
+                                f"Inverted or missing card_sources[].exclude for rescue exception in '{ability.ability_id}' ({side_key})"
+                            )
+                    if eff.action in (ActionVerb.DISCARD, ActionVerb.WITHDRAW) and eff.protection_filter.card_sources:
+                        issues.append(
+                            f"Unexpected protection_filter.card_sources on {eff.action.value} effect in '{ability.ability_id}' ({side_key}); use target.exclude instead"
+                        )
+                    if (
+                        eff.action == ActionVerb.PROTECT
+                        and eff.protection_filter.except_actions
+                        and not eff.protection_filter.actions
+                        and not eff.protection_filter.card_sources
+                    ):
+                        issues.append(
+                            f"protection_filter has except_actions without base actions or card_sources in '{ability.ability_id}' ({side_key})"
+                        )
                 if eff.action in (ActionVerb.PROTECT, ActionVerb.IMMUNE) and eff.target:
                     for ident in eff.target.identifiers:
                         if ident.lower() in ("harm", "rescue", "discard abilities", "capture abilities", "convert abilities"):

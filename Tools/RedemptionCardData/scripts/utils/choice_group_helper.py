@@ -1,8 +1,8 @@
 """Deterministic modal-OR splitting, choice_group reconciliation, and verification helpers.
 
 Shared across Stage 08 (rule-based parser), Stage 09 (LLM AST post-processing),
-Stage 10 (logic verifier), and Phase 4 migrations to keep choice_group handling
-consistent without duplicated heuristics.
+and Stage 10 (logic verifier) to keep choice_group handling consistent without
+duplicated heuristics.
 """
 
 from __future__ import annotations

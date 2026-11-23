@@ -23,7 +23,6 @@ from models.logic.card_logic import CardSideLogic
 from models.logic.target_selector import TargetSelector
 from scripts.ability_decompiler import decompile_ability
 from scripts.fact_matrix import extract_ast_facts
-from scripts.migrations import migrate_phase4_triggers
 from scripts.utils import finding_logger
 
 _s10_spec = importlib.util.spec_from_file_location("stage10_verify_mod", BASE_DIR / "scripts" / "10_verify_logic.py")
@@ -233,13 +232,6 @@ class TestPhase4ExportedDatasetInvariants(unittest.TestCase):
         self.assertEqual(self.logic["1133140715"]["sides"]["top"]["abilities"][0]["activation_mode"], "immediate")
         self.assertEqual(self.logic["773830287"]["sides"]["top"]["abilities"][0]["activation_mode"], "triggered")
         self.assertEqual(self.logic["773830287"]["sides"]["top"]["abilities"][0]["trigger_event"], "on_play")
-
-    def test_phase4_migration_is_idempotent(self) -> None:
-        """Re-running migrate_phase4_triggers in dry-run mode reports 0 further modifications."""
-        summary = migrate_phase4_triggers.run_migration(dry_run=True)
-        self.assertEqual(summary["ai_modified"], 0)
-        self.assertEqual(summary["raw_modified"], 0)
-        self.assertEqual(summary["validation_errors"], [])
 
 
 if __name__ == "__main__":

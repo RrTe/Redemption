@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -13,7 +14,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from models.enums import ActivationMode, SelectionMode
+from models.enums import ActivationMode, ModifierType, SelectionMode
 from models.logic.ability import Ability
 from models.logic.action_effect import ActionEffect
 from models.logic.card_logic import CardSideLogic
@@ -23,18 +24,84 @@ from models.logic.target_selector import (
     VERB_ACTION_IDENTIFIER_NOISE,
 )
 from scripts.fact_matrix import extract_ast_facts, verify_fact_matrix
-from scripts.migrations.migrate_phase3_normalization import (
-    _resolve_card_type,
-    _should_keep_manually_triggered,
-    migrate_ai_data,
-)
 from scripts.utils.card_helpers import get_side_field
 
 STAGE10 = importlib.import_module("scripts.10_verify_logic")
 
 EXT_PATH = ROOT_DIR / "data" / "cards_extended_with_ordir_fuzzy.json"
-AI_PATH = ROOT_DIR / "data" / "ai_generated_abilities.json"
 DIST_PATH = ROOT_DIR / "data" / "dist" / "cards_logic.json"
+
+_PERMANENT_TYPE_TOKENS = (
+    "artifact",
+    "site",
+    "fortress",
+    "city",
+    "covenant",
+    "curse",
+    "lost soul",
+)
+_GENUINE_LIMIT_SA_RE = re.compile(
+    r"\b(?:once|twice|three\s+times)\s+per\b"
+    r"|\bmay\s+be\s+used\s+(?:once|twice|each\s+turn)\b"
+    r"|\beach\s+(?:turn|round|upkeep)\b"
+    r"|\blimit\s+(?:once|twice)\s+per\b"
+    r"|\bper\s+(?:turn|game|round)\b",
+    re.IGNORECASE,
+)
+_MANUAL_CLAUSE_KEEP_IDS = frozenset({
+    "place_in_territory",
+    "place_on_hero_prevent_enhancements",
+    "place_on_lost_soul",
+    "place_on_lost_soul_site",
+    "place_chariots_on_temple",
+    "fear_of_danger_place_and_prevent",
+    "discard_top_of_deck_each_upkeep",
+    "return_any_cards_to_top_of_deck_during_discard_phase",
+    "play_cloud_enhancement",
+    "play_genesis_enhancement",
+    "abraham_blocked_play_enhancement",
+    "search_and_convert_saul",
+    "providing_angel_heal",
+})
+_MANUAL_PHASE_SA_RE = re.compile(
+    r"\b(?:during\s+(?:upkeep|discard\s+phase|preparation\s+phase|draw\s+phase)|"
+    r"each\s+upkeep|at\s+any\s+time|any\s+time\s+during)\b",
+    re.IGNORECASE,
+)
+
+
+def _resolve_card_type(card: Dict[str, Any], side: str) -> str:
+    """Resolves the canonical Card Type for an export side key."""
+    base_side = "top" if side in ("shared", "star") else side
+    ctype = (get_side_field(card, base_side, "Type") or "").strip()
+    if not ctype:
+        ctype = (get_side_field(card, "top", "Type") or card.get("Type") or "").strip()
+    return ctype
+
+
+def _should_keep_manually_triggered(
+    ability: Dict[str, Any],
+    card_type: str,
+    raw_sa: str,
+) -> bool:
+    """Returns True if a non-star ability has genuine manual, permanent, cost, or limit gating."""
+    if any(perm in card_type.lower() for perm in _PERMANENT_TYPE_TOKENS):
+        return True
+    if ability.get("trigger_event") or ability.get("costs"):
+        return True
+    ab_id = str(ability.get("ability_id") or "")
+    if ab_id in _MANUAL_CLAUSE_KEEP_IDS:
+        return True
+    mods = ability.get("modifiers") or []
+    if any(m.get("modifier_type") == ModifierType.LIMIT.value for m in mods):
+        return True
+    if _GENUINE_LIMIT_SA_RE.search(raw_sa) and "may band to shechem" not in ab_id.lower() and ab_id != "band_to_shechem":
+        return True
+    if _MANUAL_PHASE_SA_RE.search(raw_sa) and ab_id:
+        sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", raw_sa) if s.strip()]
+        if len(sentences) <= 1:
+            return True
+    return False
 
 
 class TestPhase3Normalization(unittest.TestCase):
@@ -192,8 +259,8 @@ class TestPhase3Normalization(unittest.TestCase):
         self.assertEqual(len(st_patrick_abs), 1)
         self.assertTrue(st_patrick_abs[0]["is_star"])
 
-    def test_fact_matrix_compatibility_and_migration_idempotence(self) -> None:
-        """Verifies fact_matrix passes on cleaned cards without 'block' and migration is idempotent."""
+    def test_fact_matrix_compatibility(self) -> None:
+        """Verifies fact_matrix passes on cleaned cards without 'block'."""
         raw_ramses = "Protect this character from lone Heroes. You may look at a hand."
         ramses_side = CardSideLogic.model_validate(self.cards_logic["-422285470"]["sides"]["top"])
         ok_r, issues_r = verify_fact_matrix(raw_ramses, extract_ast_facts(ramses_side))
@@ -207,11 +274,6 @@ class TestPhase3Normalization(unittest.TestCase):
             _, fact_text = STAGE10._combine_raw_texts_for_side("top", side_model, raw_map)
             ok_fm, issues_fm = verify_fact_matrix(fact_text, extract_ast_facts(side_model))
             self.assertTrue(ok_fm, msg=f"Card {cid} fact_matrix issues: {issues_fm}")
-
-        ai_data = json.loads(AI_PATH.read_text(encoding="utf-8"))
-        _, counts, errors = migrate_ai_data(ai_data, self.ext_by_id)
-        self.assertEqual(errors, [])
-        self.assertEqual(counts["modified_entries"], 0)
 
 
 if __name__ == "__main__":

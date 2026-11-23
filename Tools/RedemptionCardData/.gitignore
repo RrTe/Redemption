@@ -8,6 +8,7 @@ venv/
 env/
 
 # Konfig Dateien und Workspace Logs
+.antigravityignore
 cline-python-openrouter
 Cline_Startprompt.txt
 .clinerules
@@ -39,6 +40,7 @@ data/ORDIR.txt
 data/REG.txt
 
 # Generierte Logs, Berichte und Zwischenstände (große JSON/Log Backups)
+data/*.min.json
 data/carddata.txt
 data/carddata.json
 data/cards_extended.json

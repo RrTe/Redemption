@@ -22,7 +22,6 @@ sys.path.append(str(BASE_DIR))
 from models.logic.card_logic import CardSideLogic
 from models.logic.stat_filter import StatFilter, parse_stat_filters
 from models.logic.target_selector import TargetSelector
-from scripts.migrations.migrate_stat_filters import migrate_card_ast
 
 
 class TestStatFilter(unittest.TestCase):
@@ -195,7 +194,7 @@ class TestStatFilter(unittest.TestCase):
         )
 
     def test_migration_roundtrip_function(self) -> None:
-        """Verifies migrate_card_ast performs expected transformation on raw AST dict."""
+        """Verifies CardSideLogic model validation decomposes stat filters on raw AST dict."""
         sample_ast = {
             "modifiers": [],
             "abilities": [
@@ -215,11 +214,7 @@ class TestStatFilter(unittest.TestCase):
                 }
             ],
         }
-        migrated, records = migrate_card_ast(sample_ast)
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0][0], "strength 10 or greater")
-        self.assertEqual(records[0][1][0].stat, "strength")
-        self.assertEqual(records[0][1][0].value, 10)
+        migrated = CardSideLogic.model_validate(sample_ast).model_dump(exclude_none=True)
 
         target = migrated["abilities"][0]["effects"][0]["target"]
         self.assertEqual(target["identifiers"], ["Philistine"])

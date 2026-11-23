@@ -28,7 +28,6 @@ from models.logic.relative_filter import (
 from models.logic.target_selector import TargetSelector
 from scripts.ability_decompiler import decompile_target
 from scripts.fact_matrix import extract_ast_facts, verify_fact_matrix
-from scripts.migrations import migrate_phase5a_filters
 from scripts.utils.card_linker import CardLinker, link_side_logic_targets
 from scripts.utils.target_parser import build_target_selector
 from scripts.utils.target_phase5a_helper import UNMIGRATED_PHASE5A_IDENTIFIER_TOKENS
@@ -204,13 +203,6 @@ class TestPhase5aExportedDatasetInvariants(unittest.TestCase):
         self.assertEqual(len(mh_t["any_of"]), 2)
         self.assertEqual(mh_t["any_of"][0]["state_filters"], ["poisoned"])
         self.assertEqual(mh_t["any_of"][1]["state_filters"], ["diseased"])
-
-    def test_phase5a_migration_is_idempotent(self) -> None:
-        """Re-running migrate_phase5a_filters in dry-run mode reports 0 modifications."""
-        summary = migrate_phase5a_filters.run_migration(dry_run=True)
-        self.assertEqual(summary["ai_modified"], 0)
-        self.assertEqual(summary["raw_modified"], 0)
-        self.assertEqual(summary["validation_errors"], [])
 
 
 if __name__ == "__main__":

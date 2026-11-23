@@ -351,7 +351,12 @@ def _normalize_selector_payload(data: Any, *, is_branch: bool = False) -> Any:
         if dec.get("target_type"):
             cur_tt = data.get("target_type")
             new_tt = dec["target_type"]
-            if cur_tt in (None, "card") or (cur_tt == "character" and new_tt in ("hero", "evil_character")):
+            is_idol_only = new_tt == "artifact" and dec.get("identifiers") == ["Idol"]
+            if (
+                (cur_tt is None)
+                or (cur_tt == "card" and not is_idol_only)
+                or (cur_tt == "character" and new_tt in ("hero", "evil_character"))
+            ):
                 data["target_type"] = new_tt
         if dec.get("is_plural"):
             is_plural = True

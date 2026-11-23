@@ -22,7 +22,6 @@ from models.enums.action_verb import ActionVerb  # noqa: E402
 from models.logic.target_decomposer import try_decompose_phrase  # noqa: E402
 from models.logic.target_selector import TargetSelector, TargetSelectorBranch  # noqa: E402
 stage10 = importlib.import_module("scripts.10_verify_logic")  # noqa: E402
-from scripts.migrations import migrate_phase5b_excludes_and_abilities as migrate_phase5b  # noqa: E402
 from utils import finding_logger  # noqa: E402
 from utils.target_parser import build_target_selector  # noqa: E402
 from utils.target_phase5b_helper import (  # noqa: E402
@@ -279,14 +278,6 @@ class TestPhase5bExportedDatasetInvariants(unittest.TestCase):
         # Wild Animals (962378423): except 1 -> dynamic offset -1
         wa = self.logic["962378423"]["sides"]["top"]["abilities"][1]["effects"][0]["target"]
         self.assertEqual(wa["count"]["dynamic"]["offset"], -1)
-
-    def test_phase5b_migration_is_idempotent(self) -> None:
-        """Re-running migrate_phase5b_excludes_and_abilities in dry-run mode reports 0 modifications."""
-        summary = migrate_phase5b.run_migration(dry_run=True)
-        self.assertEqual(summary["ai_modified"], 0)
-        self.assertEqual(summary["raw_modified"], 0)
-        self.assertEqual(summary["validation_error_count"], 0)
-        self.assertEqual(summary["unknown_identifier_total_count"], 0)
 
 
 if __name__ == "__main__":

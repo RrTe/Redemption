@@ -17,12 +17,34 @@ if str(BASE_DIR) not in sys.path:
 from models.card_side import CardSide
 from models.enums.gender import CHARACTER_SIDE_TYPES, GENDERS
 from models.logic.card_logic import CardSideLogic
+from models.logic.target_decomposer import try_decompose_phrase
 from models.logic.target_selector import TargetSelector
 from scripts.ability_decompiler import decompile_target
-from scripts.migrations.migrate_gender import migrate_card_ast, scan_gender_identifiers
 from scripts.utils.card_helpers import get_side_field
 from scripts.utils.gender_resolver import apply_gender_to_card_sides, resolve_gender
 from scripts.utils.target_parser import build_target_selector
+
+
+def _scan_gender_identifiers(ast_data: Any) -> List[str]:
+    """Scans a nested AST dict/list for raw gender tokens in selector identifiers."""
+    found: List[str] = []
+    if isinstance(ast_data, dict):
+        idents = ast_data.get("identifiers")
+        if isinstance(idents, list):
+            for ident in idents:
+                s = str(ident).strip()
+                if s.lower() in ("male", "female"):
+                    found.append(s)
+                else:
+                    dec = try_decompose_phrase(s, is_from_titles=False)
+                    if dec is not None and dec.get("gender"):
+                        found.append(s)
+        for val in ast_data.values():
+            found.extend(_scan_gender_identifiers(val))
+    elif isinstance(ast_data, list):
+        for item in ast_data:
+            found.extend(_scan_gender_identifiers(item))
+    return found
 
 
 def _make_card(
@@ -289,12 +311,11 @@ class TestTargetParserAndMigration(unittest.TestCase):
                 }
             ],
         }
-        migrated, hits = migrate_card_ast(raw_ast)
-        self.assertEqual(hits, ["male"])
+        migrated = CardSideLogic.model_validate(raw_ast).model_dump(exclude_none=True)
         tgt = migrated["abilities"][0]["effects"][0]["target"]
         self.assertEqual(tgt["gender"], "male")
         self.assertEqual(tgt["identifiers"], ["Egyptian"])
-        self.assertEqual(scan_gender_identifiers(migrated), [])
+        self.assertEqual(_scan_gender_identifiers(migrated), [])
 
 
 class TestDataIntegrityGender(unittest.TestCase):
@@ -343,7 +364,7 @@ class TestDataIntegrityGender(unittest.TestCase):
             fpath = BASE_DIR / rel_path
             with fpath.open("r", encoding="utf-8") as handle:
                 data = json.load(handle)
-            leaked = scan_gender_identifiers(data)
+            leaked = _scan_gender_identifiers(data)
             self.assertEqual(leaked, [], f"Unmigrated gender identifiers in {rel_path}: {leaked[:10]}")
 
         # 2. Verify cardHierarchy.json exports canonical gender list.

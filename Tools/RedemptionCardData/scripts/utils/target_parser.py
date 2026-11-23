@@ -1404,16 +1404,66 @@ _TIMING_QUALIFIER_PATTERN = re.compile(
 )
 
 
+def _extract_protection_exception(clean_str: str) -> Tuple[str, List[ActionVerb], Optional[TargetSelector], List[str]]:
+    """Splits any trailing 'except ...' clause into action, player, or card-source exceptions.
+
+    Args:
+        clean_str: Raw 'from ...' or 'immune to ...' protection clause.
+
+    Returns:
+        Tuple of ``(base_clause_without_except, except_actions, exclude_selector, extra_qualifiers)``.
+    """
+    except_match = re.search(
+        r"\(\s*except\s+(by\s+)?([^)]+)\)|[,;]?\s*\bexcept\s+(by\s+)?(.+)$",
+        clean_str,
+        re.IGNORECASE,
+    )
+    if not except_match:
+        return clean_str, [], None, []
+
+    has_by = bool(except_match.group(1) or except_match.group(3))
+    ex_raw = (except_match.group(2) or except_match.group(4) or "").strip().rstrip(".,;")
+    base_str = (clean_str[:except_match.start()] + " " + clean_str[except_match.end():]).strip(" ,;")
+
+    # Check if exception is purely action-based (e.g. 'except discard', 'except discard abilities').
+    ex_lower = ex_raw.lower()
+    matched_acts: List[ActionVerb] = []
+    remainder = ex_lower
+    for pat, act in _PROTECTION_ACTION_MAP.items():
+        if re.search(pat, ex_lower):
+            if act not in matched_acts:
+                matched_acts.append(act)
+            remainder = re.sub(pat, " ", remainder, flags=re.IGNORECASE)
+    remainder = re.sub(r"\b(?:and|or|special|abilities|ability|effects?|from|by)\b|[,.;:\s]+", "", remainder, flags=re.IGNORECASE)
+    if matched_acts and not has_by and not remainder:
+        return base_str, matched_acts, None, []
+
+    # Player-level condition (cannot be expressed on a single source card selector).
+    if re.match(r"^(?:a\s+)?players?\s+with\b", ex_raw, re.IGNORECASE):
+        qual = f"except {'by ' if has_by else ''}{ex_raw}"
+        return base_str, [], None, [qual]
+
+    # Card-source exception (e.g. 'except by an O.T. Hero', 'except warrior class').
+    exclude_sel = build_target_selector(ex_raw, "all", default_scope=[Zone.IN_PLAY], default_owner="both")
+    exclude_sel.selection_mode = SelectionMode.AUTOMATIC_ALL
+    exclude_sel.count = None
+    exclude_sel.zone_owner = "both"
+    exclude_sel.scope = [Zone.IN_PLAY]
+    if re.match(r"^(?:a\s+)?females?$", ex_raw, re.IGNORECASE) and exclude_sel.target_type in (None, "card"):
+        exclude_sel.target_type = "character"
+    return base_str, [], exclude_sel, []
+
+
 def parse_protection_filter(from_str: str) -> ProtectionFilter:
     """Parses a protection clause into a structured ProtectionFilter model.
 
-    Separates the protected actions, card sources, harm status, and qualifiers
-    from the raw 'from ...' or 'immune to ...' string per Redemption REG v11.1.0.
+    Separates protected actions, exempt actions, positive/excluded card sources,
+    harm status, and qualifiers per Redemption REG v11.1.0.
 
     Args:
         from_str: The raw clause specifying what is blocked (e.g. 'evil cards',
             'discard and capture abilities', 'lone Heroes and opponents' Dominants',
-            'special abilities on evil cards (except discard)', 'harm').
+            'special abilities on evil cards (except discard)', 'rescue (except by an O.T. Hero)', 'harm').
 
     Returns:
         Structured ProtectionFilter instance.
@@ -1425,18 +1475,11 @@ def parse_protection_filter(from_str: str) -> ProtectionFilter:
     # 1. Harm check per REG p. 106
     from_harm = bool(re.search(r"\b(?:harm|negative\s+effects?)\b", clean_str, re.IGNORECASE))
 
-    # 2. Extract except clauses (e.g. '(except discard)', 'except capture')
-    except_actions: List[ActionVerb] = []
-    except_match = re.search(r"\bexcept\s+([^)]+)\)?", clean_str, re.IGNORECASE)
-    if except_match:
-        ex_text = except_match.group(1).lower()
-        for pat, act in _PROTECTION_ACTION_MAP.items():
-            if re.search(pat, ex_text):
-                if act not in except_actions:
-                    except_actions.append(act)
+    # 2. Extract action, player, or card-source 'except ...' clauses before splitting candidates
+    base_str, except_actions, exclude_sel, qualifiers = _extract_protection_exception(clean_str)
 
     # 3. Extract actions blocked
-    non_except_text = re.sub(r"\bexcept\s+[^)]+\)?", "", clean_str, flags=re.IGNORECASE).lower()
+    non_except_text = base_str.lower()
     actions: List[ActionVerb] = []
     for pat, act in _PROTECTION_ACTION_MAP.items():
         if re.search(pat, non_except_text):
@@ -1444,19 +1487,20 @@ def parse_protection_filter(from_str: str) -> ProtectionFilter:
                 actions.append(act)
 
     # 4. Extract timing/ordering qualifiers
-    qualifiers: List[str] = []
-    for qm in _TIMING_QUALIFIER_PATTERN.finditer(clean_str):
-        qualifiers.append(qm.group(0).strip())
+    for qm in _TIMING_QUALIFIER_PATTERN.finditer(base_str):
+        q_txt = qm.group(0).strip()
+        if q_txt not in qualifiers:
+            qualifiers.append(q_txt)
 
-    # 5. Extract card sources
-    source_candidates = re.split(r"\s+\band\b\s+|\s*,\s*", clean_str)
+    # 5. Extract positive card sources (without the stripped exception phrase)
+    source_candidates = re.split(r"\s+\band\b\s+|\s*,\s*", base_str)
     card_sources: List[TargetSelector] = []
 
     for cand in source_candidates:
         cand_clean = cand.strip()
         cand_clean = re.sub(r"\([^)]*\)", "", cand_clean).strip()
         cand_lower = cand_clean.lower()
-        if cand_lower in ("harm", "rescue", "negative effect", "negative effects"):
+        if cand_lower in ("harm", "rescue", "negative effect", "negative effects", ""):
             continue
         s_eval = re.sub(
             r"\b(?:special\s+abilities|special\s+ability|abilities|ability|effects?)\b",
@@ -1492,6 +1536,22 @@ def parse_protection_filter(from_str: str) -> ProtectionFilter:
                 clean_source_ids.append(sid)
             source_sel.identifiers = clean_source_ids
             card_sources.append(source_sel)
+
+    # 6. Attach card-source exception onto positive sources or a universal 'all cards' wrapper
+    if exclude_sel is not None:
+        if card_sources:
+            for cs in card_sources:
+                cs.exclude = exclude_sel.model_copy(deep=True)
+        else:
+            card_sources.append(
+                TargetSelector(
+                    selection_mode=SelectionMode.AUTOMATIC_ALL,
+                    zone_owner="both",
+                    scope=[Zone.IN_PLAY],
+                    target_type="card",
+                    exclude=exclude_sel,
+                )
+            )
 
     return ProtectionFilter(
         from_harm=from_harm,
