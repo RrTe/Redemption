@@ -1,28 +1,89 @@
-"""Dynamic value specification for card effects and targeting.
+"""Dynamic value specification for card effects, targeting counts, and stat modifiers.
 
-Represents fixed numbers, keywords like 'all', or dynamic expressions (X)
-with calculation sources, multipliers, and upper limits per REG guidelines.
+Represents fixed numbers, keywords like 'all', bounded ranges, or dynamic expressions (X)
+with calculation sources, arithmetic operations, signed multipliers, selector filters, and caps.
 """
 
-from typing import Optional, Union, Literal
-from pydantic import BaseModel, Field
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Literal, Optional, Union
+from pydantic import BaseModel, field_validator
+
+if TYPE_CHECKING:
+    from models.logic.target_selector import TargetSelector
+
+STAT_MOD_OPERATIONS = ("add", "multiply", "set")
+StatModOperation = Literal["add", "multiply", "set"]
+
+DYNAMIC_VALUE_SOURCES = (
+    "count_cards",
+    "count_brigades",
+    "stat_value",
+    "cards_drawn",
+    "lost_souls_in_play",
+    "self_stat",
+    "target_stat",
+    "chained_target_stats",
+    "cost_target_stats",
+    "card_x_identifier",
+    "player_choice",
+)
+DynamicValueSource = Literal[
+    "count_cards",
+    "count_brigades",
+    "stat_value",
+    "cards_drawn",
+    "lost_souls_in_play",
+    "self_stat",
+    "target_stat",
+    "chained_target_stats",
+    "cost_target_stats",
+    "card_x_identifier",
+    "player_choice",
+]
 
 
 class DynamicValueCalculation(BaseModel):
-    """Configuration for dynamically calculated values (X).
+    """Configuration for dynamically calculated values (X) and stat formulas.
 
     Attributes:
-        source: The game state metric to count (e.g. 'count_cards', 'stat_value').
-        scope: Game zone or entity pool to inspect.
-        target_type: Optional target filter for counted cards.
-        multiplier: Factor multiplied with raw count (default 1).
-        limit: Optional maximum cap for the calculated value.
+        source: Game state metric or source value to evaluate.
+        operation: Arithmetic application mode ('add', 'multiply', 'set').
+        multiplier: Signed numeric factor (e.g. -1 for -X, 0.5 for half, 2 for double).
+        fixed_value: Optional constant value (e.g. operation='set', fixed_value=1).
+        offset: Optional additive offset applied after multiplication.
+        limit: Optional upper cap for the calculated magnitude.
+        selector: Full TargetSelector filter defining counted or referenced cards.
+        ref_step: Optional prior step index for chained/cost stat references.
+        scope: Legacy flat zone hint preserved for compatibility.
+        target_type: Legacy flat target_type hint preserved for compatibility.
     """
-    source: Literal["count_cards", "stat_value", "cards_drawn", "lost_souls_in_play"]
+    source: Optional[DynamicValueSource] = None
+    operation: StatModOperation = "add"
+    multiplier: Union[int, float] = 1
+    fixed_value: Optional[int] = None
+    offset: Optional[int] = None
+    limit: Optional[int] = None
+    selector: Optional["TargetSelector"] = None
+    ref_step: Optional[int] = None
     scope: Optional[str] = None
     target_type: Optional[str] = None
-    multiplier: int = 1
-    limit: Optional[int] = None
+
+    @field_validator("multiplier", mode="before")
+    @classmethod
+    def normalize_multiplier(cls, v: object) -> Union[int, float]:
+        """Normalizes integer-valued floats to int while preserving fractional floats (e.g. 0.5)."""
+        if v is None:
+            return 1
+        if isinstance(v, bool):
+            return 1
+        if isinstance(v, (int, float)):
+            num = float(v)
+            return int(num) if num.is_integer() else num
+        if isinstance(v, str):
+            num = float(v.strip())
+            return int(num) if num.is_integer() else num
+        return v  # type: ignore[return-value]
 
 
 class DynamicValue(BaseModel):

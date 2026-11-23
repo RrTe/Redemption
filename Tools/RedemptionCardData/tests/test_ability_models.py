@@ -11,6 +11,7 @@ from models.enums.zone import Zone
 from models.enums.duration import Duration
 from models.enums.modifier_type import ModifierType
 from models.enums.selection_mode import SelectionMode
+from models.enums.state_filter import StateFilter
 from models.logic.dynamic_value import DynamicValue
 from models.logic.target_selector import TargetSelector
 from models.logic.action_effect import ActionEffect
@@ -399,7 +400,7 @@ class TestAbilityModels(unittest.TestCase):
         self.assertEqual(len(pf3.card_sources), 2)
         hero_src = next(cs for cs in pf3.card_sources if cs.target_type == "hero")
         dom_src = next(cs for cs in pf3.card_sources if cs.target_type == "dominant")
-        self.assertIn("lone", hero_src.identifiers)
+        self.assertIn(StateFilter.LONE, hero_src.state_filters)
         self.assertEqual(dom_src.zone_owner, "opponent")
 
         # 4. Exception clause (Abel style: except discard)

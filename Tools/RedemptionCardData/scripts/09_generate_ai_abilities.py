@@ -20,6 +20,8 @@ from pydantic import ValidationError
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.extend([str(Path(__file__).resolve().parent), str(BASE_DIR)])
 
+from models.enums.activation_mode import ActivationMode
+from models.enums.trigger_event import TriggerEvent
 from models.logic.card_logic import CardSideLogic
 from ability_prompt import build_system_prompt
 from ai_client import load_env, query_llm_messages, QuotaExhaustedError, sanitize_error_message
@@ -231,9 +233,14 @@ def _ensure_star_ast_dict(ast_dict: Dict[str, Any], side: str, raw_ability: str)
         return ast_dict
     for ab in ast_dict.get("abilities", []):
         ab["is_star"] = True
-        trig = (ab.get("trigger_event") or "").strip().lower()
-        if not trig or trig == "star":
-            ab["trigger_event"] = "star_phase"
+        raw_trig = ab.get("trigger_event")
+        if isinstance(raw_trig, list):
+            if not raw_trig:
+                ab["trigger_event"] = TriggerEvent.STAR_PHASE.value
+        else:
+            trig = str(raw_trig or "").strip().lower()
+            if not trig or trig == "star":
+                ab["trigger_event"] = TriggerEvent.STAR_PHASE.value
         ab_id = ab.get("ability_id") or "ability"
         if not ab_id.lower().startswith("star_"):
             ab["ability_id"] = f"star_{ab_id}"
@@ -301,6 +308,21 @@ def load_unparsed_sample(
 from fact_matrix import extract_ast_facts, verify_fact_matrix
 
 
+def _collect_trigger_issues(side_logic: CardSideLogic) -> List[str]:
+    """Detects missing trigger_event on triggered abilities or triggers on non-triggered abilities."""
+    trig_issues: List[str] = []
+    for ab in side_logic.abilities:
+        if ab.activation_mode == ActivationMode.TRIGGERED and not ab.trigger_event:
+            trig_issues.append(f"Missing required trigger_event on triggered ability '{ab.ability_id}'")
+        elif ab.activation_mode != ActivationMode.TRIGGERED and (
+            ab.trigger_event or ab.trigger_subject or ab.trigger_source
+        ):
+            trig_issues.append(
+                f"Non-triggered ability '{ab.ability_id}' ({ab.activation_mode.value}) cannot have trigger_event/trigger_subject/trigger_source"
+            )
+    return trig_issues
+
+
 def _process_single_card(backend: str, prompt: str, name: str, raw_ability: str = "") -> Optional[CardSideLogic]:
     """Queries backend and performs multi-turn self-correction for schema or factual errors.
 
@@ -338,11 +360,14 @@ def _process_single_card(backend: str, prompt: str, name: str, raw_ability: str 
         log_finding(name, "SCHEMA_ERROR", f"Auto-corrected: {err}", resolved=True, raw_ability=raw_ability)
         print(f" [OK-RETRY] Successfully self-corrected schema for {name}!", flush=True)
 
-    # In-flight fact invariant & chained target check
+    # In-flight fact invariant, trigger integrity & chained target check
     if validated and raw_ability:
         _, fact_issues = verify_fact_matrix(raw_ability, extract_ast_facts(validated))
         ambig_issues = normalize_chained_targets(validated)
-        issues = fact_issues + ambig_issues
+        trig_issues = _collect_trigger_issues(validated)
+        if trig_issues:
+            log_finding(name, "MISSING_OR_INVALID_TRIGGER_EVENT", ", ".join(trig_issues), resolved=False, raw_ability=raw_ability)
+        issues = fact_issues + ambig_issues + trig_issues
         if issues:
             log_finding(name, "VALIDATION_ISSUE", ", ".join(issues), resolved=False, raw_ability=raw_ability)
             print(f" [RETRY-ISSUES] Issues for {name}: {issues}\n Requesting correction...", flush=True)
@@ -404,8 +429,8 @@ def _worker_task(
             if side == "star" or _STAR_PREFIX_RE.match(raw_clean):
                 for ab in validated.abilities:
                     ab.is_star = True
-                    if not ab.trigger_event or ab.trigger_event.strip().lower() == "star":
-                        ab.trigger_event = "star_phase"
+                    if not ab.trigger_event:
+                        ab.trigger_event = TriggerEvent.STAR_PHASE
                     if not ab.ability_id.lower().startswith("star_"):
                         ab.ability_id = f"star_{ab.ability_id}"
                     if ab.activation_mode == "immediate":

@@ -213,7 +213,10 @@ class TestRegV111DeterministicParser(unittest.TestCase):
         self.assertEqual(eff.effect_type, "ongoing")
         self.assertEqual(eff.duration, Duration.WHILE_CONDITION)
         self.assertEqual(eff.target.zone_owner, "opponent")
-        self.assertEqual(eff.target.identifiers, ["Pharisee", "Sadducee"])
+        self.assertEqual(eff.target.identifiers, [])
+        self.assertEqual(len(eff.target.any_of), 2)
+        self.assertEqual(eff.target.any_of[0].identifiers, ["Pharisee"])
+        self.assertEqual(eff.target.any_of[1].identifiers, ["Sadducee"])
 
     def test_may_not_enter_battle_is_static_paralyze_and_not_optional(self) -> None:
         """Verifies 'may not enter battle' sets paralyze with is_optional=False."""
@@ -297,8 +300,9 @@ class TestRegV111DistArtifacts(unittest.TestCase):
         self.assertIn("paralyze", _collect_actions(self.cards_logic["730143821"]))
         palsy_actions = _collect_actions(self.cards_logic["-1594714814"])
         self.assertEqual(palsy_actions, ["paralyze"])
-        palsy_idents = self.cards_logic["-1594714814"]["sides"]["top"]["abilities"][0]["effects"][0]["target"]["identifiers"]
-        self.assertIn("until healed", palsy_idents)
+        palsy_eff = self.cards_logic["-1594714814"]["sides"]["top"]["abilities"][0]["effects"][0]
+        self.assertEqual(palsy_eff["duration"], "while_condition")
+        self.assertEqual(palsy_eff["target"]["identifiers"], [])
 
         # Paralyze (cannot/may not be blocked by) including RAW Nicodemus & Scarlet Line
         self.assertEqual(_collect_actions(self.cards_logic["-27986015"]), ["paralyze"])

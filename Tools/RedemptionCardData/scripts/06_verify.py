@@ -132,10 +132,10 @@ def verify():
             if "lost soul" in cat_lower and "lost soul" not in all_types:
                 suspicious.append(f"Type Mismatch: '{name}' in Lost Soul category '{cat}' but is not a Lost Soul")
 
-            # 3. Class checks
+            # 3. Class / Cloud checks (Cloud cards may rely on IsCloud or Classes)
             if "cloud" in cat_lower:
-                if not any("cloud" in cl for cl in all_classes):
-                    suspicious.append(f"Class Mismatch: '{name}' in Cloud category '{cat}' but Class is '{', '.join(sorted(all_classes))}'")
+                if not c.get("IsCloud", False) and not any("cloud" in cl for cl in all_classes):
+                    suspicious.append(f"Class Mismatch: '{name}' in Cloud category '{cat}' but IsCloud is False and Class is '{', '.join(sorted(all_classes))}'")
 
             # 4. Nativity scope check
             if cat_lower == "nativity card":

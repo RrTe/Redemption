@@ -105,21 +105,39 @@ def decompile_target(target: Optional[TargetSelector]) -> str:
     """
     if not target:
         return "a card"
+    if getattr(target, "any_of", None):
+        branch_strs = [decompile_target(branch) for branch in target.any_of]
+        base_str = " or ".join(b for b in branch_strs if b)
+        scopes_list = _scopes(getattr(target, "scope", None))
+        sc_map = {
+            "battle": "in battle", "in_play": "in play", "hand": "from hand",
+            "deck": "from deck", "draw_pile": "from deck", "discard": "from discard pile",
+            "discard_pile": "from discard pile", "reserve": "from Reserve",
+            "reserve_pile": "from Reserve", "territory": "in territory",
+            "set_aside": "in set-aside area", "artifact_pile": "from Artifact pile",
+        }
+        mapped_scopes = [sc_map[s] for s in scopes_list if s in sc_map]
+        return f"{base_str} {' or '.join(mapped_scopes)}".strip() if mapped_scopes else base_str
+
     if target.card_titles:
         return " or ".join(target.card_titles)
 
-    mode = _val(target.selection_mode)
-    scopes_list = _scopes(target.scope)
+    mode = _val(getattr(target, "selection_mode", ""))
+    scopes_list = _scopes(getattr(target, "scope", None))
     primary_scope = scopes_list[0] if scopes_list else ""
-    has_specifics = target.count is not None or target.target_type == "lost_soul" or (primary_scope in ("deck", "draw_pile"))
+    has_specifics = (
+        getattr(target, "count", None) is not None
+        or target.target_type == "lost_soul"
+        or (primary_scope in ("deck", "draw_pile"))
+    )
     if "self" in mode and not has_specifics:
         t = _val(target.target_type).replace("_", " ") if target.target_type else "card"
         return f"This {t.title()}" if t in ("hero", "character", "evil character") else "This card"
 
     parts: List[str] = []
-    owner = _val(target.zone_owner)
+    owner = _val(getattr(target, "zone_owner", ""))
 
-    if target.count:
+    if getattr(target, "count", None):
         parts.append(str(target.count.fixed_value) if target.count.fixed_value is not None else "X")
     elif "all" in mode:
         parts.append("all")
@@ -142,6 +160,14 @@ def decompile_target(target: Optional[TargetSelector]) -> str:
         parts.append("generic")
     elif is_generic is False:
         parts.append("unique")
+    if getattr(target, "is_meek", None) is True:
+        parts.append("meek")
+    if getattr(target, "is_gospel", None) is True:
+        parts.append("Gospel")
+    if getattr(target, "is_cloud", None) is True:
+        parts.append("cloud")
+    if getattr(target, "is_star", None) is True:
+        parts.append("*")
     if getattr(target, "gender", None):
         parts.append(_val(target.gender))
     is_human = getattr(target, "is_human", None)
@@ -157,6 +183,13 @@ def decompile_target(target: Optional[TargetSelector]) -> str:
             parts.append(f"{cls_low} class" if not cls_low.endswith("class") else cls_low)
     if getattr(target, "references", None):
         parts.extend([_val(r) for r in target.references])
+    if getattr(target, "exclude_self", False):
+        parts.append("other")
+    if getattr(target, "state_filters", None):
+        parts.extend([_val(sf).replace("_", " ") for sf in target.state_filters])
+    if getattr(target, "relative_filters", None):
+        for rf in target.relative_filters:
+            parts.append(f"{rf.relation} {rf.attribute}")
     if target.identifiers:
         parts.extend([_val(i) for i in target.identifiers])
 
@@ -169,6 +202,36 @@ def decompile_target(target: Optional[TargetSelector]) -> str:
         parts.append(t_type)
     elif not parts or parts[-1] in ("your", "opponent's", "all"):
         parts.append("cards" if "all" in mode else "card")
+
+    ub = getattr(target, "used_by", None)
+    if ub == "self":
+        parts.append("used by this card")
+    elif isinstance(ub, str):
+        parts.append(f"used by {ub}")
+    elif ub is not None:
+        parts.append(f"used by {decompile_target(ub)}")
+
+    if getattr(target, "targets_abilities", False):
+        ab_acts = getattr(target, "ability_target_actions", None) or []
+        if ab_acts:
+            vals = [a.value if hasattr(a, "value") else str(a) for a in ab_acts]
+            parts.append(f"({' or '.join(vals)} abilities)")
+        else:
+            parts.append("(special abilities)")
+    else:
+        ab_acts = getattr(target, "ability_target_actions", None) or []
+        if ab_acts:
+            vals = [a.value if hasattr(a, "value") else str(a) for a in ab_acts]
+            parts.append(f"with ({' or '.join(vals)}) ability")
+
+    excl_acts = getattr(target, "exclude_ability_actions", None) or []
+    if excl_acts:
+        vals = [a.value if hasattr(a, "value") else str(a) for a in excl_acts]
+        parts.append(f"(except {' or '.join(vals)} abilities)")
+
+    excl_sel = getattr(target, "exclude", None)
+    if excl_sel is not None:
+        parts.append(f"(except {decompile_target(excl_sel)})")
 
     stat_filters = getattr(target, "stat_filters", None) or []
     for sf in stat_filters:
@@ -187,6 +250,24 @@ def decompile_target(target: Optional[TargetSelector]) -> str:
     return " ".join(parts)
 
 
+def _format_stat_mod(mod: Any) -> str:
+    """Formats an integer or DynamicValue stat modifier for English rule synthesis."""
+    if mod is None:
+        return "0"
+    if isinstance(mod, int) and not isinstance(mod, bool):
+        return f"+{mod}" if mod > 0 else str(mod)
+    if getattr(mod, "fixed_value", None) is not None:
+        fv = mod.fixed_value
+        return f"+{fv}" if isinstance(fv, int) and fv > 0 else str(fv)
+    dyn = getattr(mod, "dynamic", None)
+    if dyn:
+        if dyn.fixed_value is not None:
+            return str(dyn.fixed_value)
+        if dyn.multiplier is not None and dyn.multiplier < 0:
+            return "-X"
+    return "X"
+
+
 def decompile_effect(effect: ActionEffect) -> str:
     """Translates a single ActionEffect into a natural English imperative clause."""
     act = _val(effect.action).replace("_", " ")
@@ -199,8 +280,8 @@ def decompile_effect(effect: ActionEffect) -> str:
     tgt = decompile_target(effect.target)
 
     if effect.strength_mod is not None or effect.toughness_mod is not None:
-        s = f"+{effect.strength_mod}" if (effect.strength_mod or 0) > 0 else str(effect.strength_mod or 0)
-        t = f"+{effect.toughness_mod}" if (effect.toughness_mod or 0) > 0 else str(effect.toughness_mod or 0)
+        s = _format_stat_mod(effect.strength_mod)
+        t = _format_stat_mod(effect.toughness_mod)
         clause = f"{tgt} is worth {s}/{t}" if "modify" in act else f"{act} {tgt} {s}/{t}"
     elif act == "draw":
         pos_str = " from bottom of deck" if pos == "bottom" else " from deck"
@@ -265,16 +346,19 @@ def decompile_ability(ability: Ability) -> str:
     """
     clauses: List[str] = []
 
-    if ability.trigger_event and str(ability.trigger_event).strip().lower() not in ("star_phase", "star"):
-        trig = str(ability.trigger_event).strip()
-        if not trig.lower().startswith(("if", "when", "after", "while", "during", "on")):
-            trig = f"If {trig}"
-        tf = getattr(ability, "trigger_filter", None)
-        if tf is not None:
-            tf_str = decompile_target(tf)
-            if tf_str and tf_str not in ("a card", "This card") and tf_str.lower() not in trig.lower():
-                trig = f"{trig} ({tf_str})"
-        clauses.append(trig)
+    if ability.trigger_event:
+        te_list = ability.trigger_event if isinstance(ability.trigger_event, list) else [ability.trigger_event]
+        te_strs = [_val(t).strip() for t in te_list if _val(t).strip() and _val(t).strip().lower() not in ("star_phase", "star")]
+        if te_strs:
+            trig = " or ".join(t.replace("_", " ") for t in te_strs)
+            if not trig.lower().startswith(("if", "when", "after", "while", "during", "on", "would")):
+                trig = f"When {trig}"
+            for tf in (getattr(ability, "trigger_subject", None), getattr(ability, "trigger_source", None)):
+                if tf is not None:
+                    tf_str = decompile_target(tf)
+                    if tf_str and tf_str not in ("a card", "This card") and tf_str.lower() not in trig.lower():
+                        trig = f"{trig} ({tf_str})"
+            clauses.append(trig)
 
     for cond in ability.conditions:
         clauses.append(decompile_condition(cond))

@@ -34,6 +34,8 @@ class Card:
         self.IsEnhancement = data.get("IsEnhancement", False)
         self.IsGospel = data.get("IsGospel", False)
         self.IsStarCard = data.get("IsStarCard", False)
+        self.IsCloud = data.get("IsCloud", False)
+        self.IsMeek = data.get("IsMeek")
         self.StarAbility = data.get("StarAbility", "")
         self.Sound = data.get("Sound", "")
         self.ORDIR = data.get("ORDIR", [])

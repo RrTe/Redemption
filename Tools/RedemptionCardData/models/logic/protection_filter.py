@@ -40,17 +40,21 @@ class ProtectionFilter(BaseModel):
             "capture": ActionVerb.CAPTURE,
             "convert": ActionVerb.CONVERT,
             "conversion": ActionVerb.CONVERT,
-            "remove from the game": ActionVerb.REMOVE_FROM_GAME,
-            "remove from game": ActionVerb.REMOVE_FROM_GAME,
-            "removal from the game": ActionVerb.REMOVE_FROM_GAME,
-            "removal from game": ActionVerb.REMOVE_FROM_GAME,
+            "remove from the game": ActionVerb.BANISH,
+            "remove from game": ActionVerb.BANISH,
+            "removal from the game": ActionVerb.BANISH,
+            "removal from game": ActionVerb.BANISH,
             "banish": ActionVerb.BANISH,
+            "return to hand": ActionVerb.BOUNCE,
+            "bounce": ActionVerb.BOUNCE,
             "negate": ActionVerb.NEGATE,
             "negation": ActionVerb.NEGATE,
             "interrupt": ActionVerb.INTERRUPT,
             "band": ActionVerb.BAND,
             "rescue": ActionVerb.RESCUE,
             "decrease": ActionVerb.DECREASE,
+            "increase": ActionVerb.INCREASE,
+            "deactivate": ActionVerb.DEACTIVATE,
             "poison": ActionVerb.POISON,
             "paralyze": ActionVerb.PARALYZE,
             "side battle": ActionVerb.SIDE_BATTLE,
@@ -58,11 +62,18 @@ class ProtectionFilter(BaseModel):
         }
         res = []
         for item in v:
+            act = None
             if isinstance(item, ActionVerb):
-                res.append(item)
+                cleaned_val = item.value.strip().lower()
+                act = canonical_map.get(cleaned_val, item)
             elif isinstance(item, str):
                 cleaned = item.strip().lower()
-                res.append(canonical_map.get(cleaned, ActionVerb(cleaned) if cleaned in ActionVerb._value2member_map_ else ActionVerb.DISCARD))
+                act = canonical_map.get(
+                    cleaned,
+                    ActionVerb(cleaned) if cleaned in ActionVerb._value2member_map_ else ActionVerb.DISCARD,
+                )
+            if act is not None and act not in res:
+                res.append(act)
         return res
 
     @field_validator("card_sources", mode="before")

@@ -17,6 +17,8 @@ class CardSide:
         Gender: Optional[str] = None,
         IsGeneric: Optional[bool] = None,
         IsHuman: Optional[bool] = None,
+        IsCloud: Optional[bool] = None,
+        IsMeek: Optional[bool] = None,
     ):
         self.Name = Name
         self.Type = Type
@@ -30,6 +32,8 @@ class CardSide:
         self.Gender = Gender
         self.IsGeneric = IsGeneric
         self.IsHuman = IsHuman
+        self.IsCloud = IsCloud
+        self.IsMeek = IsMeek
 
     def to_dict(self) -> dict:
         """Serializes the CardSide, omitting None values and empty collections.

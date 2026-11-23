@@ -39,11 +39,12 @@ from models.logic.card_logic import CardLogic, CardSideLogic
 from models.logic.ability import Ability
 from models.logic.action_effect import ActionEffect
 from models.logic.protection_filter import ProtectionFilter
-from models.logic.target_selector import TargetSelector
+from models.logic.target_selector import TargetSelector, TargetSelectorBranch
 from models.logic.modifier import Modifier
 from models.logic.dynamic_value import DynamicValue, DynamicValueCalculation
 from models.logic.condition_expression import ConditionExpression
 from models.enums.activation_mode import ActivationMode
+from models.enums.trigger_event import TriggerEvent
 from models.enums.action_verb import ActionVerb
 from models.enums.zone import Zone
 from models.enums.duration import Duration
@@ -668,11 +669,11 @@ def _parse_single_action_effects(clause: str) -> Optional[Tuple[str, List[Action
         if not _has_unparsed_clause(target_str):
             sel = build_target_selector(target_str, "all", default_scope=[Zone.BATTLE])
             return (
-                "decrease",
+                "modify_stats",
                 [
                     ActionEffect(
                         step=1,
-                        action=ActionVerb.DECREASE,
+                        action=ActionVerb.MODIFY_STATS,
                         effect_type="ongoing",
                         duration=trailing_duration or Duration.THIS_TURN,
                         strength_mod=-int(str_tok),
@@ -1070,16 +1071,50 @@ def _parse_paralyze_blocked_by_selector(blocker_clause: str) -> Optional[TargetS
             return None
         selectors.append(build_target_selector(clean_part, "all", default_scope=[Zone.IN_PLAY]))
 
-    merged = selectors[0].model_copy(deep=True)
-    if len(selectors) > 1:
+    if len(selectors) == 1:
+        merged = selectors[0].model_copy(deep=True)
+    elif all(
+        s.card_titles and not s.brigades and not s.classes and not s.references and not s.identifiers and s.gender is None
+        for s in selectors
+    ) and len({s.target_type for s in selectors}) == 1 and len({s.alignment for s in selectors}) == 1:
+        merged = selectors[0].model_copy(deep=True)
         for extra in selectors[1:]:
-            for field_name in ("brigades", "classes", "references", "identifiers", "card_titles"):
-                merged_vals = getattr(merged, field_name)
-                for val in getattr(extra, field_name):
-                    if val not in merged_vals:
-                        merged_vals.append(val)
-            if merged.target_type != extra.target_type:
-                merged.target_type = "character"
+            for val in extra.card_titles:
+                if val not in merged.card_titles:
+                    merged.card_titles.append(val)
+    else:
+        branches: List[TargetSelectorBranch] = []
+        for s in selectors:
+            b_kw: Dict[str, Any] = {}
+            if s.target_type is not None:
+                b_kw["target_type"] = s.target_type
+            if s.alignment is not None:
+                b_kw["alignment"] = s.alignment
+            if s.brigades:
+                b_kw["brigades"] = list(s.brigades)
+            if s.gender is not None:
+                b_kw["gender"] = s.gender
+            if s.classes:
+                b_kw["classes"] = list(s.classes)
+            if s.testament is not None:
+                b_kw["testament"] = s.testament
+            if s.references:
+                b_kw["references"] = list(s.references)
+            if s.identifiers:
+                b_kw["identifiers"] = list(s.identifiers)
+            if s.card_titles:
+                b_kw["card_titles"] = list(s.card_titles)
+            branches.append(TargetSelectorBranch(**b_kw))
+        u_types = {s.target_type for s in selectors}
+        u_aligns = {s.alignment for s in selectors}
+        merged = TargetSelector(
+            selection_mode=selectors[0].selection_mode,
+            zone_owner=selectors[0].zone_owner,
+            scope=list(selectors[0].scope),
+            target_type=next(iter(u_types)) if len(u_types) == 1 else "character",
+            alignment=next(iter(u_aligns)) if len(u_aligns) == 1 else None,
+            any_of=branches,
+        )
 
     # Only opposing characters can block; restrict implicit 'both' ownership to opponent.
     if merged.zone_owner == "both":
@@ -1302,7 +1337,7 @@ def parse_side_ability(
                 ability.choice_group = branch_group
             if is_star:
                 ability.is_star = True
-                ability.trigger_event = "star_phase"
+                ability.trigger_event = TriggerEvent.STAR_PHASE
                 if not ability.ability_id.startswith("star_"):
                     ability.ability_id = f"star_{ability.ability_id}"
 

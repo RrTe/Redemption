@@ -14,11 +14,12 @@ from models.enums.action_verb import ActionVerb
 from models.enums.zone import Zone
 from models.enums.condition_type import ConditionType
 from models.enums.selection_mode import SelectionMode
+from models.enums.trigger_event import TriggerEvent
 from models.logic.ability import Ability
 from models.logic.modifier import Modifier, LimitParams, ReplacementParams
 from models.logic.condition_expression import ConditionExpression
 from models.logic.stat_filter import StatFilter
-from models.logic.target_selector import TargetSelector
+from models.logic.target_selector import TargetSelector, TargetSelectorBranch
 
 # Unconditional protection modifier pattern; excludes clauses qualified by conditions or sources
 # so conditional "Cannot be negated/interrupted/prevented if/by/unless..." sentences stay intact.
@@ -679,8 +680,14 @@ def parse_protection_condition_clause(cond_clause: str) -> List[ConditionExpress
                 scope=[Zone.BATTLE],
                 target_type="hero",
                 alignment="good",
-                identifiers=["Judge", "with no special ability"],
-                card_titles=["Samuel"],
+                any_of=[
+                    TargetSelectorBranch(target_type="hero", alignment="good", card_titles=["Samuel"]),
+                    TargetSelectorBranch(
+                        target_type="hero",
+                        alignment="good",
+                        identifiers=["Judge", "with no special ability"],
+                    ),
+                ],
             ),
             operator=">=",
             value=1,
@@ -877,7 +884,7 @@ def build_conditional_protection_ability(
         is_negatable=True,
         is_interruptible=True,
         is_preventable=True,
-        trigger_event="star_phase" if is_star else None,
+        trigger_event=TriggerEvent.STAR_PHASE if is_star else None,
         conditions=conditions,
         costs=[],
         effects=[],

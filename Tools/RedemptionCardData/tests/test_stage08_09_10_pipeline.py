@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 sys.path.insert(0, str(BASE_DIR / "scripts"))
 
-from models.enums import ActionVerb, ActivationMode, SelectionMode, Zone
+from models.enums import ActionVerb, ActivationMode, SelectionMode, TriggerEvent, Zone
 from models.logic.ability import Ability
 from models.logic.action_effect import ActionEffect
 from models.logic.card_logic import CardSideLogic
@@ -234,8 +234,8 @@ class TestStage10MergeLinkAndAudit(unittest.TestCase):
         )
         self.assertEqual(issues, [])
 
-    def test_trigger_filter_card_titles_linking_and_set_suffix_strip(self) -> None:
-        """Links ability.trigger_filter.card_titles and strips trailing set qualifiers."""
+    def test_trigger_subject_card_titles_linking_and_set_suffix_strip(self) -> None:
+        """Links ability.trigger_subject.card_titles and strips trailing set qualifiers."""
         db_cards = [
             {"Id": "10", "CardSides": {"top": {"Name": "Son of God (Promo)", "Type": "Dominant"}}},
             {"Id": "20", "CardSides": {"top": {"Name": "Faith of Joshua (CoW AB)", "Type": "GE"}}},
@@ -248,14 +248,14 @@ class TestStage10MergeLinkAndAudit(unittest.TestCase):
                 Ability(
                     ability_id="on_son",
                     activation_mode=ActivationMode.TRIGGERED,
-                    trigger_event="play",
-                    trigger_filter=TargetSelector(card_titles=["Son of God"]),
+                    trigger_event=TriggerEvent.ON_PLAY,
+                    trigger_subject=TargetSelector(card_titles=["Son of God"]),
                     effects=[ActionEffect(step=1, action=ActionVerb.DRAW)],
                 )
             ]
         )
         link_side_logic_targets(side, linker)
-        self.assertEqual(side.abilities[0].trigger_filter.target_card_ids, ["10"])  # type: ignore[union-attr]
+        self.assertEqual(side.abilities[0].trigger_subject.target_card_ids, ["10"])  # type: ignore[union-attr]
 
     def test_audit_ext_coverage_reports_expected_sections(self) -> None:
         """Audit helper surfaces missing sides, missing Star, orphaned IDs, shared/top, and unresolved titles."""

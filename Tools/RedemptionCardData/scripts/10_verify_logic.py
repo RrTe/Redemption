@@ -32,11 +32,25 @@ from models.logic.target_decomposer import (
 from models.logic.dynamic_value import DynamicValue
 from models.enums import (
     SelectionMode, Zone, ActionVerb, ActivationMode, Duration, ModifierType, ConditionType,
-    CHARACTER_SIDE_TYPES, GENDERS,
+    TriggerEvent, CHARACTER_SIDE_TYPES, GENDERS,
 )
-from utils.card_linker import CardLinker, normalize_chained_targets
+from models.enums.action_verb import NON_CANONICAL_EFFECT_ACTIONS
+from utils.card_linker import (
+    CardLinker,
+    TITLE_SUBSTRING_PATTERNS,
+    _link_selector_targets,
+    _link_stat_mod_targets,
+    normalize_chained_targets,
+)
 from utils.card_helpers import check_is_star_card, get_card_name, get_side_field, get_star_ability
+from utils.finding_logger import log_finding
+from utils.target_phase5b_helper import (
+    PRINTED_SELECTOR_IDENTIFIERS,
+    get_default_ordir_lookup,
+)
 from utils.choice_group_helper import find_missing_choice_groups
+from utils.finding_logger import log_finding
+from utils.target_phase5a_helper import UNMIGRATED_PHASE5A_IDENTIFIER_TOKENS
 from utils.ast_constants_exporter import export_ast_constants
 from utils.card_hierarchy_exporter import export_card_hierarchy
 from fact_matrix import extract_ast_facts, verify_fact_matrix
@@ -58,23 +72,125 @@ _UNMIGRATED_CLASS_TOKENS = {
     "depicting a weapon", "depicting weapons", "illustration depicting a weapon",
     "territory class", "territory-class",
 } | set(CLASS_MAP.keys())
+_UNMIGRATED_GROUP_BOOL_TOKENS = {
+    "meek", "gospel", "cloud", "cloud card", "cloud cards",
+    "star", "star card", "star cards", "*", "* card", "* cards",
+}
+_UNMIGRATED_LAMB_ICON_TOKENS = {"lamb icon", "lamb icon card", "lamb icon cards"}
+_UNMIGRATED_ROYAL_TOKENS = {
+    "royal", "royals", "royal family",
+    "member of any royal family", "members of any royal family",
+    "royalty (or royal or member of a royal family)",
+}
+
+
+def _resolve_side_metadata_value(
+    side_map: Optional[Dict[str, Any]],
+    side_key: str,
+    side_types: Optional[Dict[str, str]],
+) -> Any:
+    """Resolves side metadata for top/bottom/named side or shared when all sides agree.
+
+    Args:
+        side_map: Dictionary mapping side key to resolved metadata value.
+        side_key: Current AST side key (e.g. 'top', 'bottom', 'shared').
+        side_types: Optional map of top/bottom concrete side types.
+
+    Returns:
+        Side-specific metadata value if unambiguous, otherwise None.
+    """
+    if not side_map:
+        return None
+    val = side_map.get(side_key)
+    if val is None and side_key not in side_map and len(side_map) == 1 and "top" in side_map:
+        if (side_key != "shared" and (not side_types or side_key not in side_types)) or (
+            side_key == "shared" and (not side_types or len(side_types) == 1)
+        ):
+            return side_map["top"]
+    if val is None and side_key == "shared":
+        unique_vals = {
+            tuple(v) if isinstance(v, list) else v for v in side_map.values()
+        }
+        if len(unique_vals) == 1 and (not side_types or len(side_map) == len(side_types)):
+            first = next(iter(side_map.values()))
+            return list(first) if isinstance(first, list) else first
+    return val
+
+
+_LINKER_ORDIR_CACHE: Dict[int, frozenset[str]] = {}
+
+
+def _get_allowed_selector_identifiers(linker: CardLinker | None = None) -> frozenset[str]:
+    """Returns canonical exact-match ORDIR tags plus approved non-ORDIR printed tokens.
+
+    Args:
+        linker: Optional CardLinker whose card list may supply additional ORDIR tags.
+
+    Returns:
+        Frozen set of exact permitted TargetSelector.identifiers strings.
+    """
+    cache_key = id(linker.cards) if linker is not None and getattr(linker, "cards", None) is not None else -1
+    cached = _LINKER_ORDIR_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    allowed = set(get_default_ordir_lookup().values()) | set(PRINTED_SELECTOR_IDENTIFIERS)
+    if linker is not None and getattr(linker, "cards", None):
+        for card in linker.cards:
+            if not isinstance(card, dict):
+                continue
+            for cat in card.get("ORDIR") or []:
+                if cat:
+                    allowed.add(str(cat).strip())
+            for side in (card.get("CardSides") or {}).values():
+                if isinstance(side, dict):
+                    for cat in side.get("ORDIR") or []:
+                        if cat:
+                            allowed.add(str(cat).strip())
+    frozen = frozenset(allowed)
+    _LINKER_ORDIR_CACHE[cache_key] = frozen
+    return frozen
 
 
 def _audit_selector_invariants(
-    sel: TargetSelector,
+    sel: Any,
     ab_id: str,
     side_key: str,
     issues: List[str],
     enforce_self_whitelist: bool = False,
+    allowed_identifiers: frozenset[str] | None = None,
+    finding_ctx: Dict[str, str] | None = None,
 ) -> None:
-    """Checks that a TargetSelector adheres to canonical CardType, singular identifier, and testament rules."""
+    """Checks that a TargetSelector or branch adheres to canonical Phase 1-5b invariants."""
+    allowed_set = allowed_identifiers if allowed_identifiers is not None else _get_allowed_selector_identifiers(None)
     if sel.target_type and sel.target_type not in CANONICAL_CARD_TYPES:
         issues.append(f"Non-canonical target_type '{sel.target_type}' in '{ab_id}' ({side_key})")
-    for ident in sel.identifiers:
+    idents_lower = {str(ident).strip().lower() for ident in (sel.identifiers or [])}
+    if sel.target_type == "artifact" and "temple" in idents_lower:
+        issues.append(f"Artifact selector uses 'Temple' instead of 'Temple Artifact' in '{ab_id}' ({side_key})")
+    if sel.target_type in ("character", "hero") and "priest" in idents_lower:
+        if "temple" in idents_lower:
+            issues.append(f"Selector splits 'Temple' + 'Priest' instead of 'Temple Priest' in '{ab_id}' ({side_key})")
+        if "tabernacle" in idents_lower:
+            issues.append(f"Selector splits 'Tabernacle' + 'Priest' instead of 'Tabernacle Priest' in '{ab_id}' ({side_key})")
+        if "zerubbabel's temple" in idents_lower:
+            issues.append(f"Selector splits 'Zerubbabel's Temple' + 'Priest' instead of 'Zerubbabel's Temple Priest' in '{ab_id}' ({side_key})")
+    if getattr(sel, "card_titles", None) and (idents_lower & {"temple", "tabernacle", "herod's temple"}):
+        issues.append(f"Mixed card_titles and Temple/Tabernacle identifier without any_of split in '{ab_id}' ({side_key})")
+    if sel.target_type == "site" and "temple" in idents_lower:
+        issues.append(f"Temple selector cannot use target_type='site' in '{ab_id}' ({side_key})")
+    if getattr(sel, "target_card_ids", None) and not getattr(sel, "card_titles", None):
+        issues.append(f"target_card_ids populated without card_titles in '{ab_id}' ({side_key})")
+    any_of_branches = getattr(sel, "any_of", None) or []
+    if len(any_of_branches) == 1:
+        issues.append(f"any_of must have >= 2 branches in '{ab_id}' ({side_key})")
+    if any(low in TITLE_SUBSTRING_PATTERNS or low == "joseph in title or reference" for low in idents_lower):
+        issues.append(f"Unresolved title-substring query in identifiers of '{ab_id}' ({side_key})")
+    for ident in sel.identifiers or []:
         low = ident.strip().lower()
         if low in VERB_ACTION_IDENTIFIER_NOISE:
             issues.append(f"Verb/action fragment '{ident}' in identifiers of '{ab_id}' ({side_key})")
-        if enforce_self_whitelist and sel.selection_mode == SelectionMode.AUTOMATIC_SELF and low not in AUTOMATIC_SELF_IDENTIFIER_WHITELIST:
+        if enforce_self_whitelist and getattr(sel, "selection_mode", None) == SelectionMode.AUTOMATIC_SELF and low not in AUTOMATIC_SELF_IDENTIFIER_WHITELIST:
             issues.append(f"Non-whitelist automatic_self identifier '{ident}' in '{ab_id}' ({side_key})")
         if low in ("o.t.", "n.t.", "ot", "nt", "old testament", "new testament"):
             issues.append(f"Unextracted testament '{ident}' in identifiers of '{ab_id}' ({side_key})")
@@ -86,13 +202,76 @@ def _audit_selector_invariants(
             issues.append(f"Unmigrated human qualifier '{ident}' in identifiers of '{ab_id}' ({side_key})")
         if low in _UNMIGRATED_CLASS_TOKENS:
             issues.append(f"Unmigrated class qualifier '{ident}' in identifiers of '{ab_id}' ({side_key})")
+        if low in _UNMIGRATED_GROUP_BOOL_TOKENS:
+            issues.append(f"Unmigrated group boolean token '{ident}' in identifiers of '{ab_id}' ({side_key})")
+        if low in _UNMIGRATED_LAMB_ICON_TOKENS:
+            issues.append(f"Unmigrated lamb icon token '{ident}' in identifiers of '{ab_id}' ({side_key})")
+        if low in _UNMIGRATED_ROYAL_TOKENS:
+            issues.append(f"Uncanonical royal token '{ident}' in identifiers of '{ab_id}' ({side_key})")
         if low in _PLURAL_SUBTYPE_SET:
             issues.append(f"Unsplit/plural identifier '{ident}' in '{ab_id}' ({side_key})")
+        if low in UNMIGRATED_PHASE5A_IDENTIFIER_TOKENS:
+            issues.append(f"Unmigrated Phase 5a filter '{ident}' in identifiers of '{ab_id}' ({side_key})")
         if parse_stat_filters(ident):
             issues.append(f"Unmigrated stat filter '{ident}' in identifiers of '{ab_id}' ({side_key})")
-    for sf in sel.stat_filters:
+        ident_str = str(ident).strip()
+        if ident_str not in allowed_set:
+            msg = f"Unknown non-ORDIR selector identifier '{ident_str}' in '{ab_id}' ({side_key})"
+            issues.append(msg)
+            if finding_ctx is not None:
+                log_finding(
+                    card_name=finding_ctx.get("card_name", ab_id),
+                    issue_type="UNKNOWN_SELECTOR_IDENTIFIER",
+                    details=msg,
+                    resolved=False,
+                    raw_ability=finding_ctx.get("raw_ability", ""),
+                    card_identifier=finding_ctx.get("card_identifier", ""),
+                )
+    for sf in sel.stat_filters or []:
         if sf.value is None and not sf.variable:
             issues.append(f"StatFilter without value or variable in '{ab_id}' ({side_key})")
+    for branch in getattr(sel, "any_of", None) or []:
+        _audit_selector_invariants(
+            branch,
+            ab_id,
+            side_key,
+            issues,
+            enforce_self_whitelist=False,
+            allowed_identifiers=allowed_set,
+            finding_ctx=finding_ctx,
+        )
+    ub = getattr(sel, "used_by", None)
+    if ub is not None and not isinstance(ub, str):
+        _audit_selector_invariants(
+            ub,
+            ab_id,
+            side_key,
+            issues,
+            enforce_self_whitelist=False,
+            allowed_identifiers=allowed_set,
+            finding_ctx=finding_ctx,
+        )
+    excl = getattr(sel, "exclude", None)
+    if excl is not None:
+        _audit_selector_invariants(
+            excl,
+            ab_id,
+            side_key,
+            issues,
+            enforce_self_whitelist=False,
+            allowed_identifiers=allowed_set,
+            finding_ctx=finding_ctx,
+        )
+    cnt_dyn = getattr(getattr(sel, "count", None), "dynamic", None)
+    if cnt_dyn and getattr(cnt_dyn, "selector", None):
+        _audit_selector_invariants(
+            cnt_dyn.selector,
+            ab_id,
+            side_key,
+            issues,
+            allowed_identifiers=allowed_set,
+            finding_ctx=finding_ctx,
+        )
 CONFIG_FILE = BASE_DIR / "config.json"
 with CONFIG_FILE.open("r", encoding="utf-8") as _cf:
     _config = json.load(_cf)
@@ -127,9 +306,14 @@ def merge_side_ast(
     if is_star_entry:
         for ab in incoming.get("abilities", []):
             ab["is_star"] = True
-            trig = (ab.get("trigger_event") or "").strip().lower()
-            if not trig or trig == "star":
-                ab["trigger_event"] = "star_phase"
+            raw_trig = ab.get("trigger_event")
+            if isinstance(raw_trig, list):
+                if not raw_trig:
+                    ab["trigger_event"] = TriggerEvent.STAR_PHASE.value
+            else:
+                trig = str(raw_trig or "").strip().lower()
+                if not trig or trig == "star":
+                    ab["trigger_event"] = TriggerEvent.STAR_PHASE.value
             ab_id = ab.get("ability_id") or "ability"
             if not ab_id.lower().startswith("star_"):
                 ab["ability_id"] = f"star_{ab_id}"
@@ -173,7 +357,7 @@ def merge_side_ast(
             seen_mods.add(sig)
     merged["modifiers"] = merged_mods
 
-    for meta_key in ("gender", "is_generic", "is_human"):
+    for meta_key in ("gender", "is_generic", "is_human", "is_gospel", "is_cloud", "is_star", "is_meek"):
         if merged.get(meta_key) is None and incoming.get(meta_key) is not None:
             merged[meta_key] = incoming[meta_key]
     if not merged.get("classes") and incoming.get("classes"):
@@ -404,6 +588,10 @@ def verify_card_logic(
     side_genders: Dict[str, str] | None = None,
     side_generics: Dict[str, bool] | None = None,
     side_humans: Dict[str, bool] | None = None,
+    side_gospels: Dict[str, bool] | None = None,
+    side_clouds: Dict[str, bool] | None = None,
+    side_stars: Dict[str, bool] | None = None,
+    side_meeks: Dict[str, bool] | None = None,
     side_classes: Dict[str, List[str]] | None = None,
     raw_abilities: Dict[str, str] | None = None,
 ) -> tuple[List[str], Dict[str, Any] | None]:
@@ -448,38 +636,30 @@ def verify_card_logic(
         side_card_type = ""
         if side_types:
             side_card_type = side_types.get(side_key) or side_types.get("top", "")
-        if side_genders:
-            resolved_side_gender = side_genders.get(side_key)
-            if resolved_side_gender is None and side_key == "shared":
-                unique_genders = set(side_genders.values())
-                if len(unique_genders) == 1 and (not side_types or len(side_genders) == len(side_types)):
-                    resolved_side_gender = next(iter(unique_genders))
-            if resolved_side_gender in GENDERS:
-                side_logic.gender = resolved_side_gender  # type: ignore[assignment]
-        if side_generics:
-            resolved_side_generic = side_generics.get(side_key)
-            if resolved_side_generic is None and side_key == "shared":
-                unique_generics = set(side_generics.values())
-                if len(unique_generics) == 1 and (not side_types or len(side_generics) == len(side_types)):
-                    resolved_side_generic = next(iter(unique_generics))
-            if isinstance(resolved_side_generic, bool):
-                side_logic.is_generic = resolved_side_generic
-        if side_humans:
-            resolved_side_human = side_humans.get(side_key)
-            if resolved_side_human is None and side_key == "shared":
-                unique_humans = set(side_humans.values())
-                if len(unique_humans) == 1 and (not side_types or len(side_humans) == len(side_types)):
-                    resolved_side_human = next(iter(unique_humans))
-            if isinstance(resolved_side_human, bool):
-                side_logic.is_human = resolved_side_human
-        if side_classes:
-            resolved_side_classes = side_classes.get(side_key)
-            if resolved_side_classes is None and side_key == "shared":
-                unique_class_tuples = {tuple(v) for v in side_classes.values()}
-                if len(unique_class_tuples) == 1 and (not side_types or len(side_classes) == len(side_types)):
-                    resolved_side_classes = list(next(iter(unique_class_tuples)))
-            if resolved_side_classes:
-                side_logic.classes = list(resolved_side_classes)
+        resolved_side_gender = _resolve_side_metadata_value(side_genders, side_key, side_types)
+        if resolved_side_gender in GENDERS:
+            side_logic.gender = resolved_side_gender  # type: ignore[assignment]
+        resolved_side_generic = _resolve_side_metadata_value(side_generics, side_key, side_types)
+        if isinstance(resolved_side_generic, bool):
+            side_logic.is_generic = resolved_side_generic
+        resolved_side_human = _resolve_side_metadata_value(side_humans, side_key, side_types)
+        if isinstance(resolved_side_human, bool):
+            side_logic.is_human = resolved_side_human
+        resolved_side_gospel = _resolve_side_metadata_value(side_gospels, side_key, side_types)
+        if isinstance(resolved_side_gospel, bool):
+            side_logic.is_gospel = resolved_side_gospel
+        resolved_side_cloud = _resolve_side_metadata_value(side_clouds, side_key, side_types)
+        if isinstance(resolved_side_cloud, bool):
+            side_logic.is_cloud = resolved_side_cloud
+        resolved_side_star = _resolve_side_metadata_value(side_stars, side_key, side_types)
+        if isinstance(resolved_side_star, bool):
+            side_logic.is_star = resolved_side_star
+        resolved_side_meek = _resolve_side_metadata_value(side_meeks, side_key, side_types)
+        if isinstance(resolved_side_meek, bool):
+            side_logic.is_meek = resolved_side_meek
+        resolved_side_classes = _resolve_side_metadata_value(side_classes, side_key, side_types)
+        if resolved_side_classes:
+            side_logic.classes = list(resolved_side_classes)
         # Auto-renumber duplicate step indices before normalizing chained targets
         for ability in side_logic.abilities:
             cost_steps = [c.step for c in ability.costs]
@@ -512,8 +692,8 @@ def verify_card_logic(
                 has_star_ability and (ability.is_star or ability.ability_id.lower().startswith("star_"))
             ):
                 ability.is_star = True
-                if not ability.trigger_event or ability.trigger_event.strip().lower() == "star":
-                    ability.trigger_event = "star_phase"
+                if not ability.trigger_event:
+                    ability.trigger_event = TriggerEvent.STAR_PHASE
                 if not ability.ability_id.lower().startswith("star_"):
                     ability.ability_id = f"star_{ability.ability_id}"
                 if ability.activation_mode != ActivationMode.TRIGGERED:
@@ -608,50 +788,135 @@ def verify_card_logic(
                                     f"{side_card_type} bands to evil_character/evil without raw text support"
                                 )
 
-            # Audit selector invariants across conditions, costs, effects, and triggers
-            if ability.trigger_filter:
-                _audit_selector_invariants(ability.trigger_filter, ability.ability_id, side_key, issues)
+            # Resolve card_titles and title-substring queries first when linker is provided
+            if linker:
+                _link_selector_targets(ability.trigger_subject, linker)
+                _link_selector_targets(ability.trigger_source, linker)
+                for cond in ability.conditions:
+                    _link_selector_targets(cond.selector, linker)
+                for cost in ability.costs:
+                    _link_selector_targets(cost.target, linker)
+                    _link_stat_mod_targets(cost.strength_mod, linker)
+                    _link_stat_mod_targets(cost.toughness_mod, linker)
+                for eff in ability.effects:
+                    _link_selector_targets(eff.target, linker)
+                    _link_stat_mod_targets(eff.strength_mod, linker)
+                    _link_stat_mod_targets(eff.toughness_mod, linker)
+                    if eff.protection_filter:
+                        for cs in eff.protection_filter.card_sources:
+                            _link_selector_targets(cs, linker)
+
+            # Audit trigger_event, trigger_subject, trigger_source & selector invariants
+            allowed_idents = _get_allowed_selector_identifiers(linker)
+            finding_ctx = {
+                "card_name": str(card_data.get("card_name") or card_id),
+                "card_identifier": str(card_id),
+                "raw_ability": str(raw_text_for_side or ""),
+            }
+            if ability.activation_mode == ActivationMode.TRIGGERED:
+                if not ability.trigger_event:
+                    issues.append(f"Missing required trigger_event on triggered ability '{ability.ability_id}' ({side_key})")
+            elif ability.trigger_event or ability.trigger_subject or ability.trigger_source:
+                issues.append(
+                    f"Unexpected trigger_event/trigger_subject/trigger_source on non-triggered ({ability.activation_mode.value}) ability '{ability.ability_id}' ({side_key})"
+                )
+            if ability.trigger_subject:
+                _audit_selector_invariants(
+                    ability.trigger_subject,
+                    ability.ability_id,
+                    side_key,
+                    issues,
+                    allowed_identifiers=allowed_idents,
+                    finding_ctx=finding_ctx,
+                )
+            if ability.trigger_source:
+                _audit_selector_invariants(
+                    ability.trigger_source,
+                    ability.ability_id,
+                    side_key,
+                    issues,
+                    allowed_identifiers=allowed_idents,
+                    finding_ctx=finding_ctx,
+                )
             for cond in ability.conditions:
                 if cond.selector:
-                    _audit_selector_invariants(cond.selector, ability.ability_id, side_key, issues)
+                    _audit_selector_invariants(
+                        cond.selector,
+                        ability.ability_id,
+                        side_key,
+                        issues,
+                        allowed_identifiers=allowed_idents,
+                        finding_ctx=finding_ctx,
+                    )
             for cost in ability.costs:
+                if cost.action == ActionVerb.UNKNOWN:
+                    issues.append(f"Forbidden action 'unknown' in cost of '{ability.ability_id}' ({side_key})")
+                elif cost.action in NON_CANONICAL_EFFECT_ACTIONS:
+                    issues.append(f"Non-canonical action '{cost.action.value}' in cost of '{ability.ability_id}' ({side_key})")
                 if cost.action == ActionVerb.BAND and cost.target:
                     if cost.target.scope in ([Zone.IN_PLAY], [Zone.BATTLE]) and not _BAND_ZONE_RESTRICTION_RE.search(raw_text_for_side):
                         cost.target.scope = [Zone.IN_PLAY, Zone.HAND]
                 if cost.target:
-                    _audit_selector_invariants(cost.target, ability.ability_id, side_key, issues, enforce_self_whitelist=True)
+                    _audit_selector_invariants(
+                        cost.target,
+                        ability.ability_id,
+                        side_key,
+                        issues,
+                        enforce_self_whitelist=True,
+                        allowed_identifiers=allowed_idents,
+                        finding_ctx=finding_ctx,
+                    )
             for eff in ability.effects:
+                if eff.action == ActionVerb.UNKNOWN:
+                    issues.append(f"Forbidden action 'unknown' in '{ability.ability_id}' ({side_key})")
+                elif eff.action in NON_CANONICAL_EFFECT_ACTIONS:
+                    issues.append(f"Non-canonical action '{eff.action.value}' in '{ability.ability_id}' ({side_key})")
+                if eff.action == ActionVerb.BEGIN_NEW_PHASE and eff.target_phase is None:
+                    issues.append(f"Missing required target_phase on 'begin a new phase' in '{ability.ability_id}' ({side_key})")
+                if eff.action == ActionVerb.MODIFY_STATS and eff.strength_mod is None and eff.toughness_mod is None:
+                    issues.append(f"modify_stats effect without strength_mod or toughness_mod in '{ability.ability_id}' ({side_key})")
                 if eff.target:
-                    _audit_selector_invariants(eff.target, ability.ability_id, side_key, issues, enforce_self_whitelist=True)
+                    _audit_selector_invariants(
+                        eff.target,
+                        ability.ability_id,
+                        side_key,
+                        issues,
+                        enforce_self_whitelist=True,
+                        allowed_identifiers=allowed_idents,
+                        finding_ctx=finding_ctx,
+                    )
+                for mod_attr in (eff.strength_mod, eff.toughness_mod):
+                    mod_dyn = getattr(mod_attr, "dynamic", None)
+                    if mod_dyn and getattr(mod_dyn, "selector", None):
+                        _audit_selector_invariants(
+                            mod_dyn.selector,
+                            ability.ability_id,
+                            side_key,
+                            issues,
+                            allowed_identifiers=allowed_idents,
+                            finding_ctx=finding_ctx,
+                        )
                 if eff.protection_filter:
+                    for p_act in list(eff.protection_filter.actions) + list(eff.protection_filter.except_actions):
+                        if p_act in (ActionVerb.UNKNOWN, ActionVerb.RETURN_TO_HAND, ActionVerb.REMOVE_FROM_GAME):
+                            issues.append(f"Non-canonical action '{p_act.value}' in protection_filter of '{ability.ability_id}' ({side_key})")
                     for cs in eff.protection_filter.card_sources:
-                        _audit_selector_invariants(cs, ability.ability_id, side_key, issues)
+                        _audit_selector_invariants(
+                            cs,
+                            ability.ability_id,
+                            side_key,
+                            issues,
+                            allowed_identifiers=allowed_idents,
+                            finding_ctx=finding_ctx,
+                        )
+                if eff.action in (ActionVerb.PROTECT, ActionVerb.IMMUNE) and eff.target:
+                    for ident in eff.target.identifiers:
+                        if ident.lower() in ("harm", "rescue", "discard abilities", "capture abilities", "convert abilities"):
+                            issues.append(f"Leaked protection cause in target.identifiers: '{ident}' in '{ability.ability_id}'")
 
             # Check for completely empty ability clause
             if not ability.effects and not ability.costs and not ability.modifiers:
                 issues.append(f"Ability '{ability.ability_id}' ({side_key}) has no effects, costs, or modifiers")
-
-            # Resolve card_titles to canonical target_card_ids if linker provided
-            if linker:
-                if ability.trigger_filter and ability.trigger_filter.card_titles:
-                    ability.trigger_filter.target_card_ids = linker.resolve_titles(ability.trigger_filter.card_titles)
-                for cond in ability.conditions:
-                    if cond.selector and cond.selector.card_titles:
-                        cond.selector.target_card_ids = linker.resolve_titles(cond.selector.card_titles)
-                for cost in ability.costs:
-                    if cost.target and cost.target.card_titles:
-                        cost.target.target_card_ids = linker.resolve_titles(cost.target.card_titles)
-                for eff in ability.effects:
-                    if eff.target and eff.target.card_titles:
-                        eff.target.target_card_ids = linker.resolve_titles(eff.target.card_titles)
-                    if eff.protection_filter:
-                        for cs in eff.protection_filter.card_sources:
-                            if cs.card_titles:
-                                cs.target_card_ids = linker.resolve_titles(cs.card_titles)
-                    if eff.action in (ActionVerb.PROTECT, ActionVerb.IMMUNE) and eff.target:
-                        for ident in eff.target.identifiers:
-                            if ident.lower() in ("harm", "rescue", "discard abilities", "capture abilities", "convert abilities"):
-                                issues.append(f"Leaked protection cause in target.identifiers: '{ident}' in '{ability.ability_id}'")
 
         # Verify choice_group structural integrity (no singletons, no missing modal/split groups)
         for cg_name, cg_ab_ids in side_logic.find_singleton_choice_groups().items():
@@ -697,6 +962,10 @@ def run_logic_verifier(export_dist: bool = True) -> None:
     id_to_side_genders: Dict[str, Dict[str, str]] = {}
     id_to_side_generics: Dict[str, Dict[str, bool]] = {}
     id_to_side_humans: Dict[str, Dict[str, bool]] = {}
+    id_to_side_gospels: Dict[str, Dict[str, bool]] = {}
+    id_to_side_clouds: Dict[str, Dict[str, bool]] = {}
+    id_to_side_stars: Dict[str, Dict[str, bool]] = {}
+    id_to_side_meeks: Dict[str, Dict[str, bool]] = {}
     id_to_side_classes: Dict[str, Dict[str, List[str]]] = {}
     id_to_raw_abilities: Dict[str, Dict[str, str]] = {}
     if CARDS_EXT_FILE.exists():
@@ -719,7 +988,13 @@ def run_logic_verifier(export_dist: bool = True) -> None:
                 sg_map: Dict[str, str] = {}
                 sgen_map: Dict[str, bool] = {}
                 shum_map: Dict[str, bool] = {}
+                sgos_map: Dict[str, bool] = {}
+                scld_map: Dict[str, bool] = {}
+                sstr_map: Dict[str, bool] = {}
+                smek_map: Dict[str, bool] = {}
                 scls_map: Dict[str, List[str]] = {}
+                card_is_gospel = bool(c.get("IsGospel", False))
+                card_is_star = bool(c.get("IsStarCard", False))
                 real_side_keys = [
                     k for k, v in sides_dict.items()
                     if k != "shared" and isinstance(v, dict)
@@ -737,6 +1012,21 @@ def run_logic_verifier(export_dist: bool = True) -> None:
                             scls_map[sk] = cls_list
                             if sk not in ("top", "bottom"):
                                 scls_map.setdefault("top", list(cls_list))
+                    sgos_map[sk] = card_is_gospel
+                    sstr_map[sk] = card_is_star
+                    if sk not in ("top", "bottom"):
+                        sgos_map.setdefault("top", card_is_gospel)
+                        sstr_map.setdefault("top", card_is_star)
+                    ic_val = get_side_field(c, sk, "IsCloud")
+                    if isinstance(ic_val, bool):
+                        scld_map[sk] = ic_val
+                        if sk not in ("top", "bottom"):
+                            scld_map.setdefault("top", ic_val)
+                    im_val = get_side_field(c, sk, "IsMeek")
+                    if isinstance(im_val, bool):
+                        smek_map[sk] = im_val
+                        if sk not in ("top", "bottom"):
+                            smek_map.setdefault("top", im_val)
                     if t_val in CHARACTER_SIDE_TYPES:
                         g_val = get_side_field(c, sk, "Gender")
                         if g_val in GENDERS:
@@ -760,6 +1050,14 @@ def run_logic_verifier(export_dist: bool = True) -> None:
                     id_to_side_generics[cid] = sgen_map
                 if shum_map:
                     id_to_side_humans[cid] = shum_map
+                if sgos_map:
+                    id_to_side_gospels[cid] = sgos_map
+                if scld_map:
+                    id_to_side_clouds[cid] = scld_map
+                if sstr_map:
+                    id_to_side_stars[cid] = sstr_map
+                if smek_map:
+                    id_to_side_meeks[cid] = smek_map
                 if scls_map:
                     id_to_side_classes[cid] = scls_map
                 sm: Dict[str, str] = {}
@@ -831,6 +1129,10 @@ def run_logic_verifier(export_dist: bool = True) -> None:
             side_genders=id_to_side_genders.get(card_id),
             side_generics=id_to_side_generics.get(card_id),
             side_humans=id_to_side_humans.get(card_id),
+            side_gospels=id_to_side_gospels.get(card_id),
+            side_clouds=id_to_side_clouds.get(card_id),
+            side_stars=id_to_side_stars.get(card_id),
+            side_meeks=id_to_side_meeks.get(card_id),
             side_classes=id_to_side_classes.get(card_id),
             raw_abilities=id_to_raw_abilities.get(card_id),
         )
@@ -845,6 +1147,22 @@ def run_logic_verifier(export_dist: bool = True) -> None:
         if card_issues:
             total_issues += len(card_issues)
             issue_report[card_id] = card_issues
+            trig_errs = [
+                err for err in card_issues
+                if "trigger_event" in err or "trigger_subject" in err or "trigger_source" in err
+            ]
+            if trig_errs:
+                card_raw_summary = " | ".join(
+                    f"{k}: {v}" for k, v in (id_to_raw_abilities.get(card_id) or {}).items() if v
+                )
+                log_finding(
+                    meta_name or card_data.get("card_name", "") or card_id,
+                    "MISSING_OR_INVALID_TRIGGER_EVENT",
+                    "; ".join(trig_errs),
+                    resolved=False,
+                    raw_ability=card_raw_summary,
+                    card_identifier=card_id,
+                )
         else:
             clean_cards += 1
             verified_distribution_map[card_id] = entry_payload

@@ -35,6 +35,7 @@ UNAMBIGUOUS_CARD_TITLES: Dict[str, str] = {
     "potter's field": "Potter's Field", "haman's plot": "Haman's Plot",
     "wall of protection": "Wall of Protection", "lion's den": "Lion's Den",
     "phinehas, the useless": "Phinehas, the Useless", "confusion": "Confusion",
+    "good samaritan": "Good Samaritan", "the good samaritan": "The Good Samaritan",
 }
 
 CANONICAL_CARD_TYPES: Set[str] = {
@@ -176,9 +177,13 @@ SUBTYPE_MAP: Dict[str, Tuple[str, str, bool, Optional[str]]] = {
     "magicians": ("Magician", "character", True, None),
     "soothsayer": ("Soothsayer", "character", False, None),
     "soothsayers": ("Soothsayer", "character", True, None),
-    "royal": ("Royal", "character", False, None),
-    "royals": ("Royal", "character", True, None),
+    "royal": ("Royalty", "character", False, None),
+    "royals": ("Royalty", "character", True, None),
     "royalty": ("Royalty", "character", False, None),
+    "royal family": ("Royalty", "character", False, None),
+    "member of any royal family": ("Royalty", "character", False, None),
+    "members of any royal family": ("Royalty", "character", True, None),
+    "royalty (or royal or member of a royal family)": ("Royalty", "character", False, None),
     "missionary": ("Missionary", "hero", False, "good"),
     "missionaries": ("Missionary", "hero", True, "good"),
     "flood survivor": ("Flood Survivor", "character", False, None),
@@ -192,6 +197,8 @@ SUBTYPE_MAP: Dict[str, Tuple[str, str, bool, Optional[str]]] = {
 }
 
 OFFICIAL_ORDIR_COMPOSITES: Dict[str, Tuple[List[str], str, bool]] = {
+    "temple": (["Temple"], "city", False),
+    "temples": (["Temple"], "city", True),
     "tabernacle priest": (["Tabernacle Priest"], "character", False),
     "tabernacle priests": (["Tabernacle Priest"], "character", True),
     "tabernacle artifact": (["Tabernacle Artifact"], "artifact", False),
@@ -311,13 +318,32 @@ CLASS_MAP: Dict[str, Tuple[str, Optional[str], bool]] = {
     "territory-class": ("Territory", None, False),
 }
 
+LAMB_ICON_MAP: Dict[str, Tuple[str, str, bool]] = {
+    "lamb icon": ("dominant", "good", False),
+    "lamb icon card": ("dominant", "good", False),
+    "lamb icon cards": ("dominant", "good", True),
+}
+
+GROUP_BOOL_MAP: Dict[str, Tuple[str, bool, bool, Optional[str]]] = {
+    "meek": ("is_meek", True, False, None),
+    "gospel": ("is_gospel", True, False, None),
+    "cloud": ("is_cloud", True, False, None),
+    "cloud card": ("is_cloud", True, False, "card"),
+    "cloud cards": ("is_cloud", True, True, "card"),
+    "star": ("is_star", True, False, None),
+    "star card": ("is_star", True, False, "card"),
+    "star cards": ("is_star", True, True, "card"),
+    "*": ("is_star", True, False, None),
+    "* card": ("is_star", True, False, "card"),
+    "* cards": ("is_star", True, True, "card"),
+}
+
 QUALIFIER_TRAITS: Dict[str, str] = {
-    "meek": "Meek",
     "lone": "lone",
     "single-brigade": "single-brigade",
-    "gospel": "Gospel",
-    "nativity": "Nativity", "cloud": "Cloud", "wilderness": "wilderness",
-    "tabernacle": "Tabernacle", "temple": "Temple",
+    "nativity": "Nativity",
+    "wilderness": "wilderness",
+    "tabernacle": "Tabernacle",
 }
 
 
@@ -348,17 +374,70 @@ def normalize_book_citation(text: str) -> Optional[List[str]]:
     return out if out else None
 
 
+# Multi-word ORDIR phrases, printed icons, and negative/exception polarity guards that
+# must never be misparsed into positive attribute filters by try_decompose_phrase.
 _PROTECTED_IDENT_PREFIXES = (
-    "except ", "used by ", "involve", "depict", "connected with", "access to ",
-    "special abilities", "special ability", "band abilit", "search abilit",
-    "protect abilit", "immune abilit", "draw abilit", "capture abilit",
-    "convert abilit", "discard abilit", "played ", "drawn ", "fought ",
-    "blocking ", "guarding ", "about to ", "first played", "in ", "on ",
-    "at ", "from ", "not in ", "other ", "opposite ", "selected brigade",
-    "matching brigade", "different brigade", "non-warrior", "non-weapon",
-    "holding weapon", "lamb icon", "skull icon", "bible icon",
-    "rescue attempt", "make a rescue", "enter battle",
+    "except ", "excluding ", "other than ", "involve", "depict", "connected with",
+    "fought ", "access to ", "non-warrior", "non-weapon", "non-character",
+    "non-prophet", "non-roman", "non-royal", "skull icon", "bible icon", "dual icon",
+    "ability text:", "restrict:",
 )
+
+# Canonical multi-word ORDIR categories & documented printed tokens that must remain
+# atomic when validated inside TargetSelector.identifiers.
+_ATOMIC_IDENTIFIER_GUARDS = frozenset({
+    "wilderness character",
+    "nativity card",
+    "roman soldier",
+    "roman emperor",
+    "roman centurion",
+    "roman governor",
+    "roman site or fortress",
+    "hebrews card",
+    "judges card",
+    "assyrian site",
+    "babylonian site",
+    "canaanite site",
+    "egyptian site",
+    "persian site",
+    "philistine site",
+    "false prophet",
+    "high priest",
+    "son of jacob",
+    "giant slayer",
+    "king of israel",
+    "king or queen of judah",
+    "flood survivor",
+    "armor of god enhancement",
+    "empty tomb hero",
+    "major or minor prophet",
+    "minor prophet",
+    "major prophet",
+    "son of anak",
+    "child of leah",
+    "child of jacob",
+    "number enhancement",
+    "sacrifice enhancement",
+    "side battle loser",
+    "lowest toughness",
+    "smallest toughness",
+    "named card",
+    "rescuing player",
+    "month: december",
+    "board advantage",
+    "treated as lost soul",
+    "treated as evil character",
+    "hand advantage",
+    "successful in battle",
+    "opponent: >3 brigades",
+    "hand > 10 cards",
+    "hand > 4 cards",
+    "not owned by controller",
+    "type set aside",
+    "has scripture reference",
+    "restrict: attack",
+    "restrict: control",
+})
 
 
 def try_decompose_phrase(
@@ -379,6 +458,12 @@ def try_decompose_phrase(
         return None
     low = raw.lower()
 
+    if re.match(r"^(?:or|except)\s+", low):
+        return None
+
+    if low in _ATOMIC_IDENTIFIER_GUARDS:
+        return None
+
     if low in UNAMBIGUOUS_CARD_TITLES:
         return {"card_titles": [UNAMBIGUOUS_CARD_TITLES[low]]}
 
@@ -387,8 +472,16 @@ def try_decompose_phrase(
             return {"identifiers": ["special abilities"]}
         return None
 
-    # Person-named book alone in card_titles stays a card title (e.g. 'Daniel', 'Ruth', 'Job')
-    if is_from_titles and low in CANONICAL_BOOKS and low not in NON_PERSON_BOOKS:
+    # Person-named book alone (or with 'King/Queen <Name>') in card_titles stays a card title
+    if is_from_titles and (
+        low in {"scribe", "scribes", "chief priest", "chief priests"}
+        or (low in CANONICAL_BOOKS and low not in NON_PERSON_BOOKS)
+        or (
+            re.match(r"^(?:king|queen)\s+[a-z]+$", low) is not None
+            and low.split(None, 1)[1] in CANONICAL_BOOKS
+            and low.split(None, 1)[1] not in NON_PERSON_BOOKS
+        )
+    ):
         return None
 
     # Check if card_titles has '<Testament> <ProperName>' (e.g. 'O.T. Joseph', 'N.T. Saul')
@@ -403,6 +496,10 @@ def try_decompose_phrase(
         "gender": None,
         "is_generic": None,
         "is_human": None,
+        "is_gospel": None,
+        "is_cloud": None,
+        "is_star": None,
+        "is_meek": None,
         "classes": [],
         "references": [],
         "brigades": [],
@@ -441,19 +538,21 @@ def try_decompose_phrase(
                 g1, g2 = p1.get("gender"), p2.get("gender")
                 if g1 and g2 and g1 != g2:
                     return None
-                ig1, ig2 = p1.get("is_generic"), p2.get("is_generic")
-                if ig1 is not None and ig2 is not None and ig1 != ig2:
-                    return None
-                ih1, ih2 = p1.get("is_human"), p2.get("is_human")
-                if ih1 is not None and ih2 is not None and ih1 != ih2:
-                    return None
+                bool_keys = ("is_generic", "is_human", "is_gospel", "is_cloud", "is_star", "is_meek")
+                has_or = bool(re.search(r"\bor\b", raw, flags=re.I))
+                for bk in bool_keys:
+                    bv1, bv2 = p1.get(bk), p2.get(bk)
+                    if bv1 is not None and bv2 is not None and bv1 != bv2:
+                        return None
+                    if has_or and bv1 != bv2:
+                        return None
                 for k in ("references", "brigades", "classes", "identifiers", "card_titles"):
                     for item in p1.get(k, []) + p2.get(k, []):
                         if item not in res[k]:
                             res[k].append(item)
                 res["gender"] = g1 or g2
-                res["is_generic"] = ig1 if ig1 is not None else ig2
-                res["is_human"] = ih1 if ih1 is not None else ih2
+                for bk in bool_keys:
+                    res[bk] = p1.get(bk) if p1.get(bk) is not None else p2.get(bk)
                 res["testament"] = p1.get("testament") or p2.get("testament")
                 res["alignment"] = p1.get("alignment") or p2.get("alignment")
                 t1, t2 = p1.get("target_type"), p2.get("target_type")
@@ -470,7 +569,7 @@ def try_decompose_phrase(
     rem = raw
     if re.match(r"^all\s+", rem, flags=re.I):
         res["is_plural"] = True
-    rem = re.sub(r"^(?:selected|any|all|or|and|a|an)\s+", "", rem, flags=re.I).strip()
+    rem = re.sub(r"^(?:selected|any|all|and|a|an)\s+", "", rem, flags=re.I).strip()
 
     steps = 0
     while rem:
@@ -508,7 +607,9 @@ def try_decompose_phrase(
         for dict_obj, kind in (
             (PLURAL_CARD_TYPE_MAP, "plural_type"),
             (SINGULAR_CARD_TYPE_ALIASES, "singular_type"),
+            (LAMB_ICON_MAP, "lamb_icon"),
             (HUMAN_MAP, "is_human"),
+            (GROUP_BOOL_MAP, "group_bool"),
             (CLASS_MAP, "class"),
             (SUBTYPE_MAP, "subtype"),
             (CANONICAL_BRIGADE_MAP, "brigade"),
@@ -532,6 +633,15 @@ def try_decompose_phrase(
                         res["is_human"] = val[0]
                         res["is_plural"] = res["is_plural"] or val[1]
                         res["target_type"] = res["target_type"] or val[2]
+                    elif kind == "lamb_icon":
+                        res["target_type"] = val[0]
+                        res["alignment"] = res["alignment"] or val[1]
+                        res["is_plural"] = res["is_plural"] or val[2]
+                    elif kind == "group_bool":
+                        res[val[0]] = val[1]
+                        res["is_plural"] = res["is_plural"] or val[2]
+                        if val[3]:
+                            res["target_type"] = res["target_type"] or val[3]
                     elif kind == "class":
                         if val[0] not in res["classes"]:
                             res["classes"].append(val[0])
@@ -587,6 +697,10 @@ def try_decompose_phrase(
                 "gender": None,
                 "is_generic": None,
                 "is_human": None,
+                "is_gospel": None,
+                "is_cloud": None,
+                "is_star": None,
+                "is_meek": None,
                 "classes": [],
                 "references": [],
                 "brigades": [],

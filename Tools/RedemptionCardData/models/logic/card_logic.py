@@ -25,6 +25,10 @@ class CardSideLogic(BaseModel):
     gender: Optional[GenderType] = None
     is_generic: Optional[bool] = None
     is_human: Optional[bool] = None
+    is_gospel: Optional[bool] = None
+    is_cloud: Optional[bool] = None
+    is_star: Optional[bool] = None
+    is_meek: Optional[bool] = None
     classes: List[str] = Field(default_factory=list)
     modifiers: List[Modifier] = Field(default_factory=list)
     abilities: List[Ability] = Field(default_factory=list)

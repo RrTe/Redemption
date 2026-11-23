@@ -52,6 +52,11 @@ from utils.card_helpers import get_card_name, check_is_star_card
 from utils.card_hierarchy_exporter import export_card_hierarchy
 from utils.gender_resolver import apply_gender_to_card_sides
 from utils.generic_resolver import apply_is_generic_to_card_sides
+from utils.group_resolver import (
+    apply_is_cloud_to_card_sides,
+    apply_is_meek_to_card_sides,
+    apply_rule_based_ordir_tags,
+)
 from utils.human_resolver import apply_is_human_to_card_sides, normalize_card_classes
 import importlib
 _extract_shared_fields = importlib.import_module("scripts.03_extend_cards")._extract_shared_fields
@@ -387,12 +392,15 @@ def map_ordir_to_cards():
                 if not sides[sk]["ORDIR"]:
                     del sides[sk]["ORDIR"]
 
-        c["CardSides"] = _extract_shared_fields(sides)
+        apply_rule_based_ordir_tags(c)
+        c["CardSides"] = _extract_shared_fields(c.get("CardSides", {}))
         apply_gender_to_card_sides(c)
         apply_is_generic_to_card_sides(c)
         apply_is_human_to_card_sides(c)
         normalize_card_classes(c)
         c["IsStarCard"] = check_is_star_card(c)
+        apply_is_cloud_to_card_sides(c)
+        apply_is_meek_to_card_sides(c)
 
     # Post-mapping integrity validation: verify that no card lost its core attributes
     for c in cards_data:

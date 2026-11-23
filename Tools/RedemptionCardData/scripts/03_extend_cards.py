@@ -14,6 +14,7 @@ from utils.ability_splitter import split_card_abilities
 from utils.card_helpers import check_is_star_card, generate_card_id
 from utils.gender_resolver import resolve_gender
 from utils.generic_resolver import resolve_is_generic
+from utils.group_resolver import apply_is_cloud_to_card_sides, apply_is_meek_to_card_sides
 from utils.human_resolver import normalize_card_classes, resolve_is_human
 from models.enums.brigade import ALL_BRIGADES
 from models.enums.alignment import Alignment
@@ -475,6 +476,8 @@ def main():
             raw["CardSides"] = build_card_sides(raw, raw_types)
             normalize_card_classes(raw)
             raw["IsStarCard"] = check_is_star_card(raw)
+            apply_is_cloud_to_card_sides(raw)
+            apply_is_meek_to_card_sides(raw)
             raw["Id"] = generate_card_id(raw.get("ImageFile"), raw.get("Set"), raw.get("Name"))
 
             raw["Meta"] = {

@@ -45,6 +45,100 @@ def _collect_selector_facts(
         identifiers.add("human")
     elif is_human is False:
         identifiers.add("non-human")
+    if getattr(sel, "is_gospel", None) is True:
+        identifiers.add("gospel")
+    if getattr(sel, "is_cloud", None) is True:
+        identifiers.add("cloud")
+    if getattr(sel, "is_star", None) is True:
+        identifiers.update(("star", "*"))
+    if getattr(sel, "is_meek", None) is True:
+        identifiers.add("meek")
+    if getattr(sel, "exclude_self", False):
+        identifiers.update(("other", "another"))
+    for st_f in getattr(sel, "state_filters", None) or []:
+        st_low = str(getattr(st_f, "value", st_f)).lower()
+        identifiers.add(st_low)
+        identifiers.add(st_low.replace("_", " "))
+        identifiers.add(st_low.replace("_", "-"))
+        if is_restrict:
+            restrict_identifiers.add(st_low.replace("_", " "))
+    for rf in getattr(sel, "relative_filters", None) or []:
+        attr_low = str(getattr(rf, "attribute", "")).lower()
+        rel_low = str(getattr(rf, "relation", "")).lower()
+        if attr_low:
+            identifiers.add(attr_low)
+        if rel_low:
+            identifiers.add(rel_low)
+        if rel_low == "same" and attr_low:
+            identifiers.add(f"matching {attr_low}")
+        ref_val = getattr(rf, "reference", None)
+        if isinstance(ref_val, str):
+            identifiers.add(ref_val.lower())
+    ub = getattr(sel, "used_by", None)
+    if ub is not None:
+        if ub == "self":
+            identifiers.add("used by this card")
+        elif isinstance(ub, str):
+            identifiers.add(f"used by {ub}")
+        else:
+            identifiers.add("used by")
+            _collect_selector_facts(
+                ub,
+                numbers,
+                max_values,
+                identifiers,
+                entities,
+                target_types,
+                restrict_identifiers,
+                brigades,
+                is_restrict=is_restrict,
+            )
+    excl = getattr(sel, "exclude", None)
+    if excl is not None:
+        identifiers.add("except")
+        _collect_selector_facts(
+            excl,
+            numbers,
+            max_values,
+            identifiers,
+            entities,
+            target_types,
+            restrict_identifiers,
+            brigades,
+            is_restrict=is_restrict,
+        )
+    if getattr(sel, "targets_abilities", False):
+        identifiers.add("special abilities")
+        if is_restrict:
+            restrict_identifiers.add("special abilities")
+    for act_attr in ("ability_target_actions", "exclude_ability_actions"):
+        for act_item in getattr(sel, act_attr, None) or []:
+            act_val = (act_item.value if hasattr(act_item, "value") else str(act_item)).lower()
+            if act_val:
+                identifiers.add(act_val)
+                if is_restrict:
+                    restrict_identifiers.add(act_val)
+                    if act_val == "place":
+                        restrict_identifiers.update({"put", "putting"})
+                    elif act_val == "rescue":
+                        restrict_identifiers.update({"rescue attempt", "make"})
+                    elif act_val == "play":
+                        restrict_identifiers.add("playing")
+    for flag_attr, tok in (("is_cloud", "cloud"), ("is_star", "*"), ("is_meek", "meek")):
+        if getattr(sel, flag_attr, None):
+            identifiers.add(tok)
+    for branch in getattr(sel, "any_of", None) or []:
+        _collect_selector_facts(
+            branch,
+            numbers,
+            max_values,
+            identifiers,
+            entities,
+            target_types,
+            restrict_identifiers,
+            brigades,
+            is_restrict=is_restrict,
+        )
     for cls in getattr(sel, "classes", []) or []:
         c_low = str(cls).lower()
         identifiers.add(c_low)
@@ -62,7 +156,12 @@ def _collect_selector_facts(
         for inum in re.findall(r"\b\d+\b", ident):
             numbers.add(int(inum))
         if is_restrict:
-            restrict_identifiers.add(ident.lower())
+            ident_low = ident.lower()
+            restrict_identifiers.add(ident_low)
+            if ident_low == "restrict: control":
+                restrict_identifiers.update({"control", "controlling"})
+            elif ident_low == "restrict: attack":
+                restrict_identifiers.add("attack")
     for sf in getattr(sel, "stat_filters", []) or []:
         if isinstance(getattr(sf, "value", None), int):
             numbers.add(sf.value)
@@ -81,11 +180,67 @@ def _collect_selector_facts(
             max_values.add(cnt.max_value)
         dyn = getattr(cnt, "dynamic", None)
         if dyn:
+            if isinstance(getattr(dyn, "fixed_value", None), int):
+                numbers.add(abs(dyn.fixed_value))
             if isinstance(getattr(dyn, "limit", None), int):
                 numbers.add(dyn.limit)
                 max_values.add(dyn.limit)
-            if isinstance(getattr(dyn, "multiplier", None), int) and dyn.multiplier > 1:
-                numbers.add(dyn.multiplier)
+            mult = getattr(dyn, "multiplier", None)
+            if isinstance(mult, (int, float)) and abs(mult) > 1 and float(mult).is_integer():
+                numbers.add(int(abs(mult)))
+            if getattr(dyn, "selector", None):
+                _collect_selector_facts(
+                    dyn.selector,
+                    numbers,
+                    max_values,
+                    identifiers,
+                    entities,
+                    target_types,
+                    restrict_identifiers,
+                    brigades,
+                    is_restrict=is_restrict,
+                )
+
+
+def _collect_stat_mod_facts(
+    mod: Any,
+    numbers: Set[int],
+    max_values: Set[int],
+    identifiers: Set[str],
+    entities: Set[str],
+    target_types: Set[str],
+    restrict_identifiers: Set[str],
+    brigades: Set[str],
+) -> None:
+    """Extracts numeric bounds and referenced selector facts from int or DynamicValue stat mods."""
+    if mod is None:
+        return
+    if isinstance(mod, int) and not isinstance(mod, bool):
+        numbers.add(abs(mod))
+        return
+    if isinstance(getattr(mod, "fixed_value", None), int):
+        numbers.add(abs(mod.fixed_value))
+    dyn = getattr(mod, "dynamic", None)
+    if dyn:
+        if isinstance(getattr(dyn, "fixed_value", None), int):
+            numbers.add(abs(dyn.fixed_value))
+        if isinstance(getattr(dyn, "limit", None), int):
+            numbers.add(dyn.limit)
+            max_values.add(dyn.limit)
+        mult = getattr(dyn, "multiplier", None)
+        if isinstance(mult, (int, float)) and abs(mult) > 1 and float(mult).is_integer():
+            numbers.add(int(abs(mult)))
+        if getattr(dyn, "selector", None):
+            _collect_selector_facts(
+                dyn.selector,
+                numbers,
+                max_values,
+                identifiers,
+                entities,
+                target_types,
+                restrict_identifiers,
+                brigades,
+            )
 
 
 def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
@@ -130,12 +285,15 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
         if not ab.is_preventable:
             modifiers.add("cannot_be_prevented")
         if ab.trigger_event:
-            for tn in re.findall(r"\b\d+\b", str(ab.trigger_event)):
-                numbers.add(int(tn))
-        if ab.trigger_filter:
-            _collect_selector_facts(
-                ab.trigger_filter, numbers, max_values, identifiers, entities, target_types, restrict_identifiers, brigades
-            )
+            te_items = ab.trigger_event if isinstance(ab.trigger_event, list) else [ab.trigger_event]
+            for te_item in te_items:
+                for tn in re.findall(r"\b\d+\b", str(getattr(te_item, "value", te_item))):
+                    numbers.add(int(tn))
+        for trig_sel in (getattr(ab, "trigger_subject", None), getattr(ab, "trigger_source", None)):
+            if trig_sel:
+                _collect_selector_facts(
+                    trig_sel, numbers, max_values, identifiers, entities, target_types, restrict_identifiers, brigades
+                )
 
         for m in ab.modifiers:
             m_type = str(m.modifier_type.value if hasattr(m.modifier_type, "value") else m.modifier_type).lower()
@@ -160,9 +318,13 @@ def extract_ast_facts(side_logic: CardSideLogic) -> Dict[str, Any]:
             act = str(eff.action.value if hasattr(eff.action, "value") else eff.action).lower()
             actions.add(act)
             if eff.strength_mod is not None:
-                numbers.add(abs(eff.strength_mod))
+                _collect_stat_mod_facts(
+                    eff.strength_mod, numbers, max_values, identifiers, entities, target_types, restrict_identifiers, brigades
+                )
             if eff.toughness_mod is not None:
-                numbers.add(abs(eff.toughness_mod))
+                _collect_stat_mod_facts(
+                    eff.toughness_mod, numbers, max_values, identifiers, entities, target_types, restrict_identifiers, brigades
+                )
             for dn in re.findall(r"\b\d+\b", str(eff.duration)):
                 numbers.add(int(dn))
             if eff.target:
@@ -421,6 +583,8 @@ def verify_fact_matrix(raw: str, ast_facts: Dict[str, Any]) -> Tuple[bool, List[
             if prefix == "connected with" and concept == "demons" and (
                 "orange" in ast_facts.get("brigades", set()) and "enhancement" in ast_facts.get("target_types", set())
             ):
+                continue
+            if prefix == "connected with" and concept == "him" and "connected with david" in all_target_facts:
                 continue
             if concept not in all_target_facts:
                 issues.append(f"Missing conceptual identifier: '{prefix} {concept}'")

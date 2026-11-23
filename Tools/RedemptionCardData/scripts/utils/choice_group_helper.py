@@ -51,6 +51,7 @@ _PAREN_MODAL_VERB_RE = re.compile(
 _CANONICAL_VERB_SYNONYMS: Dict[str, Set[str]] = {
     "draw": {"draw"},
     "discard": {"discard"},
+    "deactivate": {"deactivate"},
     "negate": {"negate", "deactivate"},
     "interrupt": {"interrupt"},
     "band": {"band"},
@@ -286,7 +287,12 @@ def _extract_ability_features(ab: Dict[str, Any]) -> Tuple[Set[str], Set[str], b
     gen_parts: List[str] = []
     is_self = False
     if ab.get("trigger_event"):
-        spec_parts.append(str(ab["trigger_event"]).replace("_", " "))
+        te_val = ab["trigger_event"]
+        if isinstance(te_val, list):
+            for te_item in te_val:
+                spec_parts.append(str(te_item).replace("_", " "))
+        else:
+            spec_parts.append(str(te_val).replace("_", " "))
     for item in list(ab.get("effects") or []) + list(ab.get("costs") or []):
         act = str(item.get("action") or "")
         gen_parts.append(act)

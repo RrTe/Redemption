@@ -90,7 +90,7 @@ class CardLinker:
         Returns:
             Set of matching canonical card IDs.
         """
-        pattern = re.compile(rf"\b{re.escape(title_clean)}\b", re.IGNORECASE)
+        pattern = re.compile(rf"(?<!\w){re.escape(title_clean)}(?!\w)", re.IGNORECASE)
         matched_ids: Set[str] = set()
         for cid, _, clean_names in self._index:
             for name in clean_names:
@@ -114,6 +114,65 @@ class CardLinker:
         return sorted(all_ids)
 
 
+TITLE_SUBSTRING_PATTERNS: Dict[str, List[str]] = {
+    "snare in the title": ["Snare"],
+    "trumpet or trumpets in the title": ["Trumpet", "Trumpets"],
+    "trumpet or censer in the title": ["Trumpet", "Censer"],
+    "'false' in the title": ["False"],
+    "false in the title": ["False"],
+    "ship in the title": ["Ship"],
+}
+
+
+def _link_selector_targets(sel: Any, linker: CardLinker) -> None:
+    """Recursively resolves card_titles and title-substring patterns, clearing group target_card_ids."""
+    if not sel:
+        return
+
+    idents = list(getattr(sel, "identifiers", None) or [])
+    if idents:
+        titles = list(getattr(sel, "card_titles", None) or [])
+        kept_idents: List[str] = []
+        changed = False
+        for ident in idents:
+            low = str(ident).strip().lower()
+            if low in TITLE_SUBSTRING_PATTERNS:
+                for tok in TITLE_SUBSTRING_PATTERNS[low]:
+                    if tok not in titles:
+                        titles.append(tok)
+                changed = True
+            else:
+                kept_idents.append(ident)
+        if changed:
+            sel.card_titles = titles
+            sel.identifiers = kept_idents
+
+    if getattr(sel, "card_titles", None):
+        sel.target_card_ids = linker.resolve_titles(sel.card_titles)
+    elif hasattr(sel, "target_card_ids") and getattr(sel, "target_card_ids", None) is not None:
+        sel.target_card_ids = [] if type(sel).__name__ == "TargetSelector" else None
+
+    for branch in getattr(sel, "any_of", None) or []:
+        _link_selector_targets(branch, linker)
+    ub = getattr(sel, "used_by", None)
+    if ub is not None and not isinstance(ub, str):
+        _link_selector_targets(ub, linker)
+    excl = getattr(sel, "exclude", None)
+    if excl is not None:
+        _link_selector_targets(excl, linker)
+    cnt = getattr(sel, "count", None)
+    dyn = getattr(cnt, "dynamic", None) if cnt else None
+    if dyn and getattr(dyn, "selector", None):
+        _link_selector_targets(dyn.selector, linker)
+
+
+def _link_stat_mod_targets(mod: Any, linker: CardLinker) -> None:
+    """Resolves card_titles inside a DynamicValue stat modifier selector, if present."""
+    dyn = getattr(mod, "dynamic", None) if mod else None
+    if dyn and getattr(dyn, "selector", None):
+        _link_selector_targets(dyn.selector, linker)
+
+
 def link_side_logic_targets(side_logic: Any, linker: CardLinker) -> None:
     """Populates target_card_ids for all card_titles found in AST conditions, costs, and effects.
 
@@ -122,26 +181,23 @@ def link_side_logic_targets(side_logic: Any, linker: CardLinker) -> None:
         linker: Pre-indexed CardLinker instance.
     """
     for ab in getattr(side_logic, "abilities", []):
-        tf = getattr(ab, "trigger_filter", None)
-        if tf and getattr(tf, "card_titles", None):
-            tf.target_card_ids = linker.resolve_titles(tf.card_titles)
+        _link_selector_targets(getattr(ab, "trigger_subject", None), linker)
+        _link_selector_targets(getattr(ab, "trigger_source", None), linker)
+        _link_selector_targets(getattr(ab, "trigger_filter", None), linker)
         for cond in getattr(ab, "conditions", []):
-            sel = getattr(cond, "selector", None)
-            if sel and getattr(sel, "card_titles", None):
-                sel.target_card_ids = linker.resolve_titles(sel.card_titles)
+            _link_selector_targets(getattr(cond, "selector", None), linker)
         for cost in getattr(ab, "costs", []):
-            tgt = getattr(cost, "target", None)
-            if tgt and getattr(tgt, "card_titles", None):
-                tgt.target_card_ids = linker.resolve_titles(tgt.card_titles)
+            _link_selector_targets(getattr(cost, "target", None), linker)
+            _link_stat_mod_targets(getattr(cost, "strength_mod", None), linker)
+            _link_stat_mod_targets(getattr(cost, "toughness_mod", None), linker)
         for eff in getattr(ab, "effects", []):
-            tgt = getattr(eff, "target", None)
-            if tgt and getattr(tgt, "card_titles", None):
-                tgt.target_card_ids = linker.resolve_titles(tgt.card_titles)
+            _link_selector_targets(getattr(eff, "target", None), linker)
+            _link_stat_mod_targets(getattr(eff, "strength_mod", None), linker)
+            _link_stat_mod_targets(getattr(eff, "toughness_mod", None), linker)
             pf = getattr(eff, "protection_filter", None)
             if pf:
                 for cs in getattr(pf, "card_sources", []):
-                    if getattr(cs, "card_titles", None):
-                        cs.target_card_ids = linker.resolve_titles(cs.card_titles)
+                    _link_selector_targets(cs, linker)
 
 
 def normalize_chained_targets(side_logic: Any) -> List[str]:

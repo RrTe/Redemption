@@ -68,7 +68,8 @@ class TestPhase3Normalization(unittest.TestCase):
                 identifiers=["block", "Meek", "from deck or territory", "Demon"],
             ),
         )
-        self.assertEqual(eff.target.identifiers, ["Meek", "Demon"])
+        self.assertEqual(eff.target.identifiers, ["Demon"])
+        self.assertIs(eff.target.is_meek, True)
 
         cond_ab = Ability.model_validate({
             "ability_id": "test_cond_kept",
@@ -130,7 +131,7 @@ class TestPhase3Normalization(unittest.TestCase):
                                 else:
                                     preserved_traits.add(low)
         self.assertEqual(violations, [])
-        for expected in ("meek", "royalty", "philistine", "demon", "angel", "idol", "cloud", "token"):
+        for expected in ("royalty", "philistine", "demon", "angel", "idol", "token"):
             self.assertIn(expected, preserved_traits)
 
     def test_entry_look_and_star_activation_modes(self) -> None:

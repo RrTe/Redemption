@@ -213,8 +213,10 @@ class TestPhase2Repairs(unittest.TestCase):
         enoch_actions = [e["action"] for a in self.cards_logic["-860753876"]["sides"]["top"]["abilities"] for e in a["effects"]]
         self.assertEqual(enoch_actions, ["protect", "withdraw"])
 
-        burial_ids = self.cards_logic["-1557092137"]["sides"]["top"]["abilities"][0]["effects"][0]["target"]["identifiers"]
-        self.assertIn("make a rescue attempt", burial_ids)
+        burial_tgt = self.cards_logic["-1557092137"]["sides"]["top"]["abilities"][0]["effects"][0]["target"]
+        self.assertEqual(burial_tgt["identifiers"], [])
+        self.assertTrue(burial_tgt["targets_abilities"])
+        self.assertIn("rescue", burial_tgt["ability_target_actions"])
 
         for cid in ("-950214778", "551003852", "-1270964017", "-727034140", "-1726785984", "-1574426638", "793883426"):
             self.assertIn("abilities", self.cards_logic[cid]["sides"]["top"])
