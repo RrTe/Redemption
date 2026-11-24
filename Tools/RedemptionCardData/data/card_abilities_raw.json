@@ -12434,7 +12434,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -13187,7 +13187,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_last",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -18163,7 +18163,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -22877,7 +22877,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_last",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -23765,7 +23765,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -24870,7 +24870,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -24997,7 +24997,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -29426,7 +29426,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -29563,7 +29563,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -34558,7 +34558,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_last",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -34968,7 +34968,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -46674,7 +46674,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_last",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -53612,7 +53612,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -54435,7 +54435,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_last",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -58985,7 +58985,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_last",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -64711,7 +64711,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -70894,7 +70894,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -71904,7 +71904,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "chained_target",
+                  "selection_mode": "manual_controller",
                   "zone_owner": "controller",
                   "scope": [
                     "in_play"
@@ -71928,8 +71928,7 @@
                   "any_of": [],
                   "count": {
                     "fixed_value": 1
-                  },
-                  "ref_step": 1
+                  }
                 },
                 "destination_position": "as_is",
                 "creates_context_scope": false,
@@ -81627,7 +81626,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -84816,7 +84815,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -90184,7 +90183,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_last",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -94173,7 +94172,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_last",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -95573,7 +95572,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -96953,7 +96952,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -97080,7 +97079,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -98235,7 +98234,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "manual_controller",
                   "zone_owner": "controller",
                   "scope": [
                     "battle"
@@ -99297,7 +99296,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -103293,7 +103292,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -103681,7 +103680,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -105840,7 +105839,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_last",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -108399,7 +108398,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "opponent",
                   "scope": [
                     "deck"
@@ -108568,7 +108567,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "opponent",
                   "scope": [
                     "deck"
@@ -110683,7 +110682,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -110810,7 +110809,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -112521,7 +112520,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -114666,7 +114665,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -115135,7 +115134,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -115282,7 +115281,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -118751,7 +118750,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -120029,7 +120028,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -120285,7 +120284,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -122970,7 +122969,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -124248,7 +124247,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -124504,7 +124503,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -131185,7 +131184,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"
@@ -131292,7 +131291,7 @@
                 "effect_type": "instant",
                 "duration": "instant",
                 "target": {
-                  "selection_mode": "automatic_all",
+                  "selection_mode": "automatic_next",
                   "zone_owner": "controller",
                   "scope": [
                     "deck"

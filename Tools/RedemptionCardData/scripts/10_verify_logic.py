@@ -83,6 +83,74 @@ _UNMIGRATED_ROYAL_TOKENS = {
     "royalty (or royal or member of a royal family)",
 }
 
+_EXEMPT_AUTOMATIC_ALL_COUNT_ACTIONS = frozenset({
+    ActionVerb.RESTRICT,
+    ActionVerb.CHANGE_HAND_SIZE,
+    ActionVerb.CREATE_TOKEN,
+})
+_PRIVATE_ZONES = frozenset({
+    Zone.RESERVE_PILE,
+    Zone.DECK,
+    Zone.HAND,
+    Zone.DISCARD_PILE,
+})
+_PRIVATE_SINGLE_PICK_ACTIONS = frozenset({
+    ActionVerb.TAKE,
+    ActionVerb.SEARCH,
+    ActionVerb.PLAY,
+    ActionVerb.BAND,
+    ActionVerb.UNDERDECK,
+    ActionVerb.TOPDECK,
+    ActionVerb.EQUIP,
+})
+_MULTI_PLAYER_PRIVATE_ZONE_RE = re.compile(
+    r"\b(?:each\s+(?:player|opponent|deck|hand|reserve|discard)|"
+    r"both\s+(?:players?|decks?|hands?|reserves?|discard)|"
+    r"all\s+(?:players?|decks?|hands?|reserves?|discard)|"
+    r"players?'|everyone|decks|hands|reserves|discard\s+piles|"
+    r"owner'?s\s+(?:deck|hand|reserve|discard))\b",
+    re.IGNORECASE,
+)
+
+
+def _audit_selection_mode_and_private_owner(
+    eff: Any,
+    ability_id: str,
+    side_key: str,
+    raw_text_for_side: str,
+    issues: List[str],
+) -> None:
+    """Rejects automatic_all combined with bounded counts and bogus 'both' owners on private zones."""
+    tgt = getattr(eff, "target", None)
+    if tgt is None:
+        return
+    if tgt.selection_mode == SelectionMode.AUTOMATIC_ALL and tgt.count is not None:
+        if eff.action not in _EXEMPT_AUTOMATIC_ALL_COUNT_ACTIONS:
+            cnt = tgt.count
+            is_pure_dynamic = (
+                cnt.dynamic is not None
+                and cnt.fixed_value is None
+                and cnt.max_value is None
+            )
+            if not is_pure_dynamic:
+                issues.append(
+                    f"Contradictory selection_mode='automatic_all' with count on '{eff.action.value}' "
+                    f"in '{ability_id}' ({side_key}); use manual_controller/manual_opponent/"
+                    f"automatic_next/automatic_last or count=None"
+                )
+    if (
+        tgt.zone_owner == "both"
+        and tgt.scope
+        and set(tgt.scope).issubset(_PRIVATE_ZONES)
+        and eff.action in _PRIVATE_SINGLE_PICK_ACTIONS
+        and raw_text_for_side
+        and not _MULTI_PLAYER_PRIVATE_ZONE_RE.search(raw_text_for_side)
+    ):
+        issues.append(
+            f"Invalid zone_owner='both' on private zone {[z.value for z in tgt.scope]} "
+            f"for '{eff.action.value}' in '{ability_id}' ({side_key}); expected 'controller' or 'either'"
+        )
+
 
 def _resolve_side_metadata_value(
     side_map: Optional[Dict[str, Any]],
@@ -866,6 +934,13 @@ def verify_card_logic(
                         allowed_identifiers=allowed_idents,
                         finding_ctx=finding_ctx,
                     )
+                    _audit_selection_mode_and_private_owner(
+                        cost,
+                        ability.ability_id,
+                        side_key,
+                        raw_text_for_side,
+                        issues,
+                    )
             for eff in ability.effects:
                 if eff.action == ActionVerb.UNKNOWN:
                     issues.append(f"Forbidden action 'unknown' in '{ability.ability_id}' ({side_key})")
@@ -884,6 +959,13 @@ def verify_card_logic(
                         enforce_self_whitelist=True,
                         allowed_identifiers=allowed_idents,
                         finding_ctx=finding_ctx,
+                    )
+                    _audit_selection_mode_and_private_owner(
+                        eff,
+                        ability.ability_id,
+                        side_key,
+                        raw_text_for_side,
+                        issues,
                     )
                 for mod_attr in (eff.strength_mod, eff.toughness_mod):
                     mod_dyn = getattr(mod_attr, "dynamic", None)

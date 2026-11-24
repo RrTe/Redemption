@@ -265,6 +265,12 @@ def parse_colon_clause(clause: str, ability_idx: int) -> Optional[Ability]:
         insp_count = DynamicValue.from_int(1)
     scope_zone = Zone.HAND if "hand" in target_desc.lower() else Zone.DECK
     owner_str = "opponent" if "opponent" in target_desc.lower() else "controller"
+    if scope_zone == Zone.HAND:
+        insp_mode = SelectionMode.AUTOMATIC_ALL
+    elif "bottom" in target_desc.lower() and "top" not in target_desc.lower():
+        insp_mode = SelectionMode.AUTOMATIC_LAST
+    else:
+        insp_mode = SelectionMode.AUTOMATIC_NEXT
 
     effects: List[ActionEffect] = [
         ActionEffect(
@@ -273,7 +279,7 @@ def parse_colon_clause(clause: str, ability_idx: int) -> Optional[Ability]:
             effect_type="instant",
             creates_context_scope=True,
             target=TargetSelector(
-                selection_mode=SelectionMode.AUTOMATIC_ALL,
+                selection_mode=insp_mode,
                 scope=[scope_zone],
                 zone_owner=owner_str,
                 count=insp_count,
@@ -804,6 +810,9 @@ def _parse_single_action_effects(clause: str) -> Optional[Tuple[str, List[Action
             return None
         sel = build_target_selector(target_str, cnt_token, default_scope=[Zone.IN_PLAY])
         sel.zone_owner = "controller"
+        if sel.selection_mode == SelectionMode.CHAINED_TARGET:
+            sel.selection_mode = SelectionMode.MANUAL_CONTROLLER
+            sel.ref_step = None
         return (
             "activate_artifact",
             [
