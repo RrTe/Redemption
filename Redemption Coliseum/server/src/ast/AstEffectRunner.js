@@ -19,21 +19,16 @@ class AstEffectRunner {
   static _handlers = {
     [AST_ACTIONS.DRAW]: DrawHandler,
     [AST_ACTIONS.DISCARD]: DiscardHandler,
-    [AST_ACTIONS.MODIFY_NUMBERS]: ModifyNumbersHandler,
     [AST_ACTIONS.MODIFY_STATS]: ModifyNumbersHandler,
-    [AST_ACTIONS.INCREASE]: ModifyNumbersHandler,
-    [AST_ACTIONS.DECREASE]: ModifyNumbersHandler,
     [AST_ACTIONS.BAND]: BandHandler,
     [AST_ACTIONS.ADD_TO_BATTLE]: BandHandler,
     [AST_ACTIONS.IMMUNE]: ImmunityHandler,
     [AST_ACTIONS.PROTECT]: ImmunityHandler,
     [AST_ACTIONS.SET_IMMUNITY]: ImmunityHandler,
     [AST_ACTIONS.BOUNCE]: ZoneTransferHandler,
-    [AST_ACTIONS.RETURN_TO_HAND]: ZoneTransferHandler,
     [AST_ACTIONS.TOPDECK]: ZoneTransferHandler,
     [AST_ACTIONS.UNDERDECK]: ZoneTransferHandler,
     [AST_ACTIONS.BANISH]: ZoneTransferHandler,
-    [AST_ACTIONS.REMOVE_FROM_THE_GAME]: ZoneTransferHandler,
     [AST_ACTIONS.PLACE]: ZoneTransferHandler,
     [AST_ACTIONS.TAKE]: ZoneTransferHandler,
   };
@@ -143,15 +138,18 @@ class AstEffectRunner {
 
     const snapshots = [];
     const logEntries = [];
+    const stepSnapshots = {};
     let previousSnapshot = null;
 
     // Sort effects by step order if present
     const sortedEffects = [...ability.effects].sort((a, b) => (a.step || 1) - (b.step || 1));
 
-    for (const effect of sortedEffects) {
+    for (let i = 0; i < sortedEffects.length; i++) {
+      const effect = sortedEffects[i];
       const stepRes = this.runSingleEffect(effect, {
         ...context,
         previousSnapshot,
+        stepSnapshots,
       });
 
       if (stepRes.awaitingSpecialInitiative || stepRes.awaitingTargetSelection || !stepRes.handled) {
@@ -161,6 +159,7 @@ class AstEffectRunner {
       if (stepRes.snapshot) {
         snapshots.push(stepRes.snapshot);
         previousSnapshot = stepRes.snapshot;
+        stepSnapshots[effect.step || (i + 1)] = stepRes.snapshot;
       }
       if (stepRes.logEntry) {
         logEntries.push(stepRes.logEntry);

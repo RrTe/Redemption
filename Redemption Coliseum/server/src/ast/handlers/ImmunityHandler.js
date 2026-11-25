@@ -245,11 +245,17 @@ class ImmunityHandler {
       room,
       actingPlayer,
       targetDef,
-      { sourceCard, actionType: AST_ACTIONS.SET_IMMUNITY }
+      { room, actingPlayer, sourceCard, actionType: AST_ACTIONS.SET_IMMUNITY }
     );
 
     const candidates = [];
-    const parsedCount = parseTargetCount(targetDef);
+    const parsedCount = parseTargetCount(targetDef, undefined, {
+      room,
+      player: actingPlayer,
+      sourceCard,
+      eligibleCount: eligible.eligibleCardIds.length,
+      options,
+    });
     const maxCount = parsedCount.isAll
       ? eligible.eligibleCardIds.length
       : parsedCount.maxCount;

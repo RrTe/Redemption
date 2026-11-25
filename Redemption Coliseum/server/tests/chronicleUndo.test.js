@@ -226,9 +226,9 @@ describe("Chronicle Undo & Mutation Rollback Suite", () => {
           conditions: [],
           effects: [
             {
-              action: AST_ACTIONS.DECREASE,
-              strength_mod: 2,
-              toughness_mod: 2,
+              action: AST_ACTIONS.MODIFY_STATS,
+              strength_mod: -2,
+              toughness_mod: -2,
               target: {
                 selection_mode: AST_SELECTION_MODES.AUTOMATIC_ALL,
                 zone_owner: "opponent",

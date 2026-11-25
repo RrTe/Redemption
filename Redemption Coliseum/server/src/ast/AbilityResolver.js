@@ -296,6 +296,7 @@ class AbilityResolver {
         stepOptions.specialInitiativeDeclined
       );
       const isChainedOrSelf =
+        currentEffect.action === AST_ACTIONS.DRAW ||
         currentEffect.target?.selection_mode === "chained_target" ||
         currentEffect.target?.selection_mode === "automatic_self";
 
@@ -305,10 +306,13 @@ class AbilityResolver {
           player,
           currentEffect.target,
           {
+            room: this.room,
             sourceCard: card,
             actionType: currentEffect.action,
             isOptional: Boolean((targetAbility.is_optional || item.isOptional) && stepIdx === 0),
             selectedPileId: item._selectedPileId || undefined,
+            previousSnapshot: item._previousSnapshot || null,
+            options: stepOptions,
           }
         );
 
@@ -586,6 +590,7 @@ class AbilityResolver {
 
     if (activeEffect && AstEffectRunner._handlers[activeEffect.action] && activeEffect.target) {
       const isChainedOrSelf =
+        activeEffect.action === AST_ACTIONS.DRAW ||
         activeEffect.target.selection_mode === "chained_target" ||
         activeEffect.target.selection_mode === "automatic_self";
       if (!isChainedOrSelf) {
@@ -594,10 +599,12 @@ class AbilityResolver {
           player,
           activeEffect.target,
           {
+            room: this.room,
             sourceCard: card,
             actionType: activeEffect.action,
             isOptional: Boolean((targetAbility?.is_optional || item.isOptional) && stepIdx === 0),
             selectedPileId: item._selectedPileId || undefined,
+            previousSnapshot: item._previousSnapshot || null,
           }
         );
 
@@ -678,7 +685,7 @@ class AbilityResolver {
       ? this._getOptionalPromptText(promptEffect, card, item)
       : `Activate the special ability of ${card.Name || item.title}?`;
 
-    if (promptEffect?.target && card?.id && !isFallbackBand) {
+    if (promptEffect?.target && promptEffect.action !== AST_ACTIONS.DRAW && card?.id && !isFallbackBand) {
       const eligiblePreview = TargetSelectionService.resolveEligibleTargets(
         this.room,
         player,
@@ -1105,9 +1112,11 @@ class AbilityResolver {
         player,
         effect.target,
         {
+          room: this.room,
           sourceCard: card,
           actionType: effect.action,
           isOptional: Boolean(ability.is_optional),
+          previousSnapshot: null,
         }
       );
 

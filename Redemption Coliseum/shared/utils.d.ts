@@ -14,6 +14,10 @@ export interface CardSide {
   Gender?: string;
   IsGeneric?: boolean | null;
   IsHuman?: boolean | null;
+  IsCloud?: boolean | null;
+  IsMeek?: boolean | null;
+  IsGospel?: boolean | null;
+  IsStarCard?: boolean | null;
   ORDIR?: string[];
 }
 
@@ -35,6 +39,8 @@ export interface NormalizedCard {
   IsEnhancement: boolean;
   IsGospel: boolean;
   IsStarCard: boolean;
+  IsCloud?: boolean;
+  IsMeek?: boolean;
   StarAbility?: string;
   Name: string;
   SpecialAbility: string;

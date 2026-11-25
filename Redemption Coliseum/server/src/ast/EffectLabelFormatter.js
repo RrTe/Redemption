@@ -1,7 +1,35 @@
 // server/src/ast/EffectLabelFormatter.js
-const { AST_ACTIONS, AST_SELECTION_MODES } = require("../../../shared/astConstants");
+const { AST_ACTIONS, AST_SELECTION_MODES, AST_STAT_MOD_OPERATIONS } = require("../../../shared/astConstants");
+const { SelectorComposer } = require("../../../shared/rules/SelectorComposer");
 const { ActionType } = require("../../../shared/actions");
 const { parseTargetCount } = require("./TargetCountResolver");
+
+const ADJECTIVE_STATE_FILTERS = new Set([
+  "lone",
+  "blocked",
+  "unblocked",
+  "activated",
+  "inactive",
+  "captured",
+  "face_down",
+  "face_up",
+  "blocking",
+  "attacking",
+  "rescuing",
+  "occupied",
+  "unoccupied",
+  "equipped",
+  "banded",
+  "opposed",
+  "protected",
+  "immune",
+  "converted",
+  "poisoned",
+  "diseased",
+  "revealed",
+  "single_brigade",
+  "multi_brigade",
+]);
 
 const PILE_SCOPES = new Set([
   "deck",
@@ -80,11 +108,34 @@ class EffectLabelFormatter {
       target.is_generic === true ? "generic " : (target.is_generic === false ? "unique " : "");
     const humanStr =
       target.is_human === true ? "human " : (target.is_human === false ? "non-human " : "");
+    const cloudStr = target.is_cloud === true ? "Cloud " : "";
+    const meekStr = target.is_meek === true ? "meek " : "";
+    const gospelStr = target.is_gospel === true ? "Gospel " : "";
+    const starStr = target.is_star === true ? "Star " : "";
+    const stateLabels = (Array.isArray(target.state_filters) ? target.state_filters : [])
+      .map((s) => String(s || "").trim().toLowerCase())
+      .filter((s) => ADJECTIVE_STATE_FILTERS.has(s))
+      .map((s) => s.replace(/_/g, " "));
+    const stateStr = stateLabels.length > 0 ? `${stateLabels.join(" ")} ` : "";
     const genderStr = target.gender ? `${String(target.gender).toLowerCase()} ` : "";
     const classes = Array.isArray(target.classes) ? target.classes.filter(Boolean) : [];
     const idents = (Array.isArray(target.identifiers) ? target.identifiers : [])
       .filter((id) => Boolean(id) && !(String(id).trim().toLowerCase() === "or" && classes.length > 0));
-    return { brigadeStr, testStr, refStr, genericStr, humanStr, genderStr, classes, idents };
+    return {
+      brigadeStr,
+      testStr,
+      refStr,
+      genericStr,
+      humanStr,
+      cloudStr,
+      meekStr,
+      gospelStr,
+      starStr,
+      stateStr,
+      genderStr,
+      classes,
+      idents,
+    };
   }
 
   /**
@@ -99,22 +150,37 @@ class EffectLabelFormatter {
     if (!isBand && target?.selection_mode === AST_SELECTION_MODES.AUTOMATIC_SELF) {
       return "this card";
     }
-    if (isBand && Array.isArray(target.card_titles) && target.card_titles.length > 0) {
-      return target.card_titles.join(" or ");
+    if (Array.isArray(target?.any_of) && target.any_of.length > 0) {
+      const branchPhrases = Array.from(
+        new Set(
+          target.any_of
+            .map((branch) => this.formatTargetPhrase(SelectorComposer.mergeBranch(target, branch), { isBand }))
+            .filter(Boolean)
+        )
+      );
+      if (branchPhrases.length > 0) {
+        return branchPhrases.join(" or ");
+      }
+    }
+    if (Array.isArray(target.card_titles) && target.card_titles.length > 0) {
+      const quals = this.formatTargetQualifiers(target);
+      if (!isBand && !target.target_type && target.card_titles.length === 1 && quals.idents.length === 1) {
+        const iden = quals.idents[0].replace(/_/g, " ").toLowerCase();
+        return `${target.card_titles[0]} or ${iden}`;
+      }
+      if (isBand || quals.idents.length === 0) {
+        return target.card_titles.join(" or ");
+      }
     }
 
     const rawType = (target.target_type || (isBand ? "character" : "card")).replace(/_/g, " ");
     const quals = this.formatTargetQualifiers(target);
-    if (!isBand && !target.target_type && Array.isArray(target.card_titles) && target.card_titles.length === 1 && quals.idents.length === 1) {
-      const iden = quals.idents[0].replace(/_/g, " ").toLowerCase();
-      return `${target.card_titles[0]} or ${iden}`;
-    }
     const classStr = quals.classes.length > 0 ? quals.classes.map((c) => String(c).toLowerCase()).join(" or ") : "";
 
     if (isBand) {
       const idenStr = quals.idents.length > 0 ? `${quals.idents.join("/")} ` : "";
       const finalType = classStr || rawType;
-      return `${quals.genericStr}${quals.brigadeStr}${quals.testStr}${quals.refStr}${quals.genderStr}${quals.humanStr}${idenStr}${finalType}`.trim();
+      return `${quals.genericStr}${quals.brigadeStr}${quals.testStr}${quals.refStr}${quals.genderStr}${quals.humanStr}${quals.cloudStr}${quals.meekStr}${quals.gospelStr}${quals.starStr}${quals.stateStr}${idenStr}${finalType}`.trim();
     }
 
     const iden = quals.idents.length > 0 ? quals.idents[0].replace(/_/g, " ").toLowerCase() : "";
@@ -128,7 +194,7 @@ class EffectLabelFormatter {
       alignLower && !targetType.toLowerCase().startsWith(alignLower)
         ? `${target.alignment} `
         : "";
-    return `${alignStr}${quals.genericStr}${quals.brigadeStr}${quals.testStr}${quals.refStr}${quals.genderStr}${quals.humanStr}${targetType}`.trim();
+    return `${alignStr}${quals.genericStr}${quals.brigadeStr}${quals.testStr}${quals.refStr}${quals.genderStr}${quals.humanStr}${quals.cloudStr}${quals.meekStr}${quals.gospelStr}${quals.starStr}${quals.stateStr}${targetType}`.trim();
   }
 
   /**
@@ -144,12 +210,24 @@ class EffectLabelFormatter {
       const prep = isQuestion ? "with" : "to";
       return `Band ${prep} ${target.card_titles.join(" or ")}`;
     }
+    if (Array.isArray(target.any_of) && target.any_of.length > 0) {
+      const phrase = this.formatTargetPhrase(target, { isBand: true });
+      const allTitleOnly = target.any_of.every((b) => Array.isArray(b.card_titles) && b.card_titles.length > 0);
+      if (allTitleOnly) {
+        const prep = isQuestion ? "with" : "to";
+        return `Band ${prep} ${phrase}`;
+      }
+      if (phrase && phrase !== "character") {
+        return `Band to a ${phrase}`;
+      }
+    }
 
-    const { maxCount: maxVal, minCount: minVal, fixedValue, isAll, isPlural } = parseTargetCount(target);
+    const { maxCount: maxVal, minCount: minVal, fixedValue, isAll, isPlural, hasDynamic, displayCount } = parseTargetCount(target);
 
     let countPrefix = "a";
     if (isPlural) {
       if (isAll) countPrefix = "all";
+      else if (hasDynamic) countPrefix = `${displayCount}`;
       else if (minVal === 0) countPrefix = `up to ${maxVal}`;
       else if (fixedValue > 1 || minVal === maxVal) countPrefix = `${maxVal}`;
       else countPrefix = `${minVal}-${maxVal}`;
@@ -232,15 +310,13 @@ class EffectLabelFormatter {
       case AST_ACTIONS.UNDERDECK:
         return `Underdeck ${phrase}${scope ? ` from ${scope}` : ""}`;
       case AST_ACTIONS.BOUNCE:
-      case AST_ACTIONS.RETURN_TO_HAND:
         return `Return ${phrase} to hand`;
       case AST_ACTIONS.BANISH:
-      case AST_ACTIONS.REMOVE_FROM_THE_GAME:
         return `Banish ${phrase}${pileSuffix}`;
       case AST_ACTIONS.DISCARD:
         return `Discard ${phrase}${pileSuffix}`;
       case AST_ACTIONS.DRAW: {
-        const count = target.count?.fixed_value || effect.count?.fixed_value || 1;
+        const count = target.count?.fixed_value || effect.count?.fixed_value || (target.count?.dynamic ? "X" : 1);
         return `Draw ${count} card(s)`;
       }
       case AST_ACTIONS.TAKE: {
@@ -279,24 +355,8 @@ class EffectLabelFormatter {
           : "Protect";
         return `${verb} ${phrase}${clause ? ` ${clause}` : ""}`;
       }
-      case AST_ACTIONS.MODIFY_NUMBERS:
       case AST_ACTIONS.MODIFY_STATS:
-      case AST_ACTIONS.INCREASE:
-      case AST_ACTIONS.DECREASE: {
-        let sDelta = typeof effect.strength_mod === "number" ? effect.strength_mod : 0;
-        let tDelta = typeof effect.toughness_mod === "number" ? effect.toughness_mod : 0;
-        if (action === AST_ACTIONS.DECREASE) {
-          if (sDelta > 0) sDelta = -sDelta;
-          if (tDelta > 0) tDelta = -tDelta;
-        } else if (action === AST_ACTIONS.INCREASE) {
-          if (sDelta < 0) sDelta = Math.abs(sDelta);
-          if (tDelta < 0) tDelta = Math.abs(tDelta);
-        }
-        const sSign = sDelta >= 0 ? `+${sDelta}` : `${sDelta}`;
-        const tSign = tDelta >= 0 ? `+${tDelta}` : `${tDelta}`;
-        const verb = action === AST_ACTIONS.INCREASE ? "Increase" : (action === AST_ACTIONS.DECREASE ? "Decrease" : "Modify");
-        return `${verb} ${phrase} (${sSign}/${tSign})`;
-      }
+        return this._formatModifyStatsLabel(effect, phrase);
       default: {
         const cleanVerb = String(action).replace(/_/g, " ").trim();
         const actLabel = cleanVerb.charAt(0).toUpperCase() + cleanVerb.slice(1);
@@ -373,8 +433,10 @@ class EffectLabelFormatter {
     }
     const { displayCount: count } = parseTargetCount(effect.target, effect.count);
     switch (effect.action) {
-      case AST_ACTIONS.DRAW:
-        return `Draw ${count} card${count > 1 ? "s" : ""}?`;
+      case AST_ACTIONS.DRAW: {
+        const suffix = typeof count === "number" ? (count > 1 ? "s" : "") : "(s)";
+        return `Draw ${count} card${suffix}?`;
+      }
       case AST_ACTIONS.DISCARD: {
         const phrase = this.formatTargetPhrase(effect.target);
         const pileSuffix = this._formatPileScopeSuffix(effect.target);
@@ -390,8 +452,7 @@ class EffectLabelFormatter {
         }
         return `Discard ${count} card${pileSuffix}?`;
       }
-      case AST_ACTIONS.BANISH:
-      case AST_ACTIONS.REMOVE_FROM_THE_GAME: {
+      case AST_ACTIONS.BANISH: {
         const phrase = this.formatTargetPhrase(effect.target);
         const pileSuffix = this._formatPileScopeSuffix(effect.target);
         const { isAll } = parseTargetCount(effect.target, effect.count);
@@ -431,8 +492,7 @@ class EffectLabelFormatter {
         const phrase = this.formatTargetPhrase(effect.target);
         return `Underdeck ${phrase}${scopeStr}?`;
       }
-      case AST_ACTIONS.BOUNCE:
-      case AST_ACTIONS.RETURN_TO_HAND: {
+      case AST_ACTIONS.BOUNCE: {
         const phrase = this.formatTargetPhrase(effect.target);
         return `Return ${phrase} to hand?`;
       }
@@ -455,6 +515,49 @@ class EffectLabelFormatter {
         return `Activate ${cardName}'s optional ability?`;
       }
     }
+  }
+
+  /**
+   * Formats `modify_stats` labels across static signed integers and DynamicValue descriptors.
+   *
+   * @private
+   */
+  static _formatModifyStatsLabel(effect, phrase) {
+    const s = effect?.strength_mod;
+    const t = effect?.toughness_mod;
+    const sDyn = s && typeof s === "object" ? s.dynamic : null;
+    const tDyn = t && typeof t === "object" ? t.dynamic : null;
+
+    if (!sDyn && !tDyn) {
+      const sVal = typeof s === "number" ? s : 0;
+      const tVal = typeof t === "number" ? t : 0;
+      const sSign = sVal >= 0 ? `+${sVal}` : `${sVal}`;
+      const tSign = tVal >= 0 ? `+${tVal}` : `${tVal}`;
+      const allNonPos = sVal <= 0 && tVal <= 0 && (sVal < 0 || tVal < 0);
+      const allNonNeg = sVal >= 0 && tVal >= 0 && (sVal > 0 || tVal > 0);
+      const verb = allNonNeg ? "Increase" : (allNonPos ? "Decrease" : "Modify");
+      return `${verb} ${phrase} (${sSign}/${tSign})`;
+    }
+
+    const op = String((sDyn || tDyn)?.operation || AST_STAT_MOD_OPERATIONS.ADD).toLowerCase();
+    const formatDynPart = (mod) => {
+      if (typeof mod === "number") return mod >= 0 ? `+${mod}` : `${mod}`;
+      const d = mod?.dynamic;
+      if (!d) return "0";
+      if (d.operation === AST_STAT_MOD_OPERATIONS.SET) return `${d.fixed_value ?? "X"}`;
+      if (d.operation === AST_STAT_MOD_OPERATIONS.MULTIPLY) return `x${d.multiplier ?? 1}`;
+      return (d.multiplier ?? 1) < 0 ? "-X" : "+X";
+    };
+
+    if (op === AST_STAT_MOD_OPERATIONS.SET) {
+      return `Set ${phrase} (${formatDynPart(s)}/${formatDynPart(t)})`;
+    }
+    if (op === AST_STAT_MOD_OPERATIONS.MULTIPLY) {
+      return `Multiply ${phrase} (${formatDynPart(s)})`;
+    }
+    const mult = (sDyn || tDyn)?.multiplier ?? 1;
+    const verb = mult < 0 ? "Decrease" : "Increase";
+    return `${verb} ${phrase} (${formatDynPart(s)}/${formatDynPart(t)})`;
   }
 
   /**

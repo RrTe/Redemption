@@ -12,18 +12,19 @@ const { MovementRules } = require("../../../shared/rules/MovementRules");
 const { StatFilterEvaluator } = require("../../../shared/rules/StatFilterEvaluator");
 const { GenderEvaluator } = require("../../../shared/rules/GenderEvaluator");
 const { SideAttributeEvaluator, CANONICAL_CLASSES } = require("../../../shared/rules/SideAttributeEvaluator");
+const { SelectorComposer } = require("../../../shared/rules/SelectorComposer");
+const { StateFilterEvaluator } = require("../../../shared/rules/StateFilterEvaluator");
+const { RelativeFilterEvaluator } = require("../../../shared/rules/RelativeFilterEvaluator");
 const { parseTargetCount } = require("./TargetCountResolver");
-const { matchesCardType, matchesTargetType, resolveActiveSideIndex } = require("../../../shared/cardHierarchy");
+const { matchesTargetType, resolveActiveSideIndex } = require("../../../shared/cardHierarchy");
 
 const RESERVE_REMOVAL_ACTIONS = [
   AST_ACTIONS.TAKE,
   AST_ACTIONS.TOPDECK,
   AST_ACTIONS.UNDERDECK,
   AST_ACTIONS.BOUNCE,
-  AST_ACTIONS.RETURN_TO_HAND,
   AST_ACTIONS.DISCARD,
   AST_ACTIONS.BANISH,
-  AST_ACTIONS.REMOVE_FROM_THE_GAME,
   AST_ACTIONS.PLACE,
   AST_ACTIONS.BAND,
   AST_ACTIONS.ADD_TO_BATTLE,
@@ -39,8 +40,6 @@ const SEARCHABLE_PILE_ZONES = [
 
 const CONSTRAINT_IDENT_REGEX = /^(?:non-warrior(?:\s+class)?|non-weapon(?:\s+class)?|except\s+(?:(?:a|an)\s+)?(?:human|non-human|warrior(?:\s+class)?|weapon(?:\s+class)?|good\s+warriors?|good\s+weapons?|lost\s+souls?))$/i;
 const STATE_IDENT_REGEX = /^(?:blocking|attacking)$/i;
-const NON_DISJUNCTIVE_IDENT_REGEX = /^(?:activated|captured|target|half|contents|and\s+its\s+contents|enter\s+battle|cannot\s+enter\s+battle|battle|protect|protect\s+abilities|play|special\s+abilities|withdraw|face\s+down|300|blocking|attacking|opposite\s+gender|or|from\s+hand.*)$/i;
-const CLAUSE_IDENT_REGEX = /\b(?:in\s+the\s+title|used\s+by|played\s+on|placed\s+onto|from\s+hand|in\s+discard\s+pile)\b/i;
 
 /**
  * Service for querying and evaluating valid targets according to card AST rules.
@@ -66,10 +65,16 @@ class TargetSelectionService {
    * }} Evaluated target resolution details.
    */
   static resolveEligibleTargets(room, actingPlayer, targetDef = {}, context = {}) {
-    const scope = targetDef.scope || AST_SCOPES.IN_PLAY;
+    const hasAnyOf = Array.isArray(targetDef.any_of) && targetDef.any_of.length > 0;
+    const scope = hasAnyOf
+      ? SelectorComposer.collectEffectiveScopes(targetDef, AST_SCOPES.IN_PLAY)
+      : (targetDef.scope || AST_SCOPES.IN_PLAY);
     const targetType = targetDef.target_type || "";
-    const playersToScan = this._getPlayersToScan(room, actingPlayer, targetDef.zone_owner);
-    const { isAll, hasCustomMin, hasCustomMax, count } = parseTargetCount(targetDef);
+    const effectiveZoneOwner = hasAnyOf
+      ? SelectorComposer.resolveScanZoneOwner(targetDef)
+      : targetDef.zone_owner;
+    const playersToScan = this._getPlayersToScan(room, actingPlayer, effectiveZoneOwner);
+    const initialCount = parseTargetCount(targetDef);
     const isManualOpponent = targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_OPPONENT;
     const isManual =
       targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_CONTROLLER || isManualOpponent;
@@ -140,7 +145,13 @@ class TargetSelectionService {
     // 2. Evaluate Card-Targeting effects
     const action = context.actionType || context.action || targetDef.action;
     const isBand = action === AST_ACTIONS.BAND || action === AST_ACTIONS.ADD_TO_BATTLE;
-    const effectiveScope = isBand && (!targetDef.scope || (Array.isArray(targetDef.scope) && targetDef.scope.length === 0))
+    const hasExplicitBranchScope = hasAnyOf && targetDef.any_of.some((b) => Array.isArray(b.scope) ? b.scope.length > 0 : Boolean(b.scope));
+    const hasExplicitScope = Boolean(
+      (Array.isArray(targetDef.scope) && targetDef.scope.length > 0) ||
+      (typeof targetDef.scope === "string" && targetDef.scope.trim()) ||
+      hasExplicitBranchScope
+    );
+    const effectiveScope = isBand && !hasExplicitScope
       ? [AST_SCOPES.IN_PLAY, AST_SCOPES.HAND]
       : scope;
 
@@ -299,12 +310,31 @@ class TargetSelectionService {
               if (isEvilLeader && !cardAlign.includes("evil") && !BattleCharacterClassifier.isEvilCharacter(card)) continue;
             }
           }
-          if (this.matchesFilter(card, targetDef, context)) {
+          const filterContext = {
+            ...context,
+            room,
+            actingPlayer,
+            candidateZone: zName,
+            candidateOwnerId: p.sessionId,
+          };
+          if (this.matchesFilter(card, targetDef, filterContext)) {
             eligibleCardIds.push(card.id);
           }
         }
       }
     }
+
+    const finalCountInfo = (!context.skipDynamicCount && initialCount.hasDynamic)
+      ? parseTargetCount(targetDef, undefined, {
+        room,
+        player: actingPlayer,
+        sourceCard: context.sourceCard,
+        eligibleCount: eligibleCardIds.length,
+        previousSnapshot: context.previousSnapshot,
+        options: context.options,
+      })
+      : initialCount;
+    const { isAll, hasCustomMin, hasCustomMax, count } = finalCountInfo;
 
     const isOptionalUpTo = hasCustomMin && targetDef.count.min_value === 0;
     const minTargets = hasCustomMin
@@ -439,43 +469,167 @@ class TargetSelectionService {
   }
 
   /**
-   * Evaluates unambiguous typed constraints (`testament`, `gender`, `is_generic`, `classes`, `stat_filters`).
-   * Shared by the main filter path and the `target_card_ids` fast-path so noisy title/identifier
-   * metadata on resolved IDs is bypassed while typed runtime bounds remain enforced.
+   * Evaluates unambiguous typed and relational constraints (`testament`, `gender`,
+   * `is_generic`, `is_human`, `is_cloud`, `is_meek`, `is_star`, `is_gospel`, `classes`,
+   * `stat_filters`, `state_filters`, `relative_filters`, `used_by`, ability meta filters).
+   * Shared by the main filter path and the `target_card_ids` fast-path.
    *
    * @param {object} card Candidate card instance.
    * @param {object} targetDef AST target definition.
    * @param {object} [context={}] Filter context.
    * @param {object} [options={}] Evaluation options.
-   * @returns {boolean} True if all specified typed constraints match.
+   * @returns {boolean} True if all specified structured constraints match.
    */
   static _matchesStructuredConstraints(card, targetDef, context = {}, { includeTestament = true } = {}) {
     if (includeTestament && targetDef.testament) {
-      if (!this._matchesTestament(card, targetDef.testament)) {
-        return false;
-      }
+      if (!this._matchesTestament(card, targetDef.testament)) return false;
     }
     if (targetDef.gender) {
-      if (!GenderEvaluator.matchesGender(card, targetDef.gender, { targetDef })) {
-        return false;
-      }
+      if (!GenderEvaluator.matchesGender(card, targetDef.gender, { targetDef })) return false;
     }
     if (typeof targetDef.is_generic === "boolean") {
-      if (!SideAttributeEvaluator.matchesIsGeneric(card, targetDef.is_generic, { targetDef })) {
-        return false;
-      }
+      if (!SideAttributeEvaluator.matchesIsGeneric(card, targetDef.is_generic, { targetDef })) return false;
+    }
+    if (typeof targetDef.is_human === "boolean") {
+      if (!SideAttributeEvaluator.matchesIsHuman(card, targetDef.is_human, { targetDef })) return false;
+    }
+    if (typeof targetDef.is_cloud === "boolean") {
+      if (!SideAttributeEvaluator.matchesIsCloud(card, targetDef.is_cloud, { targetDef })) return false;
+    }
+    if (typeof targetDef.is_meek === "boolean") {
+      if (!SideAttributeEvaluator.matchesIsMeek(card, targetDef.is_meek, { targetDef })) return false;
+    }
+    if (typeof targetDef.is_star === "boolean") {
+      if (!SideAttributeEvaluator.matchesIsStar(card, targetDef.is_star, { targetDef })) return false;
+    }
+    if (typeof targetDef.is_gospel === "boolean") {
+      if (!SideAttributeEvaluator.matchesIsGospel(card, targetDef.is_gospel, { targetDef })) return false;
     }
     if (Array.isArray(targetDef.classes) && targetDef.classes.length > 0) {
-      if (!SideAttributeEvaluator.matchesClasses(card, targetDef.classes, { targetDef })) {
-        return false;
-      }
+      if (!SideAttributeEvaluator.matchesClasses(card, targetDef.classes, { targetDef })) return false;
     }
     if (Array.isArray(targetDef.stat_filters) && targetDef.stat_filters.length > 0) {
-      if (!StatFilterEvaluator.matchesStatFilters(card, targetDef.stat_filters, context)) {
-        return false;
-      }
+      if (!StatFilterEvaluator.matchesStatFilters(card, targetDef.stat_filters, context)) return false;
+    }
+    if (Array.isArray(targetDef.state_filters) && targetDef.state_filters.length > 0) {
+      if (!StateFilterEvaluator.matchesStateFilters(card, targetDef.state_filters, context)) return false;
+    }
+    if (Array.isArray(targetDef.relative_filters) && targetDef.relative_filters.length > 0) {
+      if (!RelativeFilterEvaluator.matchesRelativeFilters(card, targetDef.relative_filters, context)) return false;
+    }
+    if (targetDef.used_by !== undefined && targetDef.used_by !== null) {
+      if (!this._matchesUsedBy(card, targetDef.used_by, context)) return false;
+    }
+    if (!this._matchesAbilityMetaFilters(card, targetDef)) {
+      return false;
     }
     return true;
+  }
+
+  /** @private */
+  static _matchesUsedBy(card, usedBy, context = {}) {
+    if (!usedBy) return true;
+    const actingId = context.actingPlayer?.sessionId || context.sourceCard?.controllerId || context.sourceCard?.ownerId || "";
+    const cardCtrl = card.controllerId || card.ownerId || "";
+    if (usedBy === "self") {
+      if (!context.sourceCard) return false;
+      if (card.attachedTo && card.attachedTo === context.sourceCard.id) return true;
+      return Boolean(
+        card.zone === ZONES.BATTLEFIELD &&
+        !card.attachedTo &&
+        cardCtrl === (context.sourceCard.controllerId || context.sourceCard.ownerId) &&
+        context.actorCard?.id === context.sourceCard.id
+      );
+    }
+    if (usedBy === "controller") {
+      return Boolean(actingId && cardCtrl && actingId === cardCtrl);
+    }
+    if (usedBy === "opponent") {
+      return Boolean(actingId && cardCtrl && actingId !== cardCtrl);
+    }
+    if (typeof usedBy === "object") {
+      if (card.attachedTo && context.room?.cardLookup) {
+        const holder = context.room.cardLookup.get(card.attachedTo);
+        if (holder) {
+          return this.matchesFilter(holder, usedBy, { ...context, candidateZone: holder.zone, candidateOwnerId: holder.controllerId || holder.ownerId });
+        }
+      }
+      if (context.actorCard) {
+        return this.matchesFilter(context.actorCard, usedBy, context);
+      }
+      const bf = context.room?.state?.battlefield;
+      if ((card.zone === ZONES.BATTLEFIELD || context.candidateZone === ZONES.BATTLEFIELD) && bf && typeof bf.some === "function") {
+        return Array.from(bf).some(
+          (bc) => bc && (bc.controllerId || bc.ownerId) === cardCtrl && bc.id !== card.id &&
+            this.matchesFilter(bc, usedBy, { ...context, candidateZone: ZONES.BATTLEFIELD, candidateOwnerId: bc.controllerId || bc.ownerId })
+        );
+      }
+      return false;
+    }
+    return true;
+  }
+
+  /** @private */
+  static _matchesAbilityMetaFilters(card, targetDef) {
+    const reqActions = Array.isArray(targetDef.ability_target_actions)
+      ? targetDef.ability_target_actions.map((a) => String(a || "").toLowerCase().trim()).filter(Boolean)
+      : [];
+    const exActions = Array.isArray(targetDef.exclude_ability_actions)
+      ? targetDef.exclude_ability_actions.map((a) => String(a || "").toLowerCase().trim()).filter(Boolean)
+      : [];
+    const targetsAbilities = Boolean(targetDef.targets_abilities);
+
+    if (!targetsAbilities && reqActions.length === 0 && exActions.length === 0) {
+      return true;
+    }
+
+    const { AbilityLookup } = require("./AbilityLookup");
+    const templateId = card.templateId;
+    const logic = templateId ? AbilityLookup.getCardLogic(templateId) : null;
+    const actions = [];
+    let hasAnyAbility = false;
+
+    if (logic?.sides) {
+      const isInPlay = card.zone === ZONES.BATTLEFIELD || card.zone === ZONES.TERRITORY;
+      const abilities = isInPlay
+        ? AbilityLookup.resolveAbilities(templateId, {
+          card,
+          inGameType: card.inGameType,
+          inGameAlignment: card.inGameAlignment,
+          includePassiveModifiers: true,
+        })
+        : Object.values(logic.sides).flatMap((s) => (Array.isArray(s?.abilities) ? s.abilities : []));
+      hasAnyAbility = abilities.length > 0;
+      for (const ab of abilities) {
+        for (const eff of ab?.effects || []) {
+          const act = String(eff?.action || "").toLowerCase().trim();
+          if (!act) continue;
+          actions.push(act);
+          if (act === AST_ACTIONS.MODIFY_STATS) {
+            const s = eff.strength_mod;
+            const t = eff.toughness_mod;
+            const isPos = (typeof s === "number" && s > 0) || (typeof t === "number" && t > 0) || (s?.dynamic?.multiplier > 0) || (t?.dynamic?.multiplier > 0);
+            const isNeg = (typeof s === "number" && s < 0) || (typeof t === "number" && t < 0) || (s?.dynamic?.multiplier < 0) || (t?.dynamic?.multiplier < 0);
+            if (isPos) actions.push("increase");
+            if (isNeg) actions.push("decrease");
+          }
+        }
+      }
+    } else {
+      const sa = String(card.SpecialAbility || card.specialAbility || "").toLowerCase();
+      hasAnyAbility = sa.trim().length > 0;
+      for (const kw of [...reqActions, ...exActions]) {
+        if (kw && sa.includes(kw)) actions.push(kw);
+      }
+    }
+
+    if (reqActions.length > 0) {
+      return actions.some((a) => reqActions.includes(a) && !exActions.includes(a));
+    }
+    if (exActions.length > 0) {
+      return actions.some((a) => !exActions.includes(a));
+    }
+    return hasAnyAbility;
   }
 
   /**
@@ -489,7 +643,9 @@ class TargetSelectionService {
   static isTwoStepPileSearch(targetDef = {}, context = {}) {
     if (!targetDef || targetDef.zone_owner !== AST_ZONE_OWNERS.EITHER) return false;
     if (targetDef.selection_mode !== AST_SELECTION_MODES.MANUAL_CONTROLLER) return false;
-    const scope = targetDef.scope || AST_SCOPES.IN_PLAY;
+    const scope = Array.isArray(targetDef.any_of) && targetDef.any_of.length > 0
+      ? SelectorComposer.collectEffectiveScopes(targetDef, AST_SCOPES.IN_PLAY)
+      : (targetDef.scope || AST_SCOPES.IN_PLAY);
     const targetType = targetDef.target_type || "";
     if (this._isPileTargeting(scope, targetType, targetDef, context)) return false;
     const zones = this._resolveTargetZones(scope);
@@ -512,32 +668,6 @@ class TargetSelectionService {
       case ZONES.ARTIFACT: return "Artifact Pile";
       default: return "Pile";
     }
-  }
-
-  /**
-   * Returns entity identifiers that act as disjunctive ("Title or <Identifier>")
-   * alternatives alongside card_titles on a non-convert target selector.
-   *
-   * @private
-   * @param {object} [targetDef={}] AST target definition.
-   * @param {string} [action=""] AST action name.
-   * @returns {string[]} Filtered disjunctive identifier tokens.
-   */
-  static _getDisjunctiveIdentifiers(targetDef = {}, action = "") {
-    if (String(action || "").toLowerCase() === "convert") return [];
-    if (!Array.isArray(targetDef.card_titles) || targetDef.card_titles.length === 0) return [];
-    if (!Array.isArray(targetDef.identifiers) || targetDef.identifiers.length === 0) return [];
-
-    return targetDef.identifiers
-      .map((id) => String(id || "").trim())
-      .filter((trimmed) => {
-        if (!trimmed) return false;
-        const low = trimmed.toLowerCase();
-        if (CONSTRAINT_IDENT_REGEX.test(low)) return false;
-        if (NON_DISJUNCTIVE_IDENT_REGEX.test(low)) return false;
-        if (CLAUSE_IDENT_REGEX.test(low)) return false;
-        return true;
-      });
   }
 
   /**
@@ -580,62 +710,72 @@ class TargetSelectionService {
     });
   }
 
-  /**
-   * Evaluates the "Temple" identifier against Fortresses/Sites (e.g. Herod's Temple)
-   * while preserving ORDIR/Identifier matching when target_type specifies artifact or character.
-   *
-   * @private
-   * @param {object} card Candidate card instance.
-   * @param {string} rawType Normalized target_type.
-   * @param {string} cardIdentStr Lowercased card Identifier.
-   * @param {string} cardClassStr Lowercased card Class.
-   * @param {string} ordirStr Joined lowercased card ORDIR list.
-   * @param {string[]} ordirList Raw ORDIR array.
-   * @returns {boolean} True if candidate qualifies as a Temple target.
-   */
-  static _matchesTempleIdentifier(card, rawType, cardIdentStr, cardClassStr, ordirStr, ordirList) {
-    if (
-      rawType === "artifact" ||
-      rawType === "hero" ||
-      rawType === "character" ||
-      rawType === "evil_character"
-    ) {
-      const regex = /(^|[^a-zA-Z0-9])temple([^a-zA-Z0-9]|$)/i;
-      return regex.test(cardIdentStr) || regex.test(cardClassStr) || regex.test(ordirStr) ||
-        (Array.isArray(ordirList) && ordirList.some((item) => String(item).trim().toLowerCase() === "temple"));
+  /** @private */
+  static _matchesBranchLocation(card, rawBranch, mergedBranch, context = {}) {
+    const rawHasScope = Boolean(
+      (Array.isArray(rawBranch?.scope) && rawBranch.scope.length > 0) ||
+      (typeof rawBranch?.scope === "string" && rawBranch.scope.trim())
+    );
+    if (context.candidateZone) {
+      const allowedZones = this._resolveTargetZones(mergedBranch.scope);
+      if (!allowedZones.includes(context.candidateZone)) return false;
+    } else if (rawHasScope && card.zone) {
+      const allowedZones = this._resolveTargetZones(mergedBranch.scope);
+      if (!allowedZones.includes(card.zone)) return false;
     }
 
-    let cardName = String(card.Name || card.card_name || "");
-    let rawCardType = String(card.inGameType || card.Type || "");
-    let rawCardAlign = String(card.inGameAlignment || card.Alignment || "");
-    if ((!cardName || !rawCardType) && card.templateId) {
-      try {
-        const { CardRepository } = require("../../../shared/CardRepository");
-        const dbCard = CardRepository.getById(card.templateId) || CardRepository.get(card.templateId);
-        if (dbCard) {
-          if (!cardName) cardName = String(dbCard.Name || "");
-          if (!rawCardType) rawCardType = String(dbCard.Type || "");
-          if (!rawCardAlign) rawCardAlign = String(dbCard.Alignment || "");
-        }
-      } catch (_e) { }
+    const branchOwner = String(mergedBranch.zone_owner || "").toLowerCase().trim();
+    const actingId = context.actingPlayer?.sessionId || context.sourceCard?.controllerId || context.sourceCard?.ownerId || "";
+    const candidateOwner = context.candidateOwnerId || card.controllerId || card.ownerId || "";
+    if (branchOwner && actingId && candidateOwner) {
+      if (branchOwner === AST_ZONE_OWNERS.CONTROLLER && candidateOwner !== actingId) return false;
+      if (branchOwner === AST_ZONE_OWNERS.OPPONENT && candidateOwner === actingId) return false;
     }
-
-    const typeStr = rawCardType.toLowerCase();
-    const alignStr = rawCardAlign.toLowerCase();
-    const isFortressOrSite = typeStr.includes("fortress") || typeStr.includes("site");
-    if (!isFortressOrSite) return false;
-
-    const isNamedTemple = /\b(?:solomon'?s|zerubbabel'?s|herod'?s|heavenly)\s+temple\b/i.test(cardName);
-    const isGoodTempleFortress = typeStr.includes("fortress") && !alignStr.includes("evil") && /\btemple\b/i.test(cardName);
-    return isNamedTemple || isGoodTempleFortress;
+    return true;
   }
 
   static matchesFilter(card, targetDef = {}, context = {}) {
     if (!card) return false;
 
+    if (targetDef.exclude_self === true && context.sourceCard && card.id === context.sourceCard.id) {
+      return false;
+    }
+
+    if (targetDef.exclude && typeof targetDef.exclude === "object") {
+      if (this.matchesFilter(card, targetDef.exclude, { ...context, skipProtection: true, candidateZone: undefined, candidateOwnerId: undefined })) {
+        return false;
+      }
+    }
+
+    if (Array.isArray(targetDef.any_of) && targetDef.any_of.length > 0) {
+      const matchedAny = targetDef.any_of.some((rawBranch) => {
+        const mergedBranch = SelectorComposer.mergeBranch(targetDef, rawBranch);
+        if (!this._matchesBranchLocation(card, rawBranch, mergedBranch, context)) {
+          return false;
+        }
+        return this.matchesFilter(card, mergedBranch, { ...context, skipProtection: true });
+      });
+      if (!matchedAny) return false;
+
+      if (!context.skipProtection && context.sourceCard) {
+        if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action, {
+          room: context.room,
+          strengthDelta: context.strengthDelta,
+          toughnessDelta: context.toughnessDelta,
+          statDirection: context.statDirection,
+        })) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    return this._matchesSingleSelector(card, targetDef, context);
+  }
+
+  /** @private */
+  static _matchesSingleSelector(card, targetDef = {}, context = {}) {
     const act = context.actionType || targetDef.action || "";
-    const disjunctiveIdents = this._getDisjunctiveIdentifiers(targetDef, act);
-    const hasDisjunctiveAlt = disjunctiveIdents.length > 0;
 
     // 1. Fast-Path: Explicit target_card_ids filter (O(1))
     if (Array.isArray(targetDef.target_card_ids) && targetDef.target_card_ids.length > 0) {
@@ -644,17 +784,19 @@ class TargetSelectionService {
         if (!this._matchesStructuredConstraints(card, targetDef, context)) {
           return false;
         }
-        // Protection check applies even to specifically targeted cards
-        if (context && context.sourceCard) {
-          if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action)) {
+        if (!context.skipProtection && context.sourceCard) {
+          if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action, {
+            room: context.room,
+            strengthDelta: context.strengthDelta,
+            toughnessDelta: context.toughnessDelta,
+            statDirection: context.statDirection,
+          })) {
             return false;
           }
         }
         return true;
       }
-      if (!hasDisjunctiveAlt) {
-        return false;
-      }
+      return false;
     }
 
     // 2. Check alignment filter
@@ -748,22 +890,13 @@ class TargetSelectionService {
     }
 
     // 7. Check card titles filter (Bucket 6: Specifically named titles & IDs)
-    let matchedTitleFallback = false;
     if (Array.isArray(targetDef.card_titles) && targetDef.card_titles.length > 0) {
-      const hasExplicitIds = Array.isArray(targetDef.target_card_ids) && targetDef.target_card_ids.length > 0;
-      if (hasDisjunctiveAlt && hasExplicitIds) {
-        // Explicit target_card_ids already did not match in Step 1; fall through to disjunctive identifiers in Step 8
-      } else {
-        const hasTitleMatch = this._matchesCardTitles(card, targetDef.card_titles);
-        if (hasTitleMatch) {
-          matchedTitleFallback = true;
-        } else if (!hasDisjunctiveAlt) {
-          return false;
-        }
+      if (!this._matchesCardTitles(card, targetDef.card_titles)) {
+        return false;
       }
     }
 
-    // 8. Check identifiers & ORDIR filter (Bucket 2: Subtypes, Nationalities, Roles & Composites)
+    // 8. Check identifiers & ORDIR filter (Bucket 2: Subtypes, Nationalities, Roles & Printed Identifiers)
     if (Array.isArray(targetDef.identifiers) && targetDef.identifiers.length > 0) {
       let idents = targetDef.identifiers;
       if (act === AST_ACTIONS.SET_IMMUNITY || act === AST_ACTIONS.PROTECT || act === AST_ACTIONS.IMMUNE || act.includes("protect") || act.includes("immune")) {
@@ -778,16 +911,13 @@ class TargetSelectionService {
         let ordirList = card.ORDIR;
         let cardIdent = card.Identifier;
         let cardClass = card.Class;
-        if ((!ordirList || ordirList.length === 0) && card.templateId) {
-          try {
-            const { CardRepository } = require("../../../shared/CardRepository");
-            const dbCard = CardRepository.getById(card.templateId) || CardRepository.get(card.templateId);
-            if (dbCard) {
-              if (!ordirList || ordirList.length === 0) ordirList = dbCard.ORDIR;
-              if (!cardIdent) cardIdent = dbCard.Identifier;
-              if (!cardClass) cardClass = dbCard.Class;
-            }
-          } catch (_e) { }
+        let specialAbility = card.SpecialAbility;
+        const dbCard = SideAttributeEvaluator.lookupDbCard(card);
+        if (dbCard) {
+          if (!ordirList || ordirList.length === 0) ordirList = dbCard.ORDIR;
+          if (!cardIdent) cardIdent = dbCard.Identifier;
+          if (!cardClass) cardClass = dbCard.Class;
+          if (!specialAbility) specialAbility = dbCard.SpecialAbility;
         }
         // Dual card in play: use active side ORDIR if available
         const isInPlay = card.zone === ZONES.BATTLEFIELD || card.zone === ZONES.TERRITORY;
@@ -798,11 +928,11 @@ class TargetSelectionService {
             if (Array.isArray(side.ORDIR) && side.ORDIR.length > 0) ordirList = side.ORDIR;
             if (side.Identifier) cardIdent = side.Identifier;
             if (side.Class) cardClass = side.Class;
+            if (side.SpecialAbility) specialAbility = side.SpecialAbility;
           }
         }
         const normalizedIdents = idents.filter((id) => {
           const l = String(id || "").trim().toLowerCase();
-          // Ignore bare syntactic "or" connector when structured filters carry the semantics
           if (l === "or" && (Array.isArray(targetDef.classes) && targetDef.classes.length > 0 || targetDef.gender || typeof targetDef.is_generic === "boolean" || typeof targetDef.is_human === "boolean")) {
             return false;
           }
@@ -846,25 +976,24 @@ class TargetSelectionService {
           }
         }
 
-        const effectiveStandardIdents = hasDisjunctiveAlt
-          ? (matchedTitleFallback ? [] : disjunctiveIdents)
-          : standardIdents;
-
-        if (effectiveStandardIdents.length > 0) {
+        if (standardIdents.length > 0) {
           const cardIdentStr = String(cardIdent || "").toLowerCase();
           const ordirStr = Array.isArray(ordirList) ? ordirList.join(" ").toLowerCase() : "";
           const cardClassStr = String(cardClass || "").toLowerCase();
-          const hasIdentMatch = effectiveStandardIdents.some((id) => {
+          const cardAbilityStr = String(specialAbility || "").toLowerCase();
+          const hasIdentMatch = standardIdents.some((id) => {
             const needle = String(id).trim().toLowerCase();
             if (!needle) return false;
 
-            // Official ORDIR 7.0.0 Rule: Character humanity via IsHuman / descriptor fallback
             if (needle === "human" || needle === "humans") {
               return SideAttributeEvaluator.resolveIsHuman(card, { targetDef }) === true;
             }
-
-            if (needle === "temple") {
-              return this._matchesTempleIdentifier(card, rawType, cardIdentStr, cardClassStr, ordirStr, ordirList);
+            if (needle === "token") {
+              return Boolean(card.isToken || card.IsToken || /token/i.test(String(card.inGameType || card.Type || "")));
+            }
+            if (needle.startsWith("ability text:")) {
+              const term = needle.slice("ability text:".length).trim();
+              return Boolean(term && cardAbilityStr.includes(term));
             }
 
             const esc = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -877,22 +1006,19 @@ class TargetSelectionService {
       }
     }
 
-    // 8b. Check structured gender filter (ORDIR 7.0.0)
-    // 8d. Check structured human/non-human filter (ORDIR 7.0.0)
-    if (typeof targetDef.is_human === "boolean") {
-      if (!SideAttributeEvaluator.matchesIsHuman(card, targetDef.is_human, { targetDef })) {
-        return false;
-      }
-    }
-
-    // 8b/8c/8e/9. Structured gender, is_generic, classes, and stat_filters constraints
+    // 9. Structured constraints (gender, booleans, classes, stat/state/relative filters, used_by, ability meta)
     if (!this._matchesStructuredConstraints(card, targetDef, context, { includeTestament: false })) {
       return false;
     }
 
     // 10. Protection check: protected or immune cards cannot be targeted by harm
-    if (context && context.sourceCard) {
-      if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action)) {
+    if (!context.skipProtection && context.sourceCard) {
+      if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action, {
+        room: context.room,
+        strengthDelta: context.strengthDelta,
+        toughnessDelta: context.toughnessDelta,
+        statDirection: context.statDirection,
+      })) {
         return false;
       }
     }
@@ -1010,9 +1136,20 @@ class TargetSelectionService {
       (Array.isArray(targetDef.identifiers) && targetDef.identifiers.length > 0) ||
       (Array.isArray(targetDef.card_titles) && targetDef.card_titles.length > 0) ||
       (Array.isArray(targetDef.stat_filters) && targetDef.stat_filters.length > 0) ||
+      (Array.isArray(targetDef.state_filters) && targetDef.state_filters.length > 0) ||
+      (Array.isArray(targetDef.relative_filters) && targetDef.relative_filters.length > 0) ||
+      (Array.isArray(targetDef.any_of) && targetDef.any_of.length > 0) ||
+      (Array.isArray(targetDef.ability_target_actions) && targetDef.ability_target_actions.length > 0) ||
+      (Array.isArray(targetDef.exclude_ability_actions) && targetDef.exclude_ability_actions.length > 0) ||
+      Boolean(targetDef.exclude) ||
+      targetDef.used_by != null ||
       targetDef.gender ||
       typeof targetDef.is_generic === "boolean" ||
       typeof targetDef.is_human === "boolean" ||
+      typeof targetDef.is_cloud === "boolean" ||
+      typeof targetDef.is_meek === "boolean" ||
+      typeof targetDef.is_star === "boolean" ||
+      typeof targetDef.is_gospel === "boolean" ||
       (Array.isArray(targetDef.classes) && targetDef.classes.length > 0) ||
       targetDef.testament
     );
@@ -1023,7 +1160,6 @@ class TargetSelectionService {
         AST_ACTIONS.TOPDECK,
         AST_ACTIONS.TAKE,
         AST_ACTIONS.BOUNCE,
-        AST_ACTIONS.RETURN_TO_HAND,
         AST_ACTIONS.PLACE,
         AST_ACTIONS.SEARCH,
         AST_ACTIONS.BAND,

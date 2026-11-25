@@ -303,21 +303,22 @@ describe("Playtest Bugfixes Regression Suite", () => {
       );
     });
 
-    test("disjunctive matching accepts Temple Fortresses & The Tabernacle while rejecting Temple Artifacts, Temple Priests, Evil Temple of Dagon, and protecting Desecrate/Smashing Tablets", () => {
+    test("disjunctive matching accepts Temple Fortresses & The Tabernacle while rejecting Temple Artifacts, Temple Priests, and protecting Desecrate/Smashing Tablets", () => {
       const rpTarget = AbilityLookup.getCardLogic("1553336041").sides.top.abilities[2].effects[0].target;
       const tab = createCard("c_tab", "-2130586086", "The Tabernacle", ZONES.RESERVE, "p1", { Type: "Fortress", Alignment: "Good" });
       const herod = createCard("c_ht", "1411151281", "Herod's Temple (GoC)", ZONES.RESERVE, "p1");
+      const herodSite = createCard("c_hts", "691417922", "Herod's Temple (G)", ZONES.RESERVE, "p1");
       const solomon = createCard("c_st", "-1454927819", "Solomon's Temple (Pa)", ZONES.RESERVE, "p1");
       const zerub = createCard("c_zt", "730431348", "Zerubbabel's Temple (LoC)", ZONES.RESERVE, "p1");
       const heaven = createCard("c_hvt", "-755815350", "Heavenly Temple (RoJ)", ZONES.RESERVE, "p1");
+      const dagon = createCard("c_dagon", "-1125828096", "Temple of Dagon", ZONES.RESERVE, "p1");
       const altar = createCard("c_altar", "-1040635263", "Altar of Burnt Offering", ZONES.TERRITORY, "p1", { ORDIR: ["Temple Artifact"] });
       const priest = createCard("c_priest", "439012927", "Amariah the High Priest", ZONES.TERRITORY, "p1", { ORDIR: ["Temple Priest"] });
-      const dagon = createCard("c_dagon", "-1125828096", "Temple of Dagon", ZONES.RESERVE, "p1", { Type: "Fortress", Alignment: "Evil" });
 
-      [tab, herod, solomon, zerub, heaven].forEach((c) => {
+      [tab, herod, herodSite, solomon, zerub, heaven, dagon].forEach((c) => {
         expect(TargetSelectionService.matchesFilter(c, rpTarget, { actionType: AST_ACTIONS.TOPDECK })).toBe(true);
       });
-      [altar, priest, dagon].forEach((c) => {
+      [altar, priest].forEach((c) => {
         expect(TargetSelectionService.matchesFilter(c, rpTarget, { actionType: AST_ACTIONS.TOPDECK })).toBe(false);
       });
 

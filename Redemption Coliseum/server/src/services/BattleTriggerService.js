@@ -159,8 +159,10 @@ class BattleTriggerService {
     });
     if (!abilities || abilities.length === 0) return [];
 
-    const matching = abilities.filter((a) =>
-      this.isAbilityTriggeredOnBattleEntry(a, actionType, card)
+    const matching = abilities.filter(
+      (a) =>
+        this.isAbilityTriggeredOnBattleEntry(a, actionType, card) &&
+        this.matchesTriggerParticipants(a, { room, player, card })
     );
     if (matching.length === 0) return [];
 
@@ -440,6 +442,50 @@ class BattleTriggerService {
 
   static isAbilityTriggeredOnBattleEntry(ability, actionType, card = null) {
     return BattleCharacterClassifier.isAbilityTriggeredOnBattleEntry(ability, actionType, card);
+  }
+
+  /**
+   * Validates typed `trigger_subject` and `trigger_source` TargetSelectors on a triggered ability.
+   *
+   * @param {object} ability AST ability node.
+   * @param {object} [context={}] Trigger context (`room`, `player`, `card`, `subjectCard`, `triggerSourceCard`).
+   * @returns {boolean} True when trigger participants match or are unspecified.
+   */
+  static matchesTriggerParticipants(ability, context = {}) {
+    if (!ability) return true;
+    const { room, player, card, subjectCard = null, triggerSourceCard = null } = context;
+    const actingId = player?.sessionId || card?.controllerId || card?.ownerId || "";
+    const { TargetSelectionService } = require("../ast/TargetSelectionService");
+
+    const matchesParticipant = (participantCard, selectorDef) => {
+      if (!selectorDef || typeof selectorDef !== "object") return true;
+      if (!participantCard) return false;
+      const owner = String(selectorDef.zone_owner || "").toLowerCase();
+      const pOwner = participantCard.controllerId || participantCard.ownerId || "";
+      if (owner === "controller" && actingId && pOwner && pOwner !== actingId) return false;
+      if (owner === "opponent" && actingId && pOwner && pOwner === actingId) return false;
+      return TargetSelectionService.matchesFilter(participantCard, selectorDef, {
+        room,
+        actingPlayer: player,
+        sourceCard: card,
+        candidateZone: participantCard.zone,
+        candidateOwnerId: pOwner,
+      });
+    };
+
+    if (ability.trigger_subject && typeof ability.trigger_subject === "object") {
+      if (!matchesParticipant(subjectCard || card, ability.trigger_subject)) {
+        return false;
+      }
+    }
+
+    if (ability.trigger_source && typeof ability.trigger_source === "object" && triggerSourceCard) {
+      if (!matchesParticipant(triggerSourceCard, ability.trigger_source)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   static _hasBattleAbilityHeader(text) {

@@ -53,6 +53,20 @@ function resolveSideBooleanAttr(sideObj, sharedObj, fallbackCard, sideType, pasc
   if (typeNorm && !CHARACTER_SIDE_TYPES.has(typeNorm)) {
     return null;
   }
+  return resolveSideGeneralBooleanAttr(sideObj, sharedObj, fallbackCard, pascalKey, snakeKey);
+}
+
+/**
+ * Resolves a side-level boolean attribute across all card types (e.g. IsCloud, IsMeek, IsGospel, IsStarCard).
+ *
+ * @param {object} sideObj Concrete side object (`top` or `bottom`).
+ * @param {object} sharedObj Shared side defaults (`CardSides.shared`).
+ * @param {object|null} fallbackCard Optional top-level card fallback.
+ * @param {string} pascalKey PascalCase property key.
+ * @param {string} snakeKey snake_case property key.
+ * @returns {boolean|null} Boolean attribute value or null if unset.
+ */
+function resolveSideGeneralBooleanAttr(sideObj, sharedObj, fallbackCard, pascalKey, snakeKey) {
   const raw =
     sideObj?.[pascalKey] ??
     sideObj?.[snakeKey] ??
@@ -134,6 +148,10 @@ export function normalizeCard(card) {
     Gender: resolveSideGender(top, shared, card, topType),
     IsGeneric: resolveSideBooleanAttr(top, shared, card, topType, "IsGeneric", "is_generic"),
     IsHuman: resolveSideBooleanAttr(top, shared, card, topType, "IsHuman", "is_human"),
+    IsCloud: resolveSideGeneralBooleanAttr(top, shared, card, "IsCloud", "is_cloud"),
+    IsMeek: resolveSideGeneralBooleanAttr(top, shared, card, "IsMeek", "is_meek"),
+    IsGospel: resolveSideGeneralBooleanAttr(top, shared, card, "IsGospel", "is_gospel"),
+    IsStarCard: resolveSideGeneralBooleanAttr(top, shared, card, "IsStarCard", "is_star"),
     ORDIR: top.ORDIR || card.ORDIR || []
   };
   sides.push(topSide);
@@ -148,12 +166,16 @@ export function normalizeCard(card) {
       Brigade: bottom.Brigades || shared.Brigades || [],
       Class: bottom.Classes || shared.Classes || [],
       Strength: String(bottom.Strength !== undefined && bottom.Strength !== null ? bottom.Strength : (shared.Strength !== undefined && shared.Strength !== null ? shared.Strength : (card.Strength || ""))),
-      Toughness: String(bottom.Toughness !== undefined && bottom.Toughness !== null ? bottom.Toughness : (shared.Toughness !== undefined && shared.Toughness !== null ? shared.Toughness : (card.Toughness || ""))),
+      Toughness: String(bottom.Toughness !== undefined && bottom.Toughness !== null ? bottom.Toughness : (shared.Toughness !== undefined && bottom.Toughness !== null ? shared.Toughness : (card.Toughness || ""))),
       SpecialAbility: bottom.SpecialAbility || shared.SpecialAbility || card.SpecialAbility || "",
       Identifier: bottom.Identifier || shared.Identifier || card.Identifier || "",
       Gender: resolveSideGender(bottom, shared, null, bottomType),
       IsGeneric: resolveSideBooleanAttr(bottom, shared, null, bottomType, "IsGeneric", "is_generic"),
       IsHuman: resolveSideBooleanAttr(bottom, shared, null, bottomType, "IsHuman", "is_human"),
+      IsCloud: resolveSideGeneralBooleanAttr(bottom, shared, null, "IsCloud", "is_cloud"),
+      IsMeek: resolveSideGeneralBooleanAttr(bottom, shared, null, "IsMeek", "is_meek"),
+      IsGospel: resolveSideGeneralBooleanAttr(bottom, shared, null, "IsGospel", "is_gospel"),
+      IsStarCard: resolveSideGeneralBooleanAttr(bottom, shared, null, "IsStarCard", "is_star"),
       ORDIR: bottom.ORDIR || card.ORDIR || []
     };
     sides.push(bottomSide);
@@ -196,6 +218,8 @@ export function normalizeCard(card) {
     IsEnhancement: !!card.IsEnhancement,
     IsGospel: !!card.IsGospel,
     IsStarCard: !!card.IsStarCard,
+    IsCloud: typeof card.IsCloud === "boolean" ? card.IsCloud : Boolean(resolveTopLevelBooleanAttr(sides, "IsCloud")),
+    IsMeek: typeof card.IsMeek === "boolean" ? card.IsMeek : Boolean(resolveTopLevelBooleanAttr(sides, "IsMeek")),
     StarAbility: card.StarAbility || "",
     Name: name,
     SpecialAbility: topSide.SpecialAbility,

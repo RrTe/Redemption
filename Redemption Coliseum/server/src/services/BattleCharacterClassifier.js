@@ -189,6 +189,22 @@ class BattleCharacterClassifier {
   }
 
   /**
+   * Normalizes an ability `trigger_event` (string | string[] | null) into lowercase event tokens.
+   *
+   * @param {string|string[]|null|undefined} triggerEvent AST trigger_event field.
+   * @returns {string[]} Normalized trigger event names.
+   */
+  static normalizeTriggerEvents(triggerEvent) {
+    if (Array.isArray(triggerEvent)) {
+      return triggerEvent.map((e) => String(e || "").trim().toLowerCase()).filter(Boolean);
+    }
+    if (typeof triggerEvent === "string" && triggerEvent.trim()) {
+      return [triggerEvent.trim().toLowerCase()];
+    }
+    return [];
+  }
+
+  /**
    * Checks whether an ability should trigger upon battlefield entrance.
    *
    * @param {object} ability AST ability node.
@@ -208,10 +224,10 @@ class BattleCharacterClassifier {
     }
 
     const mode = (ability.activation_mode || "").toLowerCase();
-    const event = (ability.trigger_event || "").toLowerCase();
+    const events = this.normalizeTriggerEvents(ability.trigger_event);
 
-    // Immediate, triggered, or static continuous abilities fire on battle enter / play
-    if (!event) {
+    // Immediate, triggered, or static continuous abilities without explicit trigger_event fire on battle enter / play
+    if (events.length === 0) {
       return mode === "immediate" || mode === "triggered" || mode === "static";
     }
 
@@ -219,12 +235,16 @@ class BattleCharacterClassifier {
       actionType === ActionType.BLOCK_RESCUE ||
       actionType === ActionType.PLAY_EVIL_ENHANCEMENT
     ) {
-      return (
-        event.startsWith("block") ||
-        event.includes("blocking") ||
-        event.includes("enters battle") ||
-        event.includes("play") ||
-        event.includes("use")
+      const blockEvents = new Set([
+        "on_block",
+        "on_enters_battle",
+        "on_play",
+        "on_put_in_play",
+        "on_present",
+        "on_taunt",
+      ]);
+      return events.some(
+        (ev) => blockEvents.has(ev) || ev.startsWith("block") || ev.includes("enters battle")
       );
     }
 
@@ -232,22 +252,25 @@ class BattleCharacterClassifier {
       actionType === ActionType.RESCUE_ATTEMPT ||
       actionType === ActionType.PLAY_GOOD_ENHANCEMENT
     ) {
-      return (
-        event.includes("rescue_attempt") ||
-        event.includes("enters battle") ||
-        event.includes("attack") ||
-        event.includes("play") ||
-        event.includes("use")
+      const attackEvents = new Set([
+        "on_attack",
+        "on_rescue_attempt",
+        "on_enters_battle",
+        "on_play",
+        "on_put_in_play",
+        "on_present",
+        "on_taunt",
+      ]);
+      return events.some(
+        (ev) => attackEvents.has(ev) || ev.includes("rescue_attempt") || ev.includes("enters battle")
       );
     }
 
     if (actionType === ActionType.ACTIVATE_ABILITY) {
+      const dominantEvents = new Set(["on_play", "on_put_in_play", "on_enters_battle"]);
       return (
         mode === "immediate" ||
-        mode === "triggered" ||
-        event.includes("play") ||
-        event.includes("use") ||
-        event.includes("battle")
+        events.some((ev) => dominantEvents.has(ev))
       );
     }
 

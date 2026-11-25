@@ -5,8 +5,10 @@ const { ZONES } = require("../../../../shared/zones");
 const { CARD_TYPES, ALIGNMENTS, MAX_HAND_SIZE } = require("../../../../shared/card-constants");
 const {
   AST_ACTIONS,
+  AST_SCOPES,
   AST_SELECTION_MODES,
 } = require("../../../../shared/astConstants");
+const { SelectorComposer } = require("../../../../shared/rules/SelectorComposer");
 const { TargetSelectionService } = require("../TargetSelectionService");
 const { parseTargetCount } = require("../TargetCountResolver");
 const { BattleCharacterClassifier } = require("../../services/BattleCharacterClassifier");
@@ -17,11 +19,12 @@ const logger = require("../../utils/logger");
 
 /**
  * Handler for executing zone transfer ability primitives:
- * - bounce / return to hand (moves cards to owner's hand, handling overflow per REG 1074)
+ * - bounce (moves cards to owner's hand, handling overflow per REG 1074)
  * - topdeck (moves cards to top of owner's deck)
  * - underdeck (moves cards to bottom of owner's deck)
- * - banish / remove from the game (moves cards to owner's banish pile)
+ * - banish (moves cards to owner's banish pile)
  * - place (moves cards to specified destination zone)
+ * - take (moves cards from searched zones to hand/territory/battle/deck)
  */
 class ZoneTransferHandler {
   /**
@@ -46,15 +49,21 @@ class ZoneTransferHandler {
     const action = effect?.action || AST_ACTIONS.BOUNCE;
     const { toZone, position } = this._determineDestination(effect, action);
     const targetDef = effect?.target || {};
-    const { isAll, count } = parseTargetCount(targetDef);
-
     const sourceCard = item?.cardId ? room.cardLookup?.get(item.cardId) : null;
+    const initialCountInfo = parseTargetCount(targetDef, effect?.count, {
+      room,
+      player,
+      sourceCard,
+      previousSnapshot,
+      options,
+    });
+
     const targets = this._resolveTargets(
       room,
       player,
       targetDef,
       options,
-      count,
+      initialCountInfo,
       sourceCard,
       action,
       previousSnapshot,
@@ -228,7 +237,7 @@ class ZoneTransferHandler {
    * @private
    */
   static _determineDestination(effect, action) {
-    if (action === AST_ACTIONS.BOUNCE || action === AST_ACTIONS.RETURN_TO_HAND) {
+    if (action === AST_ACTIONS.BOUNCE) {
       return { toZone: ZONES.HAND, position: null };
     }
     if (action === AST_ACTIONS.TOPDECK) {
@@ -237,7 +246,7 @@ class ZoneTransferHandler {
     if (action === AST_ACTIONS.UNDERDECK) {
       return { toZone: ZONES.DECK, position: "bottom" };
     }
-    if (action === AST_ACTIONS.BANISH || action === AST_ACTIONS.REMOVE_FROM_THE_GAME) {
+    if (action === AST_ACTIONS.BANISH) {
       return { toZone: ZONES.BANISH, position: null };
     }
     if (action === AST_ACTIONS.TAKE) {
@@ -287,12 +296,14 @@ class ZoneTransferHandler {
     actingPlayer,
     targetDef,
     options,
-    count,
+    countInfo,
     sourceCard = null,
     action = AST_ACTIONS.BOUNCE,
     previousSnapshot = null,
     toZone = ZONES.HAND
   ) {
+    const count = typeof countInfo === "number" ? countInfo : countInfo.count;
+    const hasDynamic = Boolean(typeof countInfo === "object" && countInfo?.hasDynamic);
     // 1. Explicit pile target (e.g. top of target deck)
     if (options.targetPileId) {
       const [targetOwnerId, targetZone] = options.targetPileId.split(":");
@@ -316,14 +327,17 @@ class ZoneTransferHandler {
     let explicitIds = options.targetCardIds || [];
     if (
       explicitIds.length === 0 &&
-      targetDef.selection_mode === "chained_target" &&
+      targetDef.selection_mode === AST_SELECTION_MODES.CHAINED_TARGET &&
       previousSnapshot?.movedCards
     ) {
       explicitIds = previousSnapshot.movedCards.map((c) => c.cardId);
     }
 
     const candidates = [];
-    const zoneOwner = targetDef.zone_owner || "either";
+    const hasAnyOf = Array.isArray(targetDef.any_of) && targetDef.any_of.length > 0;
+    const zoneOwner = hasAnyOf
+      ? SelectorComposer.resolveScanZoneOwner(targetDef)
+      : (targetDef.zone_owner || "either");
     const playersToScan = [];
 
     for (const p of room.state.players.values()) {
@@ -331,12 +345,15 @@ class ZoneTransferHandler {
         playersToScan.push(p);
       } else if (zoneOwner === "opponent" && p.sessionId !== actingPlayer.sessionId) {
         playersToScan.push(p);
-      } else if (zoneOwner === "either" || zoneOwner === "both") {
+      } else if (zoneOwner === "either" || zoneOwner === "both" || zoneOwner === "target_player") {
         playersToScan.push(p);
       }
     }
 
-    const zoneNames = TargetSelectionService._resolveTargetZones(targetDef.scope);
+    const effectiveScope = hasAnyOf
+      ? SelectorComposer.collectEffectiveScopes(targetDef, AST_SCOPES.IN_PLAY)
+      : targetDef.scope;
+    const zoneNames = TargetSelectionService._resolveTargetZones(effectiveScope);
 
     for (const p of playersToScan) {
       for (const zName of zoneNames) {
@@ -356,21 +373,41 @@ class ZoneTransferHandler {
             if (action === AST_ACTIONS.UNDERDECK && i === zoneCards.length - 1) continue;
           }
 
-          const filterContext = { sourceCard, actionType: action };
+          const filterContext = {
+            room,
+            actingPlayer,
+            sourceCard,
+            actionType: action,
+            candidateZone: zName,
+            candidateOwnerId: p.sessionId,
+            previousSnapshot,
+          };
           if (explicitIds.length > 0) {
             if (
               explicitIds.includes(card.id) &&
               TargetSelectionService.matchesFilter(card, targetDef, filterContext)
             ) {
               candidates.push({ card, owner: p });
-              if (candidates.length >= count) return candidates;
+              if (!hasDynamic && candidates.length >= count) return candidates;
             }
           } else if (TargetSelectionService.matchesFilter(card, targetDef, filterContext)) {
             candidates.push({ card, owner: p });
-            if (candidates.length >= count) return candidates;
+            if (!hasDynamic && candidates.length >= count) return candidates;
           }
         }
       }
+    }
+
+    if (hasDynamic && explicitIds.length === 0) {
+      const resolved = parseTargetCount(targetDef, undefined, {
+        room,
+        player: actingPlayer,
+        sourceCard,
+        eligibleCount: candidates.length,
+        previousSnapshot,
+        options,
+      });
+      return candidates.slice(0, resolved.count);
     }
 
     return candidates;

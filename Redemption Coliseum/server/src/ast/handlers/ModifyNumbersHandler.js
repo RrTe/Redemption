@@ -2,9 +2,11 @@
 const { moveCard, getZoneCollection } = require("../../services/cardService");
 const { MoveCardSnapshotHelper } = require("../../commands/MoveCardSnapshotHelper");
 const { ZONES } = require("../../../../shared/zones");
-const { AST_ACTIONS, AST_MESSAGES, AST_SELECTION_MODES } = require("../../../../shared/astConstants");
+const { AST_ACTIONS, AST_SELECTION_MODES } = require("../../../../shared/astConstants");
+const { ProtectionService } = require("../../../../shared/rules/ProtectionService");
 const { TargetSelectionService } = require("../TargetSelectionService");
 const { parseTargetCount } = require("../TargetCountResolver");
+const { DynamicValueResolver } = require("../DynamicValueResolver");
 const { SpecialInitiativeService } = require("../../services/SpecialInitiativeService");
 const { ActionTelegraphService } = require("../../services/ActionTelegraphService");
 const { BattleCalculator } = require("../../../../shared/BattleCalculator");
@@ -13,12 +15,12 @@ const { formatCardLink } = require("../../utils/gameLogFormatter");
 const logger = require("../../utils/logger");
 
 /**
- * Handler for executing MODIFY_NUMBERS / MODIFY_STATS / INCREASE / DECREASE ability primitives.
+ * Handler for executing MODIFY_STATS ability primitives (signed integers & DynamicValue).
  * Updates dynamic strength and toughness counters on cards and synchronizes battle numbers.
  */
 class ModifyNumbersHandler {
   /**
-   * Executes a modify numbers/stats effect.
+   * Executes a modify stats effect.
    *
    * @param {object} context Execution context.
    * @param {import('../../rooms/GameRoom').GameRoom} context.room Active game room.
@@ -29,7 +31,7 @@ class ModifyNumbersHandler {
    * @returns {{ success: boolean, snapshot: object, logEntry?: string, error?: string }} Result.
    */
   static execute(context) {
-    const { room, player, effect, item, options = {} } = context;
+    const { room, player, effect, item, options = {}, previousSnapshot = null, stepSnapshots = null } = context;
 
     if (!room || !player) {
       return { success: false, snapshot: null, error: "Missing context" };
@@ -38,21 +40,22 @@ class ModifyNumbersHandler {
     const sourceCard = item?.cardId ? room.cardLookup?.get(item.cardId) : null;
     const targetDef = effect?.target || {};
 
-    // 1. Resolve stat modifier values
-    const action = effect?.action || AST_ACTIONS.MODIFY_NUMBERS;
-    let sDelta = typeof effect?.strength_mod === "number" ? effect.strength_mod : 0;
-    let tDelta = typeof effect?.toughness_mod === "number" ? effect.toughness_mod : 0;
-
-    if (action === AST_ACTIONS.DECREASE) {
-      if (sDelta > 0) sDelta = -sDelta;
-      if (tDelta > 0) tDelta = -tDelta;
-    } else if (action === AST_ACTIONS.INCREASE) {
-      if (sDelta < 0) sDelta = Math.abs(sDelta);
-      if (tDelta < 0) tDelta = Math.abs(tDelta);
-    }
+    // 1. Derive directional hint for protection pre-filtering (increase vs decrease)
+    const hintDelta = (modSpec) => {
+      if (typeof modSpec === "number") return modSpec;
+      const mult = modSpec?.dynamic?.multiplier;
+      return typeof mult === "number" ? mult : 0;
+    };
+    const sHint = hintDelta(effect?.strength_mod);
+    const tHint = hintDelta(effect?.toughness_mod);
 
     // 2. Resolve target cards
-    const targets = this._resolveTargets(room, player, targetDef, sourceCard, options);
+    const targets = this._resolveTargets(room, player, targetDef, sourceCard, options, {
+      previousSnapshot,
+      stepSnapshots,
+      strengthDelta: sHint,
+      toughnessDelta: tHint,
+    });
 
     if (options.specialInitiativeDeclined) {
       if (room.state?.battle) {
@@ -91,7 +94,7 @@ class ModifyNumbersHandler {
       return {
         success: true,
         snapshot: {
-          action: AST_ACTIONS.MODIFY_NUMBERS,
+          action: AST_ACTIONS.MODIFY_STATS,
           timestamp: Date.now(),
           playerId: player.sessionId,
           cardId: item?.cardId || "",
@@ -107,29 +110,51 @@ class ModifyNumbersHandler {
       return {
         success: true,
         snapshot: {
-          action: AST_ACTIONS.MODIFY_NUMBERS,
+          action: AST_ACTIONS.MODIFY_STATS,
           timestamp: Date.now(),
           playerId: player.sessionId,
           cardId: item?.cardId || "",
           modifications: [],
         },
-        logEntry: `${player.name} modifies numbers, but no eligible targets were found.`,
+        logEntry: `${player.name} modifies stats, but no eligible targets were found.`,
       };
     }
 
-    // Broadcast action telegraph
-    ActionTelegraphService.send(room, {
-      sourceCardId: item?.cardId,
-      targetCardIds: targets.map((t) => t.card.id),
-      action: AST_ACTIONS.MODIFY_NUMBERS,
-      durationMs: 500,
-    });
-
     const modifications = [];
+    const appliedTargets = [];
     const logEntries = [];
     let battlefieldAffected = false;
 
     for (const { card, owner } of targets) {
+      const currentStats = BattleCalculator.getCardStats(card);
+      const evalCtx = {
+        room,
+        player,
+        sourceCard,
+        targetCard: card,
+        previousSnapshot,
+        stepSnapshots,
+        costSnapshot: context.costSnapshot,
+        variables: context.variables,
+        options,
+      };
+      const sDelta = DynamicValueResolver.resolveStatDelta(effect?.strength_mod, "strength", currentStats.strength, evalCtx);
+      const tDelta = DynamicValueResolver.resolveStatDelta(effect?.toughness_mod, "toughness", currentStats.toughness, evalCtx);
+
+      if (
+        sourceCard &&
+        card.id !== sourceCard.id &&
+        ProtectionService.isProtected(card, sourceCard, AST_ACTIONS.MODIFY_STATS, {
+          room,
+          strengthDelta: sDelta,
+          toughnessDelta: tDelta,
+        })
+      ) {
+        continue;
+      }
+
+      appliedTargets.push({ card, owner });
+
       const hadStrengthMod = typeof card.counters?.has === "function"
         ? card.counters.has("strength_mod")
         : Object.prototype.hasOwnProperty.call(card.counters || {}, "strength_mod");
@@ -176,10 +201,20 @@ class ModifyNumbersHandler {
       }
     }
 
+    // Broadcast action telegraph for applied targets
+    if (appliedTargets.length > 0) {
+      ActionTelegraphService.send(room, {
+        sourceCardId: item?.cardId,
+        targetCardIds: appliedTargets.map((t) => t.card.id),
+        action: AST_ACTIONS.MODIFY_STATS,
+        durationMs: 500,
+      });
+    }
+
     // REG line 1815: Check characters whose toughness drops to 0 or less
     const defeatedCombatants = [];
     const defeatedDiscards = [];
-    for (const { card, owner } of targets) {
+    for (const { card, owner } of appliedTargets) {
       if (BattleCalculator.isCharacter(card)) {
         const stats = BattleCalculator.getCardStats(card);
         if (stats.toughness <= 0) {
@@ -209,7 +244,7 @@ class ModifyNumbersHandler {
         if (room._undoTxStack?.length > 0) {
           const { ChronicleRollbackService } = require("../../services/ChronicleRollbackService");
           ChronicleRollbackService.recordPartialSnapshot(room, {
-            action: AST_ACTIONS.MODIFY_NUMBERS,
+            action: AST_ACTIONS.MODIFY_STATS,
             timestamp: Date.now(),
             playerId: player.sessionId,
             cardId: item?.cardId || "",
@@ -239,7 +274,7 @@ class ModifyNumbersHandler {
     }
 
     const snapshot = {
-      action: AST_ACTIONS.MODIFY_NUMBERS,
+      action: AST_ACTIONS.MODIFY_STATS,
       timestamp: Date.now(),
       playerId: player.sessionId,
       cardId: item?.cardId || "",
@@ -316,13 +351,21 @@ class ModifyNumbersHandler {
    * @param {object} [options] Execution options.
    * @returns {Array<{ card: object, owner: object }>}
    */
-  static _resolveTargets(room, actingPlayer, targetDef, sourceCard, options) {
+  static _resolveTargets(room, actingPlayer, targetDef, sourceCard, options, extraCtx = {}) {
     if (targetDef.selection_mode === AST_SELECTION_MODES.AUTOMATIC_SELF && sourceCard) {
       const owner = room.state.players.get(sourceCard.controllerId || sourceCard.ownerId) || actingPlayer;
       return [{ card: sourceCard, owner }];
     }
 
-    const explicitIds = options.targetCardIds || [];
+    let explicitIds = options.targetCardIds || [];
+    if (
+      explicitIds.length === 0 &&
+      targetDef.selection_mode === AST_SELECTION_MODES.CHAINED_TARGET &&
+      extraCtx.previousSnapshot?.movedCards
+    ) {
+      explicitIds = extraCtx.previousSnapshot.movedCards.map((c) => c.cardId);
+    }
+
     if (explicitIds.length > 0) {
       const explicit = [];
       for (const id of explicitIds) {
@@ -339,11 +382,25 @@ class ModifyNumbersHandler {
       room,
       actingPlayer,
       targetDef,
-      { sourceCard, actionType: AST_ACTIONS.MODIFY_NUMBERS }
+      {
+        sourceCard,
+        actionType: AST_ACTIONS.MODIFY_STATS,
+        strengthDelta: extraCtx.strengthDelta,
+        toughnessDelta: extraCtx.toughnessDelta,
+        previousSnapshot: extraCtx.previousSnapshot,
+        options,
+      }
     );
 
     const candidates = [];
-    const parsedCount = parseTargetCount(targetDef);
+    const parsedCount = parseTargetCount(targetDef, undefined, {
+      room,
+      player: actingPlayer,
+      sourceCard,
+      eligibleCount: eligible.eligibleCardIds.length,
+      previousSnapshot: extraCtx.previousSnapshot,
+      options,
+    });
     const maxCount = parsedCount.isAll
       ? eligible.eligibleCardIds.length
       : parsedCount.maxCount;

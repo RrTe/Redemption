@@ -6,10 +6,7 @@ export declare const AST_ACTIONS: {
   readonly SEARCH: "search";
   readonly NEGATE: "negate";
   readonly PLAY: "play";
-  readonly MODIFY_NUMBERS: "modify_numbers";
   readonly MODIFY_STATS: "modify_stats";
-  readonly INCREASE: "increase";
-  readonly DECREASE: "decrease";
   readonly BAND: "band";
   readonly ADD_TO_BATTLE: "add to battle";
   readonly IMMUNE: "immune";
@@ -21,21 +18,64 @@ export declare const AST_ACTIONS: {
   readonly CHOOSE_OPPONENT: "choose opponent";
   readonly PRESENT: "present";
   readonly BOUNCE: "bounce";
-  readonly RETURN_TO_HAND: "return to hand";
   readonly TOPDECK: "topdeck";
   readonly UNDERDECK: "underdeck";
   readonly BANISH: "banish";
-  readonly REMOVE_FROM_THE_GAME: "remove from the game";
   readonly PLACE: "place";
   readonly TAKE: "take";
+  readonly DEACTIVATE: "deactivate";
+  readonly BEGIN_A_NEW_PHASE: "begin a new phase";
+};
+
+export declare const AST_DIRECTIONAL_FILTER_ACTIONS: {
+  readonly INCREASE: "increase";
+  readonly DECREASE: "decrease";
+};
+
+export declare const AST_TARGET_PHASES: {
+  readonly CURRENT: "current";
+  readonly DRAW_PHASE: "draw_phase";
+  readonly UPKEEP_PHASE: "upkeep_phase";
+  readonly PREPARATION_PHASE: "preparation_phase";
+  readonly BATTLE_PHASE: "battle_phase";
+  readonly DISCARD_PHASE: "discard_phase";
+};
+
+export declare const AST_BATTLE_RESTRICTIONS: {
+  readonly RESCUE_ATTEMPT: "rescue_attempt";
+  readonly BATTLE_CHALLENGE: "battle_challenge";
+};
+
+export declare const AST_STAT_MOD_OPERATIONS: {
+  readonly ADD: "add";
+  readonly MULTIPLY: "multiply";
+  readonly SET: "set";
+};
+
+export declare const AST_DYNAMIC_VALUE_SOURCES: {
+  readonly COUNT_CARDS: "count_cards";
+  readonly COUNT_BRIGADES: "count_brigades";
+  readonly STAT_VALUE: "stat_value";
+  readonly CARDS_DRAWN: "cards_drawn";
+  readonly LOST_SOULS_IN_PLAY: "lost_souls_in_play";
+  readonly SELF_STAT: "self_stat";
+  readonly TARGET_STAT: "target_stat";
+  readonly CHAINED_TARGET_STATS: "chained_target_stats";
+  readonly COST_TARGET_STATS: "cost_target_stats";
+  readonly CARD_X_IDENTIFIER: "card_x_identifier";
+  readonly PLAYER_CHOICE: "player_choice";
 };
 
 export declare const AST_SELECTION_MODES: {
   readonly AUTOMATIC_NEXT: "automatic_next";
   readonly AUTOMATIC_ALL: "automatic_all";
+  readonly AUTOMATIC_LAST: "automatic_last";
   readonly AUTOMATIC_SELF: "automatic_self";
   readonly MANUAL_CONTROLLER: "manual_controller";
   readonly MANUAL_OPPONENT: "manual_opponent";
+  readonly CHAINED_TARGET: "chained_target";
+  readonly CONTEXT_REMAINDER: "context_remainder";
+  readonly RANDOM: "random";
 };
 
 export declare const AST_SCOPES: {
@@ -51,6 +91,7 @@ export declare const AST_SCOPES: {
   readonly LAND_OF_BONDAGE: "land_of_bondage";
   readonly LAND_OF_REDEMPTION: "land_of_redemption";
   readonly ARTIFACT_PILE: "artifact_pile";
+  readonly CONTEXT_SCOPE: "context_scope";
   readonly ANY: "any";
 };
 
@@ -59,6 +100,7 @@ export declare const AST_ZONE_OWNERS: {
   readonly OPPONENT: "opponent";
   readonly EITHER: "either";
   readonly BOTH: "both";
+  readonly TARGET_PLAYER: "target_player";
 };
 
 export declare const AST_CARD_SIDES: {
@@ -119,6 +161,11 @@ export declare const CARD_GENDERS: {
 };
 
 export type AstAction = typeof AST_ACTIONS[keyof typeof AST_ACTIONS];
+export type AstDirectionalFilterAction = typeof AST_DIRECTIONAL_FILTER_ACTIONS[keyof typeof AST_DIRECTIONAL_FILTER_ACTIONS];
+export type AstTargetPhase = typeof AST_TARGET_PHASES[keyof typeof AST_TARGET_PHASES];
+export type AstBattleRestriction = typeof AST_BATTLE_RESTRICTIONS[keyof typeof AST_BATTLE_RESTRICTIONS];
+export type AstStatModOperation = typeof AST_STAT_MOD_OPERATIONS[keyof typeof AST_STAT_MOD_OPERATIONS];
+export type AstDynamicValueSource = typeof AST_DYNAMIC_VALUE_SOURCES[keyof typeof AST_DYNAMIC_VALUE_SOURCES];
 export type AstSelectionMode = typeof AST_SELECTION_MODES[keyof typeof AST_SELECTION_MODES];
 export type AstScope = typeof AST_SCOPES[keyof typeof AST_SCOPES];
 export type AstZoneOwner = typeof AST_ZONE_OWNERS[keyof typeof AST_ZONE_OWNERS];

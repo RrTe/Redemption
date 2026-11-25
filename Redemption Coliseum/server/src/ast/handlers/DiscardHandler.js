@@ -9,6 +9,7 @@ const {
   AST_SELECTION_MODES,
   AST_SCOPES,
 } = require("../../../../shared/astConstants");
+const { SelectorComposer } = require("../../../../shared/rules/SelectorComposer");
 const { TargetSelectionService } = require("../TargetSelectionService");
 const { parseTargetCount } = require("../TargetCountResolver");
 const { BattleCharacterClassifier } = require("../../services/BattleCharacterClassifier");
@@ -34,18 +35,24 @@ class DiscardHandler {
    * @returns {{ success: boolean, snapshot: object, logEntry?: string, error?: string }} Result.
    */
   static execute(context) {
-    const { room, player, effect, item, options = {} } = context;
+    const { room, player, effect, item, options = {}, previousSnapshot = null } = context;
 
     if (!room || !player) {
       return { success: false, snapshot: null, error: "Missing context" };
     }
 
     const targetDef = effect?.target || {};
-    const { isAll, count } = parseTargetCount(targetDef);
-
     const sourceCard = item?.cardId ? room.cardLookup?.get(item.cardId) : null;
+    const initialCountInfo = parseTargetCount(targetDef, effect?.count, {
+      room,
+      player,
+      sourceCard,
+      previousSnapshot,
+      options,
+    });
+
     // Resolve eligible target cards based on dynamic filter criteria
-    const targets = this._resolveTargets(room, player, targetDef, options, count, sourceCard);
+    const targets = this._resolveTargets(room, player, targetDef, options, initialCountInfo, sourceCard, previousSnapshot);
 
     if (targets.length === 0) {
       logger.info("[DiscardHandler] No eligible targets found for discard.");
@@ -170,7 +177,10 @@ class DiscardHandler {
    * @returns {Array<{ card: object, owner: object }>} Selected targets with owners.
    * @private
    */
-  static _resolveTargets(room, actingPlayer, targetDef, options, count, sourceCard = null) {
+  static _resolveTargets(room, actingPlayer, targetDef, options, countInfo, sourceCard = null, previousSnapshot = null) {
+    const count = typeof countInfo === "number" ? countInfo : countInfo.count;
+    const hasDynamic = Boolean(typeof countInfo === "object" && countInfo?.hasDynamic);
+
     // 1. Explicit pile target (e.g. discard top card of targeted deck)
     if (options.targetPileId) {
       const [targetOwnerId, targetZone] = options.targetPileId.split(":");
@@ -183,11 +193,20 @@ class DiscardHandler {
       return [];
     }
 
-    const explicitIds = options.targetCardIds || [];
-    const candidates = [];
+    let explicitIds = options.targetCardIds || [];
+    if (
+      explicitIds.length === 0 &&
+      targetDef.selection_mode === AST_SELECTION_MODES.CHAINED_TARGET &&
+      previousSnapshot?.movedCards
+    ) {
+      explicitIds = previousSnapshot.movedCards.map((c) => c.cardId);
+    }
 
-    // Determine target player owners
-    const zoneOwner = targetDef.zone_owner || "either";
+    const candidates = [];
+    const hasAnyOf = Array.isArray(targetDef.any_of) && targetDef.any_of.length > 0;
+    const zoneOwner = hasAnyOf
+      ? SelectorComposer.resolveScanZoneOwner(targetDef)
+      : (targetDef.zone_owner || "either");
     const playersToScan = [];
 
     for (const p of room.state.players.values()) {
@@ -195,13 +214,15 @@ class DiscardHandler {
         playersToScan.push(p);
       } else if (zoneOwner === "opponent" && p.sessionId !== actingPlayer.sessionId) {
         playersToScan.push(p);
-      } else if (zoneOwner === "either" || zoneOwner === "both") {
+      } else if (zoneOwner === "either" || zoneOwner === "both" || zoneOwner === "target_player") {
         playersToScan.push(p);
       }
     }
 
-    // Determine target zones based on scope
-    const zoneNames = TargetSelectionService._resolveTargetZones(targetDef.scope);
+    const effectiveScope = hasAnyOf
+      ? SelectorComposer.collectEffectiveScopes(targetDef, AST_SCOPES.IN_PLAY)
+      : targetDef.scope;
+    const zoneNames = TargetSelectionService._resolveTargetZones(effectiveScope);
 
     for (const p of playersToScan) {
       for (const zName of zoneNames) {
@@ -209,18 +230,38 @@ class DiscardHandler {
           ? (room?.state?.battlefield || []).filter(c => (c.controllerId || c.ownerId) === p.sessionId)
           : (p[zName] || []);
         for (const card of zoneCards) {
-          const filterContext = { sourceCard, actionType: AST_ACTIONS.DISCARD };
+          const filterContext = {
+            room,
+            actingPlayer,
+            sourceCard,
+            actionType: AST_ACTIONS.DISCARD,
+            candidateZone: zName,
+            candidateOwnerId: p.sessionId,
+            previousSnapshot,
+          };
           if (explicitIds.length > 0) {
             if (explicitIds.includes(card.id) && TargetSelectionService.matchesFilter(card, targetDef, filterContext)) {
               candidates.push({ card, owner: p });
-              if (candidates.length >= count) return candidates;
+              if (!hasDynamic && candidates.length >= count) return candidates;
             }
           } else if (TargetSelectionService.matchesFilter(card, targetDef, filterContext)) {
             candidates.push({ card, owner: p });
-            if (candidates.length >= count) return candidates;
+            if (!hasDynamic && candidates.length >= count) return candidates;
           }
         }
       }
+    }
+
+    if (hasDynamic && explicitIds.length === 0) {
+      const resolved = parseTargetCount(targetDef, undefined, {
+        room,
+        player: actingPlayer,
+        sourceCard,
+        eligibleCount: candidates.length,
+        previousSnapshot,
+        options,
+      });
+      return candidates.slice(0, resolved.count);
     }
 
     return candidates;

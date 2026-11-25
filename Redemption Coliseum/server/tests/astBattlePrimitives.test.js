@@ -71,7 +71,7 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       expect(state.battle.rescuerToughness).toBe(5);
 
       const effect = {
-        action: AST_ACTIONS.MODIFY_NUMBERS,
+        action: AST_ACTIONS.MODIFY_STATS,
         strength_mod: 3,
         toughness_mod: 4,
         target: { selection_mode: "automatic_self" },
@@ -112,7 +112,7 @@ describe("Phase 3: Battle System Primitives & Combat Rules (REG v11.0.0)", () =>
       state.battlefield.push(ec);
 
       const effect = {
-        action: AST_ACTIONS.DECREASE,
+        action: AST_ACTIONS.MODIFY_STATS,
         strength_mod: 0,
         toughness_mod: -4,
         target: { selection_mode: "automatic_self" },

@@ -403,7 +403,7 @@ describe("AST Zone Transfer Handlers (REG v11.0.0)", () => {
         effects: [
           {
             step: 1,
-            action: AST_ACTIONS.MODIFY_NUMBERS,
+            action: AST_ACTIONS.MODIFY_STATS,
             strength_mod: 1,
             target: {
               selection_mode: AST_SELECTION_MODES.AUTOMATIC_ALL,

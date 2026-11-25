@@ -491,8 +491,8 @@ describe("Upstream Card Ability AST & Schema Updates", () => {
       expect(ProtectionService.isProtected(protectedHero, hostileDemon, "discard")).toBe(true);
       // Capture from Demon is prohibited
       expect(ProtectionService.isProtected(protectedHero, hostileDemon, "capture")).toBe(true);
-      // Modify numbers (or other actions) from Demon is not prohibited by this specific actions list
-      expect(ProtectionService.isProtected(protectedHero, hostileDemon, "modify_numbers")).toBe(false);
+      // Modify stats (or other actions) from Demon is not prohibited by this specific actions list
+      expect(ProtectionService.isProtected(protectedHero, hostileDemon, AST_ACTIONS.MODIFY_STATS)).toBe(false);
 
       // Discard from Human Evil Character is NOT blocked because source doesn't match card_sources (Demon)
       expect(ProtectionService.isProtected(protectedHero, hostileHuman, "discard")).toBe(false);

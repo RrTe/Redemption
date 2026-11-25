@@ -26,6 +26,8 @@ const IN_PLAY_ZONES = new Set([
 
 const NON_HUMAN_DESCRIPTOR_REGEX = /\b(angel|demon|animal|beast|non-human)\b/i;
 const GENERIC_DESCRIPTOR_REGEX = /(^|[^a-zA-Z0-9])generic([^a-zA-Z0-9]|$)/i;
+// Card Colyseus Schema initializes IsGospel/IsStarCard to false; allow metadata inference unless explicit side data says false.
+const SCHEMA_DEFAULTED_BOOL_KEYS = new Set(["IsGospel", "IsStarCard"]);
 
 /**
  * Pure service for shared side extraction and attribute/class matching.
@@ -149,6 +151,12 @@ class SideAttributeEvaluator {
           fallbackCard?.[pascalKey] ?? fallbackCard?.[snakeKey];
         return typeof val === "boolean" ? val : null;
       };
+      const pickGeneralBool = (pascalKey, snakeKey) => {
+        const val = concrete?.[pascalKey] ?? concrete?.[snakeKey] ??
+          shared[pascalKey] ?? shared[snakeKey] ??
+          fallbackCard?.[pascalKey] ?? fallbackCard?.[snakeKey];
+        return typeof val === "boolean" ? val : null;
+      };
       return {
         Name: concrete?.Name || shared.Name || fallbackCard?.Name || "",
         Type: sideType,
@@ -159,6 +167,10 @@ class SideAttributeEvaluator {
         Gender: !isChar ? "" : (concrete?.Gender ?? concrete?.gender ?? shared.Gender ?? shared.gender ?? fallbackCard?.Gender ?? fallbackCard?.gender ?? ""),
         IsGeneric: pickBool("IsGeneric", "is_generic"),
         IsHuman: pickBool("IsHuman", "is_human"),
+        IsCloud: pickGeneralBool("IsCloud", "is_cloud"),
+        IsMeek: pickGeneralBool("IsMeek", "is_meek"),
+        IsGospel: pickGeneralBool("IsGospel", "is_gospel"),
+        IsStarCard: pickGeneralBool("IsStarCard", "is_star"),
       };
     };
 
@@ -197,6 +209,10 @@ class SideAttributeEvaluator {
       Gender: side.gender ?? shared.gender ?? "",
       IsGeneric: typeof (side.is_generic ?? shared.is_generic) === "boolean" ? (side.is_generic ?? shared.is_generic) : null,
       IsHuman: typeof (side.is_human ?? shared.is_human) === "boolean" ? (side.is_human ?? shared.is_human) : null,
+      IsCloud: typeof (side.is_cloud ?? shared.is_cloud) === "boolean" ? (side.is_cloud ?? shared.is_cloud) : null,
+      IsMeek: typeof (side.is_meek ?? shared.is_meek) === "boolean" ? (side.is_meek ?? shared.is_meek) : null,
+      IsGospel: typeof (side.is_gospel ?? shared.is_gospel) === "boolean" ? (side.is_gospel ?? shared.is_gospel) : null,
+      IsStarCard: typeof (side.is_star ?? shared.is_star) === "boolean" ? (side.is_star ?? shared.is_star) : null,
     });
     const result = [];
     if (astSides.top || astSides.shared) result.push(toEntry(astSides.top || {}, card));
@@ -248,10 +264,42 @@ class SideAttributeEvaluator {
     return !(NON_HUMAN_DESCRIPTOR_REGEX.test(ident) || NON_HUMAN_DESCRIPTOR_REGEX.test(cls) || NON_HUMAN_DESCRIPTOR_REGEX.test(ordir));
   }
 
+  static _hasOrdirMatch(sideObj, cardObj, regex) {
+    const sideOrdir = Array.isArray(sideObj?.ORDIR) ? sideObj.ORDIR : [];
+    const cardOrdir = Array.isArray(cardObj?.ORDIR) ? cardObj.ORDIR : [];
+    return sideOrdir.some((o) => regex.test(String(o || ""))) || cardOrdir.some((o) => regex.test(String(o || "")));
+  }
+
+  static _inferCloud(sideObj, cardObj) {
+    return this._hasOrdirMatch(sideObj, cardObj, /^(?:cloud(?:\s+card)?)$/i);
+  }
+
+  static _inferMeek(sideObj, cardObj) {
+    return this._hasOrdirMatch(sideObj, cardObj, /^(?:meek(?:\s+card)?)$/i);
+  }
+
+  static _inferStar(sideObj, cardObj) {
+    const cls = Array.isArray(sideObj?.Class) ? sideObj.Class.join(" ") : String(sideObj?.Class ?? cardObj?.Class ?? "");
+    return /\bstar\b/i.test(cls) || this._hasOrdirMatch(sideObj, cardObj, /^(?:star(?:\s+card)?)$/i);
+  }
+
+  static _inferGospel(sideObj, cardObj) {
+    const ident = String(sideObj?.Identifier ?? cardObj?.Identifier ?? "");
+    return /\bgospel\b/i.test(ident) || this._hasOrdirMatch(sideObj, cardObj, /^(?:gospel(?:\s+card)?)$/i);
+  }
+
   static _readSideBool(sideObj, cardObj, pascalKey, snakeKey, inferFn) {
-    const explicit = sideObj?.[pascalKey] ?? sideObj?.[snakeKey] ?? cardObj?.[pascalKey] ?? cardObj?.[snakeKey];
-    if (typeof explicit === "boolean") return explicit;
-    return inferFn(sideObj, cardObj);
+    const sideExplicit = sideObj?.[pascalKey] ?? sideObj?.[snakeKey];
+    if (typeof sideExplicit === "boolean") return sideExplicit;
+    const cardExplicit = cardObj?.[pascalKey] ?? cardObj?.[snakeKey];
+    if (SCHEMA_DEFAULTED_BOOL_KEYS.has(pascalKey)) {
+      if (cardExplicit === true) return true;
+      const inferred = inferFn.call(this, sideObj, cardObj);
+      if (inferred === true) return true;
+      return typeof cardExplicit === "boolean" ? cardExplicit : inferred;
+    }
+    if (typeof cardExplicit === "boolean") return cardExplicit;
+    return inferFn.call(this, sideObj, cardObj);
   }
 
   static _resolveCharacterBoolean(card, pascalKey, snakeKey, inferFn, options = {}) {
@@ -352,6 +400,103 @@ class SideAttributeEvaluator {
   /** Evaluates a TargetSelector `is_human` filter against a card. */
   static matchesIsHuman(card, requiredIsHuman, context = {}) {
     return this._matchesCharacterBoolean(card, requiredIsHuman, context, this.resolveIsHuman, "IsHuman", "is_human", this._inferHuman);
+  }
+
+  static _resolveGeneralBoolean(card, pascalKey, snakeKey, inferFn, options = {}) {
+    if (!card || typeof card !== "object") return null;
+    const sides = this.extractSides(card);
+
+    if (options.side) {
+      const sideKey = String(options.side).toLowerCase();
+      if (sideKey === "shared") {
+        if (card.CardSides?.shared) {
+          return this._readSideBool(card.CardSides.shared, card, pascalKey, snakeKey, inferFn);
+        }
+        if (sides.length > 1) {
+          const vals = sides.map((s) => this._readSideBool(s, null, pascalKey, snakeKey, inferFn));
+          return typeof vals[0] === "boolean" && vals.every((v) => v === vals[0]) ? vals[0] : null;
+        }
+        return null;
+      }
+      const targetSide = sides[sideKey === "bottom" ? 1 : 0];
+      return targetSide ? this._readSideBool(targetSide, null, pascalKey, snakeKey, inferFn) : null;
+    }
+
+    if (sides.length === 1) {
+      return this._readSideBool(sides[0], card, pascalKey, snakeKey, inferFn);
+    }
+
+    if (sides.length > 1) {
+      if (this.hasRuntimeSide(card, options)) {
+        const activeSide = sides[resolveActiveSideIndex(card, sides)];
+        return activeSide ? this._readSideBool(activeSide, null, pascalKey, snakeKey, inferFn) : null;
+      }
+      const firstVal = this._readSideBool(sides[0], null, pascalKey, snakeKey, inferFn);
+      return sides.every((s) => this._readSideBool(s, null, pascalKey, snakeKey, inferFn) === firstVal) ? firstVal : null;
+    }
+
+    const explicitTop = card[pascalKey] ?? card[snakeKey];
+    if (SCHEMA_DEFAULTED_BOOL_KEYS.has(pascalKey)) {
+      if (explicitTop === true) return true;
+      const inferred = inferFn.call(this, null, card);
+      if (inferred === true) return true;
+      return typeof explicitTop === "boolean" ? explicitTop : inferred;
+    }
+    if (typeof explicitTop === "boolean") return explicitTop;
+    return inferFn.call(this, null, card);
+  }
+
+  static _matchesGeneralBoolean(card, requiredVal, context, singleResolver, pascalKey, snakeKey, inferFn) {
+    if (typeof requiredVal !== "boolean") return true;
+    if (!card) return false;
+    const sides = this.extractSides(card);
+    if (sides.length > 1 && !this.hasRuntimeSide(card, context)) {
+      return sides.some((side) =>
+        this.sideMatchesTargetMeta(side, context?.targetDef, false) &&
+        this._readSideBool(side, null, pascalKey, snakeKey, inferFn) === requiredVal
+      );
+    }
+    return singleResolver.call(this, card, context) === requiredVal;
+  }
+
+  /** Resolves `IsCloud` for the card's active side across all card types. */
+  static resolveIsCloud(card, options = {}) {
+    return this._resolveGeneralBoolean(card, "IsCloud", "is_cloud", this._inferCloud, options);
+  }
+
+  /** Evaluates a TargetSelector `is_cloud` filter against a card. */
+  static matchesIsCloud(card, requiredIsCloud, context = {}) {
+    return this._matchesGeneralBoolean(card, requiredIsCloud, context, this.resolveIsCloud, "IsCloud", "is_cloud", this._inferCloud);
+  }
+
+  /** Resolves `IsMeek` for the card's active side across all card types. */
+  static resolveIsMeek(card, options = {}) {
+    return this._resolveGeneralBoolean(card, "IsMeek", "is_meek", this._inferMeek, options);
+  }
+
+  /** Evaluates a TargetSelector `is_meek` filter against a card. */
+  static matchesIsMeek(card, requiredIsMeek, context = {}) {
+    return this._matchesGeneralBoolean(card, requiredIsMeek, context, this.resolveIsMeek, "IsMeek", "is_meek", this._inferMeek);
+  }
+
+  /** Resolves `IsStarCard` / `is_star` for the card's active side across all card types. */
+  static resolveIsStar(card, options = {}) {
+    return this._resolveGeneralBoolean(card, "IsStarCard", "is_star", this._inferStar, options);
+  }
+
+  /** Evaluates a TargetSelector `is_star` filter against a card. */
+  static matchesIsStar(card, requiredIsStar, context = {}) {
+    return this._matchesGeneralBoolean(card, requiredIsStar, context, this.resolveIsStar, "IsStarCard", "is_star", this._inferStar);
+  }
+
+  /** Resolves `IsGospel` / `is_gospel` for the card's active side across all card types. */
+  static resolveIsGospel(card, options = {}) {
+    return this._resolveGeneralBoolean(card, "IsGospel", "is_gospel", this._inferGospel, options);
+  }
+
+  /** Evaluates a TargetSelector `is_gospel` filter against a card. */
+  static matchesIsGospel(card, requiredIsGospel, context = {}) {
+    return this._matchesGeneralBoolean(card, requiredIsGospel, context, this.resolveIsGospel, "IsGospel", "is_gospel", this._inferGospel);
   }
 
   /**

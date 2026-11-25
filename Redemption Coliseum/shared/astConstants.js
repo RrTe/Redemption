@@ -9,10 +9,7 @@ export const AST_ACTIONS = /** @type {const} */ ({
   SEARCH: "search",
   NEGATE: "negate",
   PLAY: "play",
-  MODIFY_NUMBERS: "modify_numbers",
   MODIFY_STATS: "modify_stats",
-  INCREASE: "increase",
-  DECREASE: "decrease",
   BAND: "band",
   ADD_TO_BATTLE: "add to battle",
   IMMUNE: "immune",
@@ -24,13 +21,67 @@ export const AST_ACTIONS = /** @type {const} */ ({
   CHOOSE_OPPONENT: "choose opponent",
   PRESENT: "present",
   BOUNCE: "bounce",
-  RETURN_TO_HAND: "return to hand",
   TOPDECK: "topdeck",
   UNDERDECK: "underdeck",
   BANISH: "banish",
-  REMOVE_FROM_THE_GAME: "remove from the game",
   PLACE: "place",
   TAKE: "take",
+  DEACTIVATE: "deactivate",
+  BEGIN_A_NEW_PHASE: "begin a new phase",
+});
+
+/**
+ * Directional stat-modification predicates allowed in ability filter lists (protection_filter / ability_target_actions).
+ */
+export const AST_DIRECTIONAL_FILTER_ACTIONS = /** @type {const} */ ({
+  INCREASE: "increase",
+  DECREASE: "decrease",
+});
+
+/**
+ * Target phase identifiers for phase-switching AST effects (ActionEffect.target_phase).
+ */
+export const AST_TARGET_PHASES = /** @type {const} */ ({
+  CURRENT: "current",
+  DRAW_PHASE: "draw_phase",
+  UPKEEP_PHASE: "upkeep_phase",
+  PREPARATION_PHASE: "preparation_phase",
+  BATTLE_PHASE: "battle_phase",
+  DISCARD_PHASE: "discard_phase",
+});
+
+/**
+ * Battle restriction identifiers (ActionEffect.battle_restriction).
+ */
+export const AST_BATTLE_RESTRICTIONS = /** @type {const} */ ({
+  RESCUE_ATTEMPT: "rescue_attempt",
+  BATTLE_CHALLENGE: "battle_challenge",
+});
+
+/**
+ * Operations for DynamicValue computations.
+ */
+export const AST_STAT_MOD_OPERATIONS = /** @type {const} */ ({
+  ADD: "add",
+  MULTIPLY: "multiply",
+  SET: "set",
+});
+
+/**
+ * Value sources for DynamicValue computations.
+ */
+export const AST_DYNAMIC_VALUE_SOURCES = /** @type {const} */ ({
+  COUNT_CARDS: "count_cards",
+  COUNT_BRIGADES: "count_brigades",
+  STAT_VALUE: "stat_value",
+  CARDS_DRAWN: "cards_drawn",
+  LOST_SOULS_IN_PLAY: "lost_souls_in_play",
+  SELF_STAT: "self_stat",
+  TARGET_STAT: "target_stat",
+  CHAINED_TARGET_STATS: "chained_target_stats",
+  COST_TARGET_STATS: "cost_target_stats",
+  CARD_X_IDENTIFIER: "card_x_identifier",
+  PLAYER_CHOICE: "player_choice",
 });
 
 /**
@@ -39,9 +90,13 @@ export const AST_ACTIONS = /** @type {const} */ ({
 export const AST_SELECTION_MODES = /** @type {const} */ ({
   AUTOMATIC_NEXT: "automatic_next",
   AUTOMATIC_ALL: "automatic_all",
+  AUTOMATIC_LAST: "automatic_last",
   AUTOMATIC_SELF: "automatic_self",
   MANUAL_CONTROLLER: "manual_controller",
   MANUAL_OPPONENT: "manual_opponent",
+  CHAINED_TARGET: "chained_target",
+  CONTEXT_REMAINDER: "context_remainder",
+  RANDOM: "random",
 });
 
 /**
@@ -60,6 +115,7 @@ export const AST_SCOPES = /** @type {const} */ ({
   LAND_OF_BONDAGE: "land_of_bondage",
   LAND_OF_REDEMPTION: "land_of_redemption",
   ARTIFACT_PILE: "artifact_pile",
+  CONTEXT_SCOPE: "context_scope",
   ANY: "any",
 });
 
@@ -71,6 +127,7 @@ export const AST_ZONE_OWNERS = /** @type {const} */ ({
   OPPONENT: "opponent",
   EITHER: "either",
   BOTH: "both",
+  TARGET_PLAYER: "target_player",
 });
 
 /**
@@ -157,6 +214,11 @@ export const CARD_GENDERS = /** @type {const} */ ({
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     AST_ACTIONS,
+    AST_DIRECTIONAL_FILTER_ACTIONS,
+    AST_TARGET_PHASES,
+    AST_BATTLE_RESTRICTIONS,
+    AST_STAT_MOD_OPERATIONS,
+    AST_DYNAMIC_VALUE_SOURCES,
     AST_SELECTION_MODES,
     AST_SCOPES,
     AST_ZONE_OWNERS,

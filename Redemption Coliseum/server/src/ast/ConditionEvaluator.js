@@ -91,6 +91,7 @@ class ConditionEvaluator {
               room,
               sourceCard: card,
               card,
+              skipProtection: true,
             });
             return matchesSource
               ? { valid: true }
@@ -109,6 +110,7 @@ class ConditionEvaluator {
               room,
               sourceCard: card,
               card,
+              skipProtection: true,
             });
             return matchesActor
               ? { valid: true }
@@ -119,7 +121,7 @@ class ConditionEvaluator {
             room,
             actingPlayer,
             selector,
-            { room, actionType: "condition_check", card }
+            { room, actionType: "condition_check", card, sourceCard: card, actorCard: context.actorCard, skipProtection: true }
           );
           const matchCount = eligible?.eligibleCardIds ? eligible.eligibleCardIds.length : 0;
           const targetValue =
@@ -204,7 +206,7 @@ class ConditionEvaluator {
           room,
           actingPlayer,
           selector,
-          { room, actionType: "condition_check", card }
+          { room, actionType: "condition_check", card, sourceCard: card, actorCard: context.actorCard, skipProtection: true }
         );
         const matchCount = eligible?.eligibleCardIds ? eligible.eligibleCardIds.length : 0;
         const targetValue =
@@ -234,7 +236,7 @@ class ConditionEvaluator {
             room,
             actingPlayer,
             selector,
-            { room, actionType: "condition_check", card }
+            { room, actionType: "condition_check", card, sourceCard: card, actorCard: context.actorCard, skipProtection: true }
           );
           const count = eligible?.eligibleCardIds ? eligible.eligibleCardIds.length : 0;
           const valid = this._compareNumbers(count, operator || ">", value);

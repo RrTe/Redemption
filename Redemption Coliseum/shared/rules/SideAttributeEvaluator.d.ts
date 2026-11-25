@@ -12,6 +12,14 @@ export declare class SideAttributeEvaluator {
   static resolveIsHuman(card: any, options?: { side?: string }): boolean | null;
   static matchesIsGeneric(card: any, requiredIsGeneric: boolean | null | undefined, context?: any): boolean;
   static matchesIsHuman(card: any, requiredIsHuman: boolean | null | undefined, context?: any): boolean;
+  static resolveIsCloud(card: any, options?: { side?: string }): boolean | null;
+  static matchesIsCloud(card: any, requiredIsCloud: boolean | null | undefined, context?: any): boolean;
+  static resolveIsMeek(card: any, options?: { side?: string }): boolean | null;
+  static matchesIsMeek(card: any, requiredIsMeek: boolean | null | undefined, context?: any): boolean;
+  static resolveIsStar(card: any, options?: { side?: string }): boolean | null;
+  static matchesIsStar(card: any, requiredIsStar: boolean | null | undefined, context?: any): boolean;
+  static resolveIsGospel(card: any, options?: { side?: string }): boolean | null;
+  static matchesIsGospel(card: any, requiredIsGospel: boolean | null | undefined, context?: any): boolean;
   static resolveClasses(card: any, options?: { side?: string }): string[];
   static matchesClasses(card: any, requiredClasses: string[] | undefined | null, context?: any): boolean;
 }

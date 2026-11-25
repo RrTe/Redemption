@@ -100,8 +100,12 @@ describe("Typed Gender Attribute Integration (ORDIR 7.0.0 & AST)", () => {
       for (const [cardId, entry] of Object.entries(rawLogicMap)) {
         for (const side of Object.values(entry.sides || {})) {
           for (const ab of side.abilities || []) {
-            if (ab.trigger_filter && findIsolatedGenderIdentifiers(ab.trigger_filter).length > 0) {
-              badSelectors.push({ cardId, where: "trigger_filter" });
+            expect("trigger_filter" in ab).toBe(false);
+            if (ab.trigger_subject && findIsolatedGenderIdentifiers(ab.trigger_subject).length > 0) {
+              badSelectors.push({ cardId, where: "trigger_subject" });
+            }
+            if (ab.trigger_source && findIsolatedGenderIdentifiers(ab.trigger_source).length > 0) {
+              badSelectors.push({ cardId, where: "trigger_source" });
             }
             for (const c of ab.conditions || []) {
               if (c.selector && findIsolatedGenderIdentifiers(c.selector).length > 0) {
@@ -402,6 +406,7 @@ describe("Typed Gender Attribute Integration (ORDIR 7.0.0 & AST)", () => {
 
     test("Lost Soul Jeremiah 7:18 (Female Only) blocks male/genderless Heroes while allowing female, both, and Son of God", () => {
       const jeremiahFilter = rawLogicMap["1163275753"].sides.top.abilities[0].effects[0].protection_filter;
+      expect(jeremiahFilter.card_sources[0].exclude?.any_of).toHaveLength(2);
       const jeremiahLS = {
         id: "ls_jer",
         Name: "Lost Soul Jeremiah 7:18 (Female Only) (H)",

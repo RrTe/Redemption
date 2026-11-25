@@ -12,7 +12,7 @@ class ActionTelegraphService {
    * @param {object} params Telegraph configuration parameters.
    * @param {string} params.sourceCardId ID of the initiating card.
    * @param {string|string[]} [params.targetCardIds=[]] Target card IDs or single ID.
-   * @param {string} [params.action] AST action name (e.g. discard, modify_numbers, band).
+   * @param {string} [params.action] AST action name (e.g. discard, modify_stats, band).
    * @param {string} [params.targetPileId] Optional explicit pile identifier.
    * @param {number} [params.durationMs=500] Duration before arrow auto-fades.
    * @param {boolean} [params.persistent=false] Whether arrows persist until cleared.

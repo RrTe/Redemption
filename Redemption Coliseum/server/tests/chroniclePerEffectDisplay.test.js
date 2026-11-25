@@ -207,7 +207,7 @@ describe("Per-Effect Chronicle Items, Labels & History Summary", () => {
         effects: [
           {
             step: 1,
-            action: AST_ACTIONS.MODIFY_NUMBERS,
+            action: AST_ACTIONS.MODIFY_STATS,
             strength_mod: 1,
             toughness_mod: 1,
             target: {
@@ -255,7 +255,7 @@ describe("Per-Effect Chronicle Items, Labels & History Summary", () => {
     });
 
     expect(state.effectChronicle.items.length).toBe(2);
-    expect(state.effectChronicle.items[0].effectLabel).toBe("Modify hero (+1/+1)");
+    expect(state.effectChronicle.items[0].effectLabel).toBe("Increase hero (+1/+1)");
     expect(state.effectChronicle.items[1].effectLabel).toBe("Underdeck hero from territory");
 
     // Decline step 0 -> step 1 sibling is skipped as PASSED; undo restores BOTH pending items!
@@ -388,7 +388,7 @@ describe("Per-Effect Chronicle Items, Labels & History Summary", () => {
   test("4. EffectLabelFormatter produces clean labels without snake_case across all AST actions", () => {
     expect(
       EffectLabelFormatter.formatSingleEffectLabel({
-        action: AST_ACTIONS.INCREASE,
+        action: AST_ACTIONS.MODIFY_STATS,
         strength_mod: 2,
         toughness_mod: 2,
         target: { target_type: "hero" },
@@ -397,16 +397,16 @@ describe("Per-Effect Chronicle Items, Labels & History Summary", () => {
 
     expect(
       EffectLabelFormatter.formatSingleEffectLabel({
-        action: AST_ACTIONS.DECREASE,
-        strength_mod: 3,
-        toughness_mod: 1,
+        action: AST_ACTIONS.MODIFY_STATS,
+        strength_mod: -3,
+        toughness_mod: -1,
         target: { target_type: "evil_character" },
       })
     ).toBe("Decrease evil character (-3/-1)");
 
     expect(
       EffectLabelFormatter.formatSingleEffectLabel({
-        action: AST_ACTIONS.MODIFY_NUMBERS,
+        action: AST_ACTIONS.MODIFY_STATS,
         strength_mod: -1,
         toughness_mod: 2,
         target: { selection_mode: AST_SELECTION_MODES.AUTOMATIC_SELF },

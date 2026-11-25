@@ -23,6 +23,8 @@ export interface CardData {
   IsEnhancement: boolean;
   IsGospel: boolean;
   IsStarCard?: boolean;
+  IsCloud?: boolean;
+  IsMeek?: boolean;
   Testament: string;
   CardSides?: {
     shared?: any;

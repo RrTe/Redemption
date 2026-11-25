@@ -1,11 +1,15 @@
 /**
  * @module shared/rules/ProtectionService
  * Evaluator for immune and protect rules in accordance with official
- * Redemption REG v11.0.0 guidelines (lines 1723ff and Harm line 3889ff).
+ * Redemption REG v11.1.0 guidelines (lines 1723ff and Harm line 3889ff).
  */
-const { matchesCardType, matchesTargetType } = require("../cardHierarchy");
+const { matchesTargetType } = require("../cardHierarchy");
+const { AST_ACTIONS, AST_DIRECTIONAL_FILTER_ACTIONS } = require("../astConstants");
 const { GenderEvaluator } = require("./GenderEvaluator");
 const { SideAttributeEvaluator, CANONICAL_CLASSES } = require("./SideAttributeEvaluator");
+const { SelectorComposer } = require("./SelectorComposer");
+const { StateFilterEvaluator } = require("./StateFilterEvaluator");
+const { RelativeFilterEvaluator } = require("./RelativeFilterEvaluator");
 
 class ProtectionService {
   /**
@@ -45,13 +49,36 @@ class ProtectionService {
    * Evaluates whether a sourceCard matches a TargetSelector filter specified in card_sources.
    *
    * @param {object} sourceCard Source card attempting the action.
-   * @param {object} sourceDef TargetSelector definition from card_sources.
-   * @param {object} [targetCard] Card being protected (for controller comparison).
-   * @returns {boolean} True if sourceCard qualifies as a blocked source.
+   * @param {object} [sourceDef={}] TargetSelector definition from card_sources.
+   * @param {object|null} [targetCard=null] Card being protected (for controller/relative comparison).
+   * @param {object} [context={}] Runtime context (`room`, `actorCard`, `strengthDelta`, etc.).
+   * @returns {boolean} True if sourceCard qualifies as a matching source.
    */
-  static matchesSource(sourceCard, sourceDef = {}, targetCard = null) {
+  static matchesSource(sourceCard, sourceDef = {}, targetCard = null, context = {}) {
     if (!sourceCard || !sourceDef) return false;
 
+    if (sourceDef.exclude_self === true && targetCard && sourceCard.id === targetCard.id) {
+      return false;
+    }
+
+    if (sourceDef.exclude && typeof sourceDef.exclude === "object") {
+      if (this.matchesSource(sourceCard, sourceDef.exclude, targetCard, context)) {
+        return false;
+      }
+    }
+
+    if (Array.isArray(sourceDef.any_of) && sourceDef.any_of.length > 0) {
+      return sourceDef.any_of.some((branch) => {
+        const mergedBranch = SelectorComposer.mergeBranch(sourceDef, branch);
+        return this.matchesSource(sourceCard, mergedBranch, targetCard, context);
+      });
+    }
+
+    return this._matchesSingleSource(sourceCard, sourceDef, targetCard, context);
+  }
+
+  /** @private */
+  static _matchesSingleSource(sourceCard, sourceDef = {}, targetCard = null, context = {}) {
     // Fast-Path: target_card_ids check
     if (Array.isArray(sourceDef.target_card_ids) && sourceDef.target_card_ids.length > 0) {
       if (!this._matchesTargetCardIds(sourceCard, sourceDef.target_card_ids)) {
@@ -59,7 +86,7 @@ class ProtectionService {
       }
     }
 
-    if (!this._matchesCoreSourceAttributes(sourceCard, sourceDef, targetCard)) {
+    if (!this._matchesCoreSourceAttributes(sourceCard, sourceDef, targetCard, context)) {
       return false;
     }
 
@@ -75,22 +102,28 @@ class ProtectionService {
       let srcIdent = String(sourceCard.Identifier || "").toLowerCase();
       let srcOrdirList = Array.isArray(sourceCard.ORDIR) ? sourceCard.ORDIR : [];
       let srcClass = String(sourceCard.Class || "").toLowerCase();
-      if ((!srcOrdirList.length || !srcIdent) && sourceCard.templateId) {
-        const dbCard = SideAttributeEvaluator.lookupDbCard(sourceCard);
-        if (dbCard) {
-          if (!srcOrdirList.length && Array.isArray(dbCard.ORDIR)) srcOrdirList = dbCard.ORDIR;
-          if (!srcIdent && dbCard.Identifier) srcIdent = String(dbCard.Identifier).toLowerCase();
-          if (!srcClass && dbCard.Class) srcClass = String(dbCard.Class).toLowerCase();
-        }
+      let srcSpecialAbility = String(sourceCard.SpecialAbility || "").toLowerCase();
+      const dbCard = SideAttributeEvaluator.lookupDbCard(sourceCard);
+      if (dbCard) {
+        if (!srcOrdirList.length && Array.isArray(dbCard.ORDIR)) srcOrdirList = dbCard.ORDIR;
+        if (!srcIdent && dbCard.Identifier) srcIdent = String(dbCard.Identifier).toLowerCase();
+        if (!srcClass && dbCard.Class) srcClass = String(dbCard.Class).toLowerCase();
+        if (!srcSpecialAbility && dbCard.SpecialAbility) srcSpecialAbility = String(dbCard.SpecialAbility).toLowerCase();
       }
       const srcOrdir = srcOrdirList.join(" ").toLowerCase();
       const hasMatch = sourceDef.identifiers.some((id) => {
         const needle = String(id).trim().toLowerCase();
         if (!needle) return false;
 
-        // Official ORDIR 7.0.0 Rule: Character humanity via IsHuman / descriptor fallback
         if (needle === "human" || needle === "humans") {
           return SideAttributeEvaluator.resolveIsHuman(sourceCard, { targetDef: sourceDef }) === true;
+        }
+        if (needle === "token") {
+          return Boolean(sourceCard.isToken || sourceCard.IsToken || /token/i.test(String(sourceCard.inGameType || sourceCard.Type || "")));
+        }
+        if (needle.startsWith("ability text:")) {
+          const term = needle.slice("ability text:".length).trim();
+          return Boolean(term && srcSpecialAbility.includes(term));
         }
         const warriorClass = CANONICAL_CLASSES.find((c) => /^warrior$/i.test(c)) || "Warrior";
         const weaponClass = CANONICAL_CLASSES.find((c) => /^weapon$/i.test(c)) || "Weapon";
@@ -141,7 +174,7 @@ class ProtectionService {
    *
    * @private
    */
-  static _matchesCoreSourceAttributes(sourceCard, sourceDef, targetCard = null) {
+  static _matchesCoreSourceAttributes(sourceCard, sourceDef, targetCard = null, context = {}) {
     // 1. Controller check: opponent or controller
     const targetController = targetCard?.controllerId || targetCard?.ownerId;
     const sourceController = sourceCard?.controllerId || sourceCard?.ownerId;
@@ -151,6 +184,13 @@ class ProtectionService {
       }
     } else if (sourceDef.zone_owner === "controller") {
       if (!targetController || !sourceController || targetController !== sourceController) {
+        return false;
+      }
+    }
+
+    // 1b. used_by filter check
+    if (sourceDef.used_by !== undefined && sourceDef.used_by !== null) {
+      if (!this._matchesUsedBy(sourceCard, sourceDef.used_by, targetCard, context)) {
         return false;
       }
     }
@@ -238,14 +278,66 @@ class ProtectionService {
       }
     }
 
+    // 7e. Group booleans (IsCloud, IsMeek, IsStarCard, IsGospel)
+    if (typeof sourceDef.is_cloud === "boolean" && !SideAttributeEvaluator.matchesIsCloud(sourceCard, sourceDef.is_cloud, { targetDef: sourceDef })) {
+      return false;
+    }
+    if (typeof sourceDef.is_meek === "boolean" && !SideAttributeEvaluator.matchesIsMeek(sourceCard, sourceDef.is_meek, { targetDef: sourceDef })) {
+      return false;
+    }
+    if (typeof sourceDef.is_star === "boolean" && !SideAttributeEvaluator.matchesIsStar(sourceCard, sourceDef.is_star, { targetDef: sourceDef })) {
+      return false;
+    }
+    if (typeof sourceDef.is_gospel === "boolean" && !SideAttributeEvaluator.matchesIsGospel(sourceCard, sourceDef.is_gospel, { targetDef: sourceDef })) {
+      return false;
+    }
+
     // 8. Stat filters check on source card
     if (Array.isArray(sourceDef.stat_filters) && sourceDef.stat_filters.length > 0) {
       const { StatFilterEvaluator } = require("./StatFilterEvaluator");
-      if (!StatFilterEvaluator.matchesStatFilters(sourceCard, sourceDef.stat_filters, { targetCard })) {
+      if (!StatFilterEvaluator.matchesStatFilters(sourceCard, sourceDef.stat_filters, { ...context, targetCard })) {
         return false;
       }
     }
 
+    // 9. State filters check (e.g. "lone", "blocking", "captured")
+    if (Array.isArray(sourceDef.state_filters) && sourceDef.state_filters.length > 0) {
+      if (!StateFilterEvaluator.matchesStateFilters(sourceCard, sourceDef.state_filters, { ...context, targetCard, sourceCard: targetCard })) {
+        return false;
+      }
+    }
+
+    // 10. Relative filters check
+    if (Array.isArray(sourceDef.relative_filters) && sourceDef.relative_filters.length > 0) {
+      if (!RelativeFilterEvaluator.matchesRelativeFilters(sourceCard, sourceDef.relative_filters, { ...context, sourceCard: targetCard, targetCard })) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /** @private */
+  static _matchesUsedBy(sourceCard, usedBy, targetCard, context) {
+    if (!usedBy) return true;
+    const targetController = targetCard?.controllerId || targetCard?.ownerId;
+    const sourceController = sourceCard?.controllerId || sourceCard?.ownerId;
+    if (usedBy === "self") {
+      return Boolean(targetCard && sourceCard.attachedTo && sourceCard.attachedTo === targetCard.id);
+    }
+    if (usedBy === "controller") {
+      return Boolean(targetController && sourceController && targetController === sourceController);
+    }
+    if (usedBy === "opponent") {
+      return Boolean(targetController && sourceController && targetController !== sourceController);
+    }
+    if (typeof usedBy === "object") {
+      const holder =
+        (sourceCard.attachedTo && context?.room?.cardLookup?.get?.(sourceCard.attachedTo)) ||
+        context?.actorCard ||
+        null;
+      return Boolean(holder && this.matchesSource(holder, usedBy, targetCard, context));
+    }
     return true;
   }
 
@@ -361,14 +453,37 @@ class ProtectionService {
   }
 
   /**
+   * Evaluates whether an action list covers an incoming actionType, accounting
+   * for directional stat modification predicates ("increase" / "decrease").
+   *
+   * @private
+   */
+  static _matchesActionList(actionList, actionType, harm, context = {}) {
+    if (!Array.isArray(actionList) || actionList.length === 0 || !actionType) return false;
+    if (actionList.includes(actionType)) return true;
+    if (actionList.includes("harm") && harm) return true;
+    if (actionType === AST_ACTIONS.MODIFY_STATS) {
+      const sDelta = typeof context.strengthDelta === "number" ? context.strengthDelta : 0;
+      const tDelta = typeof context.toughnessDelta === "number" ? context.toughnessDelta : 0;
+      const dir = context.statDirection ? String(context.statDirection).toLowerCase() : "";
+      const isDecrease = dir === AST_DIRECTIONAL_FILTER_ACTIONS.DECREASE || sDelta < 0 || tDelta < 0;
+      const isIncrease = dir === AST_DIRECTIONAL_FILTER_ACTIONS.INCREASE || sDelta > 0 || tDelta > 0;
+      if (isDecrease && actionList.includes(AST_DIRECTIONAL_FILTER_ACTIONS.DECREASE)) return true;
+      if (isIncrease && actionList.includes(AST_DIRECTIONAL_FILTER_ACTIONS.INCREASE)) return true;
+    }
+    return false;
+  }
+
+  /**
    * Checks whether targetCard is immune to or protected from sourceCard and/or an action type.
    *
    * @param {object} targetCard Card being targeted or affected.
    * @param {object} [sourceCard] Source card executing the ability or attack.
-   * @param {string} [actionType=""] Action type being executed (e.g. "discard", "band", "modify_numbers").
+   * @param {string} [actionType=""] Action type being executed (e.g. "discard", "band", "modify_stats").
+   * @param {object} [context={}] Optional runtime context (`room`, `strengthDelta`, `toughnessDelta`, `statDirection`).
    * @returns {boolean} True if targetCard is protected or immune.
    */
-  static isProtected(targetCard, sourceCard, actionType = "") {
+  static isProtected(targetCard, sourceCard, actionType = "", context = {}) {
     if (!targetCard) return false;
 
     const isImmune = Boolean(targetCard.isImmune);
@@ -384,13 +499,13 @@ class ProtectionService {
     }
 
     const prot = targetCard._protection || {};
+    const harm = this.isHarmful(targetCard, sourceCard);
 
     // 1. Exception actions override protection (e.g. "except discard")
-    if (actionType && Array.isArray(prot.except_actions) && prot.except_actions.includes(actionType)) {
+    if (this._matchesActionList(prot.except_actions, actionType, harm, context)) {
       return false;
     }
 
-    const harm = this.isHarmful(targetCard, sourceCard);
     const targetController = targetCard.controllerId || targetCard.ownerId;
     const sourceController = sourceCard.controllerId || sourceCard.ownerId;
     const isOpponent = Boolean(targetController && sourceController && targetController !== sourceController);
@@ -408,8 +523,7 @@ class ProtectionService {
     // 4. Card sources matching (structured TargetSelector[] filter)
     if (Array.isArray(prot.card_sources) && prot.card_sources.length > 0) {
       if (Array.isArray(prot.actions) && prot.actions.length > 0 && actionType) {
-        const actionCovered = prot.actions.includes(actionType) || (prot.actions.includes("harm") && harm);
-        if (!actionCovered) {
+        if (!this._matchesActionList(prot.actions, actionType, harm, context)) {
           return false;
         }
       }
@@ -429,19 +543,17 @@ class ProtectionService {
         }
       }
 
-      const matchesAnySource = blockingSources.some((cs) => this.matchesSource(sourceCard, cs, targetCard));
+      const matchesAnySource = blockingSources.some((cs) => this.matchesSource(sourceCard, cs, targetCard, context));
       if (!matchesAnySource) {
         return false;
       }
       return true;
     }
 
-    // 5. Action-specific protection (e.g. protect from discard, capture, negate, harm)
+    // 5. Action-specific protection (e.g. protect from discard, capture, negate, harm, decrease)
     const hasSpecificActions = Array.isArray(prot.actions) && prot.actions.length > 0;
     if (hasSpecificActions) {
-      const actionMatches = Boolean(
-        actionType && (prot.actions.includes(actionType) || (prot.actions.includes("harm") && harm))
-      );
+      const actionMatches = this._matchesActionList(prot.actions, actionType, harm, context);
       if (actionMatches) {
         if (prot.opponent || prot.from_harm || prot.harm) {
           if (isOpponent || harm) return true;
@@ -529,7 +641,7 @@ class ProtectionService {
       });
 
       if (matchesZone) {
-        if (this.isProtected(card, sourceCard, actionType)) {
+        if (this.isProtected(card, sourceCard, actionType, { room })) {
           return true;
         }
       }

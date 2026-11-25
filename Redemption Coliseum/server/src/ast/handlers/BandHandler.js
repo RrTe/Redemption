@@ -283,13 +283,21 @@ class BandHandler {
           if (isHeroLeader && !cardAlign.includes("good") && !BattleCharacterClassifier.isHero(card)) continue;
           if (isEvilLeader && !cardAlign.includes("evil") && !BattleCharacterClassifier.isEvilCharacter(card)) continue;
 
-          // Target filter matching (e.g. identifiers, brigades)
-          if (!TargetSelectionService.matchesFilter(card, targetDef, { sourceCard: leaderCard, actionType: AST_ACTIONS.BAND })) {
+          // Target filter matching (e.g. identifiers, brigades, relative_filters, any_of)
+          const filterCtx = {
+            room,
+            actingPlayer,
+            sourceCard: leaderCard,
+            actionType: AST_ACTIONS.BAND,
+            candidateZone: zoneList === p[ZONES.HAND] ? ZONES.HAND : ZONES.TERRITORY,
+            candidateOwnerId: p.sessionId,
+          };
+          if (!TargetSelectionService.matchesFilter(card, targetDef, filterCtx)) {
             continue;
           }
 
           // Protection check (cannot band card protected from band or opponent)
-          if (ProtectionService.isProtected(card, leaderCard, AST_ACTIONS.BAND)) {
+          if (ProtectionService.isProtected(card, leaderCard, AST_ACTIONS.BAND, { room })) {
             continue;
           }
 
@@ -299,7 +307,12 @@ class BandHandler {
     }
 
     const isManual = targetDef.selection_mode === AST_SELECTION_MODES.MANUAL_CONTROLLER;
-    const { isAll, hasCustomMin, hasCustomMax, count } = parseTargetCount(targetDef);
+    const { isAll, hasCustomMin, hasCustomMax, count } = parseTargetCount(targetDef, undefined, {
+      room,
+      player: actingPlayer,
+      sourceCard: leaderCard,
+      eligibleCount: eligibleCardIds.length,
+    });
 
     const minTargets = isAll
       ? (isManual

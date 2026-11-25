@@ -22,7 +22,7 @@ class DrawHandler {
    * @returns {{ success: boolean, snapshot: object, logEntry?: string, error?: string }} Execution result with mutation snapshot.
    */
   static execute(context) {
-    const { room, player, effect, item } = context;
+    const { room, player, effect, item, previousSnapshot = null, options = {} } = context;
 
     if (!room || !player) {
       return {
@@ -32,8 +32,15 @@ class DrawHandler {
       };
     }
 
-    // Extract finite draw count from AST target definition (defaults to 1)
-    const count = parseTargetCount(effect?.target).finiteCount;
+    const sourceCard = item?.cardId ? room.cardLookup?.get(item.cardId) : null;
+    // Extract finite draw count from AST target definition (supports count.dynamic)
+    const count = parseTargetCount(effect?.target, effect?.count, {
+      room,
+      player,
+      sourceCard,
+      previousSnapshot,
+      options,
+    }).finiteCount;
 
     // Map destination zone
     const destination = effect?.destination === "hand" ? ZONES.HAND : ZONES.HAND;

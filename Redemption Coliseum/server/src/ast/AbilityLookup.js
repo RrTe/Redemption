@@ -247,8 +247,10 @@ class AbilityLookup {
     if (!ability) return false;
     if (typeof ability.is_star === "boolean") return ability.is_star;
     if (typeof ability.isStar === "boolean") return ability.isStar;
-    const event = (ability.trigger_event || "").toLowerCase();
-    if (event === "star_phase") return true;
+    const events = Array.isArray(ability.trigger_event)
+      ? ability.trigger_event
+      : (ability.trigger_event ? [ability.trigger_event] : []);
+    if (events.some((e) => String(e || "").toLowerCase() === "star_phase")) return true;
     const id = (ability.ability_id || "").toLowerCase();
     if (/^star(?:_|$)/.test(id)) return true;
     return false;
@@ -334,6 +336,42 @@ class AbilityLookup {
     if (typeof astVal === "boolean") return astVal;
     const fallbackCard = ctx?.cardInput || { templateId, inGameType: options.inGameType, inGameAlignment: options.inGameAlignment };
     return SideAttributeEvaluator.resolveIsHuman(fallbackCard, { side: options.activeSide });
+  }
+
+  /** Resolves `IsCloud` (`boolean | null`) for the active card side. */
+  static getSideIsCloud(templateId, options = {}) {
+    const ctx = this._resolveAstSideContext(templateId, options);
+    const astVal = ctx?.sideNode?.is_cloud ?? ctx?.sharedNode?.is_cloud;
+    if (typeof astVal === "boolean") return astVal;
+    const fallbackCard = ctx?.cardInput || { templateId, inGameType: options.inGameType, inGameAlignment: options.inGameAlignment };
+    return SideAttributeEvaluator.resolveIsCloud(fallbackCard, { side: options.activeSide });
+  }
+
+  /** Resolves `IsMeek` (`boolean | null`) for the active card side. */
+  static getSideIsMeek(templateId, options = {}) {
+    const ctx = this._resolveAstSideContext(templateId, options);
+    const astVal = ctx?.sideNode?.is_meek ?? ctx?.sharedNode?.is_meek;
+    if (typeof astVal === "boolean") return astVal;
+    const fallbackCard = ctx?.cardInput || { templateId, inGameType: options.inGameType, inGameAlignment: options.inGameAlignment };
+    return SideAttributeEvaluator.resolveIsMeek(fallbackCard, { side: options.activeSide });
+  }
+
+  /** Resolves `IsStarCard` (`boolean | null`) for the active card side. */
+  static getSideIsStar(templateId, options = {}) {
+    const ctx = this._resolveAstSideContext(templateId, options);
+    const astVal = ctx?.sideNode?.is_star ?? ctx?.sharedNode?.is_star;
+    if (typeof astVal === "boolean") return astVal;
+    const fallbackCard = ctx?.cardInput || { templateId, inGameType: options.inGameType, inGameAlignment: options.inGameAlignment };
+    return SideAttributeEvaluator.resolveIsStar(fallbackCard, { side: options.activeSide });
+  }
+
+  /** Resolves `IsGospel` (`boolean | null`) for the active card side. */
+  static getSideIsGospel(templateId, options = {}) {
+    const ctx = this._resolveAstSideContext(templateId, options);
+    const astVal = ctx?.sideNode?.is_gospel ?? ctx?.sharedNode?.is_gospel;
+    if (typeof astVal === "boolean") return astVal;
+    const fallbackCard = ctx?.cardInput || { templateId, inGameType: options.inGameType, inGameAlignment: options.inGameAlignment };
+    return SideAttributeEvaluator.resolveIsGospel(fallbackCard, { side: options.activeSide });
   }
 
   /** Resolves canonical `classes` array (`["Warrior"|"Weapon"|"Territory"]`) for the active card side. */

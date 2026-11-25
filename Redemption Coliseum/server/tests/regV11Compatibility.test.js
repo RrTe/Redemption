@@ -98,13 +98,20 @@ describe("REG v11.1.0 & ORDIR 7.1.0 Compatibility (Durchgang 1)", () => {
       expect(AST_ACTIONS.WITHDRAW).toBe("withdraw");
       expect(AST_ACTIONS.CHOOSE_OPPONENT).toBe("choose opponent");
       expect(AST_ACTIONS.PRESENT).toBe("present");
+      expect(AST_ACTIONS.DEACTIVATE).toBe("deactivate");
+      expect(AST_ACTIONS.RETURN_TO_HAND).toBeUndefined();
+      expect(AST_ACTIONS.REMOVE_FROM_THE_GAME).toBeUndefined();
+      expect(AST_ACTIONS.INCREASE).toBeUndefined();
+      expect(AST_ACTIONS.DECREASE).toBeUndefined();
+      expect(AST_ACTIONS.MODIFY_NUMBERS).toBeUndefined();
 
-      // New effect handlers must NOT be enabled in Durchgang 1
+      // New effect handlers must NOT be enabled yet
       expect(AstEffectRunner.isActionSupported(AST_ACTIONS.PARALYZE)).toBe(false);
       expect(AstEffectRunner.isActionSupported(AST_ACTIONS.RELEASE)).toBe(false);
       expect(AstEffectRunner.isActionSupported(AST_ACTIONS.WITHDRAW)).toBe(false);
       expect(AstEffectRunner.isActionSupported(AST_ACTIONS.CHOOSE_OPPONENT)).toBe(false);
       expect(AstEffectRunner.isActionSupported(AST_ACTIONS.PRESENT)).toBe(false);
+      expect(AstEffectRunner.isActionSupported(AST_ACTIONS.DEACTIVATE)).toBe(false);
     });
   });
 
@@ -603,7 +610,9 @@ describe("REG v11.1.0 & ORDIR 7.1.0 Compatibility (Durchgang 1)", () => {
 
       const activeRamses = room.cardLookup.get(ramses.id);
       expect(activeRamses.isProtected).toBe(true);
-      expect(activeRamses._protection?.card_sources?.[0]?.identifiers).toEqual(["lone"]);
+      expect(activeRamses._protection?.card_sources?.[0]?.state_filters).toEqual(["lone"]);
+      const { ProtectionService } = require("../../shared/rules/ProtectionService");
+      expect(ProtectionService.isProtected(activeRamses, room.cardLookup.get("atk_hero_2"), AST_ACTIONS.DISCARD, { room })).toBe(true);
       // Protect auto-applied silently; only look_at_hand (immediate, optional) emits a single optional prompt
       expect(state.effectChronicle.items.map((i) => i.abilityId)).toEqual(["look_at_hand"]);
       const optionalPromptCalls = client2.send.mock.calls.filter(

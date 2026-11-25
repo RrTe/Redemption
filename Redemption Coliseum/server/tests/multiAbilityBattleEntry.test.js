@@ -187,6 +187,7 @@ describe("Multi-Ability Battle Entry Resolution & Tabletop Fallbacks", () => {
       Testament: "OT",
       Class: "Warrior",
       Identifier: "Royal, Priest",
+      ORDIR: ["Royalty", "Priest"],
       IsCharacter: true,
     });
     const redWarrior = createCard("h_red_war", "102", "Red Warrior Hero", ZONES.TERRITORY, "p1", {
@@ -894,6 +895,7 @@ describe("Multi-Ability Battle Entry Resolution & Tabletop Fallbacks", () => {
       Testament: "OT",
       Gender: "Female",
       Identifier: "Royal",
+      ORDIR: ["Royalty"],
     });
     const fallenKing = createCard("fk_1", "848128688", "The Fallen King", ZONES.HAND, "p2", {
       Type: "Evil Character",
