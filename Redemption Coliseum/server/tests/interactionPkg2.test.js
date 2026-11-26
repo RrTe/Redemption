@@ -296,6 +296,63 @@ describe("Paket 2: Pre-Validation, No Valid Targets Toast, Full Pile Display & O
         type: "warning",
       });
     });
+
+    test("Per-effect chronicle item (step 2 bounce on -265232813) includes effectLabel in gameToast and ChatLog", () => {
+      const counsel = createCard({
+        id: "counsel_step2",
+        templateId: "-265232813",
+        Name: "Counsel for the King [K]",
+        Type: "GE",
+        Alignment: "Good",
+        Brigade: "Green/Purple",
+        controllerId: "p1",
+        originalOwnerId: "p1",
+        zone: ZONES.BATTLEFIELD,
+      });
+      room.cardLookup.set(counsel.id, counsel);
+      state.battlefield.push(counsel);
+
+      // Step 2 (effectStepIndex: 1 = Bounce an evil character) with explicit item.effectLabel
+      const itemWithLabel = {
+        id: "item_counsel_step2",
+        cardId: counsel.id,
+        controllerId: "p1",
+        title: counsel.Name,
+        actionType: ActionType.PLAY_GOOD_ENHANCEMENT,
+        abilityId: "counsel_for_the_king_ability",
+        effectStepIndex: 1,
+        effectLabel: "Bounce an evil character",
+      };
+
+      const resWithLabel = resolver.resolve(itemWithLabel);
+      expect(resWithLabel.handled).toBe(true);
+      expect(resWithLabel.noValidTargets).toBe(true);
+      expect(resWithLabel.logEntries).toContain(
+        "Player 1's {{-265232813|Counsel for the King [K]}} (Bounce an evil character) has no valid targets."
+      );
+      expect(clientP1.send).toHaveBeenCalledWith("gameToast", {
+        message: "Counsel for the King [K] (Bounce an evil character): No valid targets.",
+        type: "warning",
+      });
+
+      // Fallback derivation via EffectLabelFormatter when effectStepIndex >= 0 without item.effectLabel
+      clientP1.send.mockClear();
+      const itemWithoutLabel = {
+        id: "item_counsel_step2_nolabel",
+        cardId: counsel.id,
+        controllerId: "p1",
+        title: counsel.Name,
+        actionType: ActionType.PLAY_GOOD_ENHANCEMENT,
+        abilityId: "counsel_for_the_king_ability",
+        effectStepIndex: 1,
+      };
+      const resFallback = resolver.resolve(itemWithoutLabel);
+      expect(resFallback.noValidTargets).toBe(true);
+      expect(clientP1.send).toHaveBeenCalledWith("gameToast", {
+        message: "Counsel for the King [K] (Return evil character to hand): No valid targets.",
+        type: "warning",
+      });
+    });
   });
 
   describe("3. Full Pile Display (searchedPiles alongside eligibleCardIds)", () => {

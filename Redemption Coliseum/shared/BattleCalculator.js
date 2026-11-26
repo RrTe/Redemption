@@ -126,14 +126,24 @@ class BattleCalculator {
    *
    * @param {object} attackSide Side attacking.
    * @param {object} defendSide Side defending.
+   * @param {Array<object>|null} [battlefield=null] Optional battlefield array for Enhancement inheritance.
    * @returns {number} Effective offensive strength.
    */
-  static getEffectiveStrength(attackSide, defendSide) {
+  static getEffectiveStrength(attackSide, defendSide, battlefield = null) {
     let effective = 0;
+    const bf = Array.isArray(battlefield)
+      ? battlefield
+      : [
+          ...attackSide.characters,
+          ...attackSide.enhancements,
+          ...defendSide.characters,
+          ...defendSide.enhancements,
+        ];
+    const protContext = bf.length > 0 ? { room: { state: { battlefield: bf } } } : {};
     const allCards = [...attackSide.characters, ...attackSide.enhancements];
     for (const card of allCards) {
       const isBlocked = defendSide.characters.length > 0 &&
-        defendSide.characters.every((def) => ProtectionService.isProtected(def, card));
+        defendSide.characters.every((def) => ProtectionService.isProtected(def, card, "", protContext));
       if (!isBlocked) {
         effective += this.getCardStats(card).strength;
       }
@@ -213,8 +223,8 @@ class BattleCalculator {
 
     // 4. Opposed battle: Both sides have characters! Evaluate numbers comparison
     if (rescuer.characters.length > 0 && blocker.characters.length > 0) {
-      const rescuerOffensiveStrength = this.getEffectiveStrength(rescuer, blocker);
-      const blockerOffensiveStrength = this.getEffectiveStrength(blocker, rescuer);
+      const rescuerOffensiveStrength = this.getEffectiveStrength(rescuer, blocker, battlefield);
+      const blockerOffensiveStrength = this.getEffectiveStrength(blocker, rescuer, battlefield);
 
       const rescuerDefeatsBlocker = rescuerOffensiveStrength >= blocker.toughness;
       const blockerDefeatsRescuer = blockerOffensiveStrength >= rescuer.toughness;

@@ -52,7 +52,16 @@ class DiscardHandler {
     });
 
     // Resolve eligible target cards based on dynamic filter criteria
-    const targets = this._resolveTargets(room, player, targetDef, options, initialCountInfo, sourceCard, previousSnapshot);
+    const targets = this._resolveTargets(
+      room,
+      player,
+      targetDef,
+      options,
+      initialCountInfo,
+      sourceCard,
+      previousSnapshot,
+      options.actorCard || context.actorCard
+    );
 
     if (targets.length === 0) {
       logger.info("[DiscardHandler] No eligible targets found for discard.");
@@ -177,7 +186,7 @@ class DiscardHandler {
    * @returns {Array<{ card: object, owner: object }>} Selected targets with owners.
    * @private
    */
-  static _resolveTargets(room, actingPlayer, targetDef, options, countInfo, sourceCard = null, previousSnapshot = null) {
+  static _resolveTargets(room, actingPlayer, targetDef, options, countInfo, sourceCard = null, previousSnapshot = null, actorCard = null) {
     const count = typeof countInfo === "number" ? countInfo : countInfo.count;
     const hasDynamic = Boolean(typeof countInfo === "object" && countInfo?.hasDynamic);
 
@@ -234,6 +243,7 @@ class DiscardHandler {
             room,
             actingPlayer,
             sourceCard,
+            actorCard,
             actionType: AST_ACTIONS.DISCARD,
             candidateZone: zName,
             candidateOwnerId: p.sessionId,

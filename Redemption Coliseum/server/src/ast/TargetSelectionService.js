@@ -111,7 +111,7 @@ class TargetSelectionService {
         const pileLabel = isSelf ? `My ${pileLabelSuffix}` : `${p.name}'s ${pileLabelSuffix}`;
 
         // Check if the pile is protected from sourceCard
-        if (context.sourceCard && ProtectionService.isZoneProtected(room, p, pileZone, context.sourceCard, context.actionType || targetDef.action)) {
+        if (context.sourceCard && ProtectionService.isZoneProtected(room, p, pileZone, context.sourceCard, context.actionType || targetDef.action, context)) {
           continue;
         }
 
@@ -188,7 +188,7 @@ class TargetSelectionService {
           if (cardsInPile.length === 0) continue;
           if (
             context.sourceCard &&
-            ProtectionService.isZoneProtected(room, p, pileZone, context.sourceCard, action)
+            ProtectionService.isZoneProtected(room, p, pileZone, context.sourceCard, action, context)
           ) {
             continue;
           }
@@ -760,6 +760,7 @@ class TargetSelectionService {
       if (!context.skipProtection && context.sourceCard) {
         if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action, {
           room: context.room,
+          actorCard: context.actorCard,
           strengthDelta: context.strengthDelta,
           toughnessDelta: context.toughnessDelta,
           statDirection: context.statDirection,
@@ -787,6 +788,7 @@ class TargetSelectionService {
         if (!context.skipProtection && context.sourceCard) {
           if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action, {
             room: context.room,
+            actorCard: context.actorCard,
             strengthDelta: context.strengthDelta,
             toughnessDelta: context.toughnessDelta,
             statDirection: context.statDirection,
@@ -1015,6 +1017,7 @@ class TargetSelectionService {
     if (!context.skipProtection && context.sourceCard) {
       if (ProtectionService.isProtected(card, context.sourceCard, context.actionType || targetDef.action, {
         room: context.room,
+        actorCard: context.actorCard,
         strengthDelta: context.strengthDelta,
         toughnessDelta: context.toughnessDelta,
         statDirection: context.statDirection,

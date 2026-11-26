@@ -67,7 +67,8 @@ class ZoneTransferHandler {
       sourceCard,
       action,
       previousSnapshot,
-      toZone
+      toZone,
+      options.actorCard || context.actorCard
     );
 
     if (targets.length === 0) {
@@ -300,7 +301,8 @@ class ZoneTransferHandler {
     sourceCard = null,
     action = AST_ACTIONS.BOUNCE,
     previousSnapshot = null,
-    toZone = ZONES.HAND
+    toZone = ZONES.HAND,
+    actorCard = null
   ) {
     const count = typeof countInfo === "number" ? countInfo : countInfo.count;
     const hasDynamic = Boolean(typeof countInfo === "object" && countInfo?.hasDynamic);
@@ -377,6 +379,7 @@ class ZoneTransferHandler {
             room,
             actingPlayer,
             sourceCard,
+            actorCard,
             actionType: action,
             candidateZone: zName,
             candidateOwnerId: p.sessionId,

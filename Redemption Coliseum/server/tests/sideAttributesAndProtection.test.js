@@ -14,6 +14,12 @@ const { TargetSelectionService } = require("../src/ast/TargetSelectionService");
 const { ConditionEvaluator } = require("../src/ast/ConditionEvaluator");
 const { AbilityResolver } = require("../src/ast/AbilityResolver");
 const { BattleCharacterClassifier } = require("../src/services/BattleCharacterClassifier");
+const { ImmunityHandler } = require("../src/ast/handlers/ImmunityHandler");
+const { ZoneTransferHandler } = require("../src/ast/handlers/ZoneTransferHandler");
+const { BattleCalculator } = require("../../shared/BattleCalculator");
+const { BATTLE_STATE_REASON } = require("../../shared/battleConstants");
+const { AST_ACTIONS } = require("../../shared/astConstants");
+const { PHASES } = require("../../shared/phases");
 const { ZONES } = require("../../shared/zones");
 
 const findRaw = (id) => cardsRaw.cards.find((c) => c.Id === id);
@@ -207,6 +213,203 @@ describe("Side Attributes (IsGeneric, IsHuman, Classes) & Conditional Protection
       const bucklerTarget = cardsLogic["133156924"].sides.top.abilities[0].effects[0].target;
       expect(resolver._formatBandActionText(jethroTarget, { fixed_value: 1 }, false)).toBe("Band to a generic Exodus female hero");
       expect(resolver._formatBandActionText(bucklerTarget, { fixed_value: 1 }, false)).toBe("Band to a warrior or weapon");
+    });
+  });
+
+  describe("4. Protection Inheritance on Enhancements (REG v11.1.0 lines 1799–1801)", () => {
+    const applyRamsesProtection = (room, ramsesCard) => {
+      const protectEffect = AbilityLookup.resolveAbilities("-422285470")[0].effects[0];
+      return ImmunityHandler.execute({
+        room,
+        player: room.state.players.get(ramsesCard.controllerId),
+        effect: protectEffect,
+        item: { cardId: ramsesCard.id, controllerId: ramsesCard.controllerId },
+      });
+    };
+
+    test("Pharaoh, Ramses II [K] cannot be targeted/bounced by Counsel for the King [K] when used by a lone Hero, but can with 2 Heroes", () => {
+      const ramses = CardFactory.createCard(CardRepository.getById("-422285470"), "p2", "c_ramses", ZONES.BATTLEFIELD);
+      const counsel = CardFactory.createCard(CardRepository.getById("-265232813"), "p1", "c_counsel", ZONES.BATTLEFIELD);
+      const hero1 = CardFactory.createCard(CardRepository.getById("1974135304"), "p1", "c_hero1", ZONES.BATTLEFIELD);
+      hero1.Brigade = "Green";
+
+      const room1 = buildRoom({ battlefield: [hero1, counsel, ramses] });
+      room1.state.activePlayer = "p1";
+      applyRamsesProtection(room1, ramses);
+
+      const p1 = room1.state.players.get("p1");
+      const p2 = room1.state.players.get("p2");
+      const bounceEffect = AbilityLookup.resolveAbilities("-265232813")[0].effects[1];
+
+      expect(ProtectionService.isProtected(ramses, counsel, AST_ACTIONS.BOUNCE, { room: room1 })).toBe(true);
+      const eligibleLone = TargetSelectionService.resolveEligibleTargets(room1, p1, bounceEffect.target, {
+        room: room1,
+        sourceCard: counsel,
+        actionType: AST_ACTIONS.BOUNCE,
+      });
+      expect(eligibleLone.eligibleCardIds).toEqual([]);
+
+      const bounceResLone = ZoneTransferHandler.execute({
+        room: room1,
+        player: p1,
+        effect: bounceEffect,
+        item: { cardId: counsel.id, controllerId: "p1" },
+        options: { specialInitiativeDeclined: true },
+      });
+      expect(bounceResLone.snapshot.movedCards).toEqual([]);
+      expect(ramses.zone).toBe(ZONES.BATTLEFIELD);
+      expect(p2.hand).toHaveLength(0);
+
+      // Adding a second Hero removes "lone" status -> Counsel for the King can now target and bounce Ramses
+      const hero2 = CardFactory.createCard(CardRepository.getById("149684389"), "p1", "c_hero2", ZONES.BATTLEFIELD);
+      hero2.Brigade = "Purple";
+      room1.state.battlefield.push(hero2);
+      room1.cardLookup.set(hero2.id, hero2);
+
+      expect(ProtectionService.isProtected(ramses, counsel, AST_ACTIONS.BOUNCE, { room: room1 })).toBe(false);
+      const eligibleTwo = TargetSelectionService.resolveEligibleTargets(room1, p1, bounceEffect.target, {
+        room: room1,
+        sourceCard: counsel,
+        actionType: AST_ACTIONS.BOUNCE,
+      });
+      expect(eligibleTwo.eligibleCardIds).toEqual(["c_ramses"]);
+
+      const bounceResTwo = ZoneTransferHandler.execute({
+        room: room1,
+        player: p1,
+        effect: bounceEffect,
+        item: { cardId: counsel.id, controllerId: "p1" },
+        options: { targetCardIds: ["c_ramses"], specialInitiativeDeclined: true },
+      });
+      expect(bounceResTwo.snapshot.movedCards).toHaveLength(1);
+      expect(ramses.zone).toBe(ZONES.HAND);
+      expect(p2.hand.map((c) => c.id)).toContain("c_ramses");
+    });
+
+    test("Attached Enhancement (attachedTo) and explicit actorCard evaluate protection strictly against the bearer", () => {
+      const target = {
+        id: "ec_prot",
+        Name: "Protected EC",
+        Type: "Evil Character",
+        Alignment: "Evil",
+        controllerId: "p2",
+        isProtected: true,
+        _protection: {
+          card_sources: [{ target_type: "hero", alignment: "good", brigades: ["green"] }],
+        },
+      };
+      const greenHero = { id: "h_green", Name: "Green Hero", Type: "Hero", Alignment: "Good", Brigade: "Green", IsCharacter: true, zone: ZONES.BATTLEFIELD, controllerId: "p1" };
+      const silverHero = { id: "h_silver", Name: "Silver Hero", Type: "Hero", Alignment: "Good", Brigade: "Silver", IsCharacter: true, zone: ZONES.BATTLEFIELD, controllerId: "p1" };
+
+      const attachedToGreen = { id: "e_1", Name: "Attached GE", Type: "GE", Alignment: "Good", Brigade: "Green/Silver", IsEnhancement: true, attachedTo: "h_green", zone: ZONES.BATTLEFIELD, controllerId: "p1" };
+      const attachedToSilver = { id: "e_2", Name: "Attached GE 2", Type: "GE", Alignment: "Good", Brigade: "Green/Silver", IsEnhancement: true, attachedTo: "h_silver", zone: ZONES.BATTLEFIELD, controllerId: "p1" };
+      const unattachedGE = { id: "e_3", Name: "Unattached GE", Type: "GE", Alignment: "Good", Brigade: "Green/Silver", IsEnhancement: true, zone: ZONES.BATTLEFIELD, controllerId: "p1" };
+
+      const room = buildRoom({ battlefield: [target, greenHero, silverHero, attachedToGreen, attachedToSilver, unattachedGE] });
+
+      expect(ProtectionService.isProtected(target, attachedToGreen, AST_ACTIONS.DISCARD, { room })).toBe(true);
+      expect(ProtectionService.isProtected(target, attachedToSilver, AST_ACTIONS.DISCARD, { room })).toBe(false);
+      expect(ProtectionService.isProtected(target, unattachedGE, AST_ACTIONS.DISCARD, { room, actorCard: greenHero })).toBe(true);
+      expect(ProtectionService.isProtected(target, unattachedGE, AST_ACTIONS.DISCARD, { room, actorCard: silverHero })).toBe(false);
+    });
+
+    test("Unattached Enhancement in battle checks brigade-matching characters and preserves direct Enhancement / no-room semantics", () => {
+      const targetProtGreenHero = {
+        id: "ec_prot_g",
+        Name: "Protected EC",
+        Type: "Evil Character",
+        Alignment: "Evil",
+        controllerId: "p2",
+        isProtected: true,
+        _protection: {
+          card_sources: [{ target_type: "hero", alignment: "good", brigades: ["green"] }],
+        },
+      };
+      const greenHero = { id: "h_g", Name: "Green Hero", Type: "Hero", Alignment: "Good", Brigade: "Green", IsCharacter: true, zone: ZONES.BATTLEFIELD, controllerId: "p1" };
+      const purpleHero = { id: "h_p", Name: "Purple Hero", Type: "Hero", Alignment: "Good", Brigade: "Purple", IsCharacter: true, zone: ZONES.BATTLEFIELD, controllerId: "p1" };
+      const silverHero = { id: "h_s", Name: "Silver Hero", Type: "Hero", Alignment: "Good", Brigade: "Silver", IsCharacter: true, zone: ZONES.BATTLEFIELD, controllerId: "p1" };
+
+      const greenEnh = { id: "enh_g", Name: "Green GE", Type: "GE", Alignment: "Good", Brigade: "Green", IsEnhancement: true, zone: ZONES.BATTLEFIELD, controllerId: "p1" };
+      const dualEnh = { id: "enh_gp", Name: "Counsel for the King [K]", Type: "GE", Alignment: "Good", Brigade: "Green/Purple", IsEnhancement: true, zone: ZONES.BATTLEFIELD, controllerId: "p1" };
+
+      // Single-brigade Green Enhancement can only be used by Green Hero -> blocked even with Silver Hero in battle
+      const roomGreenAndSilver = buildRoom({ battlefield: [targetProtGreenHero, greenHero, silverHero, greenEnh, dualEnh] });
+      expect(ProtectionService.isProtected(targetProtGreenHero, greenEnh, AST_ACTIONS.BOUNCE, { room: roomGreenAndSilver })).toBe(true);
+      // Dual-brigade Green/Purple Enhancement only matches Green Hero here -> blocked when only Green + Silver are in battle
+      expect(ProtectionService.isProtected(targetProtGreenHero, dualEnh, AST_ACTIONS.BOUNCE, { room: roomGreenAndSilver })).toBe(true);
+
+      // With Green Hero + Purple Hero in battle, Purple Hero is NOT protected-from -> dualEnh is NOT blocked
+      const roomGreenAndPurple = buildRoom({ battlefield: [targetProtGreenHero, greenHero, purpleHero, dualEnh] });
+      expect(ProtectionService.isProtected(targetProtGreenHero, dualEnh, AST_ACTIONS.BOUNCE, { room: roomGreenAndPurple })).toBe(false);
+
+      // Without room context, character-only protection does not block an unattached Enhancement
+      expect(ProtectionService.isProtected(targetProtGreenHero, greenEnh, AST_ACTIONS.BOUNCE)).toBe(false);
+
+      // Regression guard: direct protection against Enhancements still works without room context
+      const targetProtEnh = {
+        id: "ec_prot_enh",
+        Name: "Enhancement Protected EC",
+        Type: "Evil Character",
+        Alignment: "Evil",
+        controllerId: "p2",
+        isProtected: true,
+        _protection: {
+          card_sources: [{ target_type: "enhancement", alignment: "good" }],
+        },
+      };
+      expect(ProtectionService.isProtected(targetProtEnh, greenEnh, AST_ACTIONS.BOUNCE)).toBe(true);
+    });
+
+    test("BattleCalculator treats strength of lone Hero and its Enhancement as 0 against Ramses II [K], but counts both with 2 Heroes", () => {
+      const ramses = CardFactory.createCard(CardRepository.getById("-422285470"), "p2", "c_ramses", ZONES.BATTLEFIELD);
+      const counsel = CardFactory.createCard(CardRepository.getById("-265232813"), "p1", "c_counsel", ZONES.BATTLEFIELD);
+      const hero1 = {
+        id: "h1",
+        Name: "Lone Green Hero",
+        Type: "Hero",
+        Alignment: "Good",
+        Brigade: "Green",
+        Strength: "8",
+        Toughness: "8",
+        IsCharacter: true,
+        zone: ZONES.BATTLEFIELD,
+        controllerId: "p1",
+      };
+      const room = buildRoom({ battlefield: [hero1, counsel, ramses] });
+      applyRamsesProtection(room, ramses);
+
+      const loneEval = BattleCalculator.evaluateBattle({
+        battlefield: [hero1, counsel, ramses],
+        activePlayerId: "p1",
+        defenderPlayerId: "p2",
+        lastBattleCardPlayerId: "p1",
+        currentPhase: PHASES.BATTLE,
+      });
+      // Ramses (12/12) vs hero1 (8/8) + counsel (2/2): rescuer strength is zeroed -> blocker wins numbers -> attacker gets initiative
+      expect(loneEval.stateReason).toBe(BATTLE_STATE_REASON.LOSING_NUMBERS);
+      expect(loneEval.initiativePlayerId).toBe("p1");
+
+      const hero2 = {
+        id: "h2",
+        Name: "Second Purple Hero",
+        Type: "Hero",
+        Alignment: "Good",
+        Brigade: "Purple",
+        Strength: "2",
+        Toughness: "2",
+        IsCharacter: true,
+        zone: ZONES.BATTLEFIELD,
+        controllerId: "p1",
+      };
+      const twoHeroEval = BattleCalculator.evaluateBattle({
+        battlefield: [hero1, hero2, counsel, ramses],
+        activePlayerId: "p1",
+        defenderPlayerId: "p2",
+        lastBattleCardPlayerId: "p1",
+        currentPhase: PHASES.BATTLE,
+      });
+      // Now 8 + 2 + 2 = 12 >= 12 (Ramses defeated) and 12 >= 12 (Heroes defeated) -> mutual destruction
+      expect(twoHeroEval.stateReason).toBe(BATTLE_STATE_REASON.MUTUAL_DESTRUCTION);
     });
   });
 });

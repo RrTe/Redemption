@@ -5,6 +5,8 @@
  */
 const { matchesTargetType } = require("../cardHierarchy");
 const { AST_ACTIONS, AST_DIRECTIONAL_FILTER_ACTIONS } = require("../astConstants");
+const { ZONES } = require("../zones");
+const { CombatClassifier } = require("./CombatClassifier");
 const { GenderEvaluator } = require("./GenderEvaluator");
 const { SideAttributeEvaluator, CANONICAL_CLASSES } = require("./SideAttributeEvaluator");
 const { SelectorComposer } = require("./SelectorComposer");
@@ -46,7 +48,131 @@ class ProtectionService {
   }
 
   /**
-   * Evaluates whether a sourceCard matches a TargetSelector filter specified in card_sources.
+   * Determines whether a card is an Enhancement.
+   *
+   * @private
+   * @param {object} card Card instance.
+   * @returns {boolean} True if the card is an Enhancement.
+   */
+  static _isEnhancementCard(card) {
+    if (!card) return false;
+    if (CombatClassifier.isGoodEnhancement(card) || CombatClassifier.isEvilEnhancement(card)) {
+      return true;
+    }
+    const srcType = card.inGameType || card.Type || "";
+    return matchesTargetType(card, "enhancement", srcType);
+  }
+
+  /**
+   * Determines whether a card is a Character (excluding Enhancements).
+   *
+   * @private
+   * @param {object} card Card instance.
+   * @returns {boolean} True if the card is a Character.
+   */
+  static _isCharacterCard(card) {
+    if (!card || this._isEnhancementCard(card)) return false;
+    if (CombatClassifier.isHero(card) || CombatClassifier.isEvilCharacter(card)) {
+      return true;
+    }
+    const srcType = card.inGameType || card.Type || "";
+    return matchesTargetType(card, "character", srcType);
+  }
+
+  /**
+   * Checks whether an Enhancement shares at least one brigade with a Character
+   * (or involves a colorless/"multi" wildcard).
+   *
+   * @private
+   * @param {object} enhancementCard Enhancement card instance.
+   * @param {object} characterCard Character card instance.
+   * @returns {boolean} True if brigades strictly overlap or wildcard applies.
+   */
+  static _hasStrictBrigadeMatch(enhancementCard, characterCard) {
+    if (!enhancementCard || !characterCard) return false;
+    const enhBrigades = CombatClassifier.getBrigades(enhancementCard);
+    const charBrigades = CombatClassifier.getBrigades(characterCard);
+    if (enhBrigades.length === 0 || charBrigades.length === 0) return true;
+    if (enhBrigades.includes("multi") || charBrigades.includes("multi")) return true;
+    return enhBrigades.some((b) => charBrigades.includes(b));
+  }
+
+  /**
+   * Resolves the character(s) using an Enhancement per REG v11.1.0 lines 1799–1801.
+   * Priority: explicit `attachedTo` -> explicit `context.actorCard` -> matching same-side characters in battle.
+   *
+   * @private
+   * @param {object} sourceCard Source card being evaluated.
+   * @param {object} [context={}] Runtime context (`room`, `actorCard`).
+   * @returns {Array<object>} Character cards using the Enhancement.
+   */
+  static _resolveUsingCharacters(sourceCard, context = {}) {
+    if (!this._isEnhancementCard(sourceCard)) return [];
+
+    const rawBattlefield = context?.room?.state?.battlefield;
+    const bfCards = rawBattlefield && typeof rawBattlefield[Symbol.iterator] === "function"
+      ? Array.from(rawBattlefield).filter(Boolean)
+      : [];
+
+    // 1. Explicit attachedTo bearer takes precedence and never falls through to battlefield scan
+    if (sourceCard.attachedTo) {
+      const attachedHolder =
+        context?.room?.cardLookup?.get?.(sourceCard.attachedTo) ||
+        bfCards.find((c) => c.id === sourceCard.attachedTo) ||
+        (context?.actorCard?.id === sourceCard.attachedTo ? context.actorCard : null);
+      return this._isCharacterCard(attachedHolder) ? [attachedHolder] : [];
+    }
+
+    // 2. Explicit actorCard character
+    if (context?.actorCard && this._isCharacterCard(context.actorCard)) {
+      return [context.actorCard];
+    }
+
+    // 3. Unattached Enhancement in battle: resolve same-side characters of matching alignment & brigade
+    const isInBattle =
+      sourceCard.zone === ZONES.BATTLEFIELD ||
+      sourceCard.zone === "battle" ||
+      bfCards.some((c) => c.id === sourceCard.id);
+    if (!isInBattle || bfCards.length === 0) {
+      return [];
+    }
+
+    const sourceController = sourceCard.controllerId || sourceCard.ownerId || "";
+    const isGoodEnh = CombatClassifier.isGoodEnhancement(sourceCard);
+    const isEvilEnh = CombatClassifier.isEvilEnhancement(sourceCard);
+
+    const sameSideChars = bfCards.filter((candidate) => {
+      if (!candidate || candidate.id === sourceCard.id || !this._isCharacterCard(candidate)) {
+        return false;
+      }
+      const candidateController = candidate.controllerId || candidate.ownerId || "";
+      if (sourceController && candidateController && candidateController !== sourceController) {
+        return false;
+      }
+      if (isGoodEnh && !isEvilEnh) {
+        return CombatClassifier.isHero(candidate);
+      }
+      if (isEvilEnh && !isGoodEnh) {
+        return CombatClassifier.isEvilCharacter(candidate);
+      }
+      return true;
+    });
+
+    if (sameSideChars.length === 0) {
+      return [];
+    }
+
+    const strictMatches = sameSideChars.filter((ch) => this._hasStrictBrigadeMatch(sourceCard, ch));
+    if (strictMatches.length > 0) {
+      return strictMatches;
+    }
+
+    return sameSideChars.filter((ch) => CombatClassifier.canEnhancementMatchCharacter(sourceCard, ch));
+  }
+
+  /**
+   * Evaluates whether a sourceCard matches a TargetSelector filter specified in card_sources,
+   * including REG v11.1.0 protection inheritance onto Enhancements used by protected characters.
    *
    * @param {object} sourceCard Source card attempting the action.
    * @param {object} [sourceDef={}] TargetSelector definition from card_sources.
@@ -57,12 +183,37 @@ class ProtectionService {
   static matchesSource(sourceCard, sourceDef = {}, targetCard = null, context = {}) {
     if (!sourceCard || !sourceDef) return false;
 
+    if (this._matchesSourceDirect(sourceCard, sourceDef, targetCard, context)) {
+      return true;
+    }
+
+    if (!context._skipEnhancementInheritance && this._isEnhancementCard(sourceCard)) {
+      const usingChars = this._resolveUsingCharacters(sourceCard, context);
+      if (usingChars.length > 0) {
+        const directCtx = { ...context, _skipEnhancementInheritance: true };
+        return usingChars.every((ch) =>
+          this._matchesSourceDirect(ch, sourceDef, targetCard, directCtx)
+        );
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Evaluates whether a card directly matches a TargetSelector filter without Enhancement inheritance.
+   *
+   * @private
+   */
+  static _matchesSourceDirect(sourceCard, sourceDef = {}, targetCard = null, context = {}) {
+    if (!sourceCard || !sourceDef) return false;
+
     if (sourceDef.exclude_self === true && targetCard && sourceCard.id === targetCard.id) {
       return false;
     }
 
     if (sourceDef.exclude && typeof sourceDef.exclude === "object") {
-      if (this.matchesSource(sourceCard, sourceDef.exclude, targetCard, context)) {
+      if (this._matchesSourceDirect(sourceCard, sourceDef.exclude, targetCard, context)) {
         return false;
       }
     }
@@ -70,7 +221,7 @@ class ProtectionService {
     if (Array.isArray(sourceDef.any_of) && sourceDef.any_of.length > 0) {
       return sourceDef.any_of.some((branch) => {
         const mergedBranch = SelectorComposer.mergeBranch(sourceDef, branch);
-        return this.matchesSource(sourceCard, mergedBranch, targetCard, context);
+        return this._matchesSourceDirect(sourceCard, mergedBranch, targetCard, context);
       });
     }
 
@@ -242,9 +393,7 @@ class ProtectionService {
 
     // 6. Brigades check (Bucket 5)
     if (Array.isArray(sourceDef.brigades) && sourceDef.brigades.length > 0) {
-      const srcBrigades = Array.isArray(sourceCard.Brigades)
-        ? sourceCard.Brigades.map((b) => b.toLowerCase())
-        : (sourceCard.Brigade ? [sourceCard.Brigade.toLowerCase()] : []);
+      const srcBrigades = CombatClassifier.getBrigades(sourceCard);
       if (!sourceDef.brigades.some((b) => srcBrigades.includes(String(b).toLowerCase()))) {
         return false;
       }
@@ -357,7 +506,7 @@ class ProtectionService {
    *
    * @private
    */
-  static _matchesExceptionCardSource(sourceCard, cs, targetCard = null) {
+  static _matchesExceptionCardSource(sourceCard, cs, targetCard = null, context = {}) {
     if (!sourceCard || !cs) return false;
 
     const targetController = targetCard?.controllerId || targetCard?.ownerId;
@@ -368,7 +517,7 @@ class ProtectionService {
     }
 
     const exceptClauses = (cs.identifiers || []).filter((id) => /^except\b/i.test(String(id || "").trim()));
-    return exceptClauses.some((clause) => this._matchesSingleExceptionClause(sourceCard, clause, cs, targetCard));
+    return exceptClauses.some((clause) => this._matchesSingleExceptionClause(sourceCard, clause, cs, targetCard, context));
   }
 
   /**
@@ -376,7 +525,7 @@ class ProtectionService {
    *
    * @private
    */
-  static _matchesSingleExceptionClause(sourceCard, clause, cs, targetCard) {
+  static _matchesSingleExceptionClause(sourceCard, clause, cs, targetCard, context = {}) {
     const body = String(clause || "")
       .replace(/^except\s+(?:by\s+)?(?:the\s+|an\s+|a\s+)?/i, "")
       .trim()
@@ -405,7 +554,7 @@ class ProtectionService {
     }
 
     // 2. Structured attributes (alignment, target_type, gender, etc.) must hold
-    if (!this._matchesCoreSourceAttributes(sourceCard, cs, targetCard)) {
+    if (!this._matchesCoreSourceAttributes(sourceCard, cs, targetCard, context)) {
       return false;
     }
 
@@ -530,10 +679,11 @@ class ProtectionService {
 
       const exceptionSources = prot.card_sources.filter((cs) => this._isExceptionCardSource(cs));
       const blockingSources = prot.card_sources.filter((cs) => !this._isExceptionCardSource(cs));
+      const directCtx = { ...context, _skipEnhancementInheritance: true };
 
       if (exceptionSources.length > 0) {
         const isExcepted = exceptionSources.some((cs) =>
-          this._matchesExceptionCardSource(sourceCard, cs, targetCard)
+          this._matchesExceptionCardSource(sourceCard, cs, targetCard, directCtx)
         );
         if (isExcepted) {
           return false;
@@ -543,11 +693,38 @@ class ProtectionService {
         }
       }
 
-      const matchesAnySource = blockingSources.some((cs) => this.matchesSource(sourceCard, cs, targetCard, context));
-      if (!matchesAnySource) {
-        return false;
+      const matchesDirectSource = blockingSources.some((cs) =>
+        this._matchesSourceDirect(sourceCard, cs, targetCard, directCtx)
+      );
+      if (matchesDirectSource) {
+        return true;
       }
-      return true;
+
+      // REG v11.1.0 lines 1799–1801: Enhancement inherits protection from its using character(s)
+      if (!context._skipEnhancementInheritance && this._isEnhancementCard(sourceCard)) {
+        const usingChars = this._resolveUsingCharacters(sourceCard, context);
+        if (usingChars.length > 0) {
+          const allCharsBlocked = usingChars.every((ch) => {
+            if (
+              exceptionSources.length > 0 &&
+              exceptionSources.some((cs) => this._matchesExceptionCardSource(ch, cs, targetCard, directCtx))
+            ) {
+              return false;
+            }
+            if (blockingSources.length === 0) {
+              return true;
+            }
+            return blockingSources.some((cs) =>
+              this._matchesSourceDirect(ch, cs, targetCard, directCtx)
+            );
+          });
+          if (allCharsBlocked) {
+            return true;
+          }
+        }
+      }
+
+      return false;
     }
 
     // 5. Action-specific protection (e.g. protect from discard, capture, negate, harm, decrease)
@@ -586,9 +763,7 @@ class ProtectionService {
 
     // 8. Protection from specific brigades
     if (Array.isArray(prot.brigades) && prot.brigades.length > 0) {
-      const srcBrigades = Array.isArray(sourceCard.Brigades)
-        ? sourceCard.Brigades.map((b) => b.toLowerCase())
-        : (sourceCard.Brigade ? [sourceCard.Brigade.toLowerCase()] : []);
+      const srcBrigades = CombatClassifier.getBrigades(sourceCard);
       if (prot.brigades.some((b) => srcBrigades.includes(String(b).toLowerCase()))) {
         return true;
       }
@@ -604,6 +779,17 @@ class ProtectionService {
       return true;
     }
 
+    // 11. REG v11.1.0 lines 1799–1801: Inherit character protection for non-card_sources rules
+    if (!context._skipEnhancementInheritance && this._isEnhancementCard(sourceCard)) {
+      const usingChars = this._resolveUsingCharacters(sourceCard, context);
+      if (usingChars.length > 0) {
+        const inheritedCtx = { ...context, _skipEnhancementInheritance: true };
+        if (usingChars.every((ch) => this.isProtected(targetCard, ch, actionType, inheritedCtx))) {
+          return true;
+        }
+      }
+    }
+
     return false;
   }
 
@@ -615,9 +801,10 @@ class ProtectionService {
    * @param {string} zone Zone name (e.g. "deck", "hand", "reserve", "discard").
    * @param {object} [sourceCard] Card attempting the action.
    * @param {string} [actionType=""] Action being performed.
+   * @param {object} [context={}] Optional runtime context (`actorCard`, etc.).
    * @returns {boolean} True if the zone/pile is protected.
    */
-  static isZoneProtected(room, targetPlayer, zone, sourceCard, actionType = "") {
+  static isZoneProtected(room, targetPlayer, zone, sourceCard, actionType = "", context = {}) {
     if (!targetPlayer || !zone || !sourceCard) return false;
 
     // Opponent check
@@ -641,7 +828,7 @@ class ProtectionService {
       });
 
       if (matchesZone) {
-        if (this.isProtected(card, sourceCard, actionType, { room })) {
+        if (this.isProtected(card, sourceCard, actionType, { ...context, room })) {
           return true;
         }
       }

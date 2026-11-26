@@ -46,7 +46,7 @@ class BandHandler {
     const targetDef = effect?.target || {};
 
     // 1. Resolve eligible target candidates
-    const eligible = this._resolveEligibleCandidates(room, player, targetDef, effectiveLeader);
+    const eligible = this._resolveEligibleCandidates(room, player, targetDef, effectiveLeader, leaderCard, context.actorCard);
 
     // If selection is manual and no explicit targets submitted, request client selection
     const explicitIds = options.targetCardIds || [];
@@ -259,7 +259,8 @@ class BandHandler {
    * @param {object} [leaderCard] Character leading the band.
    * @returns {{ eligibleCardIds: string[], minTargets: number, maxTargets: number, requiresSelection: boolean }}
    */
-  static _resolveEligibleCandidates(room, actingPlayer, targetDef, leaderCard) {
+  static _resolveEligibleCandidates(room, actingPlayer, targetDef, leaderCard, sourceCard = leaderCard, actorCard = null) {
+    const protectionSource = sourceCard || leaderCard;
     const leaderAlignment = (leaderCard?.inGameAlignment || leaderCard?.Alignment || "").toString().toLowerCase();
     const isHeroLeader = BattleCharacterClassifier.isHero(leaderCard);
     const isEvilLeader = BattleCharacterClassifier.isEvilCharacter(leaderCard);
@@ -287,7 +288,8 @@ class BandHandler {
           const filterCtx = {
             room,
             actingPlayer,
-            sourceCard: leaderCard,
+            sourceCard: protectionSource,
+            actorCard,
             actionType: AST_ACTIONS.BAND,
             candidateZone: zoneList === p[ZONES.HAND] ? ZONES.HAND : ZONES.TERRITORY,
             candidateOwnerId: p.sessionId,
@@ -297,7 +299,7 @@ class BandHandler {
           }
 
           // Protection check (cannot band card protected from band or opponent)
-          if (ProtectionService.isProtected(card, leaderCard, AST_ACTIONS.BAND, { room })) {
+          if (ProtectionService.isProtected(card, protectionSource, AST_ACTIONS.BAND, { room, actorCard })) {
             continue;
           }
 

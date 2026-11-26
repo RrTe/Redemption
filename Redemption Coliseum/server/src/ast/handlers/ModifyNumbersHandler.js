@@ -55,6 +55,7 @@ class ModifyNumbersHandler {
       stepSnapshots,
       strengthDelta: sHint,
       toughnessDelta: tHint,
+      actorCard: context.actorCard,
     });
 
     if (options.specialInitiativeDeclined) {
@@ -146,6 +147,7 @@ class ModifyNumbersHandler {
         card.id !== sourceCard.id &&
         ProtectionService.isProtected(card, sourceCard, AST_ACTIONS.MODIFY_STATS, {
           room,
+          actorCard: context.actorCard,
           strengthDelta: sDelta,
           toughnessDelta: tDelta,
         })
@@ -383,7 +385,9 @@ class ModifyNumbersHandler {
       actingPlayer,
       targetDef,
       {
+        room,
         sourceCard,
+        actorCard: extraCtx.actorCard,
         actionType: AST_ACTIONS.MODIFY_STATS,
         strengthDelta: extraCtx.strengthDelta,
         toughnessDelta: extraCtx.toughnessDelta,

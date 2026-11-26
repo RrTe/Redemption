@@ -14,6 +14,14 @@ interface ToastStyleConfig {
 /** Gold color value matching the Deck Synchronization dialogs */
 const GOLD_COLOR = "#ffd700";
 
+const TOAST_MIN_DURATION_MS = 4000;
+const TOAST_MAX_DURATION_MS = 7500;
+const TOAST_BASE_DURATION_MS = 2800;
+const TOAST_MS_PER_CHAR = 50;
+const TOAST_FADE_IN_OFFSET = 0.12;
+const TOAST_FADE_OUT_START_OFFSET = 0.75;
+const TOAST_MAX_WIDTH = "min(680px, 88vw)";
+
 const TOAST_THEMES: Record<ToastType, ToastStyleConfig> = {
   info: {
     borderColor: GOLD_COLOR,
@@ -63,8 +71,10 @@ export class ToastManager {
         fontSize: "14px",
         fontWeight: "bold",
         letterSpacing: "1px",
+        lineHeight: "1.35",
         textAlign: "center",
-        whiteSpace: "nowrap",
+        whiteSpace: "normal",
+        maxWidth: TOAST_MAX_WIDTH,
         opacity: "0",
         backdropFilter: "blur(6px)",
       });
@@ -74,19 +84,35 @@ export class ToastManager {
   }
 
   /**
+   * Computes a text-length-scaled toast duration bounded between 4000 ms and 7500 ms.
+   *
+   * @param {string} message - Toast message text.
+   * @returns {number} Duration in milliseconds.
+   */
+  private static computeDurationMs(message: string): number {
+    const trimmedLength = (message || "").trim().length;
+    return Math.min(
+      TOAST_MAX_DURATION_MS,
+      Math.max(TOAST_MIN_DURATION_MS, TOAST_BASE_DURATION_MS + trimmedLength * TOAST_MS_PER_CHAR),
+    );
+  }
+
+  /**
    * Displays a toast notification that rises slowly above the player's hand cards and fades out.
    *
    * @param {string} message - The text message to display.
    * @param {ToastType} [type="warning"] - The visual style type of the toast.
-   * @param {number} [durationMs=4000] - Duration in milliseconds for the rise and fade animation.
+   * @param {number} [durationMs] - Optional explicit duration in milliseconds; defaults to length-scaled duration.
    */
   public static show(
     message: string,
     type: ToastType = "warning",
-    durationMs: number = 4000,
+    durationMs?: number,
   ): void {
     const el = this.getOrCreateElement();
     const theme = TOAST_THEMES[type] || TOAST_THEMES.warning;
+    const effectiveDurationMs =
+      typeof durationMs === "number" ? durationMs : this.computeDurationMs(message);
 
     if (this.activeAnimation) {
       this.activeAnimation.cancel();
@@ -103,12 +129,12 @@ export class ToastManager {
     this.activeAnimation = el.animate(
       [
         { transform: "translateX(-50%) translateY(0px)", opacity: 0, offset: 0 },
-        { transform: "translateX(-50%) translateY(-10px)", opacity: 1, offset: 0.12 },
-        { transform: "translateX(-50%) translateY(-35px)", opacity: 1, offset: 0.65 },
+        { transform: "translateX(-50%) translateY(-10px)", opacity: 1, offset: TOAST_FADE_IN_OFFSET },
+        { transform: "translateX(-50%) translateY(-35px)", opacity: 1, offset: TOAST_FADE_OUT_START_OFFSET },
         { transform: "translateX(-50%) translateY(-65px)", opacity: 0, offset: 1.0 },
       ],
       {
-        duration: durationMs,
+        duration: effectiveDurationMs,
         easing: "cubic-bezier(0.25, 1, 0.5, 1)",
         fill: "forwards",
       },

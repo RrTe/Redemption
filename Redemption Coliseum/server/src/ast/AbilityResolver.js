@@ -308,6 +308,7 @@ class AbilityResolver {
           {
             room: this.room,
             sourceCard: card,
+            actorCard: options.actorCard,
             actionType: currentEffect.action,
             isOptional: Boolean((targetAbility.is_optional || item.isOptional) && stepIdx === 0),
             selectedPileId: item._selectedPileId || undefined,
@@ -690,7 +691,7 @@ class AbilityResolver {
         this.room,
         player,
         promptEffect.target,
-        { sourceCard: card, actionType: promptEffect.action }
+        { room: this.room, sourceCard: card, actionType: promptEffect.action }
       );
       if (eligiblePreview.eligibleCardIds?.length > 0) {
         const actingClient = this.room.clients?.find((c) => c.sessionId === player.sessionId);
@@ -902,10 +903,29 @@ class AbilityResolver {
     }
     const cardTitle = card?.Name || item?.title || "Card";
     const logTarget = card ? formatCardLink(card) : cardTitle;
+    let effectLabel = String(item?.effectLabel || "").trim();
+    if (
+      !effectLabel &&
+      typeof item?.effectStepIndex === "number" &&
+      item.effectStepIndex >= 0 &&
+      Array.isArray(targetAbility?.effects)
+    ) {
+      const sortedEffects = [...targetAbility.effects].sort((a, b) => (a.step || 1) - (b.step || 1));
+      const stepEffect = sortedEffects[item.effectStepIndex];
+      if (stepEffect) {
+        effectLabel = String(EffectLabelFormatter.formatSingleEffectLabel(stepEffect, card) || "").trim();
+      }
+    }
+    const toastMessage = effectLabel
+      ? `${cardTitle} (${effectLabel}): No valid targets.`
+      : `${cardTitle}: No valid targets.`;
+    const logMessage = effectLabel
+      ? `${player.name}'s ${logTarget} (${effectLabel}) has no valid targets.`
+      : `${player.name}'s ${logTarget} has no valid targets.`;
     const client = this.room?.clients?.find((c) => c.sessionId === player.sessionId);
     if (client && typeof client.send === "function") {
       client.send("gameToast", {
-        message: `${cardTitle}: No valid targets.`,
+        message: toastMessage,
         type: "warning",
       });
     }
@@ -913,7 +933,7 @@ class AbilityResolver {
       handled: true,
       noValidTargets: true,
       snapshots: [],
-      logEntries: [`${player.name}'s ${logTarget} has no valid targets.`],
+      logEntries: [logMessage],
     };
   }
 
@@ -1082,7 +1102,7 @@ class AbilityResolver {
           this.room,
           player,
           effect.target,
-          { sourceCard: card, actionType: effect.action }
+          { room: this.room, sourceCard: card, actionType: effect.action }
         );
         if (
           (unsupportedEligible.eligibleCardIds && unsupportedEligible.eligibleCardIds.length > 0) ||
